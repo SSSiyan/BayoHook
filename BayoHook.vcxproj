@@ -210,6 +210,11 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="include\minhook\src\buffer.c" />
+    <ClCompile Include="include\minhook\src\hde\hde32.c" />
+    <ClCompile Include="include\minhook\src\hde\hde64.c" />
+    <ClCompile Include="include\minhook\src\hook.c" />
+    <ClCompile Include="include\minhook\src\trampoline.c" />
     <ClCompile Include="src\base.cpp" />
     <ClCompile Include="src\bayohook.cpp" />
     <ClCompile Include="src\hooks\EndScene.cpp" />
@@ -222,7 +227,9 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="utils\Address.cpp" />
     <ClCompile Include="utils\config.cpp" />
+    <ClCompile Include="utils\FunctionHook.cpp" />
     <ClCompile Include="utils\String.cpp" />
     <ClCompile Include="utils\Timer.cpp" />
   </ItemGroup>
@@ -236,10 +243,20 @@
     <ClInclude Include="include\imgui\imstb_textedit.h" />
     <ClInclude Include="include\imgui\imstb_truetype.h" />
     <ClInclude Include="include\libmem++\libmem.hpp" />
+    <ClInclude Include="include\minhook\include\MinHook.h" />
+    <ClInclude Include="include\minhook\src\buffer.h" />
+    <ClInclude Include="include\minhook\src\hde\hde32.h" />
+    <ClInclude Include="include\minhook\src\hde\hde64.h" />
+    <ClInclude Include="include\minhook\src\hde\pstdint.h" />
+    <ClInclude Include="include\minhook\src\hde\table32.h" />
+    <ClInclude Include="include\minhook\src\hde\table64.h" />
+    <ClInclude Include="include\minhook\src\trampoline.h" />
     <ClInclude Include="src\base.h" />
     <ClInclude Include="src\bayohook.hpp" />
     <ClInclude Include="src\pch.h" />
+    <ClInclude Include="utils\Address.hpp" />
     <ClInclude Include="utils\config.hpp" />
+    <ClInclude Include="utils\FunctionHook.hpp" />
     <ClInclude Include="utils\Hash.hpp" />
     <ClInclude Include="utils\String.hpp" />
     <ClInclude Include="utils\Timer.hpp" />

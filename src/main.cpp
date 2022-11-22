@@ -23,7 +23,7 @@ DWORD WINAPI MainThread(LPVOID lpThreadParameter)
 		}
 	}
 
-	//Sleep(6000);
+	Sleep(6000);
 
 	Base::Data::hModule = (HMODULE)lpThreadParameter;
 	Base::Init();
@@ -45,7 +45,7 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD dwReason, LPVOID lpReserved)
 	switch (dwReason)
 	{
 	case DLL_PROCESS_ATTACH:
-		// MessageBox(NULL, "Debug", "Bayohook", MB_ICONINFORMATION);
+		//MessageBox(NULL, "Debug", "Bayohook", MB_ICONINFORMATION);
 		CreateThread(nullptr, 0, MainThread, hModule, 0, nullptr);
 		break;
 	case DLL_PROCESS_DETACH:
