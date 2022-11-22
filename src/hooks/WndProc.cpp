@@ -11,11 +11,8 @@ LRESULT CALLBACK Base::Hooks::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
 	{
 		switch (wParam)
 		{
-		case Data::Keys::ToggleMenu:
+		case VK_DELETE:
 			Data::ShowMenu = !Data::ShowMenu;
-			break;
-		case Data::Keys::DetachDll:
-			Data::ToDetach = true;
 			break;
 		}
 	}

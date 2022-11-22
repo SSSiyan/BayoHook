@@ -40,11 +40,11 @@ namespace Base
 		extern bool              InitImGui;
 		extern bool              ShowMenu;
 
-		namespace Keys
+		/*namespace Keys
 		{
-			const UINT ToggleMenu = VK_INSERT;
+			const UINT ToggleMenu = VK_DELETE;
 			const UINT DetachDll  = VK_END;
-		}
+		}*/
 	}
 
 	namespace Hooks

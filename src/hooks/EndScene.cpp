@@ -3,6 +3,20 @@
 #include "bayohook.hpp"
 
 utils::Config cfg{ "bayo_hook.cfg" };
+static float inputItemWidth = 100.0f;
+
+void help_marker(const char* desc) {
+    ImGui::SameLine();
+    ImGui::TextDisabled("(?)");
+    if (ImGui::IsItemHovered())
+    {
+        ImGui::BeginTooltip();
+        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+        ImGui::TextUnformatted(desc);
+        ImGui::PopTextWrapPos();
+        ImGui::EndTooltip();
+    }
+}
 
 HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
 {
@@ -76,7 +90,7 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
 		// get process ID and module base address
 		// BayoHook::_hook(); // I think this isn't needed in a dll?
 
-        BayoHook::InitializeCheats();
+        BayoHook::InitializeDetours();
 
 		// load settings, must happen after hook
 		BayoHook::onConfigLoad(cfg);
@@ -95,6 +109,7 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
     static bool HasDoneOnceMenuOff = false;
 	if (Data::ShowMenu) {
         ImGui::Begin("BayoHook 0.1", NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
+        BayoHook::Update();
         HasDoneOnceMenuOff = false;
         if (HasDoneOnceMenuOn == false) {
             ImGui::GetIO().MouseDrawCursor = true;
@@ -102,34 +117,95 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
             //BayoHook::ShowCursor(BayoHook::showCursor_toggle);
             HasDoneOnceMenuOn = true;
         }
-        BayoHook::ShowCursor(BayoHook::showCursor_toggle);
+
+        if (ImGui::Button("Save config")) {
+            BayoHook::onConfigSave(cfg);
+        }
+
 		if (ImGui::BeginTabBar("Trainer", ImGuiTabBarFlags_FittingPolicyScroll | ImGuiTabBarFlags_NoTooltip)) {
 			if (ImGui::BeginTabItem("General")) {
 				ImGui::BeginChild("GeneralChild");
-				if (ImGui::Button("Save config")) {
-					BayoHook::onConfigSave(cfg);
-				}
 
-				if (ImGui::Checkbox("Take No Damage", &BayoHook::takeNoDamage_toggle)) { // toggle
+				if (ImGui::Checkbox("Take No Damage", &BayoHook::takeNoDamage_toggle)) {
 					BayoHook::TakeNoDamage(BayoHook::takeNoDamage_toggle);
 				}
-				if (ImGui::Checkbox("Deal No Damage", &BayoHook::dealNoDamage_toggle)) { // toggle
-					BayoHook::DealNoDamage(BayoHook::dealNoDamage_toggle);
-				}
+
+                if (ImGui::Checkbox("Deal No Damage ##DealNoDamageToggle", &BayoHook::enemyHP_no_damage_toggle)) {
+                    BayoHook::enemyHP_one_hit_kill_toggle = false;
+                }
+                if (ImGui::Checkbox("One Hit Kill ##OneHitKillToggle", &BayoHook::enemyHP_one_hit_kill_toggle)) {
+                    BayoHook::enemyHP_no_damage_toggle = false;
+                }
+
+                ImGui::Checkbox("Inf Magic ##InfMagicToggle", &BayoHook::inf_magic_toggle);
+
 				//if (ImGui::Button("Detach"))
 				//	Data::ToDetach = true;
 				ImGui::EndChild();
 				ImGui::EndTabItem();
 			}
+
             if (ImGui::BeginTabItem("Character")) {
                 ImGui::BeginChild("CharacterChild");
-                ImGui::Checkbox("Witch Time Multiplier", &BayoHook::witchTimeMultiplier_toggle);
-                ImGui::InputFloat("Multiplier", &BayoHook::witchTimeMultiplier, 0, 0, "%.1f");
+                ImGui::Checkbox("Witch Time Multiplier ##WitchTimeToggle", &BayoHook::witchTimeMultiplier_toggle);
+                ImGui::SameLine();
+                ImGui::PushItemWidth(inputItemWidth);
+                ImGui::InputFloat("##WitchTimeMultiplier", &BayoHook::witchTimeMultiplier, 0, 0, "%.1f");
+                ImGui::PopItemWidth();
+                help_marker("Adjust how long Witch Time lasts");
+                if (ImGui::Checkbox("Infinite Jumps ##InfJumpsToggle", &BayoHook::infJumps_toggle)) {
+                    BayoHook::InfJumps(BayoHook::infJumps_toggle);
+                }
                 ImGui::EndChild();
                 ImGui::EndTabItem();
             }
+
+            if (ImGui::BeginTabItem("Stats")) {
+                ImGui::BeginChild("StatsChild");
+                ImGui::Text("Player Position");
+                if (ImGui::InputFloat3("##Player Position", BayoHook::xyzpos)) {
+                    BayoHook::SetXYZPos(BayoHook::xyzpos[0], BayoHook::xyzpos[1], BayoHook::xyzpos[2]);
+                }
+                ImGui::Text("Halos");
+                if (ImGui::InputInt("##HaloInputInt", &BayoHook::halos, 1, 100)) {
+                    BayoHook::SetHalos(BayoHook::halos);
+                }
+                ImGui::Text("Chapters Played");
+                if (ImGui::InputInt("##ChapterInputInt", &BayoHook::chaptersPlayed, 1, 100)) {
+                    BayoHook::SetChaptersPlayed(BayoHook::chaptersPlayed);
+                }
+                ImGui::Text("Player HP");
+                if (ImGui::InputInt("##PlayerHPInputInt", &BayoHook::playerHealth, 1, 100)) {
+                    BayoHook::SetHealth(BayoHook::playerHealth);
+                }
+                ImGui::Text("Player MP");
+                if (ImGui::InputFloat("##PlayerMPInputFloat", &BayoHook::playerMagic, 1, 100)) {
+                    BayoHook::SetMagic(BayoHook::playerMagic);
+                }
+                ImGui::Text("Combo Points");
+                if (ImGui::InputInt("##ComboPointsInputInt", &BayoHook::comboPoints, 1, 100)) {
+                    BayoHook::SetComboPoints(BayoHook::comboPoints);
+                }
+                ImGui::EndChild();
+                ImGui::EndTabItem();
+            }
+
+            if (ImGui::BeginTabItem("System")) {
+                ImGui::BeginChild("SystemChild");
+                if (ImGui::Checkbox("Focus Patch", &BayoHook::focusPatch_toggle)) {
+                    BayoHook::FocusPatch(BayoHook::focusPatch_toggle);
+                }
+                help_marker("Play while tabbed out");
+
+                //ImGui::Checkbox("Easier Mash ##EasierMashToggle", &BayoHook::easierMashMultiplier_toggle);
+
+                ImGui::EndChild();
+                ImGui::EndTabItem();
+            }
+
 			ImGui::EndTabBar();
 		}
+
 		ImGui::End();
 	}
     else {

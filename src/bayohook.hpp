@@ -12,32 +12,43 @@ class BayoHook {
 public:
 	// cheat toggles
 	static bool takeNoDamage_toggle;
-	static bool dealNoDamage_toggle;
-	static bool witchTimeMultiplier_toggle;
+	static bool focusPatch_toggle;
 	static bool showCursor_toggle;
-
-	// cheat values
-	static float witchTimeMultiplier;
-
+	static bool infJumps_toggle;
 	// cheat functions
 	static void TakeNoDamage(bool enabled);
-	static void DealNoDamage(bool enabled);
-	static void ShowCursor(bool enabled);
+	static void FocusPatch(bool enabled);
+	static void InfJumps(bool enabled);
 
-	// dev values
-	static DWORD _pID;
-	static uintptr_t _baseAddress;
+	// detour values
+	static bool witchTimeMultiplier_toggle;
+	static float witchTimeMultiplier;
+	static bool enemyHP_no_damage_toggle;
+	static bool enemyHP_one_hit_kill_toggle;
+	static bool inf_magic_toggle;
+
+	// update
+	static void Update(void);
 	static uintptr_t actorPlayable;
-	static bool _hooked;
+	static float xyzpos[3];
+	static int halos;
+	static int chaptersPlayed;
+	static int playerHealth;
+	static float playerMagic;
+	static int comboPoints;
+
+	// setters
+	static void SetXYZPos(float x, float y, float z);
+	static void SetHalos(int value);
+	static void SetChaptersPlayed(int value);
+	static void SetHealth(int value);
+	static void SetMagic(float value);
+	static void SetComboPoints(int value);
 
 	// dev functions
-	static DWORD _getProcessID(void);
-	static uintptr_t _getModuleBaseAddress(DWORD procId, const char* modName);
-	static void _hook(void);
 	static void _patch(char* dst, char* src, int size);
 	static void _nop(char* dst, unsigned int size);
-	static void InitializeCheats();
-	//static void update();
+	static void InitializeDetours();
 	static void onConfigLoad(const utils::Config& cfg);
 	static void onConfigSave(utils::Config& cfg);
 
