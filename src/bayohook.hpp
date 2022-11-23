@@ -13,12 +13,13 @@ public:
 	// cheat toggles
 	static bool takeNoDamage_toggle;
 	static bool focusPatch_toggle;
-	static bool showCursor_toggle;
 	static bool infJumps_toggle;
+	static bool disableClicking_toggle;
 	// cheat functions
 	static void TakeNoDamage(bool enabled);
 	static void FocusPatch(bool enabled);
 	static void InfJumps(bool enabled);
+	static void DisableClicking(bool enabled);
 
 	// detour values
 	static bool witchTimeMultiplier_toggle;

@@ -3,8 +3,8 @@
 // cheat toggles
 bool BayoHook::takeNoDamage_toggle(false);
 bool BayoHook::focusPatch_toggle(false);
-bool BayoHook::showCursor_toggle(false);
 bool BayoHook::infJumps_toggle(false);
+bool BayoHook::disableClicking_toggle(false);
 
 // update
 uintptr_t playerPointerAddress = 0xEF5A60;
@@ -45,6 +45,13 @@ void BayoHook::InfJumps(bool enabled) {
 		BayoHook::_nop((char*)(0x9E8906), 6);
 	else
 		BayoHook::_patch((char*)(0x9E8906), (char*)"\x01\xAE\x78\x35\x09\x00", 6);
+}
+
+void BayoHook::DisableClicking(bool enabled) {
+	if (enabled)
+		BayoHook::_nop((char*)(0xC75747), 3);
+	else
+		BayoHook::_patch((char*)(0xC75747), (char*)"\x89\x70\x04", 3);
 }
 
 // detours

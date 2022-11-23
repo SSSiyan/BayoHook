@@ -113,8 +113,8 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
         HasDoneOnceMenuOff = false;
         if (HasDoneOnceMenuOn == false) {
             ImGui::GetIO().MouseDrawCursor = true;
-            //BayoHook::showCursor_toggle = true;
-            //BayoHook::ShowCursor(BayoHook::showCursor_toggle);
+            BayoHook::disableClicking_toggle = true;
+            BayoHook::DisableClicking(BayoHook::disableClicking_toggle);
             HasDoneOnceMenuOn = true;
         }
 
@@ -197,8 +197,6 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
                 }
                 help_marker("Play while tabbed out");
 
-                //ImGui::Checkbox("Easier Mash ##EasierMashToggle", &BayoHook::easierMashMultiplier_toggle);
-
                 ImGui::EndChild();
                 ImGui::EndTabItem();
             }
@@ -212,8 +210,8 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
         HasDoneOnceMenuOn = false;
         if (HasDoneOnceMenuOff == false) {
             ImGui::GetIO().MouseDrawCursor = false;
-            //BayoHook::showCursor_toggle = false;
-            //BayoHook::ShowCursor(BayoHook::showCursor_toggle);
+            BayoHook::disableClicking_toggle = false;
+            BayoHook::DisableClicking(BayoHook::disableClicking_toggle);
             HasDoneOnceMenuOff = true;
         }
     }
