@@ -27,6 +27,10 @@ public:
 	static bool enemyHP_no_damage_toggle;
 	static bool enemyHP_one_hit_kill_toggle;
 	static bool inf_magic_toggle;
+	static bool outgoingDamageMultiplier_toggle;
+	static float outgoingDamageMultiplierMult;
+	static bool customCameraDistance_toggle;
+	static float customCameraDistanceMultiplierMult;
 
 	// update
 	static void Update(void);
@@ -35,6 +39,7 @@ public:
 	static int halos;
 	static int chaptersPlayed;
 	static int playerHealth;
+	static float remainingWitchTimeDuration;
 	static float playerMagic;
 	static int comboPoints;
 
@@ -43,6 +48,7 @@ public:
 	static void SetHalos(int value);
 	static void SetChaptersPlayed(int value);
 	static void SetHealth(int value);
+	static void SetRemainingWitchTimeDuration(float value);
 	static void SetMagic(float value);
 	static void SetComboPoints(int value);
 

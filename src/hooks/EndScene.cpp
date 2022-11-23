@@ -25,7 +25,7 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
 	{
 		ImGui::CreateContext();
 		ImGuiIO& io = ImGui::GetIO();
-
+        io.IniFilename = NULL; // disable data/imgui.ini
         // 4hook styling
         ImGui::GetStyle().FrameRounding = 2.5f;
         ImGui::GetStyle().GrabRounding = 3.0f;
@@ -126,9 +126,11 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
 			if (ImGui::BeginTabItem("General")) {
 				ImGui::BeginChild("GeneralChild");
 
-				if (ImGui::Checkbox("Take No Damage", &BayoHook::takeNoDamage_toggle)) {
-					BayoHook::TakeNoDamage(BayoHook::takeNoDamage_toggle);
-				}
+                ImGui::Checkbox("Outgoing Damage Multiplier ##OutgoingDamageMultiplierToggle", &BayoHook::outgoingDamageMultiplier_toggle);
+                ImGui::SameLine();
+                ImGui::PushItemWidth(inputItemWidth);
+                ImGui::InputFloat("##OutgoingDamageMultiplierInputFloat", &BayoHook::outgoingDamageMultiplierMult, 1, 100, "%.1f");
+                ImGui::PopItemWidth();
 
                 if (ImGui::Checkbox("Deal No Damage ##DealNoDamageToggle", &BayoHook::enemyHP_no_damage_toggle)) {
                     BayoHook::enemyHP_one_hit_kill_toggle = false;
@@ -136,6 +138,10 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
                 if (ImGui::Checkbox("One Hit Kill ##OneHitKillToggle", &BayoHook::enemyHP_one_hit_kill_toggle)) {
                     BayoHook::enemyHP_no_damage_toggle = false;
                 }
+
+				if (ImGui::Checkbox("Take No Damage", &BayoHook::takeNoDamage_toggle)) {
+					BayoHook::TakeNoDamage(BayoHook::takeNoDamage_toggle);
+				}
 
                 ImGui::Checkbox("Inf Magic ##InfMagicToggle", &BayoHook::inf_magic_toggle);
 
@@ -147,55 +153,77 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
 
             if (ImGui::BeginTabItem("Character")) {
                 ImGui::BeginChild("CharacterChild");
+
                 ImGui::Checkbox("Witch Time Multiplier ##WitchTimeToggle", &BayoHook::witchTimeMultiplier_toggle);
                 ImGui::SameLine();
                 ImGui::PushItemWidth(inputItemWidth);
                 ImGui::InputFloat("##WitchTimeMultiplier", &BayoHook::witchTimeMultiplier, 0, 0, "%.1f");
                 ImGui::PopItemWidth();
                 help_marker("Adjust how long Witch Time lasts");
+
                 if (ImGui::Checkbox("Infinite Jumps ##InfJumpsToggle", &BayoHook::infJumps_toggle)) {
                     BayoHook::InfJumps(BayoHook::infJumps_toggle);
                 }
+
                 ImGui::EndChild();
                 ImGui::EndTabItem();
             }
 
             if (ImGui::BeginTabItem("Stats")) {
                 ImGui::BeginChild("StatsChild");
+
                 ImGui::Text("Player Position");
                 if (ImGui::InputFloat3("##Player Position", BayoHook::xyzpos)) {
                     BayoHook::SetXYZPos(BayoHook::xyzpos[0], BayoHook::xyzpos[1], BayoHook::xyzpos[2]);
                 }
+
                 ImGui::Text("Halos");
                 if (ImGui::InputInt("##HaloInputInt", &BayoHook::halos, 1, 100)) {
                     BayoHook::SetHalos(BayoHook::halos);
                 }
+
                 ImGui::Text("Chapters Played");
                 if (ImGui::InputInt("##ChapterInputInt", &BayoHook::chaptersPlayed, 1, 100)) {
                     BayoHook::SetChaptersPlayed(BayoHook::chaptersPlayed);
                 }
+
                 ImGui::Text("Player HP");
                 if (ImGui::InputInt("##PlayerHPInputInt", &BayoHook::playerHealth, 1, 100)) {
                     BayoHook::SetHealth(BayoHook::playerHealth);
                 }
+
                 ImGui::Text("Player MP");
-                if (ImGui::InputFloat("##PlayerMPInputFloat", &BayoHook::playerMagic, 1, 100)) {
+                if (ImGui::InputFloat("##PlayerMPInputFloat", &BayoHook::playerMagic, 1, 100, "%.0f")) {
                     BayoHook::SetMagic(BayoHook::playerMagic);
                 }
+
+                ImGui::Text("Remaining Witch Time Duration");
+                if (ImGui::InputFloat("##RemainingWitchTimeDurationInputFloat", &BayoHook::remainingWitchTimeDuration, 1, 100, "%.0f")) {
+                    BayoHook::SetRemainingWitchTimeDuration(BayoHook::remainingWitchTimeDuration);
+                }
+
                 ImGui::Text("Combo Points");
                 if (ImGui::InputInt("##ComboPointsInputInt", &BayoHook::comboPoints, 1, 100)) {
                     BayoHook::SetComboPoints(BayoHook::comboPoints);
                 }
+
                 ImGui::EndChild();
                 ImGui::EndTabItem();
             }
 
             if (ImGui::BeginTabItem("System")) {
                 ImGui::BeginChild("SystemChild");
+
                 if (ImGui::Checkbox("Focus Patch", &BayoHook::focusPatch_toggle)) {
                     BayoHook::FocusPatch(BayoHook::focusPatch_toggle);
                 }
                 help_marker("Play while tabbed out");
+
+                ImGui::Checkbox("Camera Distance Multiplier ##CameraDistanceMultiplierToggle", &BayoHook::customCameraDistance_toggle);
+                ImGui::SameLine();
+                ImGui::PushItemWidth(inputItemWidth);
+                ImGui::InputFloat("##CustomCameraDistanceMultiplierInputFloat", &BayoHook::customCameraDistanceMultiplierMult, 0.1f, 1, "%.1f");
+                ImGui::PopItemWidth();
 
                 ImGui::EndChild();
                 ImGui::EndTabItem();

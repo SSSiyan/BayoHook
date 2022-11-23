@@ -18,6 +18,7 @@ float BayoHook::xyzpos[3]{ 0.0f, 0.0f, 0.0f };
 int BayoHook::halos = 0;
 int BayoHook::chaptersPlayed = 0;
 int BayoHook::playerHealth = 0;
+float BayoHook::remainingWitchTimeDuration = 0.0f;
 float BayoHook::playerMagic = 0.0f;
 int BayoHook::comboPoints = 0;
 
@@ -59,7 +60,6 @@ std::unique_ptr<FunctionHook> enemyHPHook;
 uintptr_t enemyHP_jmp_ret{ NULL };
 bool BayoHook::enemyHP_no_damage_toggle = false;
 bool BayoHook::enemyHP_one_hit_kill_toggle = false;
-
 static __declspec(naked) void EnemyHPDetour(void) {
 	_asm {
 		cmp byte ptr [BayoHook::enemyHP_no_damage_toggle], 1
@@ -104,23 +104,65 @@ static __declspec(naked) void WitchTimeMultiplierDetour(void) {
 }
 
 std::unique_ptr<FunctionHook> infMagicHook;
-uintptr_t inf_magic_jmp_ret{ NULL };
+uintptr_t infMagic_jmp_ret{ NULL };
 bool BayoHook::inf_magic_toggle = false;
-uintptr_t magicAddress = 0x5AA74AC;
 static __declspec(naked) void InfMagicDetour(void) {
 	_asm {
 		push eax
 		cmp byte ptr [BayoHook::inf_magic_toggle], 0
 		je originalcode
 
-		mov eax, [magicAddress]
+		mov eax, [playerMagicAddress]
 		mov dword ptr [eax], 0x44fa0000 // 2000
 
 		originalcode:
-		mov eax, [magicAddress] // i hate that i have to do this
+		mov eax, [playerMagicAddress] // i hate that i have to do this
 		movss xmm0, [eax]
 		pop eax
-		jmp dword ptr [inf_magic_jmp_ret]
+		jmp dword ptr [infMagic_jmp_ret]
+	}
+}
+
+std::unique_ptr<FunctionHook> outgoingDamageMultiplierHook;
+uintptr_t outgoingDamageMultiplier_jmp_ret{ NULL };
+bool BayoHook::outgoingDamageMultiplier_toggle = false;
+float outgoingDamageMultiplierXmm0Backup = 0.0f;
+float BayoHook::outgoingDamageMultiplierMult = 1.0f;
+static __declspec(naked) void OutgoingDamageMultiplierDetour(void) {
+	_asm {
+		mov [esi+0x000006B8],eax // originalcode, early bytes to avoid EnemyHPDetour
+		cmp byte ptr [BayoHook::outgoingDamageMultiplier_toggle], 0
+		je originalcode
+
+		movss [outgoingDamageMultiplierXmm0Backup], xmm0 // xmm0 backup
+		cvtsi2ss xmm0, edi // convert to float
+		mulss xmm0, [BayoHook::outgoingDamageMultiplierMult] // multiply
+		cvttss2si edi, xmm0 // convert from float
+		movss xmm0,[outgoingDamageMultiplierXmm0Backup] // restore xmm0
+
+		originalcode:
+		sub eax,edi
+		jmp dword ptr [outgoingDamageMultiplier_jmp_ret]
+	}
+}
+
+std::unique_ptr<FunctionHook> customCameraDistanceHook;
+uintptr_t customCameraDistance_jmp_ret{ NULL };
+bool BayoHook::customCameraDistance_toggle = false;
+float BayoHook::customCameraDistanceMultiplierMult = 0.0f;
+static __declspec(naked) void CustomCameraDistanceDetour(void) {
+	_asm {
+		cmp byte ptr [BayoHook::customCameraDistance_toggle], 0
+		je originalcode
+
+		cmp eax, 0xF2E630 // only change this value
+		jne originalcode
+		mulss xmm0,[BayoHook::customCameraDistanceMultiplierMult]
+
+		originalcode:
+		movss [eax],xmm0
+		pop esi
+		jmp dword ptr [customCameraDistance_jmp_ret]
 	}
 }
 
@@ -133,6 +175,7 @@ void BayoHook::Update() {
 		BayoHook::xyzpos[1] = (*(float*)(BayoHook::actorPlayable + 0xD4));
 		BayoHook::xyzpos[2] = (*(float*)(BayoHook::actorPlayable + 0xD8));
 		BayoHook::playerHealth = (*(int*)(BayoHook::actorPlayable + 0x93508));
+		BayoHook::remainingWitchTimeDuration = (*(float*)(BayoHook::actorPlayable + 0x95D5C));
 	}
 	BayoHook::chaptersPlayed = (*(int*)chaptersPlayedAddress);
 	BayoHook::playerMagic = (*(float*)playerMagicAddress);
@@ -157,6 +200,10 @@ void BayoHook::SetChaptersPlayed(int value) {
 
 void BayoHook::SetHealth(int value) {
 	(*(int*)(BayoHook::actorPlayable + 0x93508)) = value;
+}
+
+void BayoHook::SetRemainingWitchTimeDuration(float value) {
+	(*(float*)(BayoHook::actorPlayable + 0x95D5C)) = value;
 }
 
 void BayoHook::SetMagic(float value) {
@@ -205,7 +252,9 @@ bool install_hook_absolute(uintptr_t location, std::unique_ptr<FunctionHook>& ho
 void BayoHook::InitializeDetours(void) {
 	install_hook_absolute(0x4572BA, enemyHPHook, &EnemyHPDetour, &enemyHP_jmp_ret, 6);
 	install_hook_absolute(0x9E1808, witchTimeHook, &WitchTimeMultiplierDetour, &witchTimeMultiplier_jmp_ret, 6);
-	install_hook_absolute(0x8BCE4C, infMagicHook, &InfMagicDetour, &inf_magic_jmp_ret, 8);
+	install_hook_absolute(0x8BCE4C, infMagicHook, &InfMagicDetour, &infMagic_jmp_ret, 8);
+	install_hook_absolute(0x4572B2, outgoingDamageMultiplierHook, &OutgoingDamageMultiplierDetour, &outgoingDamageMultiplier_jmp_ret, 8);
+	install_hook_absolute(0xC52491, customCameraDistanceHook, &CustomCameraDistanceDetour, &customCameraDistance_jmp_ret, 5);
 }
 
 void BayoHook::onConfigLoad(const utils::Config& cfg) {
@@ -222,7 +271,11 @@ void BayoHook::onConfigLoad(const utils::Config& cfg) {
 	witchTimeMultiplier_toggle = cfg.get<bool>("WitchTimeMultiplierToggle").value_or(false);
 	witchTimeMultiplier = cfg.get<float>("WitchTimeMultiplier").value_or(1.0f);
 	inf_magic_toggle = cfg.get<bool>("InfMagicToggle").value_or(false);
-};
+	outgoingDamageMultiplier_toggle = cfg.get<bool>("OutgoingDamageMultiplierToggle").value_or(false);
+	outgoingDamageMultiplierMult = cfg.get<float>("OutgoingDamageMultiplierMult").value_or(1.0f);
+	customCameraDistance_toggle = cfg.get<bool>("CustomCameraDistanceToggle").value_or(false);
+	customCameraDistanceMultiplierMult = cfg.get<float>("CustomCameraDistanceMultiplier").value_or(1.0f);
+}
 
 void BayoHook::onConfigSave(utils::Config& cfg) {
 	// patches
@@ -235,6 +288,11 @@ void BayoHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("WitchTimeMultiplierToggle", witchTimeMultiplier_toggle);
 	cfg.set<float>("WitchTimeMultiplier", witchTimeMultiplier);
 	cfg.set<bool>("InfMagicToggle", inf_magic_toggle);
+	cfg.set<bool>("OutgoingDamageMultiplierToggle", outgoingDamageMultiplier_toggle);
+	cfg.set<float>("OutgoingDamageMultiplierMult", outgoingDamageMultiplierMult);
+
+	cfg.set<bool>("CustomCameraDistanceToggle", customCameraDistance_toggle);
+	cfg.set<float>("CustomCameraDistanceMultiplier", customCameraDistanceMultiplierMult);
 
 	cfg.save("../bayo_hook.cfg");
-};
+}
