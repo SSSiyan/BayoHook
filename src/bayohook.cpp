@@ -12,6 +12,8 @@ uintptr_t halosAddress = 0x5AA74B4;
 uintptr_t chaptersPlayedAddress = 0x5AA736C;
 uintptr_t playerMagicAddress = 0x5AA74AC;
 uintptr_t comboPointsAddress = 0x5BB519C;
+uintptr_t currentCharacterAddress = 0x5AA7484;
+uintptr_t thirdAccessoryAddress = 0x5AA7468;
 
 uintptr_t BayoHook::actorPlayable = NULL;
 float BayoHook::xyzpos[3]{ 0.0f, 0.0f, 0.0f };
@@ -21,6 +23,8 @@ int BayoHook::playerHealth = 0;
 float BayoHook::remainingWitchTimeDuration = 0.0f;
 float BayoHook::playerMagic = 0.0f;
 int BayoHook::comboPoints = 0;
+int BayoHook::currentCharacter = 0;
+int BayoHook::thirdAccessory = 0;
 
 // patches
 void BayoHook::TakeNoDamage(bool enabled) {
@@ -180,6 +184,8 @@ void BayoHook::Update() {
 	BayoHook::chaptersPlayed = (*(int*)chaptersPlayedAddress);
 	BayoHook::playerMagic = (*(float*)playerMagicAddress);
 	BayoHook::comboPoints = (*(int*)comboPointsAddress);
+	BayoHook::currentCharacter = (*(int*)currentCharacterAddress);
+	BayoHook::thirdAccessory = (*(int*)thirdAccessoryAddress);
 	//BayoHook::zone = (const char*)_baseAddress + 0x4374A24;
 }
 
@@ -212,6 +218,14 @@ void BayoHook::SetMagic(float value) {
 
 void BayoHook::SetComboPoints(int value) {
 	(*(int*)comboPointsAddress) = value;
+}
+
+void BayoHook::SetCurrentCharacter(int value) {
+	(*(int*)currentCharacterAddress) = value;
+}
+
+void BayoHook::SetThirdAccessory(int value) {
+	(*(int*)thirdAccessoryAddress) = value;
 }
 
 // dev functions
@@ -275,6 +289,7 @@ void BayoHook::onConfigLoad(const utils::Config& cfg) {
 	outgoingDamageMultiplierMult = cfg.get<float>("OutgoingDamageMultiplierMult").value_or(1.0f);
 	customCameraDistance_toggle = cfg.get<bool>("CustomCameraDistanceToggle").value_or(false);
 	customCameraDistanceMultiplierMult = cfg.get<float>("CustomCameraDistanceMultiplier").value_or(1.0f);
+	thirdAccessory = cfg.get<int>("ThirdAccessory").value_or(0);
 }
 
 void BayoHook::onConfigSave(utils::Config& cfg) {
@@ -293,6 +308,7 @@ void BayoHook::onConfigSave(utils::Config& cfg) {
 
 	cfg.set<bool>("CustomCameraDistanceToggle", customCameraDistance_toggle);
 	cfg.set<float>("CustomCameraDistanceMultiplier", customCameraDistanceMultiplierMult);
+	cfg.set<int>("ThirdAccessory", thirdAccessory);
 
 	cfg.save("../bayo_hook.cfg");
 }

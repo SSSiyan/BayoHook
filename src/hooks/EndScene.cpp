@@ -1,6 +1,8 @@
 //#include <pch.h>
 #include <base.h>
 #include "bayohook.hpp"
+#include "LicenseStrings.hpp"
+#include <array>
 
 utils::Config cfg{ "bayo_hook.cfg" };
 static float inputItemWidth = 100.0f;
@@ -16,6 +18,13 @@ void help_marker(const char* desc) {
         ImGui::PopTextWrapPos();
         ImGui::EndTooltip();
     }
+}
+
+inline void under_line(const ImColor& col) {
+    ImVec2 min = ImGui::GetItemRectMin();
+    ImVec2 max = ImGui::GetItemRectMax();
+    min.y = max.y;
+    ImGui::GetWindowDrawList()->AddLine(min, max, col, 1.0f);
 }
 
 HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
@@ -108,8 +117,10 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
     static bool HasDoneOnceMenuOn = false;
     static bool HasDoneOnceMenuOff = false;
 	if (Data::ShowMenu) {
-        ImGui::Begin("BayoHook 0.1", NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
+        ImGui::Begin("BayoHook 0.2", NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
+
         BayoHook::Update();
+
         HasDoneOnceMenuOff = false;
         if (HasDoneOnceMenuOn == false) {
             ImGui::GetIO().MouseDrawCursor = true;
@@ -127,14 +138,15 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
 				ImGui::BeginChild("GeneralChild");
 
                 ImGui::Checkbox("Outgoing Damage Multiplier ##OutgoingDamageMultiplierToggle", &BayoHook::outgoingDamageMultiplier_toggle);
-                ImGui::SameLine();
+                //ImGui::SameLine();
                 ImGui::PushItemWidth(inputItemWidth);
-                ImGui::InputFloat("##OutgoingDamageMultiplierInputFloat", &BayoHook::outgoingDamageMultiplierMult, 1, 100, "%.1f");
+                ImGui::InputFloat("##OutgoingDamageMultiplierInputFloat", &BayoHook::outgoingDamageMultiplierMult, 0.1f, 1, "%.1f");
                 ImGui::PopItemWidth();
 
                 if (ImGui::Checkbox("Deal No Damage ##DealNoDamageToggle", &BayoHook::enemyHP_no_damage_toggle)) {
                     BayoHook::enemyHP_one_hit_kill_toggle = false;
                 }
+
                 if (ImGui::Checkbox("One Hit Kill ##OneHitKillToggle", &BayoHook::enemyHP_one_hit_kill_toggle)) {
                     BayoHook::enemyHP_no_damage_toggle = false;
                 }
@@ -155,7 +167,7 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
                 ImGui::BeginChild("CharacterChild");
 
                 ImGui::Checkbox("Witch Time Multiplier ##WitchTimeToggle", &BayoHook::witchTimeMultiplier_toggle);
-                ImGui::SameLine();
+                //ImGui::SameLine();
                 ImGui::PushItemWidth(inputItemWidth);
                 ImGui::InputFloat("##WitchTimeMultiplier", &BayoHook::witchTimeMultiplier, 0, 0, "%.1f");
                 ImGui::PopItemWidth();
@@ -165,6 +177,60 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
                     BayoHook::InfJumps(BayoHook::infJumps_toggle);
                 }
 
+                ImGui::Text("Third Accessory");
+                //ImGui::SameLine();
+                ImGui::PushItemWidth(inputItemWidth);
+                if (ImGui::InputInt("##ThirdAccessoryInputInt", &BayoHook::thirdAccessory, 1, 100)) {
+                    BayoHook::SetThirdAccessory(BayoHook::thirdAccessory);
+                }
+                ImGui::PopItemWidth();
+                ImGui::SameLine();
+                
+                switch (BayoHook::thirdAccessory)
+                {
+                case 0:
+                    ImGui::Text("None");
+                    break;
+                case 1:
+                    ImGui::Text("Sergey's Lover");
+                    break;
+                case 2:
+                    ImGui::Text("Infernal Communicator");
+                    break;
+                case 3:
+                    ImGui::Text("Pulley's Butterfly");
+                    break;
+                case 4:
+                    ImGui::Text("Selene's Light");
+                    break;
+                case 5:
+                    ImGui::Text("Star of Dinéta");
+                    break;
+                case 6:
+                    ImGui::Text("Evil Harvest Rosary");
+                    break;
+                case 7:
+                    ImGui::Text("Gaze of Despair");
+                    break;
+                case 8:
+                    ImGui::Text("Moon of Mahaa-Kalaa");
+                    break;
+                case 9:
+                    ImGui::Text("Eternal Testimony");
+                    break;
+                case 10:
+                    ImGui::Text("Bracelet of Time");
+                    break;
+                case 11:
+                    ImGui::Text("Climax Brace");
+                    break;
+                case 12:
+                    ImGui::Text("Immortal Marionette");
+                    break;
+                default:
+                    ImGui::Text("");
+                    break;
+                }
                 ImGui::EndChild();
                 ImGui::EndTabItem();
             }
@@ -198,7 +264,7 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
                 }
 
                 ImGui::Text("Remaining Witch Time Duration");
-                if (ImGui::InputFloat("##RemainingWitchTimeDurationInputFloat", &BayoHook::remainingWitchTimeDuration, 1, 100, "%.0f")) {
+                if (ImGui::InputFloat("##RemainingWitchTimeDurationInputFloat", &BayoHook::remainingWitchTimeDuration, 10, 100, "%.0f")) {
                     BayoHook::SetRemainingWitchTimeDuration(BayoHook::remainingWitchTimeDuration);
                 }
 
@@ -220,16 +286,108 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
                 help_marker("Play while tabbed out");
 
                 ImGui::Checkbox("Camera Distance Multiplier ##CameraDistanceMultiplierToggle", &BayoHook::customCameraDistance_toggle);
-                ImGui::SameLine();
+                //ImGui::SameLine();
                 ImGui::PushItemWidth(inputItemWidth);
                 ImGui::InputFloat("##CustomCameraDistanceMultiplierInputFloat", &BayoHook::customCameraDistanceMultiplierMult, 0.1f, 1, "%.1f");
                 ImGui::PopItemWidth();
+
+                ImGui::Text("Character Select");
+                //ImGui::SameLine();
+                ImGui::PushItemWidth(inputItemWidth);
+                if (ImGui::InputInt("##CharacterSelectInputInt", &BayoHook::currentCharacter, 1, 100)) {
+                    BayoHook::SetCurrentCharacter(BayoHook::currentCharacter);
+                }
+                ImGui::PopItemWidth();
+                ImGui::SameLine();
+                switch (BayoHook::currentCharacter) {
+                case 0:
+                    ImGui::Text("Bayonetta");
+                    break;
+                case 1:
+                    ImGui::Text("Jeanne");
+                    break;
+                default:
+                    ImGui::Text("");
+                    break;
+                }
+                help_marker("Set while in costume select");
 
                 ImGui::EndChild();
                 ImGui::EndTabItem();
             }
 
+            if (ImGui::BeginTabItem("Credits")) {
+                ImGui::BeginChild("CreditsChild");
+
+                struct ImGuiURL {
+                    std::string text;
+                    std::string url;
+                    const ImVec4 color_hover{ 0.356f, 0.764f, 0.960f, 1.00f };
+                    const ImVec4 color_regular{ 0.950f, 0.960f, 0.980f, 1.00f };
+
+                    void draw() {
+
+                        ImGui::TextColored(color_regular, text.c_str());
+                        if (ImGui::IsItemHovered()) {
+                            under_line(color_hover);
+                        }
+                        if (ImGui::IsItemClicked()) {
+                            ShellExecuteA(NULL, "open", url.c_str(), NULL, NULL, SW_SHOWNORMAL);
+                        }
+                    }
+                };
+
+                ImGuiURL repo{ "https://github.com/SSSiyan/BayoHook", "https://github.com/SSSiyan/BayoHook" };
+                repo.draw();
+
+                ImGui::Separator();
+
+                ImGui::Text("This trainer was made by");
+                static std::array<ImGuiURL, 5> links1{
+                    ImGuiURL { "SSSiyan", "https://twitter.com/sssiyan" },
+                    ImGuiURL { "GarudaKK", "https://www.youtube.com/@GarudaPSN" },
+                    ImGuiURL { "CreativeHandler", "https://twitter.com/CreativeHandler" },
+                    ImGuiURL { "deepdarkkapustka", "https://www.youtube.com/@mstislavcapusta7573" },
+                    ImGuiURL { "TheDarkness", "https://store.steampowered.com/app/67370/The_Darkness_II/" },
+                };
+                for (auto& link : links1) {
+                    link.draw();
+                }
+
+                ImGui::Separator();
+
+                ImGui::Text("This trainer was made using");
+                static std::array<ImGuiURL, 3> links2{
+                    ImGuiURL { "Dear ImGui", "https://github.com/ocornut/imgui" },
+                    ImGuiURL { "minhook", "https://github.com/TsudaKageyu/minhook" },
+                    ImGuiURL { "DX9 BaseHook", "https://github.com/rdbo/DX9-BaseHook" },
+                };
+                for (auto& link : links2) {
+                    link.draw();
+                }
+
+                ImGui::Separator();
+                ImGui::Text("Licenses");
+                struct License {
+                    std::string name;
+                    std::string text;
+                };
+                static std::array<License, 2> licenses{
+                    License{ "imgui", license::imgui },
+                    License{ "minhook", license::minhook },
+                };
+                for (const auto& license : licenses) {
+                    if (ImGui::CollapsingHeader(license.name.c_str())) {
+                        ImGui::TextWrapped(license.text.c_str());
+                    }
+                }
+
+                ImGui::EndChild();
+                ImGui::EndTabItem();
+
+            }
 			ImGui::EndTabBar();
+
 		}
 
 		ImGui::End();

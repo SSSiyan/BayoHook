@@ -253,6 +253,7 @@
     <ClInclude Include="include\minhook\src\trampoline.h" />
     <ClInclude Include="src\base.h" />
     <ClInclude Include="src\bayohook.hpp" />
+    <ClInclude Include="src\LicenseStrings.hpp" />
     <ClInclude Include="src\pch.h" />
     <ClInclude Include="utils\Address.hpp" />
     <ClInclude Include="utils\config.hpp" />

@@ -42,6 +42,8 @@ public:
 	static float remainingWitchTimeDuration;
 	static float playerMagic;
 	static int comboPoints;
+	static int currentCharacter;
+	static int thirdAccessory;
 
 	// setters
 	static void SetXYZPos(float x, float y, float z);
@@ -51,6 +53,8 @@ public:
 	static void SetRemainingWitchTimeDuration(float value);
 	static void SetMagic(float value);
 	static void SetComboPoints(int value);
+	static void SetCurrentCharacter(int value);
+	static void SetThirdAccessory(int value);
 
 	// dev functions
 	static void _patch(char* dst, char* src, int size);
