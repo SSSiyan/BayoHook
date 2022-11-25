@@ -14,6 +14,7 @@ uintptr_t playerMagicAddress = 0x5AA74AC;
 uintptr_t comboPointsAddress = 0x5BB519C;
 uintptr_t currentCharacterAddress = 0x5AA7484;
 uintptr_t thirdAccessoryAddress = 0x5AA7468;
+uintptr_t hudDisplayAddress = 0xF2B714;
 
 uintptr_t BayoHook::actorPlayable = NULL;
 float BayoHook::xyzpos[3]{ 0.0f, 0.0f, 0.0f };
@@ -25,6 +26,7 @@ float BayoHook::playerMagic = 0.0f;
 int BayoHook::comboPoints = 0;
 int BayoHook::currentCharacter = 0;
 int BayoHook::thirdAccessory = 0;
+bool BayoHook::hudDisplay = 0;
 
 // patches
 void BayoHook::TakeNoDamage(bool enabled) {
@@ -170,6 +172,23 @@ static __declspec(naked) void CustomCameraDistanceDetour(void) {
 	}
 }
 
+std::unique_ptr<FunctionHook> lessClothesHook;
+uintptr_t lessClothes_jmp_ret{ NULL };
+bool BayoHook::lessClothes_toggle = false;
+static __declspec(naked) void LessClothesDetour(void) {
+	_asm {
+		cmp byte ptr [BayoHook::lessClothes_toggle], 0
+		je originalcode
+
+		mov byte ptr [esi+0x00096330], 6
+		mov byte ptr [esi+0x00096331], 0
+
+		originalcode:
+		mov eax,[esi+0x00096330]
+		jmp dword ptr [lessClothes_jmp_ret]
+	}
+}
+
 // update
 void BayoHook::Update() {
 	BayoHook::actorPlayable = (*(uintptr_t*)playerPointerAddress);
@@ -186,6 +205,7 @@ void BayoHook::Update() {
 	BayoHook::comboPoints = (*(int*)comboPointsAddress);
 	BayoHook::currentCharacter = (*(int*)currentCharacterAddress);
 	BayoHook::thirdAccessory = (*(int*)thirdAccessoryAddress);
+	BayoHook::hudDisplay = (*(bool*)hudDisplayAddress);
 	//BayoHook::zone = (const char*)_baseAddress + 0x4374A24;
 }
 
@@ -226,6 +246,10 @@ void BayoHook::SetCurrentCharacter(int value) {
 
 void BayoHook::SetThirdAccessory(int value) {
 	(*(int*)thirdAccessoryAddress) = value;
+}
+
+void BayoHook::SetHudDisplay(bool value) {
+	(*(bool*)hudDisplayAddress) = value;
 }
 
 // dev functions
@@ -269,6 +293,7 @@ void BayoHook::InitializeDetours(void) {
 	install_hook_absolute(0x8BCE4C, infMagicHook, &InfMagicDetour, &infMagic_jmp_ret, 8);
 	install_hook_absolute(0x4572B2, outgoingDamageMultiplierHook, &OutgoingDamageMultiplierDetour, &outgoingDamageMultiplier_jmp_ret, 8);
 	install_hook_absolute(0xC52491, customCameraDistanceHook, &CustomCameraDistanceDetour, &customCameraDistance_jmp_ret, 5);
+	install_hook_absolute(0x8B6C55, lessClothesHook, &LessClothesDetour, &lessClothes_jmp_ret, 6);
 }
 
 void BayoHook::onConfigLoad(const utils::Config& cfg) {
@@ -289,7 +314,7 @@ void BayoHook::onConfigLoad(const utils::Config& cfg) {
 	outgoingDamageMultiplierMult = cfg.get<float>("OutgoingDamageMultiplierMult").value_or(1.0f);
 	customCameraDistance_toggle = cfg.get<bool>("CustomCameraDistanceToggle").value_or(false);
 	customCameraDistanceMultiplierMult = cfg.get<float>("CustomCameraDistanceMultiplier").value_or(1.0f);
-	thirdAccessory = cfg.get<int>("ThirdAccessory").value_or(0);
+	lessClothes_toggle = cfg.get<bool>("LessClothesToggle").value_or(false);
 }
 
 void BayoHook::onConfigSave(utils::Config& cfg) {
@@ -305,10 +330,8 @@ void BayoHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("InfMagicToggle", inf_magic_toggle);
 	cfg.set<bool>("OutgoingDamageMultiplierToggle", outgoingDamageMultiplier_toggle);
 	cfg.set<float>("OutgoingDamageMultiplierMult", outgoingDamageMultiplierMult);
-
 	cfg.set<bool>("CustomCameraDistanceToggle", customCameraDistance_toggle);
 	cfg.set<float>("CustomCameraDistanceMultiplier", customCameraDistanceMultiplierMult);
-	cfg.set<int>("ThirdAccessory", thirdAccessory);
-
+	cfg.set<bool>("LessClothesToggle", lessClothes_toggle);
 	cfg.save("../bayo_hook.cfg");
 }

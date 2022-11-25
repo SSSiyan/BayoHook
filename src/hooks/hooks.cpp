@@ -82,7 +82,11 @@ bool GetD3D9Device(void** pTable, size_t Size)
 	D3DPRESENT_PARAMETERS d3dpp = {};
 	d3dpp.Windowed = false;
 	d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
-	d3dpp.hDeviceWindow = GetProcessWindow();
+
+	Base::Data::hWindow = GetDesktopWindow();
+	d3dpp.hDeviceWindow = Base::Data::hWindow;
+	//d3dpp.hDeviceWindow = GetProcessWindow(); // old
+	
 
 	HRESULT dummyDeviceCreated = pD3D->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, d3dpp.hDeviceWindow, D3DCREATE_SOFTWARE_VERTEXPROCESSING, &d3dpp, &pDummyDevice);
 

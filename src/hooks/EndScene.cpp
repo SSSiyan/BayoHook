@@ -99,10 +99,11 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
 		// get process ID and module base address
 		// BayoHook::_hook(); // I think this isn't needed in a dll?
 
-        BayoHook::InitializeDetours();
+        // BayoHook::InitializeDetours();
 
 		// load settings, must happen after hook
-		BayoHook::onConfigLoad(cfg);
+
+		// BayoHook::onConfigLoad(cfg);
 	}
 
 	if (!Data::InitImGui) return Data::oEndScene(pDevice);
@@ -119,16 +120,16 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
 	if (Data::ShowMenu) {
         ImGui::Begin("BayoHook 0.2", NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
 
-        BayoHook::Update();
+        // BayoHook::Update();
 
         HasDoneOnceMenuOff = false;
         if (HasDoneOnceMenuOn == false) {
             ImGui::GetIO().MouseDrawCursor = true;
-            BayoHook::disableClicking_toggle = true;
-            BayoHook::DisableClicking(BayoHook::disableClicking_toggle);
+            //BayoHook::disableClicking_toggle = true;
+            //BayoHook::DisableClicking(BayoHook::disableClicking_toggle);
             HasDoneOnceMenuOn = true;
         }
-
+        /*
         if (ImGui::Button("Save config")) {
             BayoHook::onConfigSave(cfg);
         }
@@ -166,16 +167,16 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
             if (ImGui::BeginTabItem("Character")) {
                 ImGui::BeginChild("CharacterChild");
 
+                if (ImGui::Checkbox("Infinite Jumps ##InfJumpsToggle", &BayoHook::infJumps_toggle)) {
+                    BayoHook::InfJumps(BayoHook::infJumps_toggle);
+                }
+
                 ImGui::Checkbox("Witch Time Multiplier ##WitchTimeToggle", &BayoHook::witchTimeMultiplier_toggle);
+                help_marker("Adjust how long Witch Time lasts");
                 //ImGui::SameLine();
                 ImGui::PushItemWidth(inputItemWidth);
                 ImGui::InputFloat("##WitchTimeMultiplier", &BayoHook::witchTimeMultiplier, 0, 0, "%.1f");
                 ImGui::PopItemWidth();
-                help_marker("Adjust how long Witch Time lasts");
-
-                if (ImGui::Checkbox("Infinite Jumps ##InfJumpsToggle", &BayoHook::infJumps_toggle)) {
-                    BayoHook::InfJumps(BayoHook::infJumps_toggle);
-                }
 
                 ImGui::Text("Third Accessory");
                 //ImGui::SameLine();
@@ -292,6 +293,7 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
                 ImGui::PopItemWidth();
 
                 ImGui::Text("Character Select");
+                help_marker("Set while in costume select");
                 //ImGui::SameLine();
                 ImGui::PushItemWidth(inputItemWidth);
                 if (ImGui::InputInt("##CharacterSelectInputInt", &BayoHook::currentCharacter, 1, 100)) {
@@ -310,7 +312,13 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
                     ImGui::Text("");
                     break;
                 }
-                help_marker("Set while in costume select");
+
+                if (ImGui::Checkbox("HUD Display", &BayoHook::hudDisplay)) {
+                    BayoHook::SetHudDisplay(BayoHook::hudDisplay);
+                }
+
+                ImGui::Checkbox("Force Summoning Clothes ##LessClothesToggle", &BayoHook::lessClothes_toggle);
+                help_marker("Only works on outfits that have this function");
 
                 ImGui::EndChild();
                 ImGui::EndTabItem();
@@ -346,7 +354,7 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
                 static std::array<ImGuiURL, 5> links1{
                     ImGuiURL { "SSSiyan", "https://twitter.com/sssiyan" },
                     ImGuiURL { "GarudaKK", "https://www.youtube.com/@GarudaPSN" },
-                    ImGuiURL { "CreativeHandler", "https://twitter.com/CreativeHandler" },
+                    ImGuiURL { "CreativeHandle", "https://twitter.com/CreativeHandler" },
                     ImGuiURL { "deepdarkkapustka", "https://www.youtube.com/@mstislavcapusta7573" },
                     ImGuiURL { "TheDarkness", "https://store.steampowered.com/app/67370/The_Darkness_II/" },
                 };
@@ -389,15 +397,15 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
 			ImGui::EndTabBar();
 
 		}
-
+        */
 		ImGui::End();
 	}
     else {
         HasDoneOnceMenuOn = false;
         if (HasDoneOnceMenuOff == false) {
             ImGui::GetIO().MouseDrawCursor = false;
-            BayoHook::disableClicking_toggle = false;
-            BayoHook::DisableClicking(BayoHook::disableClicking_toggle);
+            //BayoHook::disableClicking_toggle = false;
+            //BayoHook::DisableClicking(BayoHook::disableClicking_toggle);
             HasDoneOnceMenuOff = true;
         }
     }

@@ -23,7 +23,7 @@ DWORD WINAPI MainThread(LPVOID lpThreadParameter)
 		}
 	}
 
-	Sleep(6000);
+	//Sleep(6000);
 
 	Base::Data::hModule = (HMODULE)lpThreadParameter;
 	Base::Init();

@@ -15,6 +15,7 @@ public:
 	static bool focusPatch_toggle;
 	static bool infJumps_toggle;
 	static bool disableClicking_toggle;
+	static bool lessClothes_toggle;
 	// cheat functions
 	static void TakeNoDamage(bool enabled);
 	static void FocusPatch(bool enabled);
@@ -44,6 +45,7 @@ public:
 	static int comboPoints;
 	static int currentCharacter;
 	static int thirdAccessory;
+	static bool hudDisplay;
 
 	// setters
 	static void SetXYZPos(float x, float y, float z);
@@ -55,6 +57,7 @@ public:
 	static void SetComboPoints(int value);
 	static void SetCurrentCharacter(int value);
 	static void SetThirdAccessory(int value);
+	static void SetHudDisplay(bool value);
 
 	// dev functions
 	static void _patch(char* dst, char* src, int size);
