@@ -45,13 +45,14 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
         HasDoneOnceMenuOff = false;
         if (HasDoneOnceMenuOn == false) {
             ImGui::GetIO().MouseDrawCursor = true;
-            GameHook::disableClicking_toggle = true;
-            GameHook::DisableClicking(GameHook::disableClicking_toggle);
+            GameHook::disableClicking_toggle = true; // bayo
+            GameHook::DisableClicking(GameHook::disableClicking_toggle); // bayo
             HasDoneOnceMenuOn = true;
         }
 
-        GameHook::GameImGui();
-        GameHook::Update();
+		ImGui::Begin(GameHook::dllname, NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
+
+        // GameHook::GameImGui();
 
 		ImGui::End();
 	}
@@ -59,8 +60,8 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
         HasDoneOnceMenuOn = false;
         if (HasDoneOnceMenuOff == false) {
             ImGui::GetIO().MouseDrawCursor = false;
-            GameHook::disableClicking_toggle = false;
-            GameHook::DisableClicking(GameHook::disableClicking_toggle);
+            GameHook::disableClicking_toggle = false; // bayo
+            GameHook::DisableClicking(GameHook::disableClicking_toggle); // bayo
             HasDoneOnceMenuOff = true;
         }
     }

@@ -10,16 +10,12 @@
 
 class GameHook {
 public:
-	// cheat toggles
+	// patch toggles
 	static bool takeNoDamage_toggle;
 	static bool focusPatch_toggle;
 	static bool infJumps_toggle;
 	static bool disableClicking_toggle;
-	static bool lessClothes_toggle;
-	static bool haloDisplay_toggle;
-	static bool animSwap_toggle;
-	static bool inputIcons_toggle;
-	// cheat functions
+	// patch functions
 	static void TakeNoDamage(bool enabled);
 	static void FocusPatch(bool enabled);
 	static void InfJumps(bool enabled);
@@ -35,14 +31,17 @@ public:
 	static float outgoingDamageMultiplierMult;
 	static bool customCameraDistance_toggle;
 	static float customCameraDistanceMultiplierMult;
+	static bool lessClothes_toggle;
+	static bool inputIcons_toggle;
+	static int inputIconsValue;
+	static bool haloDisplay_toggle;
 	static int haloDisplayValue;
+	static bool animSwap_toggle;
 	static int animSwapCurrentAnim;
 	static int animSwapSourceAnim1;
 	static int animSwapDesiredAnim1;
-	static int inputIconsValue;
 
 	// update
-	static void Update(void);
 	static uintptr_t actorPlayable;
 	static float xyzpos[3];
 	static int halos;
@@ -73,8 +72,9 @@ public:
 	static void InitializeDetours();
 	static void onConfigLoad(const utils::Config& cfg);
 	static void onConfigSave(utils::Config& cfg);
-	
-	inline static utils::Config cfg{ "bayo_hook.cfg" };
+	static void Update(void);
+	static inline utils::Config cfg{ "bayo_hook.cfg" };
+	static inline const char* dllname{"BayoHook 0.4"};
 
 	// imgui
 	static void GameImGui(void);
