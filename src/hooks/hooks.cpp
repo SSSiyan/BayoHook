@@ -21,7 +21,6 @@ bool Base::Hooks::Init()
 
 		Data::pEndScene = Data::pDeviceTable[42];
 		Data::oEndScene = (EndScene_t)mem::in::detour_trampoline((mem::voidptr_t)Data::pEndScene, (mem::voidptr_t)Hooks::EndScene, Data::szEndScene);
-		Data::oWndProc  = (WndProc_t)SetWindowLongPtr(Data::hWindow, WNDPROC_INDEX, (LONG_PTR)Hooks::WndProc);
 
 		return true;
 	}

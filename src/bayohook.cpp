@@ -1,6 +1,6 @@
 #include "bayohook.hpp"
 
-// cheat toggles
+// patch toggles
 bool BayoHook::takeNoDamage_toggle(false);
 bool BayoHook::focusPatch_toggle(false);
 bool BayoHook::infJumps_toggle(false);
@@ -136,7 +136,8 @@ float outgoingDamageMultiplierXmm0Backup = 0.0f;
 float BayoHook::outgoingDamageMultiplierMult = 1.0f;
 static __declspec(naked) void OutgoingDamageMultiplierDetour(void) {
 	_asm {
-		mov [esi+0x000006B8],eax // originalcode, early bytes to avoid EnemyHPDetour
+		mov [esi+0x000006B8], eax // originalcode, early bytes to avoid EnemyHPDetour
+		mov [BayoHook::haloDisplayValue], eax
 		cmp byte ptr [BayoHook::outgoingDamageMultiplier_toggle], 0
 		je originalcode
 
@@ -186,6 +187,80 @@ static __declspec(naked) void LessClothesDetour(void) {
 		originalcode:
 		mov eax,[esi+0x00096330]
 		jmp dword ptr [lessClothes_jmp_ret]
+	}
+}
+
+std::unique_ptr<FunctionHook> haloDisplayHook;
+uintptr_t haloDisplay_jmp_ret{ NULL };
+bool BayoHook::haloDisplay_toggle = false;
+int BayoHook::haloDisplayValue = 0;
+uintptr_t haloAddress = 0x5BB57B0;
+static __declspec(naked) void HaloDisplayDetour(void) {
+	_asm {
+		cmp byte ptr [BayoHook::haloDisplay_toggle], 0
+		je originalcode
+
+		cmp dword ptr [BayoHook::haloDisplayValue], 1
+		jle originalcode
+		mov eax, [BayoHook::haloDisplayValue]	
+
+		originalcode:
+		push esi
+		mov esi,[haloAddress] // i still hate this
+		mov [esi],eax
+		pop esi
+		jmp dword ptr [haloDisplay_jmp_ret]
+	}
+}
+
+std::unique_ptr<FunctionHook> animSwapHook;
+uintptr_t animSwap_jmp_ret{ NULL };
+uintptr_t animSwapCharacterAddress = 0xEF5A60;
+bool BayoHook::animSwap_toggle = false;
+int BayoHook::animSwapCurrentAnim = 0;
+int BayoHook::animSwapSourceAnim1 = -1;
+int BayoHook::animSwapDesiredAnim1 = 0;
+static __declspec(naked) void AnimSwapDetour(void) {
+	_asm {
+		cmp byte ptr [BayoHook::animSwap_toggle], 0
+		je originalcode
+
+		push eax
+		mov eax, [animSwapCharacterAddress] // only edit player anim
+		cmp [eax], ecx
+		pop eax
+		jne originalcode
+
+		mov [BayoHook::animSwapCurrentAnim], edx
+		cmp edx, [BayoHook::animSwapSourceAnim1]
+		je newMove1
+		jmp originalcode
+
+		newMove1:
+		mov edx, [BayoHook::animSwapDesiredAnim1]
+		jmp originalcode
+
+
+		originalcode:
+		mov [ecx+0x0000034C], edx
+		jmp dword ptr [animSwap_jmp_ret]
+	}
+}
+
+std::unique_ptr<FunctionHook> inputIconsHook;
+uintptr_t inputIcons_jmp_ret{ NULL };
+bool BayoHook::inputIcons_toggle = false;
+int BayoHook::inputIconsValue = 1; // 0 keyboard, 1 gamepad
+static __declspec(naked) void InputIconsDetour(void) {
+	_asm {
+		cmp byte ptr [BayoHook::inputIcons_toggle], 0
+		je originalcode
+
+		mov eax, [BayoHook::inputIconsValue]
+
+		originalcode:
+		mov [ebx+0x00000CA8], eax
+		jmp dword ptr [inputIcons_jmp_ret]
 	}
 }
 
@@ -294,6 +369,9 @@ void BayoHook::InitializeDetours(void) {
 	install_hook_absolute(0x4572B2, outgoingDamageMultiplierHook, &OutgoingDamageMultiplierDetour, &outgoingDamageMultiplier_jmp_ret, 8);
 	install_hook_absolute(0xC52491, customCameraDistanceHook, &CustomCameraDistanceDetour, &customCameraDistance_jmp_ret, 5);
 	install_hook_absolute(0x8B6C55, lessClothesHook, &LessClothesDetour, &lessClothes_jmp_ret, 6);
+	install_hook_absolute(0x4250F7, haloDisplayHook, &HaloDisplayDetour, &haloDisplay_jmp_ret, 5);
+	install_hook_absolute(0x4BD053, animSwapHook, &AnimSwapDetour, &animSwap_jmp_ret, 6);
+	install_hook_absolute(0x411CDB, inputIconsHook, &InputIconsDetour, &inputIcons_jmp_ret, 6);
 }
 
 void BayoHook::onConfigLoad(const utils::Config& cfg) {
@@ -315,6 +393,9 @@ void BayoHook::onConfigLoad(const utils::Config& cfg) {
 	customCameraDistance_toggle = cfg.get<bool>("CustomCameraDistanceToggle").value_or(false);
 	customCameraDistanceMultiplierMult = cfg.get<float>("CustomCameraDistanceMultiplier").value_or(1.0f);
 	lessClothes_toggle = cfg.get<bool>("LessClothesToggle").value_or(false);
+	haloDisplay_toggle = cfg.get<bool>("HaloDisplayToggle").value_or(false);
+	inputIcons_toggle = cfg.get<bool>("InputIconsToggle").value_or(false);
+	inputIconsValue = cfg.get<int>("InputIconsValue").value_or(false);
 }
 
 void BayoHook::onConfigSave(utils::Config& cfg) {
@@ -333,5 +414,10 @@ void BayoHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("CustomCameraDistanceToggle", customCameraDistance_toggle);
 	cfg.set<float>("CustomCameraDistanceMultiplier", customCameraDistanceMultiplierMult);
 	cfg.set<bool>("LessClothesToggle", lessClothes_toggle);
+	cfg.set<bool>("HaloDisplayToggle", haloDisplay_toggle);
+
+	cfg.set<bool>("InputIconsToggle", inputIcons_toggle);
+	cfg.set<int>("InputIconsValue", inputIconsValue);
+
 	cfg.save("../bayo_hook.cfg");
 }

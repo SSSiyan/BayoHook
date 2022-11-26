@@ -1,4 +1,4 @@
-//#include <pch.h>
+#include <pch.h>
 #include <base.h>
 #include "bayohook.hpp"
 #include "LicenseStrings.hpp"
@@ -92,18 +92,19 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
         colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.4588f, 0.45880f, 0.4588f, 0.35f);
 		
 		io.ConfigFlags = ImGuiConfigFlags_NoMouseCursorChange;
-		ImGui_ImplWin32_Init(Data::hWindow);
+
+        D3DDEVICE_CREATION_PARAMETERS deviceParams = { 0 };
+
+        pDevice->GetCreationParameters(&deviceParams);
+
+		Data::oWndProc = (WndProc_t)SetWindowLongPtr(deviceParams.hFocusWindow, WNDPROC_INDEX, (LONG_PTR)Hooks::WndProc);
+
+		ImGui_ImplWin32_Init(deviceParams.hFocusWindow);
 		ImGui_ImplDX9_Init(pDevice);
 		Data::InitImGui = true;
 
-		// get process ID and module base address
-		// BayoHook::_hook(); // I think this isn't needed in a dll?
-
-        // BayoHook::InitializeDetours();
-
-		// load settings, must happen after hook
-
-		// BayoHook::onConfigLoad(cfg);
+        BayoHook::InitializeDetours();
+		BayoHook::onConfigLoad(cfg);
 	}
 
 	if (!Data::InitImGui) return Data::oEndScene(pDevice);
@@ -118,18 +119,18 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
     static bool HasDoneOnceMenuOn = false;
     static bool HasDoneOnceMenuOff = false;
 	if (Data::ShowMenu) {
-        ImGui::Begin("BayoHook 0.2", NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
+        ImGui::Begin("BayoHook 0.3", NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
 
-        // BayoHook::Update();
+        BayoHook::Update();
 
         HasDoneOnceMenuOff = false;
         if (HasDoneOnceMenuOn == false) {
             ImGui::GetIO().MouseDrawCursor = true;
-            //BayoHook::disableClicking_toggle = true;
-            //BayoHook::DisableClicking(BayoHook::disableClicking_toggle);
+            BayoHook::disableClicking_toggle = true;
+            BayoHook::DisableClicking(BayoHook::disableClicking_toggle);
             HasDoneOnceMenuOn = true;
         }
-        /*
+        
         if (ImGui::Button("Save config")) {
             BayoHook::onConfigSave(cfg);
         }
@@ -286,6 +287,14 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
                 }
                 help_marker("Play while tabbed out");
 
+                ImGui::Checkbox("Force Input Type", &BayoHook::inputIcons_toggle);
+                help_marker("0 keyboard, 1 gamepad");
+                if (BayoHook::inputIcons_toggle) {
+                    ImGui::PushItemWidth(inputItemWidth);
+                    ImGui::InputInt("##InputIconsInputInt", &BayoHook::inputIconsValue, 1, 100);
+                    ImGui::PopItemWidth();
+                }
+
                 ImGui::Checkbox("Camera Distance Multiplier ##CameraDistanceMultiplierToggle", &BayoHook::customCameraDistance_toggle);
                 //ImGui::SameLine();
                 ImGui::PushItemWidth(inputItemWidth);
@@ -293,7 +302,7 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
                 ImGui::PopItemWidth();
 
                 ImGui::Text("Character Select");
-                help_marker("Set while in costume select");
+                help_marker("Set while in costume select\nIf your game freezes at the end of a fight, flick the value back to default");
                 //ImGui::SameLine();
                 ImGui::PushItemWidth(inputItemWidth);
                 if (ImGui::InputInt("##CharacterSelectInputInt", &BayoHook::currentCharacter, 1, 100)) {
@@ -317,8 +326,37 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
                     BayoHook::SetHudDisplay(BayoHook::hudDisplay);
                 }
 
+                ImGui::Checkbox("Enemy HP in Halo Display", &BayoHook::haloDisplay_toggle);
+
                 ImGui::Checkbox("Force Summoning Clothes ##LessClothesToggle", &BayoHook::lessClothes_toggle);
                 help_marker("Only works on outfits that have this function");
+
+                ImGui::Checkbox("Animation Swap Test ##AnimationSwapTestToggle", &BayoHook::animSwap_toggle);
+                help_marker("Do the move you want to see, hit the first button\nDo the move you want to replace, hit the second button");
+                if (BayoHook::animSwap_toggle) {
+                    ImGui::Text("Current Anim ID");
+                    ImGui::PushItemWidth(inputItemWidth);
+                    ImGui::InputInt("##CurrentAnimIDInputInt", &BayoHook::animSwapCurrentAnim);
+                    ImGui::PopItemWidth();
+
+                    ImGui::Text("Desired Anim ID");
+                    ImGui::PushItemWidth(inputItemWidth);
+                    ImGui::InputInt("##DesiredAnimID1InputInt", &BayoHook::animSwapDesiredAnim1);
+                    ImGui::PopItemWidth();
+                    ImGui::SameLine();
+                    if (ImGui::Button("Save Current Anim ID as desired")) {
+                        BayoHook::animSwapDesiredAnim1 = BayoHook::animSwapCurrentAnim;
+                    }
+
+                    ImGui::Text("Source Anim ID");
+                    ImGui::PushItemWidth(inputItemWidth);
+                    ImGui::InputInt("##SourceAnimID1InputInt", &BayoHook::animSwapSourceAnim1);
+                    ImGui::PopItemWidth();
+                    ImGui::SameLine();
+                    if (ImGui::Button("Save Current Anim ID as source")) {
+                        BayoHook::animSwapSourceAnim1 = BayoHook::animSwapCurrentAnim;
+                    }
+                }
 
                 ImGui::EndChild();
                 ImGui::EndTabItem();
@@ -356,7 +394,7 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
                     ImGuiURL { "GarudaKK", "https://www.youtube.com/@GarudaPSN" },
                     ImGuiURL { "CreativeHandle", "https://twitter.com/CreativeHandler" },
                     ImGuiURL { "deepdarkkapustka", "https://www.youtube.com/@mstislavcapusta7573" },
-                    ImGuiURL { "TheDarkness", "https://store.steampowered.com/app/67370/The_Darkness_II/" },
+                    ImGuiURL { "TheDarkness", "https://steamcommunity.com/id/TheDarkness704/" },
                 };
                 for (auto& link : links1) {
                     link.draw();
@@ -397,15 +435,15 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
 			ImGui::EndTabBar();
 
 		}
-        */
+        
 		ImGui::End();
 	}
     else {
         HasDoneOnceMenuOn = false;
         if (HasDoneOnceMenuOff == false) {
             ImGui::GetIO().MouseDrawCursor = false;
-            //BayoHook::disableClicking_toggle = false;
-            //BayoHook::DisableClicking(BayoHook::disableClicking_toggle);
+            BayoHook::disableClicking_toggle = false;
+            BayoHook::DisableClicking(BayoHook::disableClicking_toggle);
             HasDoneOnceMenuOff = true;
         }
     }

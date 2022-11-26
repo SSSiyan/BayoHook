@@ -16,6 +16,9 @@ public:
 	static bool infJumps_toggle;
 	static bool disableClicking_toggle;
 	static bool lessClothes_toggle;
+	static bool haloDisplay_toggle;
+	static bool animSwap_toggle;
+	static bool inputIcons_toggle;
 	// cheat functions
 	static void TakeNoDamage(bool enabled);
 	static void FocusPatch(bool enabled);
@@ -32,6 +35,11 @@ public:
 	static float outgoingDamageMultiplierMult;
 	static bool customCameraDistance_toggle;
 	static float customCameraDistanceMultiplierMult;
+	static int haloDisplayValue;
+	static int animSwapCurrentAnim;
+	static int animSwapSourceAnim1;
+	static int animSwapDesiredAnim1;
+	static int inputIconsValue;
 
 	// update
 	static void Update(void);
