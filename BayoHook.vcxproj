@@ -82,11 +82,13 @@
     <OutDir>$(SolutionDir)build\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>build\$(Platform)\$(Configuration)\</IntDir>
     <IncludePath>$(IncludePath)</IncludePath>
+    <TargetName>dinput8</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(SolutionDir)build\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>build\$(Platform)\$(Configuration)\</IntDir>
     <IncludePath>$(IncludePath)</IncludePath>
+    <TargetName>dinput8</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -97,6 +99,7 @@
       <AdditionalIncludeDirectories>$(ProjectDir)\src;$(ProjectDir)\include;$(DXSDK_DIR)Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -216,7 +219,8 @@
     <ClCompile Include="include\minhook\src\hook.c" />
     <ClCompile Include="include\minhook\src\trampoline.c" />
     <ClCompile Include="src\base.cpp" />
-    <ClCompile Include="src\bayohook.cpp" />
+    <ClCompile Include="src\gamehook.cpp" />
+    <ClCompile Include="src\gameimgui.cpp" />
     <ClCompile Include="src\hooks\EndScene.cpp" />
     <ClCompile Include="src\hooks\hooks.cpp" />
     <ClCompile Include="src\hooks\WndProc.cpp" />
@@ -252,7 +256,7 @@
     <ClInclude Include="include\minhook\src\hde\table64.h" />
     <ClInclude Include="include\minhook\src\trampoline.h" />
     <ClInclude Include="src\base.h" />
-    <ClInclude Include="src\bayohook.hpp" />
+    <ClInclude Include="src\gamehook.hpp" />
     <ClInclude Include="src\LicenseStrings.hpp" />
     <ClInclude Include="src\pch.h" />
     <ClInclude Include="utils\Address.hpp" />

@@ -8,7 +8,7 @@
 #include "MinHook/include/MinHook.h"
 #include "../utils/FunctionHook.hpp"
 
-class BayoHook {
+class GameHook {
 public:
 	// cheat toggles
 	static bool takeNoDamage_toggle;
@@ -73,6 +73,12 @@ public:
 	static void InitializeDetours();
 	static void onConfigLoad(const utils::Config& cfg);
 	static void onConfigSave(utils::Config& cfg);
+	
+	inline static utils::Config cfg{ "bayo_hook.cfg" };
+
+	// imgui
+	static void GameImGui(void);
+	static void ImGuiStyle(void);
 
 private:
 };

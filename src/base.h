@@ -39,12 +39,6 @@ namespace Base
 		extern bool              ToDetach;
 		extern bool              InitImGui;
 		extern bool              ShowMenu;
-
-		/*namespace Keys
-		{
-			const UINT ToggleMenu = VK_DELETE;
-			const UINT DetachDll  = VK_END;
-		}*/
 	}
 
 	namespace Hooks
