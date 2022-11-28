@@ -5,6 +5,11 @@
 
 static float inputItemWidth = 100.0f;
 
+int GameHook::showMessageTimerF1 = 0;
+int GameHook::showMessageTimerF2 = 0;
+int GameHook::showMessageTimerF3 = 0;
+int GameHook::showMessageTimerF5 = 0;
+
 void help_marker(const char* desc) {
     ImGui::SameLine();
     ImGui::TextDisabled("(?)");
@@ -33,7 +38,7 @@ void GameHook::GameImGui(void) {
 
     int& halosValue = *(int*)halosAddress;
     int& chaptersPlayedValue = *(int*)chaptersPlayedAddress;
-    float& comboPointsValue = *(float*)comboPointsAddress;
+    int& comboPointsValue = *(int*)comboPointsAddress;
     int& currentCharacterValue = *(int*)currentCharacterAddress;
     int& thirdAccessoryValue = *(int*)thirdAccessoryAddress;
     bool& hudDisplayValue = *(bool*)hudDisplayAddress;
@@ -53,19 +58,23 @@ void GameHook::GameImGui(void) {
                 ImGui::PopItemWidth();
             }
 
-            if (ImGui::Checkbox("Deal No Damage ##DealNoDamageToggle", &GameHook::enemyHP_no_damage_toggle)) {
+            if (ImGui::Checkbox("Deal No Damage (F1) ##DealNoDamageToggle", &GameHook::enemyHP_no_damage_toggle)) {
                 GameHook::enemyHP_one_hit_kill_toggle = false;
             }
 
-            if (ImGui::Checkbox("One Hit Kill ##OneHitKillToggle", &GameHook::enemyHP_one_hit_kill_toggle)) {
-                GameHook::enemyHP_no_damage_toggle = false;
-            }
-
-            if (ImGui::Checkbox("Take No Damage", &GameHook::takeNoDamage_toggle)) {
+            if (ImGui::Checkbox("Take No Damage (F2)", &GameHook::takeNoDamage_toggle)) {
                 GameHook::TakeNoDamage(GameHook::takeNoDamage_toggle);
             }
 
+            if (ImGui::Checkbox("One Hit Kill (F3) ##OneHitKillToggle", &GameHook::enemyHP_one_hit_kill_toggle)) {
+                GameHook::enemyHP_no_damage_toggle = false;
+            }
+
             ImGui::Checkbox("Inf Magic ##InfMagicToggle", &GameHook::inf_magic_toggle);
+
+            if (ImGui::Checkbox("Disable Enemy Daze", &GameHook::disableDaze_toggle)) {
+                GameHook::DisableDaze(GameHook::disableDaze_toggle);
+            }
 
             ImGui::EndChild();
             ImGui::EndTabItem();
@@ -80,9 +89,11 @@ void GameHook::GameImGui(void) {
 
             ImGui::Checkbox("Witch Time Multiplier ##WitchTimeToggle", &GameHook::witchTimeMultiplier_toggle);
             help_marker("Adjust how long Witch Time lasts");
-            ImGui::PushItemWidth(inputItemWidth);
-            ImGui::InputFloat("##WitchTimeMultiplier", &GameHook::witchTimeMultiplier, 0, 0, "%.1f");
-            ImGui::PopItemWidth();
+            if (GameHook::witchTimeMultiplier_toggle) {
+                ImGui::PushItemWidth(inputItemWidth);
+                ImGui::InputFloat("##WitchTimeMultiplier", &GameHook::witchTimeMultiplier, 0, 0, "%.1f");
+                ImGui::PopItemWidth();
+            }
 
             ImGui::Text("Third Accessory");
             ImGui::PushItemWidth(inputItemWidth);
@@ -176,7 +187,7 @@ void GameHook::GameImGui(void) {
                 ImGui::InputFloat("##RemainingWitchTimeDurationInputFloat", &remainingWitchTimeValue, 10, 100, "%.0f");
 
                 ImGui::Text("Combo Points");
-                ImGui::InputFloat("##ComboPointsInputFloat", &comboPointsValue, 1, 100, "% .0f");
+                ImGui::InputInt("##ComboPointsInputInt", &comboPointsValue, 10, 100);
             }
 
             ImGui::Spacing();
@@ -222,6 +233,8 @@ void GameHook::GameImGui(void) {
         if (ImGui::BeginTabItem("System")) {
             ImGui::BeginChild("SystemChild");
 
+            ImGui::Checkbox("Show Hotkey Messages", &GameHook::showMessages_toggle);
+
             if (ImGui::Checkbox("Focus Patch", &GameHook::focusPatch_toggle)) {
                 GameHook::FocusPatch(GameHook::focusPatch_toggle);
             }
@@ -265,7 +278,7 @@ void GameHook::GameImGui(void) {
 
             ImGui::Checkbox("Enemy HP in Halo Display", &GameHook::haloDisplay_toggle);
 
-            if (ImGui::Checkbox("NoClip", &GameHook::noClip_toggle)) {
+            if (ImGui::Checkbox("NoClip (F5)", &GameHook::noClip_toggle)) {
                 GameHook::NoClip(GameHook::noClip_toggle);
             }
 
@@ -305,6 +318,14 @@ void GameHook::GameImGui(void) {
 
         if (ImGui::BeginTabItem("Credits")) {
             ImGui::BeginChild("CreditsChild");
+
+            ImGui::Text("Hotkeys:");
+            ImGui::Text("F1 = Deal No Damage");
+            ImGui::Text("F2 = Take No Damage");
+            ImGui::Text("F3 = One Hit Kill");
+            ImGui::Text("F5 = NoClip");
+
+            ImGui::Separator();
 
             struct ImGuiURL {
                 std::string text;
@@ -434,4 +455,38 @@ void GameHook::ImGuiStyle(void) {
     colors[ImGuiCol_NavWindowingHighlight] = ImVec4(1.00f, 1.00f, 1.00f, 0.70f);
     colors[ImGuiCol_NavWindowingDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 0.20f);
     colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.4588f, 0.45880f, 0.4588f, 0.35f);
+}
+
+void GameHook::BackgroundImGui(void) {
+    if (GameHook::showMessages_toggle) {
+        if (GameHook::showMessageTimerF1 > 0) {
+            if (GameHook::enemyHP_no_damage_toggle)
+                ImGui::Text("Deal No Damage Enabled");
+            else
+                ImGui::Text("Deal No Damage Disabled");
+            GameHook::showMessageTimerF1--;
+        }
+        if (GameHook::showMessageTimerF2 > 0) {
+            if (GameHook::takeNoDamage_toggle)
+                ImGui::Text("Take No Damage Enabled");
+            else
+                ImGui::Text("Take No Damage Disabled");
+            GameHook::showMessageTimerF2--;
+        }
+        if (GameHook::showMessageTimerF3 > 0) {
+            if (GameHook::enemyHP_one_hit_kill_toggle)
+                ImGui::Text("One Hit Kill Enabled");
+            else
+                ImGui::Text("One Hit Kill Disabled");
+            GameHook::showMessageTimerF3--;
+        }
+        //
+        if (GameHook::showMessageTimerF5 > 0) {
+            if (GameHook::noClip_toggle)
+                ImGui::Text("NoClip Enabled");
+            else
+                ImGui::Text("NoClip Disabled");
+            GameHook::showMessageTimerF5--;
+        }
+    }
 }

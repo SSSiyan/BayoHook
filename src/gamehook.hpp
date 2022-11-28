@@ -27,12 +27,16 @@ public:
 	static bool infJumps_toggle;
 	static bool disableClicking_toggle;
 	static bool noClip_toggle;
+	static bool disableDaze_toggle;
 	// patch functions
 	static void TakeNoDamage(bool enabled);
 	static void FocusPatch(bool enabled);
 	static void InfJumps(bool enabled);
 	static void DisableClicking(bool enabled);
 	static void NoClip(bool enabled);
+	static void DisableDaze(bool enabled);
+	static void SaveStates_SaveState();
+	static void SaveStates_LoadState();
 
 	// detour values
 	static bool witchTimeMultiplier_toggle;
@@ -56,32 +60,14 @@ public:
 
 	// update
 	static uintptr_t actorPlayable;
-	static float xyzpos[3];
-	static int halos;
-	static int chaptersPlayed;
-	static int playerHealth;
-	static float remainingWitchTimeDuration;
-	static float playerMagic;
-	static int comboPoints;
 	static int currentCharacter;
 	static int thirdAccessory;
-	static bool hudDisplay;
-	static float enemyDazeDisplay;
-
 	static int saveStates_CurrentEnemy;
-	static int saveStates_CurrentEnemyMoveID;
 	static int saveStates_SavedEnemyMoveID;
-	static float saveStates_CurrentEnemyAnimFrame;
 	static float saveStates_SavedEnemyAnimFrame;
-	static float saveStates_CurrentEnemyXYZPos[3];
 	static float saveStates_SavedEnemyXYZPos[3];
-
-	static int saveStates_CurrentPlayerMoveID;
 	static int saveStates_SavedPlayerMoveID;
 	static float saveStates_SavedPlayerXYZPos[3];
-
-	static void SaveStates_SaveState();
-	static void SaveStates_LoadState();
 
 	// dev functions
 	static void _patch(char* dst, char* src, int size);
@@ -89,16 +75,20 @@ public:
 	static void InitializeDetours();
 	static void onConfigLoad(const utils::Config& cfg);
 	static void onConfigSave(utils::Config& cfg);
-	static void Update(void);
 
 	static inline const char* cfgString{ "../bayo_hook.cfg" };
 	static inline utils::Config cfg{ "bayo_hook.cfg" };
-	static inline const char* dllName{"BayoHook 0.4"};
+	static inline const char* dllName{"BayoHook 0.5"};
 	static inline const char* repoUrl{ "https://github.com/SSSiyan/BayoHook" };
 
 	// imgui
 	static void GameImGui(void);
+	static bool showMessages_toggle;
+	static void BackgroundImGui(void);
 	static void ImGuiStyle(void);
-
+	static int showMessageTimerF1;
+	static int showMessageTimerF2;
+	static int showMessageTimerF3;
+	static int showMessageTimerF5;
 private:
 };

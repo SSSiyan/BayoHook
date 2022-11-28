@@ -1,11 +1,15 @@
 #include "gamehook.hpp"
 
+// system
+bool GameHook::showMessages_toggle(false);
+
 // patch toggles
 bool GameHook::takeNoDamage_toggle(false);
 bool GameHook::focusPatch_toggle(false);
 bool GameHook::infJumps_toggle(false);
 bool GameHook::disableClicking_toggle(false);
 bool GameHook::noClip_toggle(false);
+bool GameHook::disableDaze_toggle(false);
 
 // update
 uintptr_t GameHook::playerPointerAddress = 0xEF5A60;
@@ -19,17 +23,9 @@ uintptr_t GameHook::hudDisplayAddress = 0xF2B714;
 uintptr_t GameHook::enemySlotsAddress = 0x5A56A88;
 
 uintptr_t GameHook::actorPlayable = NULL;
-float GameHook::xyzpos[3]{ 0.0f, 0.0f, 0.0f };
-int GameHook::halos = 0;
-int GameHook::chaptersPlayed = 0;
-int GameHook::playerHealth = 0;
-float GameHook::remainingWitchTimeDuration = 0.0f;
-float GameHook::playerMagic = 0.0f;
-int GameHook::comboPoints = 0;
 int GameHook::currentCharacter = 0;
 int GameHook::thirdAccessory = 0;
-bool GameHook::hudDisplay = 0;
-float GameHook::enemyDazeDisplay = 0.0f;
+int showTextTimer = 0;
 
 // patches
 void GameHook::TakeNoDamage(bool enabled) {
@@ -71,6 +67,13 @@ void GameHook::NoClip(bool enabled) {
 		GameHook::_patch((char*)(0xC13250), (char*)"\xC7\x41\x54\x01\x00\x00\x00", 7);
 }
 
+void GameHook::DisableDaze(bool enabled) {
+	if (enabled)
+		GameHook::_patch((char*)(0x430CF4), (char*) "\xEB\x20", 2);
+	else
+		GameHook::_patch((char*)(0x430CF4), (char*)"\x72\x20", 2);
+}
+
 // detours
 std::unique_ptr<FunctionHook> enemyHPHook;
 uintptr_t enemyHP_jmp_ret{ NULL };
@@ -83,20 +86,20 @@ static __declspec(naked) void EnemyHPDetour(void) {
 		jmp check2
 
 		check2:
-			cmp byte ptr [GameHook::enemyHP_one_hit_kill_toggle], 1
-			je one_hit_kill
-			jmp originalcode
+		cmp byte ptr [GameHook::enemyHP_one_hit_kill_toggle], 1
+		je one_hit_kill
+		jmp originalcode
 
 		no_damage:
-			jmp dword ptr [enemyHP_jmp_ret]
+		jmp dword ptr [enemyHP_jmp_ret]
 
 		one_hit_kill:
-			mov dword ptr [esi+0x000006B4], 0
-			jmp dword ptr [enemyHP_jmp_ret]
+		mov dword ptr [esi+0x000006B4], 0
+		jmp dword ptr [enemyHP_jmp_ret]
 
 		originalcode:
-			mov [esi+0x000006B4], eax
-			jmp dword ptr [enemyHP_jmp_ret]
+		mov [esi+0x000006B4], eax
+		jmp dword ptr [enemyHP_jmp_ret]
 	}
 }
 
@@ -114,8 +117,8 @@ static __declspec(naked) void WitchTimeMultiplierDetour(void) {
 		jmp dword ptr [witchTimeMultiplier_jmp_ret]
 
 		originalcode:
-			fmul dword ptr [esi+0x00095D68]
-			jmp dword ptr [witchTimeMultiplier_jmp_ret]
+		fmul dword ptr [esi+0x00095D68]
+		jmp dword ptr [witchTimeMultiplier_jmp_ret]
 	}
 }
 
@@ -275,17 +278,11 @@ static __declspec(naked) void InputIconsDetour(void) {
 }
 
 int GameHook::saveStates_CurrentEnemy = 1;
-int GameHook::saveStates_CurrentEnemyMoveID = 0;
 int GameHook::saveStates_SavedEnemyMoveID = 0;
-float GameHook::saveStates_CurrentEnemyAnimFrame = 0.0f;
 float GameHook::saveStates_SavedEnemyAnimFrame = 0.0f;
-float GameHook::saveStates_CurrentEnemyXYZPos[3]{};
 float GameHook::saveStates_SavedEnemyXYZPos[3]{};
-
-int GameHook::saveStates_CurrentPlayerMoveID;
 int GameHook::saveStates_SavedPlayerMoveID;
 float GameHook::saveStates_SavedPlayerXYZPos[3];
-
 void GameHook::SaveStates_SaveState() {
 	uintptr_t* enemy_ptr = (uintptr_t*)((uintptr_t)enemySlotsAddress + saveStates_CurrentEnemy * 4); // 0x5A56A8C
 	uintptr_t enemy_base = *enemy_ptr; 
@@ -297,7 +294,6 @@ void GameHook::SaveStates_SaveState() {
 		GameHook::saveStates_SavedEnemyXYZPos[2] = *(float*)(enemy_base + 0xD8);
 	}
 }
-
 void GameHook::SaveStates_LoadState() {
 	uintptr_t* enemy_ptr = (uintptr_t*)((uintptr_t)enemySlotsAddress + saveStates_CurrentEnemy * 4); // 0x5A56A8C
 	uintptr_t enemy_base = *enemy_ptr;
@@ -344,7 +340,7 @@ bool install_hook_absolute(uintptr_t location, std::unique_ptr<FunctionHook>& ho
 		}
 	}
 	return true;
-}	
+}
 
 void GameHook::InitializeDetours(void) {
 	install_hook_absolute(0x4572BA, enemyHPHook, &EnemyHPDetour, &enemyHP_jmp_ret, 6);
@@ -366,6 +362,9 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	FocusPatch(focusPatch_toggle);
 	infJumps_toggle = cfg.get<bool>("InfJumpsToggle").value_or(false);
 	InfJumps(infJumps_toggle);
+	disableDaze_toggle = cfg.get<bool>("DisableDazeToggle").value_or(false);
+	DisableDaze(disableDaze_toggle);
+	showMessages_toggle = cfg.get<bool>("ShowMessagesToggle").value_or(false);
 	// detours
 	enemyHP_no_damage_toggle = cfg.get<bool>("DealNoDamageToggle").value_or(false);
 	enemyHP_one_hit_kill_toggle = cfg.get<bool>("OneHitKillToggle").value_or(false);
@@ -387,6 +386,8 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("TakeNoDamageToggle", takeNoDamage_toggle);
 	cfg.set<bool>("FocusPatchToggle", focusPatch_toggle);
 	cfg.set<bool>("InfJumpsToggle", infJumps_toggle);
+	cfg.set<bool>("ShowMessagesToggle", showMessages_toggle);
+	cfg.set<bool>("DisableDazeToggle", disableDaze_toggle);
 	// detours
 	cfg.set<bool>("DealNoDamageToggle", enemyHP_no_damage_toggle);
 	cfg.set<bool>("OneHitKillToggle", enemyHP_one_hit_kill_toggle);
@@ -401,6 +402,6 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("HaloDisplayToggle", haloDisplay_toggle);
 	cfg.set<bool>("InputIconsToggle", inputIcons_toggle);
 	cfg.set<int>("InputIconsValue", inputIconsValue);
-
+	
 	cfg.save(GameHook::cfgString);
 }
