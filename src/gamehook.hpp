@@ -10,17 +10,6 @@
 
 class GameHook {
 public:
-	// addresses
-	static uintptr_t playerPointerAddress;
-	static uintptr_t halosAddress;
-	static uintptr_t chaptersPlayedAddress;
-	static uintptr_t playerMagicAddress;
-	static uintptr_t comboPointsAddress;
-	static uintptr_t currentCharacterAddress;
-	static uintptr_t thirdAccessoryAddress;
-	static uintptr_t hudDisplayAddress;
-	static uintptr_t enemySlotsAddress;
-
 	// patch toggles
 	static bool takeNoDamage_toggle;
 	static bool focusPatch_toggle;
@@ -28,6 +17,7 @@ public:
 	static bool disableClicking_toggle;
 	static bool noClip_toggle;
 	static bool disableDaze_toggle;
+	static bool freezeTimer_toggle;
 	// patch functions
 	static void TakeNoDamage(bool enabled);
 	static void FocusPatch(bool enabled);
@@ -35,6 +25,7 @@ public:
 	static void DisableClicking(bool enabled);
 	static void NoClip(bool enabled);
 	static void DisableDaze(bool enabled);
+	static void FreezeTimer(bool enabled);
 	static void SaveStates_SaveState();
 	static void SaveStates_LoadState();
 
@@ -57,17 +48,37 @@ public:
 	static int animSwapCurrentAnim;
 	static int animSwapSourceAnim1;
 	static int animSwapDesiredAnim1;
+	static bool easierMash_toggle;
 
 	// update
 	static uintptr_t actorPlayable;
-	static int currentCharacter;
-	static int thirdAccessory;
 	static int saveStates_CurrentEnemy;
 	static int saveStates_SavedEnemyMoveID;
 	static float saveStates_SavedEnemyAnimFrame;
 	static float saveStates_SavedEnemyXYZPos[3];
 	static int saveStates_SavedPlayerMoveID;
 	static float saveStates_SavedPlayerXYZPos[3];
+
+	// addresses
+	static uintptr_t playerPointerAddress;
+	static uintptr_t halosAddress;
+	static uintptr_t chaptersPlayedAddress;
+	static uintptr_t playerMagicAddress;
+	static uintptr_t comboPointsAddress;
+	static uintptr_t currentCharacterAddress;
+	static uintptr_t thirdAccessoryAddress;
+	static uintptr_t hudDisplayAddress;
+	static uintptr_t enemySlotsAddress;
+
+	// imgui
+	static void GameImGui(void);
+	static bool showMessages_toggle;
+	static void BackgroundImGui(void);
+	static void ImGuiStyle(void);
+	static int showMessageTimerF1;
+	static int showMessageTimerF2;
+	static int showMessageTimerF3;
+	static int showMessageTimerF5;
 
 	// dev functions
 	static void _patch(char* dst, char* src, int size);
@@ -80,15 +91,5 @@ public:
 	static inline utils::Config cfg{ "bayo_hook.cfg" };
 	static inline const char* dllName{"BayoHook 0.5"};
 	static inline const char* repoUrl{ "https://github.com/SSSiyan/BayoHook" };
-
-	// imgui
-	static void GameImGui(void);
-	static bool showMessages_toggle;
-	static void BackgroundImGui(void);
-	static void ImGuiStyle(void);
-	static int showMessageTimerF1;
-	static int showMessageTimerF2;
-	static int showMessageTimerF3;
-	static int showMessageTimerF5;
 private:
 };

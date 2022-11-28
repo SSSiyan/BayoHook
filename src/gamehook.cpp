@@ -1,8 +1,5 @@
 #include "gamehook.hpp"
 
-// system
-bool GameHook::showMessages_toggle(false);
-
 // patch toggles
 bool GameHook::takeNoDamage_toggle(false);
 bool GameHook::focusPatch_toggle(false);
@@ -10,6 +7,7 @@ bool GameHook::infJumps_toggle(false);
 bool GameHook::disableClicking_toggle(false);
 bool GameHook::noClip_toggle(false);
 bool GameHook::disableDaze_toggle(false);
+bool GameHook::freezeTimer_toggle(false);
 
 // update
 uintptr_t GameHook::playerPointerAddress = 0xEF5A60;
@@ -23,9 +21,6 @@ uintptr_t GameHook::hudDisplayAddress = 0xF2B714;
 uintptr_t GameHook::enemySlotsAddress = 0x5A56A88;
 
 uintptr_t GameHook::actorPlayable = NULL;
-int GameHook::currentCharacter = 0;
-int GameHook::thirdAccessory = 0;
-int showTextTimer = 0;
 
 // patches
 void GameHook::TakeNoDamage(bool enabled) {
@@ -74,6 +69,13 @@ void GameHook::DisableDaze(bool enabled) {
 		GameHook::_patch((char*)(0x430CF4), (char*)"\x72\x20", 2);
 }
 
+void GameHook::FreezeTimer(bool enabled) {
+	if (enabled)
+		GameHook::_nop((char*)(0x620C1D), 8);
+	else
+		GameHook::_patch((char*)(0x620C1D), (char*)"\xF3\x0F\x5C\x05\xF8\xD6\xD9\x00", 8);
+}
+
 // detours
 std::unique_ptr<FunctionHook> enemyHPHook;
 uintptr_t enemyHP_jmp_ret{ NULL };
@@ -81,13 +83,13 @@ bool GameHook::enemyHP_no_damage_toggle = false;
 bool GameHook::enemyHP_one_hit_kill_toggle = false;
 static __declspec(naked) void EnemyHPDetour(void) {
 	_asm {
-		cmp byte ptr [GameHook::enemyHP_no_damage_toggle], 1
-		je no_damage
-		jmp check2
-
-		check2:
 		cmp byte ptr [GameHook::enemyHP_one_hit_kill_toggle], 1
 		je one_hit_kill
+		jmp check2
+		
+		check2:
+		cmp byte ptr [GameHook::enemyHP_no_damage_toggle], 1
+		je no_damage
 		jmp originalcode
 
 		no_damage:
@@ -277,6 +279,22 @@ static __declspec(naked) void InputIconsDetour(void) {
 	}
 }
 
+std::unique_ptr<FunctionHook> easierMashHook;
+uintptr_t easierMash_jmp_ret{ NULL };
+bool GameHook::easierMash_toggle = false;
+static __declspec(naked) void EasierMashDetour(void) {
+	_asm {
+		cmp byte ptr [GameHook::easierMash_toggle], 0
+		je originalcode
+
+		mov dword ptr [esi+0x30], 0x3fc00000 // 1.5f
+
+		originalcode:
+		divss xmm0, [esi+0x30]
+		jmp dword ptr [easierMash_jmp_ret]
+	}
+}
+
 int GameHook::saveStates_CurrentEnemy = 1;
 int GameHook::saveStates_SavedEnemyMoveID = 0;
 float GameHook::saveStates_SavedEnemyAnimFrame = 0.0f;
@@ -352,6 +370,7 @@ void GameHook::InitializeDetours(void) {
 	install_hook_absolute(0x4250F7, haloDisplayHook, &HaloDisplayDetour, &haloDisplay_jmp_ret, 5);
 	install_hook_absolute(0x4BD053, animSwapHook, &AnimSwapDetour, &animSwap_jmp_ret, 6);
 	install_hook_absolute(0x411CDB, inputIconsHook, &InputIconsDetour, &inputIcons_jmp_ret, 6);
+	install_hook_absolute(0x4A8EFF, easierMashHook, &EasierMashDetour, &easierMash_jmp_ret, 5);
 }
 
 void GameHook::onConfigLoad(const utils::Config& cfg) {
@@ -364,6 +383,8 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	InfJumps(infJumps_toggle);
 	disableDaze_toggle = cfg.get<bool>("DisableDazeToggle").value_or(false);
 	DisableDaze(disableDaze_toggle);
+	freezeTimer_toggle = cfg.get<bool>("FreezeTimerToggle").value_or(false);
+	FreezeTimer(freezeTimer_toggle);
 	showMessages_toggle = cfg.get<bool>("ShowMessagesToggle").value_or(true);
 	// detours
 	enemyHP_no_damage_toggle = cfg.get<bool>("DealNoDamageToggle").value_or(false);
@@ -379,6 +400,7 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	haloDisplay_toggle = cfg.get<bool>("HaloDisplayToggle").value_or(false);
 	inputIcons_toggle = cfg.get<bool>("InputIconsToggle").value_or(false);
 	inputIconsValue = cfg.get<int>("InputIconsValue").value_or(false);
+	easierMash_toggle = cfg.get<bool>("EasierMashToggle").value_or(false);
 }
 
 void GameHook::onConfigSave(utils::Config& cfg) {
@@ -387,6 +409,7 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("FocusPatchToggle", focusPatch_toggle);
 	cfg.set<bool>("InfJumpsToggle", infJumps_toggle);
 	cfg.set<bool>("DisableDazeToggle", disableDaze_toggle);
+	cfg.set<bool>("FreezeTimerToggle", freezeTimer_toggle);
 	cfg.set<bool>("ShowMessagesToggle", showMessages_toggle);
 	// detours
 	cfg.set<bool>("DealNoDamageToggle", enemyHP_no_damage_toggle);
@@ -402,6 +425,7 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("HaloDisplayToggle", haloDisplay_toggle);
 	cfg.set<bool>("InputIconsToggle", inputIcons_toggle);
 	cfg.set<int>("InputIconsValue", inputIconsValue);
-	
+	cfg.set<bool>("EasierMashToggle", easierMash_toggle);
+
 	cfg.save(GameHook::cfgString);
 }

@@ -3,8 +3,9 @@
 #include "LicenseStrings.hpp"
 #include <array>
 
+// system
 static float inputItemWidth = 100.0f;
-
+bool GameHook::showMessages_toggle(false);
 int GameHook::showMessageTimerF1 = 0;
 int GameHook::showMessageTimerF2 = 0;
 int GameHook::showMessageTimerF3 = 0;
@@ -58,23 +59,21 @@ void GameHook::GameImGui(void) {
                 ImGui::PopItemWidth();
             }
 
-            if (ImGui::Checkbox("Deal No Damage (F1) ##DealNoDamageToggle", &GameHook::enemyHP_no_damage_toggle)) {
-                GameHook::enemyHP_one_hit_kill_toggle = false;
-            }
+            ImGui::Checkbox("Deal No Damage (F1) ##DealNoDamageToggle", &GameHook::enemyHP_no_damage_toggle);
 
             if (ImGui::Checkbox("Take No Damage (F2)", &GameHook::takeNoDamage_toggle)) {
                 GameHook::TakeNoDamage(GameHook::takeNoDamage_toggle);
             }
 
-            if (ImGui::Checkbox("One Hit Kill (F3) ##OneHitKillToggle", &GameHook::enemyHP_one_hit_kill_toggle)) {
-                GameHook::enemyHP_no_damage_toggle = false;
-            }
+            ImGui::Checkbox("One Hit Kill (F3) ##OneHitKillToggle", &GameHook::enemyHP_one_hit_kill_toggle);
 
             ImGui::Checkbox("Inf Magic ##InfMagicToggle", &GameHook::inf_magic_toggle);
 
             if (ImGui::Checkbox("Disable Enemy Daze", &GameHook::disableDaze_toggle)) {
                 GameHook::DisableDaze(GameHook::disableDaze_toggle);
             }
+
+            ImGui::Checkbox("Easier Mash ##EasierMashToggle", &GameHook::easierMash_toggle);
 
             ImGui::EndChild();
             ImGui::EndTabItem();
@@ -101,7 +100,7 @@ void GameHook::GameImGui(void) {
             ImGui::PopItemWidth();
             ImGui::SameLine();
 
-            switch (GameHook::thirdAccessory)
+            switch (thirdAccessoryValue)
             {
             case 0:
                 ImGui::Text("None");
@@ -159,6 +158,9 @@ void GameHook::GameImGui(void) {
             ImGui::Text("Chapters Played");
             ImGui::InputInt("##ChapterInputInt", &chaptersPlayedValue, 1, 100);
 
+            ImGui::Text("Combo Points");
+            ImGui::InputInt("##ComboPointsInputInt", &comboPointsValue, 10, 100);
+
             ImGui::Spacing();
             ImGui::Separator();
 
@@ -185,9 +187,6 @@ void GameHook::GameImGui(void) {
 
                 ImGui::Text("Remaining Witch Time Duration");
                 ImGui::InputFloat("##RemainingWitchTimeDurationInputFloat", &remainingWitchTimeValue, 10, 100, "%.0f");
-
-                ImGui::Text("Combo Points");
-                ImGui::InputInt("##ComboPointsInputInt", &comboPointsValue, 10, 100);
             }
 
             ImGui::Spacing();
@@ -261,7 +260,7 @@ void GameHook::GameImGui(void) {
             ImGui::InputInt("##CharacterSelectInputInt", &currentCharacterValue, 1, 100);
             ImGui::PopItemWidth();
             ImGui::SameLine();
-            switch (GameHook::currentCharacter) {
+            switch (currentCharacterValue) {
             case 0:
                 ImGui::Text("Bayonetta");
                 break;
@@ -280,6 +279,10 @@ void GameHook::GameImGui(void) {
 
             if (ImGui::Checkbox("NoClip (F5)", &GameHook::noClip_toggle)) {
                 GameHook::NoClip(GameHook::noClip_toggle);
+            }
+
+            if (ImGui::Checkbox("Freeze Timer", &GameHook::freezeTimer_toggle)) {
+                GameHook::FreezeTimer(GameHook::freezeTimer_toggle);
             }
 
             ImGui::Checkbox("Force Summoning Clothes ##LessClothesToggle", &GameHook::lessClothes_toggle);
