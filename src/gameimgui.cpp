@@ -3,7 +3,6 @@
 #include "LicenseStrings.hpp"
 #include <array>
 
-//utils::Config GameHook::cfg{ "bayo_hook.cfg" };
 static float inputItemWidth = 100.0f;
 
 void help_marker(const char* desc) {
@@ -27,7 +26,17 @@ inline void under_line(const ImColor& col) {
 }
 
 void GameHook::GameImGui(void) {
-    GameHook::Update(); // update values
+    GameHook::actorPlayable = (*(uintptr_t*)playerPointerAddress);
+
+    uintptr_t* enemy_ptr = (uintptr_t*)((uintptr_t)enemySlotsAddress + saveStates_CurrentEnemy * 4); // 0x5A56A8C
+    uintptr_t enemy_base = *enemy_ptr;
+
+    int& halosValue = *(int*)halosAddress;
+    int& chaptersPlayedValue = *(int*)chaptersPlayedAddress;
+    float& comboPointsValue = *(float*)comboPointsAddress;
+    int& currentCharacterValue = *(int*)currentCharacterAddress;
+    int& thirdAccessoryValue = *(int*)thirdAccessoryAddress;
+    bool& hudDisplayValue = *(bool*)hudDisplayAddress;
 
     if (ImGui::Button("Save config")) {
         GameHook::onConfigSave(GameHook::cfg);
@@ -38,10 +47,11 @@ void GameHook::GameImGui(void) {
             ImGui::BeginChild("GeneralChild");
 
             ImGui::Checkbox("Outgoing Damage Multiplier ##OutgoingDamageMultiplierToggle", &GameHook::outgoingDamageMultiplier_toggle);
-            //ImGui::SameLine();
-            ImGui::PushItemWidth(inputItemWidth);
-            ImGui::InputFloat("##OutgoingDamageMultiplierInputFloat", &GameHook::outgoingDamageMultiplierMult, 0.1f, 1, "%.1f");
-            ImGui::PopItemWidth();
+            if (GameHook::outgoingDamageMultiplier_toggle) {
+                ImGui::PushItemWidth(inputItemWidth);
+                ImGui::InputFloat("##OutgoingDamageMultiplierInputFloat", &GameHook::outgoingDamageMultiplierMult, 0.1f, 1, "%.1f");
+                ImGui::PopItemWidth();
+            }
 
             if (ImGui::Checkbox("Deal No Damage ##DealNoDamageToggle", &GameHook::enemyHP_no_damage_toggle)) {
                 GameHook::enemyHP_one_hit_kill_toggle = false;
@@ -76,9 +86,7 @@ void GameHook::GameImGui(void) {
 
             ImGui::Text("Third Accessory");
             ImGui::PushItemWidth(inputItemWidth);
-            if (ImGui::InputInt("##ThirdAccessoryInputInt", &GameHook::thirdAccessory, 1, 100)) {
-                GameHook::SetThirdAccessory(GameHook::thirdAccessory);
-            }
+            ImGui::InputInt("##ThirdAccessoryInputInt", &thirdAccessoryValue, 1, 100);
             ImGui::PopItemWidth();
             ImGui::SameLine();
 
@@ -134,39 +142,77 @@ void GameHook::GameImGui(void) {
         if (ImGui::BeginTabItem("Stats")) {
             ImGui::BeginChild("StatsChild");
 
-            ImGui::Text("Player Position");
-            if (ImGui::InputFloat3("##Player Position", GameHook::xyzpos)) {
-                GameHook::SetXYZPos(GameHook::xyzpos[0], GameHook::xyzpos[1], GameHook::xyzpos[2]);
-            }
-
             ImGui::Text("Halos");
-            if (ImGui::InputInt("##HaloInputInt", &GameHook::halos, 1, 100)) {
-                GameHook::SetHalos(GameHook::halos);
-            }
+            ImGui::InputInt("##HaloInputInt", &halosValue, 1, 100);
 
             ImGui::Text("Chapters Played");
-            if (ImGui::InputInt("##ChapterInputInt", &GameHook::chaptersPlayed, 1, 100)) {
-                GameHook::SetChaptersPlayed(GameHook::chaptersPlayed);
+            ImGui::InputInt("##ChapterInputInt", &chaptersPlayedValue, 1, 100);
+
+            ImGui::Spacing();
+            ImGui::Separator();
+
+            if (GameHook::actorPlayable) { // != NULL
+                float* playerXYZPos[3];
+                playerXYZPos[0] = (float*)(GameHook::actorPlayable + 0xD0);
+                playerXYZPos[1] = (float*)(GameHook::actorPlayable + 0xD4);
+                playerXYZPos[2] = (float*)(GameHook::actorPlayable + 0xD8);
+                int& playerHealthValue = *(int*)(GameHook::actorPlayable + 0x93508);
+                int& playerHealthValue2 = *(int*)(GameHook::actorPlayable + 0x6B4); // red damage
+                float& remainingWitchTimeValue = *(float*)(GameHook::actorPlayable + 0x95D5C);
+                float& playerMagicValue = *(float*)playerMagicAddress; // not player offset but keeping it here anyway
+
+                ImGui::Text("Player Position");
+                ImGui::InputFloat3("##Player Position", *playerXYZPos); // player
+
+                ImGui::Text("Player HP");
+                if (ImGui::InputInt("##PlayerHPInputInt", &playerHealthValue, 1, 100)) {
+                    playerHealthValue2 = playerHealthValue;
+                }
+
+                ImGui::Text("Player MP");
+                ImGui::InputFloat("##PlayerMPInputFloat", &playerMagicValue, 1, 100, "%.0f");
+
+                ImGui::Text("Remaining Witch Time Duration");
+                ImGui::InputFloat("##RemainingWitchTimeDurationInputFloat", &remainingWitchTimeValue, 10, 100, "%.0f");
+
+                ImGui::Text("Combo Points");
+                ImGui::InputFloat("##ComboPointsInputFloat", &comboPointsValue, 1, 100, "% .0f");
             }
 
-            ImGui::Text("Player HP");
-            if (ImGui::InputInt("##PlayerHPInputInt", &GameHook::playerHealth, 1, 100)) {
-                GameHook::SetHealth(GameHook::playerHealth);
-            }
+            ImGui::Spacing();
+            ImGui::Separator();
 
-            ImGui::Text("Player MP");
-            if (ImGui::InputFloat("##PlayerMPInputFloat", &GameHook::playerMagic, 1, 100, "%.0f")) {
-                GameHook::SetMagic(GameHook::playerMagic);
-            }
+            ImGui::Text("Enemy Slot");
+            help_marker("Slide until you find your enemy's XYZ moving similarly to what you see ingame\nNot 100% sure how this works yet so its a lil funky");
+            ImGui::SliderInt("##EnemyXYZPosInputInt", &GameHook::saveStates_CurrentEnemy, 1, 10);
 
-            ImGui::Text("Remaining Witch Time Duration");
-            if (ImGui::InputFloat("##RemainingWitchTimeDurationInputFloat", &GameHook::remainingWitchTimeDuration, 10, 100, "%.0f")) {
-                GameHook::SetRemainingWitchTimeDuration(GameHook::remainingWitchTimeDuration);
-            }
+            if (enemy_base) {
+                float* enemyXYZPos[3];
+                enemyXYZPos[0] = (float*)(enemy_base + 0xD0);
+                enemyXYZPos[1] = (float*)(enemy_base + 0xD4);
+                enemyXYZPos[2] = (float*)(enemy_base + 0xD8);
+                int& enemyHPValue = *(int*)(enemy_base + 0x6B4);
+                int& enemyMoveIDValue = *(int*)(enemy_base + 0x34C);
+                float& enemyAnimFrameValue = *(float*)(enemy_base + 0x3E4);
+                float& enemyDazeValue = *(float*)(enemy_base + 0xC94);
 
-            ImGui::Text("Combo Points");
-            if (ImGui::InputInt("##ComboPointsInputInt", &GameHook::comboPoints, 1, 100)) {
-                GameHook::SetComboPoints(GameHook::comboPoints);
+                ImGui::Text("Enemy Position");
+                ImGui::InputFloat3("##EnemyXYZPosInputFloat", *enemyXYZPos);
+                ImGui::Text("Enemy HP");
+                ImGui::InputInt("##EnemyHPInputInt", &enemyHPValue);
+                ImGui::Text("Enemy Move ID");
+                ImGui::InputInt("##EnemyMoveIDInputInt", &enemyMoveIDValue, 1, 100);
+                ImGui::Text("Enemy Daze");
+                ImGui::InputFloat("##EnemyDazeInputFloat", &enemyDazeValue, 1, 10, "%.0f");
+
+                ImGui::Text("SaveState");
+                help_marker("Save and load an enemy's position and animation");
+                if (ImGui::Button("Save State")) {
+                    GameHook::SaveStates_SaveState();
+                }
+                if (ImGui::Button("Load State")) {
+                    GameHook::SaveStates_LoadState();
+                }
             }
 
             ImGui::EndChild();
@@ -190,16 +236,16 @@ void GameHook::GameImGui(void) {
             }
 
             ImGui::Checkbox("Camera Distance Multiplier ##CameraDistanceMultiplierToggle", &GameHook::customCameraDistance_toggle);
-            ImGui::PushItemWidth(inputItemWidth);
-            ImGui::InputFloat("##CustomCameraDistanceMultiplierInputFloat", &GameHook::customCameraDistanceMultiplierMult, 0.1f, 1, "%.1f");
-            ImGui::PopItemWidth();
+            if (GameHook::customCameraDistance_toggle) {
+                ImGui::PushItemWidth(inputItemWidth);
+                ImGui::InputFloat("##CustomCameraDistanceMultiplierInputFloat", &GameHook::customCameraDistanceMultiplierMult, 0.1f, 1, "%.1f");
+                ImGui::PopItemWidth();
+            }
 
             ImGui::Text("Character Select");
             help_marker("Set while in costume select\nIf your game freezes at the end of a fight, flick the value back to default");
             ImGui::PushItemWidth(inputItemWidth);
-            if (ImGui::InputInt("##CharacterSelectInputInt", &GameHook::currentCharacter, 1, 100)) {
-                GameHook::SetCurrentCharacter(GameHook::currentCharacter);
-            }
+            ImGui::InputInt("##CharacterSelectInputInt", &currentCharacterValue, 1, 100);
             ImGui::PopItemWidth();
             ImGui::SameLine();
             switch (GameHook::currentCharacter) {
@@ -214,11 +260,14 @@ void GameHook::GameImGui(void) {
                 break;
             }
 
-            if (ImGui::Checkbox("HUD Display", &GameHook::hudDisplay)) {
-                GameHook::SetHudDisplay(GameHook::hudDisplay);
-            }
+            ImGui::Checkbox("HUD Display", &hudDisplayValue);
+            help_marker("Show HP etc");
 
             ImGui::Checkbox("Enemy HP in Halo Display", &GameHook::haloDisplay_toggle);
+
+            if (ImGui::Checkbox("NoClip", &GameHook::noClip_toggle)) {
+                GameHook::NoClip(GameHook::noClip_toggle);
+            }
 
             ImGui::Checkbox("Force Summoning Clothes ##LessClothesToggle", &GameHook::lessClothes_toggle);
             help_marker("Only works on outfits that have this function");
@@ -275,7 +324,7 @@ void GameHook::GameImGui(void) {
                 }
             };
 
-            ImGuiURL repo{ "https://github.com/SSSiyan/GameHook", "https://github.com/SSSiyan/GameHook" };
+            ImGuiURL repo{ GameHook::repoUrl, GameHook::repoUrl };
             repo.draw();
 
             ImGui::Separator();

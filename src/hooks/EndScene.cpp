@@ -50,9 +50,9 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
             HasDoneOnceMenuOn = true;
         }
 
-		ImGui::Begin(GameHook::dllname, NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
+		ImGui::Begin(GameHook::dllName, NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
 
-        // GameHook::GameImGui();
+        GameHook::GameImGui();
 
 		ImGui::End();
 	}

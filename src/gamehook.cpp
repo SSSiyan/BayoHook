@@ -5,16 +5,18 @@ bool GameHook::takeNoDamage_toggle(false);
 bool GameHook::focusPatch_toggle(false);
 bool GameHook::infJumps_toggle(false);
 bool GameHook::disableClicking_toggle(false);
+bool GameHook::noClip_toggle(false);
 
 // update
-uintptr_t playerPointerAddress = 0xEF5A60;
-uintptr_t halosAddress = 0x5AA74B4;
-uintptr_t chaptersPlayedAddress = 0x5AA736C;
-uintptr_t playerMagicAddress = 0x5AA74AC;
-uintptr_t comboPointsAddress = 0x5BB519C;
-uintptr_t currentCharacterAddress = 0x5AA7484;
-uintptr_t thirdAccessoryAddress = 0x5AA7468;
-uintptr_t hudDisplayAddress = 0xF2B714;
+uintptr_t GameHook::playerPointerAddress = 0xEF5A60;
+uintptr_t GameHook::halosAddress = 0x5AA74B4;
+uintptr_t GameHook::chaptersPlayedAddress = 0x5AA736C;
+uintptr_t GameHook::playerMagicAddress = 0x5AA74AC;
+uintptr_t GameHook::comboPointsAddress = 0x5BB519C;
+uintptr_t GameHook::currentCharacterAddress = 0x5AA7484;
+uintptr_t GameHook::thirdAccessoryAddress = 0x5AA7468;
+uintptr_t GameHook::hudDisplayAddress = 0xF2B714;
+uintptr_t GameHook::enemySlotsAddress = 0x5A56A88;
 
 uintptr_t GameHook::actorPlayable = NULL;
 float GameHook::xyzpos[3]{ 0.0f, 0.0f, 0.0f };
@@ -27,6 +29,7 @@ int GameHook::comboPoints = 0;
 int GameHook::currentCharacter = 0;
 int GameHook::thirdAccessory = 0;
 bool GameHook::hudDisplay = 0;
+float GameHook::enemyDazeDisplay = 0.0f;
 
 // patches
 void GameHook::TakeNoDamage(bool enabled) {
@@ -59,6 +62,13 @@ void GameHook::DisableClicking(bool enabled) {
 		GameHook::_nop((char*)(0xC75747), 3);
 	else
 		GameHook::_patch((char*)(0xC75747), (char*)"\x89\x70\x04", 3);
+}
+
+void GameHook::NoClip(bool enabled) {
+	if (enabled)
+		GameHook::_nop((char*)(0xC13250), 7);
+	else
+		GameHook::_patch((char*)(0xC13250), (char*)"\xC7\x41\x54\x01\x00\x00\x00", 7);
 }
 
 // detours
@@ -118,11 +128,11 @@ static __declspec(naked) void InfMagicDetour(void) {
 		cmp byte ptr [GameHook::inf_magic_toggle], 0
 		je originalcode
 
-		mov eax, [playerMagicAddress]
+		mov eax, [GameHook::playerMagicAddress]
 		mov dword ptr [eax], 0x44fa0000 // 2000
 
 		originalcode:
-		mov eax, [playerMagicAddress] // i hate that i have to do this
+		mov eax, [GameHook::playerMagicAddress] // i hate that i have to do this
 		movss xmm0, [eax]
 		pop eax
 		jmp dword ptr [infMagic_jmp_ret]
@@ -264,67 +274,41 @@ static __declspec(naked) void InputIconsDetour(void) {
 	}
 }
 
-// update
-void GameHook::Update() {
-	GameHook::actorPlayable = (*(uintptr_t*)playerPointerAddress);
-	GameHook::halos = (*(int*)halosAddress);
-	if (GameHook::actorPlayable != NULL) {
-		GameHook::xyzpos[0] = (*(float*)(GameHook::actorPlayable + 0xD0));
-		GameHook::xyzpos[1] = (*(float*)(GameHook::actorPlayable + 0xD4));
-		GameHook::xyzpos[2] = (*(float*)(GameHook::actorPlayable + 0xD8));
-		GameHook::playerHealth = (*(int*)(GameHook::actorPlayable + 0x93508));
-		GameHook::remainingWitchTimeDuration = (*(float*)(GameHook::actorPlayable + 0x95D5C));
+int GameHook::saveStates_CurrentEnemy = 1;
+int GameHook::saveStates_CurrentEnemyMoveID = 0;
+int GameHook::saveStates_SavedEnemyMoveID = 0;
+float GameHook::saveStates_CurrentEnemyAnimFrame = 0.0f;
+float GameHook::saveStates_SavedEnemyAnimFrame = 0.0f;
+float GameHook::saveStates_CurrentEnemyXYZPos[3]{};
+float GameHook::saveStates_SavedEnemyXYZPos[3]{};
+
+int GameHook::saveStates_CurrentPlayerMoveID;
+int GameHook::saveStates_SavedPlayerMoveID;
+float GameHook::saveStates_SavedPlayerXYZPos[3];
+
+void GameHook::SaveStates_SaveState() {
+	uintptr_t* enemy_ptr = (uintptr_t*)((uintptr_t)enemySlotsAddress + saveStates_CurrentEnemy * 4); // 0x5A56A8C
+	uintptr_t enemy_base = *enemy_ptr; 
+	if (enemy_base) {
+		GameHook::saveStates_SavedEnemyMoveID = *(int*)(enemy_base + 0x348 + GameHook::saveStates_CurrentEnemy * 4); // +34C
+		GameHook::saveStates_SavedEnemyAnimFrame = *(float*)(enemy_base + 0x3E4);
+		GameHook::saveStates_SavedEnemyXYZPos[0] = *(float*)(enemy_base + 0xD0);
+		GameHook::saveStates_SavedEnemyXYZPos[1] = *(float*)(enemy_base + 0xD4);
+		GameHook::saveStates_SavedEnemyXYZPos[2] = *(float*)(enemy_base + 0xD8);
 	}
-	GameHook::chaptersPlayed = (*(int*)chaptersPlayedAddress);
-	GameHook::playerMagic = (*(float*)playerMagicAddress);
-	GameHook::comboPoints = (*(int*)comboPointsAddress);
-	GameHook::currentCharacter = (*(int*)currentCharacterAddress);
-	GameHook::thirdAccessory = (*(int*)thirdAccessoryAddress);
-	GameHook::hudDisplay = (*(bool*)hudDisplayAddress);
-	//GameHook::zone = (const char*)_baseAddress + 0x4374A24;
 }
 
-// setters
-void GameHook::SetXYZPos(float x, float y, float z) {
-	(*(float*)(GameHook::actorPlayable + 0xD0)) = x;
-	(*(float*)(GameHook::actorPlayable + 0xD4)) = y;
-	(*(float*)(GameHook::actorPlayable + 0xD8)) = z;
-}
-
-void GameHook::SetHalos(int value) {
-	(*(int*)halosAddress) = value;
-}
-
-void GameHook::SetChaptersPlayed(int value) {
-	(*(int*)chaptersPlayedAddress) = value;
-}
-
-void GameHook::SetHealth(int value) {
-	(*(int*)(GameHook::actorPlayable + 0x93508)) = value;
-}
-
-void GameHook::SetRemainingWitchTimeDuration(float value) {
-	(*(float*)(GameHook::actorPlayable + 0x95D5C)) = value;
-}
-
-void GameHook::SetMagic(float value) {
-	(*(float*)playerMagicAddress) = value;
-}
-
-void GameHook::SetComboPoints(int value) {
-	(*(int*)comboPointsAddress) = value;
-}
-
-void GameHook::SetCurrentCharacter(int value) {
-	(*(int*)currentCharacterAddress) = value;
-}
-
-void GameHook::SetThirdAccessory(int value) {
-	(*(int*)thirdAccessoryAddress) = value;
-}
-
-void GameHook::SetHudDisplay(bool value) {
-	(*(bool*)hudDisplayAddress) = value;
+void GameHook::SaveStates_LoadState() {
+	uintptr_t* enemy_ptr = (uintptr_t*)((uintptr_t)enemySlotsAddress + saveStates_CurrentEnemy * 4); // 0x5A56A8C
+	uintptr_t enemy_base = *enemy_ptr;
+	if (enemy_base) {
+		*(int*)(enemy_base + 0x350) = 0; // cancel current anim, might have to go after ID
+		*(int*)(enemy_base + 0x34C) = GameHook::saveStates_SavedEnemyMoveID;
+		*(float*)(enemy_base + 0x3E4) = GameHook::saveStates_SavedEnemyAnimFrame;
+		*(float*)(enemy_base + 0xD0) = GameHook::saveStates_SavedEnemyXYZPos[0];
+		*(float*)(enemy_base + 0xD4) = GameHook::saveStates_SavedEnemyXYZPos[1];
+		*(float*)(enemy_base + 0xD8) = GameHook::saveStates_SavedEnemyXYZPos[2];
+	}
 }
 
 // dev functions
@@ -415,9 +399,8 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<float>("CustomCameraDistanceMultiplier", customCameraDistanceMultiplierMult);
 	cfg.set<bool>("LessClothesToggle", lessClothes_toggle);
 	cfg.set<bool>("HaloDisplayToggle", haloDisplay_toggle);
-
 	cfg.set<bool>("InputIconsToggle", inputIcons_toggle);
 	cfg.set<int>("InputIconsValue", inputIconsValue);
 
-	cfg.save("../bayo_hook.cfg");
+	cfg.save(GameHook::cfgString);
 }
