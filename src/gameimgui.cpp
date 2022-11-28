@@ -345,12 +345,13 @@ void GameHook::GameImGui(void) {
                 }
             };
 
+            ImGui::Text("Check for updates here:");
             ImGuiURL repo{ GameHook::repoUrl, GameHook::repoUrl };
             repo.draw();
 
             ImGui::Separator();
 
-            ImGui::Text("This trainer was made by");
+            ImGui::Text("This trainer was made by:");
             static std::array<ImGuiURL, 5> links1{
                 ImGuiURL { "SSSiyan", "https://twitter.com/sssiyan" },
                 ImGuiURL { "GarudaKK", "https://www.youtube.com/@GarudaPSN" },
@@ -364,7 +365,7 @@ void GameHook::GameImGui(void) {
 
             ImGui::Separator();
 
-            ImGui::Text("This trainer was made using");
+            ImGui::Text("This trainer was made using:");
             static std::array<ImGuiURL, 3> links2{
                 ImGuiURL { "Dear ImGui", "https://github.com/ocornut/imgui" },
                 ImGuiURL { "minhook", "https://github.com/TsudaKageyu/minhook" },
@@ -375,7 +376,7 @@ void GameHook::GameImGui(void) {
             }
 
             ImGui::Separator();
-            ImGui::Text("Licenses");
+            ImGui::Text("Licenses:");
             struct License {
                 std::string name;
                 std::string text;

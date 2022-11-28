@@ -38,18 +38,14 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
 
 	ImGui::SetNextWindowPos(ImVec2(0, 0)), ImGuiCond_Always;
 	ImGui::SetNextWindowSize(ImVec2(400, 500)), ImGuiCond_Always;
-
 	ImGui::Begin("Background window", NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar |
 		ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus |
 		ImGuiWindowFlags_NoBackground);
-
 	GameHook::BackgroundImGui();
 	ImGui::End();
 
-
 	ImGui::SetNextWindowPos(ImVec2(0, 0)), ImGuiCond_Always;
 	ImGui::SetNextWindowSize(ImVec2(400, 500)), ImGuiCond_Always;
-
     static bool HasDoneOnceMenuOn = false;
     static bool HasDoneOnceMenuOff = false;
 	if (Data::ShowMenu) {
@@ -60,11 +56,8 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
             GameHook::DisableClicking(GameHook::disableClicking_toggle); // bayo
             HasDoneOnceMenuOn = true;
         }
-
 		ImGui::Begin(GameHook::dllName, NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
-
         GameHook::GameImGui();
-
 		ImGui::End();
 	}
     else {

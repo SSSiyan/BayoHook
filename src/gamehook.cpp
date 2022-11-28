@@ -287,7 +287,7 @@ void GameHook::SaveStates_SaveState() {
 	uintptr_t* enemy_ptr = (uintptr_t*)((uintptr_t)enemySlotsAddress + saveStates_CurrentEnemy * 4); // 0x5A56A8C
 	uintptr_t enemy_base = *enemy_ptr; 
 	if (enemy_base) {
-		GameHook::saveStates_SavedEnemyMoveID = *(int*)(enemy_base + 0x348 + GameHook::saveStates_CurrentEnemy * 4); // +34C
+		GameHook::saveStates_SavedEnemyMoveID = *(int*)(enemy_base + 0x34C);
 		GameHook::saveStates_SavedEnemyAnimFrame = *(float*)(enemy_base + 0x3E4);
 		GameHook::saveStates_SavedEnemyXYZPos[0] = *(float*)(enemy_base + 0xD0);
 		GameHook::saveStates_SavedEnemyXYZPos[1] = *(float*)(enemy_base + 0xD4);
@@ -298,8 +298,8 @@ void GameHook::SaveStates_LoadState() {
 	uintptr_t* enemy_ptr = (uintptr_t*)((uintptr_t)enemySlotsAddress + saveStates_CurrentEnemy * 4); // 0x5A56A8C
 	uintptr_t enemy_base = *enemy_ptr;
 	if (enemy_base) {
-		*(int*)(enemy_base + 0x350) = 0; // cancel current anim, might have to go after ID
 		*(int*)(enemy_base + 0x34C) = GameHook::saveStates_SavedEnemyMoveID;
+		*(int*)(enemy_base + 0x350) = 0; // cancel current anim
 		*(float*)(enemy_base + 0x3E4) = GameHook::saveStates_SavedEnemyAnimFrame;
 		*(float*)(enemy_base + 0xD0) = GameHook::saveStates_SavedEnemyXYZPos[0];
 		*(float*)(enemy_base + 0xD4) = GameHook::saveStates_SavedEnemyXYZPos[1];
@@ -364,7 +364,7 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	InfJumps(infJumps_toggle);
 	disableDaze_toggle = cfg.get<bool>("DisableDazeToggle").value_or(false);
 	DisableDaze(disableDaze_toggle);
-	showMessages_toggle = cfg.get<bool>("ShowMessagesToggle").value_or(false);
+	showMessages_toggle = cfg.get<bool>("ShowMessagesToggle").value_or(true);
 	// detours
 	enemyHP_no_damage_toggle = cfg.get<bool>("DealNoDamageToggle").value_or(false);
 	enemyHP_one_hit_kill_toggle = cfg.get<bool>("OneHitKillToggle").value_or(false);
@@ -386,8 +386,8 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("TakeNoDamageToggle", takeNoDamage_toggle);
 	cfg.set<bool>("FocusPatchToggle", focusPatch_toggle);
 	cfg.set<bool>("InfJumpsToggle", infJumps_toggle);
-	cfg.set<bool>("ShowMessagesToggle", showMessages_toggle);
 	cfg.set<bool>("DisableDazeToggle", disableDaze_toggle);
+	cfg.set<bool>("ShowMessagesToggle", showMessages_toggle);
 	// detours
 	cfg.set<bool>("DealNoDamageToggle", enemyHP_no_damage_toggle);
 	cfg.set<bool>("OneHitKillToggle", enemyHP_one_hit_kill_toggle);
