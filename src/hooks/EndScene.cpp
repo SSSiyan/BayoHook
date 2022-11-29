@@ -44,6 +44,20 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
 	GameHook::BackgroundImGui();
 	ImGui::End();
 
+	if (GameHook::showComboUI_toggle) {
+		float& comboMultiplierValue = *(float*)GameHook::comboMultiplierAddress;
+		if (comboMultiplierValue > 9.9f) {
+			ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x * GameHook::comboUI_X, ImGui::GetIO().DisplaySize.y * GameHook::comboUI_Y), ImGuiCond_Always);
+			ImGui::SetNextWindowSize(ImVec2(100, 50)), ImGuiCond_Always;
+			ImGui::Begin("Combo Multiplier Panel", NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse);
+			//ImGui::SameLine(14);
+			ImGui::SetWindowFontScale(3.0f);
+			ImGui::TextColored(ImVec4(1, 0, 0, 1), "%.1f", comboMultiplierValue);
+			ImGui::SetWindowFontScale(1.0f);
+			ImGui::End();
+		}
+	}
+		
 	ImGui::SetNextWindowPos(ImVec2(0, 0)), ImGuiCond_Always;
 	ImGui::SetNextWindowSize(ImVec2(400, 500)), ImGuiCond_Always;
     static bool HasDoneOnceMenuOn = false;

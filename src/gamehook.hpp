@@ -35,8 +35,8 @@ public:
 	static bool enemyHP_no_damage_toggle;
 	static bool enemyHP_one_hit_kill_toggle;
 	static bool inf_magic_toggle;
-	static bool outgoingDamageMultiplier_toggle;
-	static float outgoingDamageMultiplierMult;
+	static bool damageDealtMultiplier_toggle;
+	static float damageDealtMultiplierMult;
 	static bool customCameraDistance_toggle;
 	static float customCameraDistanceMultiplierMult;
 	static bool lessClothes_toggle;
@@ -51,7 +51,6 @@ public:
 	static bool easierMash_toggle;
 
 	// update
-	static uintptr_t actorPlayable;
 	static int saveStates_CurrentEnemy;
 	static int saveStates_SavedEnemyMoveID;
 	static float saveStates_SavedEnemyAnimFrame;
@@ -65,6 +64,7 @@ public:
 	static uintptr_t chaptersPlayedAddress;
 	static uintptr_t playerMagicAddress;
 	static uintptr_t comboPointsAddress;
+	static uintptr_t comboMultiplierAddress;
 	static uintptr_t currentCharacterAddress;
 	static uintptr_t thirdAccessoryAddress;
 	static uintptr_t hudDisplayAddress;
@@ -73,6 +73,9 @@ public:
 	// imgui
 	static void GameImGui(void);
 	static bool showMessages_toggle;
+	static bool showComboUI_toggle;
+	static float comboUI_X;
+	static float comboUI_Y;
 	static void BackgroundImGui(void);
 	static void ImGuiStyle(void);
 	static int showMessageTimerF1;

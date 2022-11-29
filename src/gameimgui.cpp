@@ -6,10 +6,25 @@
 // system
 static float inputItemWidth = 100.0f;
 bool GameHook::showMessages_toggle(false);
+bool GameHook::showComboUI_toggle(false);
+float GameHook::comboUI_X(0.0f);
+float GameHook::comboUI_Y(0.0f);
 int GameHook::showMessageTimerF1 = 0;
 int GameHook::showMessageTimerF2 = 0;
 int GameHook::showMessageTimerF3 = 0;
 int GameHook::showMessageTimerF5 = 0;
+
+// update
+uintptr_t GameHook::playerPointerAddress = 0xEF5A60;
+uintptr_t GameHook::halosAddress = 0x5AA74B4;
+uintptr_t GameHook::chaptersPlayedAddress = 0x5AA736C;
+uintptr_t GameHook::playerMagicAddress = 0x5AA74AC;
+uintptr_t GameHook::comboPointsAddress = 0x5BB519C;
+uintptr_t GameHook::comboMultiplierAddress = 0x5BB51A0;
+uintptr_t GameHook::currentCharacterAddress = 0x5AA7484;
+uintptr_t GameHook::thirdAccessoryAddress = 0x5AA7468;
+uintptr_t GameHook::hudDisplayAddress = 0xF2B714;
+uintptr_t GameHook::enemySlotsAddress = 0x5A56A88;
 
 void help_marker(const char* desc) {
     ImGui::SameLine();
@@ -32,7 +47,7 @@ inline void under_line(const ImColor& col) {
 }
 
 void GameHook::GameImGui(void) {
-    GameHook::actorPlayable = (*(uintptr_t*)playerPointerAddress);
+    uintptr_t actorPlayable = *(uintptr_t*)playerPointerAddress;
 
     uintptr_t* enemy_ptr = (uintptr_t*)((uintptr_t)enemySlotsAddress + saveStates_CurrentEnemy * 4); // 0x5A56A8C
     uintptr_t enemy_base = *enemy_ptr;
@@ -40,6 +55,7 @@ void GameHook::GameImGui(void) {
     int& halosValue = *(int*)halosAddress;
     int& chaptersPlayedValue = *(int*)chaptersPlayedAddress;
     int& comboPointsValue = *(int*)comboPointsAddress;
+    float& comboMultiplierValue = *(float*)comboMultiplierAddress;
     int& currentCharacterValue = *(int*)currentCharacterAddress;
     int& thirdAccessoryValue = *(int*)thirdAccessoryAddress;
     bool& hudDisplayValue = *(bool*)hudDisplayAddress;
@@ -52,10 +68,10 @@ void GameHook::GameImGui(void) {
         if (ImGui::BeginTabItem("General")) {
             ImGui::BeginChild("GeneralChild");
 
-            ImGui::Checkbox("Outgoing Damage Multiplier ##OutgoingDamageMultiplierToggle", &GameHook::outgoingDamageMultiplier_toggle);
-            if (GameHook::outgoingDamageMultiplier_toggle) {
+            ImGui::Checkbox("Damage Dealt Multiplier ##DamageDealtMultiplierToggle", &GameHook::damageDealtMultiplier_toggle);
+            if (GameHook::damageDealtMultiplier_toggle) {
                 ImGui::PushItemWidth(inputItemWidth);
-                ImGui::InputFloat("##OutgoingDamageMultiplierInputFloat", &GameHook::outgoingDamageMultiplierMult, 0.1f, 1, "%.1f");
+                ImGui::InputFloat("##DamageDealtMultiplierrInputFloat", &GameHook::damageDealtMultiplierMult, 0.1f, 1, "%.1f");
                 ImGui::PopItemWidth();
             }
 
@@ -72,8 +88,6 @@ void GameHook::GameImGui(void) {
             if (ImGui::Checkbox("Disable Enemy Daze", &GameHook::disableDaze_toggle)) {
                 GameHook::DisableDaze(GameHook::disableDaze_toggle);
             }
-
-            ImGui::Checkbox("Easier Mash ##EasierMashToggle", &GameHook::easierMash_toggle);
 
             ImGui::EndChild();
             ImGui::EndTabItem();
@@ -161,17 +175,20 @@ void GameHook::GameImGui(void) {
             ImGui::Text("Combo Points");
             ImGui::InputInt("##ComboPointsInputInt", &comboPointsValue, 10, 100);
 
+            ImGui::Text("Combo Multiplier");
+            ImGui::InputFloat("##ComboMultiplierInputFloat", &comboMultiplierValue, 1, 10, "% .1f");
+
             ImGui::Spacing();
             ImGui::Separator();
 
-            if (GameHook::actorPlayable) { // != NULL
+            if (actorPlayable) { // != NULL
                 float* playerXYZPos[3];
-                playerXYZPos[0] = (float*)(GameHook::actorPlayable + 0xD0);
-                playerXYZPos[1] = (float*)(GameHook::actorPlayable + 0xD4);
-                playerXYZPos[2] = (float*)(GameHook::actorPlayable + 0xD8);
-                int& playerHealthValue = *(int*)(GameHook::actorPlayable + 0x93508);
-                int& playerHealthValue2 = *(int*)(GameHook::actorPlayable + 0x6B4); // red damage
-                float& remainingWitchTimeValue = *(float*)(GameHook::actorPlayable + 0x95D5C);
+                playerXYZPos[0] = (float*)(actorPlayable + 0xD0);
+                playerXYZPos[1] = (float*)(actorPlayable + 0xD4);
+                playerXYZPos[2] = (float*)(actorPlayable + 0xD8);
+                int& playerHealthValue = *(int*)(actorPlayable + 0x93508);
+                int& playerHealthValue2 = *(int*)(actorPlayable + 0x6B4); // red damage
+                float& remainingWitchTimeValue = *(float*)(actorPlayable + 0x95D5C);
                 float& playerMagicValue = *(float*)playerMagicAddress; // not player offset but keeping it here anyway
 
                 ImGui::Text("Player Position");
@@ -247,6 +264,15 @@ void GameHook::GameImGui(void) {
                 ImGui::PopItemWidth();
             }
 
+            ImGui::Checkbox("Show Combo UI", &GameHook::showComboUI_toggle);
+            help_marker("Open a window that shows your current combo multiplier when passing 9.9x");
+            if (GameHook::showComboUI_toggle) {
+                ImGui::PushItemWidth(inputItemWidth);
+                ImGui::InputFloat("X Position ##ComboUIXInputFloat", &comboUI_X);
+                ImGui::InputFloat("Y Position ##ComboUIYInputFloat", &comboUI_Y);
+                ImGui::PopItemWidth();
+            }
+
             ImGui::Checkbox("Camera Distance Multiplier ##CameraDistanceMultiplierToggle", &GameHook::customCameraDistance_toggle);
             if (GameHook::customCameraDistance_toggle) {
                 ImGui::PushItemWidth(inputItemWidth);
@@ -284,6 +310,8 @@ void GameHook::GameImGui(void) {
             if (ImGui::Checkbox("Freeze Timer", &GameHook::freezeTimer_toggle)) {
                 GameHook::FreezeTimer(GameHook::freezeTimer_toggle);
             }
+
+            ImGui::Checkbox("Easier Mashing ##EasierMashToggle", &GameHook::easierMash_toggle);
 
             ImGui::Checkbox("Force Summoning Clothes ##LessClothesToggle", &GameHook::lessClothes_toggle);
             help_marker("Only works on outfits that have this function");

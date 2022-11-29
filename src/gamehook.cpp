@@ -9,19 +9,6 @@ bool GameHook::noClip_toggle(false);
 bool GameHook::disableDaze_toggle(false);
 bool GameHook::freezeTimer_toggle(false);
 
-// update
-uintptr_t GameHook::playerPointerAddress = 0xEF5A60;
-uintptr_t GameHook::halosAddress = 0x5AA74B4;
-uintptr_t GameHook::chaptersPlayedAddress = 0x5AA736C;
-uintptr_t GameHook::playerMagicAddress = 0x5AA74AC;
-uintptr_t GameHook::comboPointsAddress = 0x5BB519C;
-uintptr_t GameHook::currentCharacterAddress = 0x5AA7484;
-uintptr_t GameHook::thirdAccessoryAddress = 0x5AA7468;
-uintptr_t GameHook::hudDisplayAddress = 0xF2B714;
-uintptr_t GameHook::enemySlotsAddress = 0x5A56A88;
-
-uintptr_t GameHook::actorPlayable = NULL;
-
 // patches
 void GameHook::TakeNoDamage(bool enabled) {
 	if (enabled) 
@@ -36,8 +23,8 @@ void GameHook::FocusPatch(bool enabled) {
 		GameHook::_patch((char*)(0x411DB8), (char*)"\xE9\x82\x00", 3); // enable inputs tabbed out
 	}
 	else {
-		GameHook::_patch((char*)(0x49E519), (char*)"\x75\x17", 2); // enable pausing tabbed out
-		GameHook::_patch((char*)(0x411DB8), (char*)"\x0F\x85\x81", 3); // disable inputs tabbed out
+		GameHook::_patch((char*)(0x49E519), (char*)"\x75\x17", 2);
+		GameHook::_patch((char*)(0x411DB8), (char*)"\x0F\x85\x81", 3);
 	}
 }
 
@@ -144,27 +131,27 @@ static __declspec(naked) void InfMagicDetour(void) {
 	}
 }
 
-std::unique_ptr<FunctionHook> outgoingDamageMultiplierHook;
-uintptr_t outgoingDamageMultiplier_jmp_ret{ NULL };
-bool GameHook::outgoingDamageMultiplier_toggle = false;
-float outgoingDamageMultiplierXmm0Backup = 0.0f;
-float GameHook::outgoingDamageMultiplierMult = 1.0f;
-static __declspec(naked) void OutgoingDamageMultiplierDetour(void) {
+std::unique_ptr<FunctionHook> damageDealtMultiplierHook;
+uintptr_t damageDealtMultiplier_jmp_ret{ NULL };
+bool GameHook::damageDealtMultiplier_toggle = false;
+float damageDealtMultiplierXmm0Backup = 0.0f;
+float GameHook::damageDealtMultiplierMult = 1.0f;
+static __declspec(naked) void DamageDealtMultiplierDetour(void) {
 	_asm {
 		mov [esi+0x000006B8], eax // originalcode, early bytes to avoid EnemyHPDetour
 		mov [GameHook::haloDisplayValue], eax
-		cmp byte ptr [GameHook::outgoingDamageMultiplier_toggle], 0
+		cmp byte ptr [GameHook::damageDealtMultiplier_toggle], 0
 		je originalcode
 
-		movss [outgoingDamageMultiplierXmm0Backup], xmm0 // xmm0 backup
+		movss [damageDealtMultiplierXmm0Backup], xmm0 // xmm0 backup
 		cvtsi2ss xmm0, edi // convert to float
-		mulss xmm0, [GameHook::outgoingDamageMultiplierMult] // multiply
+		mulss xmm0, [GameHook::damageDealtMultiplierMult] // multiply
 		cvttss2si edi, xmm0 // convert from float
-		movss xmm0,[outgoingDamageMultiplierXmm0Backup] // restore xmm0
+		movss xmm0,[damageDealtMultiplierXmm0Backup] // restore xmm0
 
 		originalcode:
 		sub eax,edi
-		jmp dword ptr [outgoingDamageMultiplier_jmp_ret]
+		jmp dword ptr [damageDealtMultiplier_jmp_ret]
 	}
 }
 
@@ -209,7 +196,7 @@ std::unique_ptr<FunctionHook> haloDisplayHook;
 uintptr_t haloDisplay_jmp_ret{ NULL };
 bool GameHook::haloDisplay_toggle = false;
 int GameHook::haloDisplayValue = 0;
-uintptr_t haloAddress = 0x5BB57B0;
+uintptr_t haloDisplayAddress = 0x5BB57B0;
 static __declspec(naked) void HaloDisplayDetour(void) {
 	_asm {
 		cmp byte ptr [GameHook::haloDisplay_toggle], 0
@@ -221,7 +208,7 @@ static __declspec(naked) void HaloDisplayDetour(void) {
 
 		originalcode:
 		push esi
-		mov esi,[haloAddress] // i still hate this
+		mov esi,[haloDisplayAddress] // i still hate this
 		mov [esi],eax
 		pop esi
 		jmp dword ptr [haloDisplay_jmp_ret]
@@ -255,7 +242,6 @@ static __declspec(naked) void AnimSwapDetour(void) {
 		mov edx, [GameHook::animSwapDesiredAnim1]
 		jmp originalcode
 
-
 		originalcode:
 		mov [ecx+0x0000034C], edx
 		jmp dword ptr [animSwap_jmp_ret]
@@ -274,6 +260,7 @@ static __declspec(naked) void InputIconsDetour(void) {
 		mov eax, [GameHook::inputIconsValue]
 
 		originalcode:
+		cmp dword ptr [ebx+0x000003E8], 00
 		mov [ebx+0x00000CA8], eax
 		jmp dword ptr [inputIcons_jmp_ret]
 	}
@@ -364,12 +351,12 @@ void GameHook::InitializeDetours(void) {
 	install_hook_absolute(0x4572BA, enemyHPHook, &EnemyHPDetour, &enemyHP_jmp_ret, 6);
 	install_hook_absolute(0x9E1808, witchTimeHook, &WitchTimeMultiplierDetour, &witchTimeMultiplier_jmp_ret, 6);
 	install_hook_absolute(0x8BCE4C, infMagicHook, &InfMagicDetour, &infMagic_jmp_ret, 8);
-	install_hook_absolute(0x4572B2, outgoingDamageMultiplierHook, &OutgoingDamageMultiplierDetour, &outgoingDamageMultiplier_jmp_ret, 8);
+	install_hook_absolute(0x4572B2, damageDealtMultiplierHook, &DamageDealtMultiplierDetour, &damageDealtMultiplier_jmp_ret, 8);
 	install_hook_absolute(0xC52491, customCameraDistanceHook, &CustomCameraDistanceDetour, &customCameraDistance_jmp_ret, 5);
 	install_hook_absolute(0x8B6C55, lessClothesHook, &LessClothesDetour, &lessClothes_jmp_ret, 6);
 	install_hook_absolute(0x4250F7, haloDisplayHook, &HaloDisplayDetour, &haloDisplay_jmp_ret, 5);
 	install_hook_absolute(0x4BD053, animSwapHook, &AnimSwapDetour, &animSwap_jmp_ret, 6);
-	install_hook_absolute(0x411CDB, inputIconsHook, &InputIconsDetour, &inputIcons_jmp_ret, 6);
+	install_hook_absolute(0x411CD4, inputIconsHook, &InputIconsDetour, &inputIcons_jmp_ret, 13);
 	install_hook_absolute(0x4A8EFF, easierMashHook, &EasierMashDetour, &easierMash_jmp_ret, 5);
 }
 
@@ -392,8 +379,8 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	witchTimeMultiplier_toggle = cfg.get<bool>("WitchTimeMultiplierToggle").value_or(false);
 	witchTimeMultiplier = cfg.get<float>("WitchTimeMultiplier").value_or(1.0f);
 	inf_magic_toggle = cfg.get<bool>("InfMagicToggle").value_or(false);
-	outgoingDamageMultiplier_toggle = cfg.get<bool>("OutgoingDamageMultiplierToggle").value_or(false);
-	outgoingDamageMultiplierMult = cfg.get<float>("OutgoingDamageMultiplierMult").value_or(1.0f);
+	damageDealtMultiplier_toggle = cfg.get<bool>("DamageDealtMultiplierToggle").value_or(false);
+	damageDealtMultiplierMult = cfg.get<float>("DamageDealtMultiplierMult").value_or(1.0f);
 	customCameraDistance_toggle = cfg.get<bool>("CustomCameraDistanceToggle").value_or(false);
 	customCameraDistanceMultiplierMult = cfg.get<float>("CustomCameraDistanceMultiplier").value_or(1.0f);
 	lessClothes_toggle = cfg.get<bool>("LessClothesToggle").value_or(false);
@@ -401,6 +388,9 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	inputIcons_toggle = cfg.get<bool>("InputIconsToggle").value_or(false);
 	inputIconsValue = cfg.get<int>("InputIconsValue").value_or(false);
 	easierMash_toggle = cfg.get<bool>("EasierMashToggle").value_or(false);
+	showComboUI_toggle = cfg.get<bool>("ShowComboUIToggle").value_or(false);
+	comboUI_X = cfg.get<float>("ComboUI_X").value_or(0.875f);
+	comboUI_Y = cfg.get<float>("ComboUI_Y").value_or(0.215f);
 }
 
 void GameHook::onConfigSave(utils::Config& cfg) {
@@ -417,8 +407,8 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("WitchTimeMultiplierToggle", witchTimeMultiplier_toggle);
 	cfg.set<float>("WitchTimeMultiplier", witchTimeMultiplier);
 	cfg.set<bool>("InfMagicToggle", inf_magic_toggle);
-	cfg.set<bool>("OutgoingDamageMultiplierToggle", outgoingDamageMultiplier_toggle);
-	cfg.set<float>("OutgoingDamageMultiplierMult", outgoingDamageMultiplierMult);
+	cfg.set<bool>("DamageDealtMultiplierToggle", damageDealtMultiplier_toggle);
+	cfg.set<float>("DamageDealtMultiplierMult", damageDealtMultiplierMult);
 	cfg.set<bool>("CustomCameraDistanceToggle", customCameraDistance_toggle);
 	cfg.set<float>("CustomCameraDistanceMultiplier", customCameraDistanceMultiplierMult);
 	cfg.set<bool>("LessClothesToggle", lessClothes_toggle);
@@ -426,6 +416,9 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("InputIconsToggle", inputIcons_toggle);
 	cfg.set<int>("InputIconsValue", inputIconsValue);
 	cfg.set<bool>("EasierMashToggle", easierMash_toggle);
+	cfg.set<bool>("ShowComboUIToggle", showComboUI_toggle);
+	cfg.set<float>("ComboUI_X", comboUI_X);
+	cfg.set<float>("ComboUI_Y", comboUI_Y);
 
 	cfg.save(GameHook::cfgString);
 }
