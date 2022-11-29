@@ -25,6 +25,7 @@ uintptr_t GameHook::currentCharacterAddress = 0x5AA7484;
 uintptr_t GameHook::thirdAccessoryAddress = 0x5AA7468;
 uintptr_t GameHook::hudDisplayAddress = 0xF2B714;
 uintptr_t GameHook::enemySlotsAddress = 0x5A56A88;
+uintptr_t GameHook::angelSlayerFloorAddress = 0x509E87C;
 
 void help_marker(const char* desc) {
     ImGui::SameLine();
@@ -47,18 +48,19 @@ inline void under_line(const ImColor& col) {
 }
 
 void GameHook::GameImGui(void) {
-    uintptr_t actorPlayable = *(uintptr_t*)playerPointerAddress;
+    uintptr_t actorPlayable = *(uintptr_t*)GameHook::playerPointerAddress;
 
-    uintptr_t* enemy_ptr = (uintptr_t*)((uintptr_t)enemySlotsAddress + saveStates_CurrentEnemy * 4); // 0x5A56A8C
+    uintptr_t* enemy_ptr = (uintptr_t*)((uintptr_t)GameHook::enemySlotsAddress + GameHook::saveStates_CurrentEnemy * 4); // 0x5A56A8C
     uintptr_t enemy_base = *enemy_ptr;
 
-    int& halosValue = *(int*)halosAddress;
-    int& chaptersPlayedValue = *(int*)chaptersPlayedAddress;
-    int& comboPointsValue = *(int*)comboPointsAddress;
-    float& comboMultiplierValue = *(float*)comboMultiplierAddress;
-    int& currentCharacterValue = *(int*)currentCharacterAddress;
-    int& thirdAccessoryValue = *(int*)thirdAccessoryAddress;
-    bool& hudDisplayValue = *(bool*)hudDisplayAddress;
+    int& halosValue = *(int*)GameHook::halosAddress;
+    int& chaptersPlayedValue = *(int*)GameHook::chaptersPlayedAddress;
+    int& comboPointsValue = *(int*)GameHook::comboPointsAddress;
+    float& comboMultiplierValue = *(float*)GameHook::comboMultiplierAddress;
+    int& currentCharacterValue = *(int*)GameHook::currentCharacterAddress;
+    int& thirdAccessoryValue = *(int*)GameHook::thirdAccessoryAddress;
+    bool& hudDisplayValue = *(bool*)GameHook::hudDisplayAddress;
+    int& angelSlayerFloorValue = *(int*)GameHook::angelSlayerFloorAddress;
 
     if (ImGui::Button("Save config")) {
         GameHook::onConfigSave(GameHook::cfg);
@@ -88,6 +90,12 @@ void GameHook::GameImGui(void) {
             if (ImGui::Checkbox("Disable Enemy Daze", &GameHook::disableDaze_toggle)) {
                 GameHook::DisableDaze(GameHook::disableDaze_toggle);
             }
+
+            ImGui::Text("Angel Slayer Floor");
+            help_marker("0 = floor 1. Set before entering a portal.");
+            ImGui::PushItemWidth(inputItemWidth);
+            ImGui::InputInt("##AngelSlayerFloorInputInt", &angelSlayerFloorValue);
+            ImGui::PopItemWidth();
 
             ImGui::EndChild();
             ImGui::EndTabItem();
@@ -189,7 +197,7 @@ void GameHook::GameImGui(void) {
                 int& playerHealthValue = *(int*)(actorPlayable + 0x93508);
                 int& playerHealthValue2 = *(int*)(actorPlayable + 0x6B4); // red damage
                 float& remainingWitchTimeValue = *(float*)(actorPlayable + 0x95D5C);
-                float& playerMagicValue = *(float*)playerMagicAddress; // not player offset but keeping it here anyway
+                float& playerMagicValue = *(float*)GameHook::playerMagicAddress; // not player offset but keeping it here anyway
 
                 ImGui::Text("Player Position");
                 ImGui::InputFloat3("##Player Position", *playerXYZPos); // player

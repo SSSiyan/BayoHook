@@ -69,6 +69,7 @@ public:
 	static uintptr_t thirdAccessoryAddress;
 	static uintptr_t hudDisplayAddress;
 	static uintptr_t enemySlotsAddress;
+	static uintptr_t angelSlayerFloorAddress;
 
 	// imgui
 	static void GameImGui(void);
