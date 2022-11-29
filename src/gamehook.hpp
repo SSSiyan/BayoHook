@@ -20,6 +20,7 @@ public:
 	static bool freezeTimer_toggle;
 	// patch functions
 	static void TakeNoDamage(bool enabled);
+	static void DisableKilling(bool enabled);
 	static void FocusPatch(bool enabled);
 	static void InfJumps(bool enabled);
 	static void DisableClicking(bool enabled);
@@ -70,6 +71,7 @@ public:
 	static uintptr_t hudDisplayAddress;
 	static uintptr_t enemySlotsAddress;
 	static uintptr_t angelSlayerFloorAddress;
+	static uintptr_t difficultyAddress;
 
 	// imgui
 	static void GameImGui(void);

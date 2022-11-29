@@ -63,6 +63,13 @@ void GameHook::FreezeTimer(bool enabled) {
 		GameHook::_patch((char*)(0x620C1D), (char*)"\xF3\x0F\x5C\x05\xF8\xD6\xD9\x00", 8);
 }
 
+void GameHook::DisableKilling(bool enabled) {
+	if (enabled)
+		GameHook::_patch((char*)(0x4572D2), (char*) "\xEB\x0C", 2);
+	else
+		GameHook::_patch((char*)(0x4572D2), (char*)"\x75\x0C", 2);
+}
+
 // detours
 std::unique_ptr<FunctionHook> enemyHPHook;
 uintptr_t enemyHP_jmp_ret{ NULL };
@@ -375,6 +382,7 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	showMessages_toggle = cfg.get<bool>("ShowMessagesToggle").value_or(true);
 	// detours
 	enemyHP_no_damage_toggle = cfg.get<bool>("DealNoDamageToggle").value_or(false);
+	DisableKilling(enemyHP_no_damage_toggle);
 	enemyHP_one_hit_kill_toggle = cfg.get<bool>("OneHitKillToggle").value_or(false);
 	witchTimeMultiplier_toggle = cfg.get<bool>("WitchTimeMultiplierToggle").value_or(false);
 	witchTimeMultiplier = cfg.get<float>("WitchTimeMultiplier").value_or(1.0f);

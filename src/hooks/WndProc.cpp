@@ -19,6 +19,7 @@ LRESULT CALLBACK Base::Hooks::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
 			break;
 		case VK_F1:
 			GameHook::enemyHP_no_damage_toggle = !GameHook::enemyHP_no_damage_toggle;
+			GameHook::DisableKilling(GameHook::enemyHP_no_damage_toggle);
 			GameHook::showMessageTimerF1 = messageTimer;
 			break;
 		case VK_F2:

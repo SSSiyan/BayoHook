@@ -1,4 +1,4 @@
-#include <base.h>
+﻿#include <base.h>
 #include "gamehook.hpp"
 #include "LicenseStrings.hpp"
 #include <array>
@@ -26,6 +26,7 @@ uintptr_t GameHook::thirdAccessoryAddress = 0x5AA7468;
 uintptr_t GameHook::hudDisplayAddress = 0xF2B714;
 uintptr_t GameHook::enemySlotsAddress = 0x5A56A88;
 uintptr_t GameHook::angelSlayerFloorAddress = 0x509E87C;
+uintptr_t GameHook::difficultyAddress = 0x5A985A0;
 
 void help_marker(const char* desc) {
     ImGui::SameLine();
@@ -61,6 +62,7 @@ void GameHook::GameImGui(void) {
     int& thirdAccessoryValue = *(int*)GameHook::thirdAccessoryAddress;
     bool& hudDisplayValue = *(bool*)GameHook::hudDisplayAddress;
     int& angelSlayerFloorValue = *(int*)GameHook::angelSlayerFloorAddress;
+    int& difficultyValue = *(int*)GameHook::difficultyAddress;
 
     if (ImGui::Button("Save config")) {
         GameHook::onConfigSave(GameHook::cfg);
@@ -77,7 +79,9 @@ void GameHook::GameImGui(void) {
                 ImGui::PopItemWidth();
             }
 
-            ImGui::Checkbox("Deal No Damage (F1) ##DealNoDamageToggle", &GameHook::enemyHP_no_damage_toggle);
+            if (ImGui::Checkbox("Deal No Damage (F1) ##DealNoDamageToggle", &GameHook::enemyHP_no_damage_toggle)) {
+                GameHook::DisableKilling(GameHook::enemyHP_no_damage_toggle);
+            }
 
             if (ImGui::Checkbox("Take No Damage (F2)", &GameHook::takeNoDamage_toggle)) {
                 GameHook::TakeNoDamage(GameHook::takeNoDamage_toggle);
@@ -89,6 +93,33 @@ void GameHook::GameImGui(void) {
 
             if (ImGui::Checkbox("Disable Enemy Daze", &GameHook::disableDaze_toggle)) {
                 GameHook::DisableDaze(GameHook::disableDaze_toggle);
+            }
+
+            ImGui::Text("Difficulty");
+            ImGui::PushItemWidth(inputItemWidth);
+            ImGui::InputInt("##DifficultyInputInt", &difficultyValue);
+            ImGui::PopItemWidth();
+            ImGui::SameLine();
+            switch (difficultyValue)
+            {
+            case 0:
+                ImGui::Text("Very Easy");
+                break;
+            case 1:
+                ImGui::Text("Easy");
+                break;
+            case 2:
+                ImGui::Text("Normal");
+                break;
+            case 3:
+                ImGui::Text("Hard");
+                break;
+            case 4:
+                ImGui::Text("Non-Stop Infinite Climax");
+                break;
+            default:
+                ImGui::Text("");
+                break;
             }
 
             ImGui::Text("Angel Slayer Floor");
@@ -140,7 +171,7 @@ void GameHook::GameImGui(void) {
                 ImGui::Text("Selene's Light");
                 break;
             case 5:
-                ImGui::Text("Star of Din�ta");
+                ImGui::Text("Star of Dinéta");
                 break;
             case 6:
                 ImGui::Text("Evil Harvest Rosary");
@@ -501,31 +532,31 @@ void GameHook::BackgroundImGui(void) {
     if (GameHook::showMessages_toggle) {
         if (GameHook::showMessageTimerF1 > 0) {
             if (GameHook::enemyHP_no_damage_toggle)
-                ImGui::Text("Deal No Damage Enabled");
+                ImGui::TextColored(ImVec4(0,1,0,1), "Deal No Damage ON");
             else
-                ImGui::Text("Deal No Damage Disabled");
+                ImGui::TextColored(ImVec4(0,1,0,1), "Deal No Damage OFF");
             GameHook::showMessageTimerF1--;
         }
         if (GameHook::showMessageTimerF2 > 0) {
             if (GameHook::takeNoDamage_toggle)
-                ImGui::Text("Take No Damage Enabled");
+                ImGui::TextColored(ImVec4(0,1,0,1), "Take No Damage ON");
             else
-                ImGui::Text("Take No Damage Disabled");
+                ImGui::TextColored(ImVec4(0,1,0,1), "Take No Damage OFF");
             GameHook::showMessageTimerF2--;
         }
         if (GameHook::showMessageTimerF3 > 0) {
             if (GameHook::enemyHP_one_hit_kill_toggle)
-                ImGui::Text("One Hit Kill Enabled");
+                ImGui::TextColored(ImVec4(0,1,0,1), "One Hit Kill ON");
             else
-                ImGui::Text("One Hit Kill Disabled");
+                ImGui::TextColored(ImVec4(0,1,0,1), "One Hit Kill OFF");
             GameHook::showMessageTimerF3--;
         }
         //
         if (GameHook::showMessageTimerF5 > 0) {
             if (GameHook::noClip_toggle)
-                ImGui::Text("NoClip Enabled");
+                ImGui::TextColored(ImVec4(0,1,0,1), "NoClip ON");
             else
-                ImGui::Text("NoClip Disabled");
+                ImGui::TextColored(ImVec4(0,1,0,1), "NoClip OFF");
             GameHook::showMessageTimerF5--;
         }
     }
