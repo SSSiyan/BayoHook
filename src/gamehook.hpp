@@ -18,7 +18,7 @@ public:
 	static bool noClip_toggle;
 	static bool disableDaze_toggle;
 	static bool freezeTimer_toggle;
-	static bool disableDivekickBounce_toggle;
+	static bool disableAfterBurnerBounce_toggle;
 	// patch functions
 	static void TakeNoDamage(bool enabled);
 	static void DisableKilling(bool enabled);
@@ -28,7 +28,7 @@ public:
 	static void NoClip(bool enabled);
 	static void DisableDaze(bool enabled);
 	static void FreezeTimer(bool enabled);
-	static void DisableDivekickBounce(bool enabled);
+	static void DisableAfterBurnerBounce(bool enabled);
 
 	static void SaveStates_SaveState();
 	static void SaveStates_LoadState();
@@ -53,6 +53,9 @@ public:
 	static int animSwapSourceAnim1;
 	static int animSwapDesiredAnim1;
 	static bool easierMash_toggle;
+	static int initialAngelSlayerFloor;
+	static bool cancellableAfterBurner_toggle;
+	static bool cancellableFallingKick_toggle;
 
 	// update
 	static int saveStates_CurrentEnemy;

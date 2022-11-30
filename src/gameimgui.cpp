@@ -31,8 +31,7 @@ uintptr_t GameHook::difficultyAddress = 0x5A985A0;
 void help_marker(const char* desc) {
     ImGui::SameLine();
     ImGui::TextDisabled("(?)");
-    if (ImGui::IsItemHovered())
-    {
+    if (ImGui::IsItemHovered()) {
         ImGui::BeginTooltip();
         ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
         ImGui::TextUnformatted(desc);
@@ -81,13 +80,20 @@ void GameHook::GameImGui(void) {
 
             if (ImGui::Checkbox("Deal No Damage (F1) ##DealNoDamageToggle", &GameHook::enemyHP_no_damage_toggle)) {
                 GameHook::DisableKilling(GameHook::enemyHP_no_damage_toggle);
+                if (GameHook::enemyHP_no_damage_toggle)
+                    GameHook::enemyHP_one_hit_kill_toggle = false;
             }
 
             if (ImGui::Checkbox("Take No Damage (F2)", &GameHook::takeNoDamage_toggle)) {
                 GameHook::TakeNoDamage(GameHook::takeNoDamage_toggle);
             }
 
-            ImGui::Checkbox("One Hit Kill (F3) ##OneHitKillToggle", &GameHook::enemyHP_one_hit_kill_toggle);
+            if (ImGui::Checkbox("One Hit Kill (F3) ##OneHitKillToggle", &GameHook::enemyHP_one_hit_kill_toggle)) {
+                if (GameHook::enemyHP_one_hit_kill_toggle) {
+                    GameHook::enemyHP_no_damage_toggle = false;
+                    GameHook::DisableKilling(GameHook::enemyHP_no_damage_toggle);
+                }
+            }
 
             ImGui::Checkbox("Inf Magic ##InfMagicToggle", &GameHook::inf_magic_toggle);
 
@@ -122,7 +128,13 @@ void GameHook::GameImGui(void) {
                 break;
             }
 
-            ImGui::Text("Angel Slayer Floor");
+            ImGui::Text("Initial Angel Slayer Floor");
+            help_marker("0 = floor 1. Set before starting Angel Slayer.");
+            ImGui::PushItemWidth(inputItemWidth);
+            ImGui::InputInt("##InitialAngelSlayerFloorInputInt", &GameHook::initialAngelSlayerFloor);
+            ImGui::PopItemWidth();
+
+            ImGui::Text("Current Angel Slayer Floor");
             help_marker("0 = floor 1. Set before entering a portal.");
             ImGui::PushItemWidth(inputItemWidth);
             ImGui::InputInt("##AngelSlayerFloorInputInt", &angelSlayerFloorValue);
@@ -147,9 +159,13 @@ void GameHook::GameImGui(void) {
                 ImGui::PopItemWidth();
             }
 
-            if (ImGui::Checkbox("Disable Divekick Bounce", &GameHook::disableDivekickBounce_toggle)) {
-                DisableDivekickBounce(GameHook::disableDivekickBounce_toggle);
+            if (ImGui::Checkbox("Disable After Burner Bounce", &GameHook::disableAfterBurnerBounce_toggle)) {
+                DisableAfterBurnerBounce(GameHook::disableAfterBurnerBounce_toggle);
             }
+
+            ImGui::Checkbox("Cancellable After Burner", &GameHook::cancellableAfterBurner_toggle);
+
+            ImGui::Checkbox("Cancellable Falling Kick", &GameHook::cancellableFallingKick_toggle);
 
             ImGui::Text("Third Accessory");
             ImGui::PushItemWidth(inputItemWidth);

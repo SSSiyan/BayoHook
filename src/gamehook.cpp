@@ -8,7 +8,7 @@ bool GameHook::disableClicking_toggle(false);
 bool GameHook::noClip_toggle(false);
 bool GameHook::disableDaze_toggle(false);
 bool GameHook::freezeTimer_toggle(false);
-bool GameHook::disableDivekickBounce_toggle(false);
+bool GameHook::disableAfterBurnerBounce_toggle(false);
 
 // patches
 void GameHook::TakeNoDamage(bool enabled) {
@@ -71,10 +71,10 @@ void GameHook::DisableKilling(bool enabled) {
 		GameHook::_patch((char*)(0x4572D2), (char*)"\x75\x0C", 2);
 }
 
-void GameHook::DisableDivekickBounce(bool enabled) {
+void GameHook::DisableAfterBurnerBounce(bool enabled) {
 	if (enabled) {
 		GameHook::_nop((char*)(0x959B23), 6); // enemy
-		GameHook::_patch((char*)(0x959E2C), (char*)"\xEB\x5E", 6); // wall
+		GameHook::_patch((char*)(0x959E2C), (char*)"\xEB\x5E", 2); // wall
 	}
 	else {
 		GameHook::_patch((char*)(0x959B23), (char*)"\x0F\x84\x37\x03\x00\x00", 6); // enemy
@@ -301,6 +301,62 @@ static __declspec(naked) void EasierMashDetour(void) {
 	}
 }
 
+std::unique_ptr<FunctionHook> initialAngelSlayerFloorHook;
+uintptr_t initialAngelSlayerFloor_jmp_ret{ NULL };
+int GameHook::initialAngelSlayerFloor = 0;
+static __declspec(naked) void InitialAngelSlayerFloorDetour(void) {
+	_asm {
+		push eax
+		push esi
+		mov eax, [GameHook::angelSlayerFloorAddress]
+		mov esi, [GameHook::initialAngelSlayerFloor]
+		mov [eax], esi
+		pop esi
+		pop eax
+		jmp dword ptr [initialAngelSlayerFloor_jmp_ret]
+	}
+}
+
+std::unique_ptr<FunctionHook> cancellableAfterBurnerHook;
+uintptr_t cancellableAfterBurner_jmp_ret{ NULL };
+bool GameHook::cancellableAfterBurner_toggle = false;
+uintptr_t cancellableMovesCall = 0x9E85E0;
+static __declspec(naked) void CancellableAfterBurnerDetour(void) {
+	_asm {
+		cmp byte ptr [GameHook::cancellableAfterBurner_toggle], 0
+		je originalcode
+
+		push ecx
+		mov ecx, esi // put player pointer in ecx before call
+		call dword ptr [cancellableMovesCall] // "is cancellable" call
+		pop ecx // restore ecx
+
+		originalcode:
+		cmp [esi+0x00000350], ebx
+		jmp dword ptr [cancellableAfterBurner_jmp_ret]
+	}
+}
+
+std::unique_ptr<FunctionHook> cancellableFallingKickHook;
+uintptr_t cancellableFallingKick_jmp_ret{ NULL };
+bool GameHook::cancellableFallingKick_toggle = false;
+uintptr_t CancellableFallingKickDefaultCall = 0x433220;
+static __declspec(naked) void CancellableFallingKickDetour(void) {
+	_asm {
+		cmp byte ptr [GameHook::cancellableFallingKick_toggle], 0
+		je originalcode
+
+		push ecx
+		mov ecx, esi // put player pointer in ecx before call
+		call dword ptr [cancellableMovesCall] // "is cancellable" call
+		pop ecx // restore ecx
+
+		originalcode:
+		call dword ptr [CancellableFallingKickDefaultCall]
+		jmp dword ptr [cancellableFallingKick_jmp_ret]
+	}
+}
+
 int GameHook::saveStates_CurrentEnemy = 1;
 int GameHook::saveStates_SavedEnemyMoveID = 0;
 float GameHook::saveStates_SavedEnemyAnimFrame = 0.0f;
@@ -377,6 +433,9 @@ void GameHook::InitializeDetours(void) {
 	install_hook_absolute(0x4BD053, animSwapHook, &AnimSwapDetour, &animSwap_jmp_ret, 6);
 	install_hook_absolute(0x411CD4, inputIconsHook, &InputIconsDetour, &inputIcons_jmp_ret, 13);
 	install_hook_absolute(0x4A8EFF, easierMashHook, &EasierMashDetour, &easierMash_jmp_ret, 5);
+	install_hook_absolute(0x41C8B5, initialAngelSlayerFloorHook, &InitialAngelSlayerFloorDetour, &initialAngelSlayerFloor_jmp_ret, 10);
+	install_hook_absolute(0x95ABD3, cancellableAfterBurnerHook, &CancellableAfterBurnerDetour, &cancellableAfterBurner_jmp_ret, 6);
+	install_hook_absolute(0x952142, cancellableFallingKickHook, &CancellableFallingKickDetour, &cancellableFallingKick_jmp_ret, 5);
 }
 
 void GameHook::onConfigLoad(const utils::Config& cfg) {
@@ -392,8 +451,8 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	freezeTimer_toggle = cfg.get<bool>("FreezeTimerToggle").value_or(false);
 	FreezeTimer(freezeTimer_toggle);
 	showMessages_toggle = cfg.get<bool>("ShowMessagesToggle").value_or(true);
-	disableDivekickBounce_toggle = cfg.get<bool>("DisableDivekickBounceToggle").value_or(false);
-	DisableDivekickBounce(disableDivekickBounce_toggle);
+	disableAfterBurnerBounce_toggle = cfg.get<bool>("DisableAfterBurnerBounceToggle").value_or(false);
+	DisableAfterBurnerBounce(disableAfterBurnerBounce_toggle);
 	// detours
 	enemyHP_no_damage_toggle = cfg.get<bool>("DealNoDamageToggle").value_or(false);
 	DisableKilling(enemyHP_no_damage_toggle);
@@ -408,11 +467,14 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	lessClothes_toggle = cfg.get<bool>("LessClothesToggle").value_or(false);
 	haloDisplay_toggle = cfg.get<bool>("HaloDisplayToggle").value_or(false);
 	inputIcons_toggle = cfg.get<bool>("InputIconsToggle").value_or(false);
-	inputIconsValue = cfg.get<int>("InputIconsValue").value_or(false);
+	inputIconsValue = cfg.get<int>("InputIconsValue").value_or(0);
 	easierMash_toggle = cfg.get<bool>("EasierMashToggle").value_or(false);
 	showComboUI_toggle = cfg.get<bool>("ShowComboUIToggle").value_or(false);
 	comboUI_X = cfg.get<float>("ComboUI_X").value_or(0.875f);
 	comboUI_Y = cfg.get<float>("ComboUI_Y").value_or(0.215f);
+	initialAngelSlayerFloor = cfg.get<int>("InitialAngelSlayerFloor").value_or(0);
+	cancellableAfterBurner_toggle = cfg.get<bool>("CancellableAfterBurner").value_or(false);
+	cancellableFallingKick_toggle = cfg.get<bool>("CancellableFallingKick").value_or(false);
 }
 
 void GameHook::onConfigSave(utils::Config& cfg) {
@@ -423,7 +485,7 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("DisableDazeToggle", disableDaze_toggle);
 	cfg.set<bool>("FreezeTimerToggle", freezeTimer_toggle);
 	cfg.set<bool>("ShowMessagesToggle", showMessages_toggle);
-	cfg.set<bool>("DisableDivekickBounceToggle", disableDivekickBounce_toggle);
+	cfg.set<bool>("DisableAfterBurnerBounceToggle", disableAfterBurnerBounce_toggle);
 	// detours
 	cfg.set<bool>("DealNoDamageToggle", enemyHP_no_damage_toggle);
 	cfg.set<bool>("OneHitKillToggle", enemyHP_one_hit_kill_toggle);
@@ -442,6 +504,9 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("ShowComboUIToggle", showComboUI_toggle);
 	cfg.set<float>("ComboUI_X", comboUI_X);
 	cfg.set<float>("ComboUI_Y", comboUI_Y);
+	cfg.set<int>("InitialAngelSlayerFloor", initialAngelSlayerFloor);
+	cfg.set<bool>("CancellableAfterBurner", cancellableAfterBurner_toggle);
+	cfg.set<bool>("CancellableFallingKick", cancellableFallingKick_toggle);
 
 	cfg.save(GameHook::cfgString);
 }
