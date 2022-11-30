@@ -7,6 +7,7 @@ bool GameHook::infJumps_toggle(false);
 bool GameHook::disableClicking_toggle(false);
 bool GameHook::noClip_toggle(false);
 bool GameHook::disableDaze_toggle(false);
+bool GameHook::forceDaze_toggle(false);
 bool GameHook::freezeTimer_toggle(false);
 bool GameHook::disableAfterBurnerBounce_toggle(false);
 bool GameHook::areaJumpPatch_toggle(false);
@@ -58,6 +59,13 @@ void GameHook::DisableDaze(bool enabled) {
 		GameHook::_patch((char*)(0x430CF4), (char*)"\x72\x20", 2);
 }
 
+void GameHook::ForceDaze(bool enabled) {
+	if (enabled)
+		GameHook::_patch((char*)(0x65C75C), (char*)"\xF3\x0F\x10\x86\x98\x0C\x00\x00", 8);
+	else
+		GameHook::_patch((char*)(0x65C75C), (char*)"\xF3\x0F\x10\x86\x9C\x0C\x00\x00", 8);
+}
+
 void GameHook::FreezeTimer(bool enabled) {
 	if (enabled)
 		GameHook::_nop((char*)(0x620C1D), 8);
@@ -89,6 +97,17 @@ void GameHook::AreaJumpPatch(bool enabled) {
 	}
 	else {
 		GameHook::_patch((char*)(0x4FC2FB), (char*)"\x89\x83\x28\x08\x00\x00", 6); // enemy
+	}
+}
+
+void GameHook::WeaponSwapCaller(void) {
+	uintptr_t weaponSwapCallAddress = 0x00C43FE1;
+	__asm {
+		pusha
+		pushf
+		call weaponSwapCallAddress
+		popf
+		popa
 	}
 }
 
@@ -458,6 +477,8 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	InfJumps(infJumps_toggle);
 	disableDaze_toggle = cfg.get<bool>("DisableDazeToggle").value_or(false);
 	DisableDaze(disableDaze_toggle);
+	forceDaze_toggle = cfg.get<bool>("ForceDazeToggle").value_or(false);
+	ForceDaze(forceDaze_toggle);
 	freezeTimer_toggle = cfg.get<bool>("FreezeTimerToggle").value_or(false);
 	FreezeTimer(freezeTimer_toggle);
 	showMessages_toggle = cfg.get<bool>("ShowMessagesToggle").value_or(true);
@@ -495,6 +516,7 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("FocusPatchToggle", focusPatch_toggle);
 	cfg.set<bool>("InfJumpsToggle", infJumps_toggle);
 	cfg.set<bool>("DisableDazeToggle", disableDaze_toggle);
+	cfg.set<bool>("ForceDazeToggle", forceDaze_toggle);
 	cfg.set<bool>("FreezeTimerToggle", freezeTimer_toggle);
 	cfg.set<bool>("ShowMessagesToggle", showMessages_toggle);
 	cfg.set<bool>("DisableAfterBurnerBounceToggle", disableAfterBurnerBounce_toggle);

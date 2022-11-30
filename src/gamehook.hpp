@@ -17,6 +17,7 @@ public:
 	static bool disableClicking_toggle;
 	static bool noClip_toggle;
 	static bool disableDaze_toggle;
+	static bool forceDaze_toggle;
 	static bool freezeTimer_toggle;
 	static bool disableAfterBurnerBounce_toggle;
 	static bool areaJumpPatch_toggle;
@@ -28,9 +29,11 @@ public:
 	static void DisableClicking(bool enabled);
 	static void NoClip(bool enabled);
 	static void DisableDaze(bool enabled);
+	static void ForceDaze(bool enabled);
 	static void FreezeTimer(bool enabled);
 	static void DisableAfterBurnerBounce(bool enabled);
 	static void AreaJumpPatch(bool enabled);
+	static void WeaponSwapCaller(void);
 
 	static void SaveStates_SaveState();
 	static void SaveStates_LoadState();
@@ -81,6 +84,10 @@ public:
 	static uintptr_t angelSlayerFloorAddress;
 	static uintptr_t difficultyAddress;
 	static uintptr_t areaJumpAddress;
+	static uintptr_t WeaponA1Address;
+	static uintptr_t WeaponA2Address;
+	static uintptr_t WeaponB1Address;
+	static uintptr_t WeaponB2Address;
 
 	// imgui
 	static void GameImGui(void);
@@ -90,6 +97,7 @@ public:
 	static float comboUI_Y;
 	static void BackgroundImGui(void);
 	static void ImGuiStyle(void);
+	static const char* WeaponNames(int weaponID);
 	static int showMessageTimerF1;
 	static int showMessageTimerF2;
 	static int showMessageTimerF3;

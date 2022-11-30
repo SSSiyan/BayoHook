@@ -5,6 +5,7 @@
 
 // system
 static float inputItemWidth = 100.0f;
+static float sameLineWidth = 200.0f;
 bool GameHook::showMessages_toggle(false);
 bool GameHook::showComboUI_toggle(false);
 float GameHook::comboUI_X(0.0f);
@@ -27,7 +28,11 @@ uintptr_t GameHook::hudDisplayAddress = 0xF2B714;
 uintptr_t GameHook::enemySlotsAddress = 0x5A56A88;
 uintptr_t GameHook::angelSlayerFloorAddress = 0x509E87C;
 uintptr_t GameHook::difficultyAddress = 0x5A985A0;
-uintptr_t GameHook::areaJumpAddress = 0x05A978E8;
+uintptr_t GameHook::areaJumpAddress = 0x5A978E8;
+uintptr_t GameHook::WeaponA1Address = 0x5AA741C;
+uintptr_t GameHook::WeaponA2Address = 0x5AA7420;
+uintptr_t GameHook::WeaponB1Address = 0x5AA742C;
+uintptr_t GameHook::WeaponB2Address = 0x5AA7430;
 
 void help_marker(const char* desc) {
     ImGui::SameLine();
@@ -64,6 +69,10 @@ void GameHook::GameImGui(void) {
     int& angelSlayerFloorValue = *(int*)GameHook::angelSlayerFloorAddress;
     int& difficultyValue = *(int*)GameHook::difficultyAddress;
     int& areaJumpValue = *(int*)GameHook::areaJumpAddress;
+    int& weaponA1Value = *(int*)GameHook::WeaponA1Address;
+    int& weaponA2Value = *(int*)GameHook::WeaponA2Address;
+    int& weaponB1Value = *(int*)GameHook::WeaponB1Address;
+    int& weaponB2Value = *(int*)GameHook::WeaponB2Address;
 
     if (ImGui::Button("Save config")) {
         GameHook::onConfigSave(GameHook::cfg);
@@ -73,18 +82,13 @@ void GameHook::GameImGui(void) {
         if (ImGui::BeginTabItem("General")) {
             ImGui::BeginChild("GeneralChild");
 
-            ImGui::Checkbox("Damage Dealt Multiplier ##DamageDealtMultiplierToggle", &GameHook::damageDealtMultiplier_toggle);
-            if (GameHook::damageDealtMultiplier_toggle) {
-                ImGui::PushItemWidth(inputItemWidth);
-                ImGui::InputFloat("##DamageDealtMultiplierrInputFloat", &GameHook::damageDealtMultiplierMult, 0.1f, 1, "%.1f");
-                ImGui::PopItemWidth();
-            }
-
             if (ImGui::Checkbox("Deal No Damage (F1) ##DealNoDamageToggle", &GameHook::enemyHP_no_damage_toggle)) {
                 GameHook::DisableKilling(GameHook::enemyHP_no_damage_toggle);
                 if (GameHook::enemyHP_no_damage_toggle)
                     GameHook::enemyHP_one_hit_kill_toggle = false;
             }
+
+            ImGui::SameLine(sameLineWidth);
 
             if (ImGui::Checkbox("Take No Damage (F2)", &GameHook::takeNoDamage_toggle)) {
                 GameHook::TakeNoDamage(GameHook::takeNoDamage_toggle);
@@ -97,10 +101,25 @@ void GameHook::GameImGui(void) {
                 }
             }
 
+            ImGui::SameLine(sameLineWidth);
+
             ImGui::Checkbox("Inf Magic ##InfMagicToggle", &GameHook::inf_magic_toggle);
 
             if (ImGui::Checkbox("Disable Enemy Daze", &GameHook::disableDaze_toggle)) {
                 GameHook::DisableDaze(GameHook::disableDaze_toggle);
+            }
+
+            ImGui::SameLine(sameLineWidth);
+
+            if (ImGui::Checkbox("Force Enemy Daze", &GameHook::forceDaze_toggle)) {
+                GameHook::ForceDaze(GameHook::forceDaze_toggle);
+            }
+
+            ImGui::Checkbox("Damage Dealt Multiplier ##DamageDealtMultiplierToggle", &GameHook::damageDealtMultiplier_toggle);
+            if (GameHook::damageDealtMultiplier_toggle) {
+                ImGui::PushItemWidth(inputItemWidth);
+                ImGui::InputFloat("##DamageDealtMultiplierrInputFloat", &GameHook::damageDealtMultiplierMult, 0.1f, 1, "%.1f");
+                ImGui::PopItemWidth();
             }
 
             ImGui::Text("Difficulty");
@@ -135,12 +154,6 @@ void GameHook::GameImGui(void) {
             ImGui::InputInt("##InitialAngelSlayerFloorInputInt", &GameHook::initialAngelSlayerFloor);
             ImGui::PopItemWidth();
 
-            ImGui::Text("Current Angel Slayer Floor");
-            help_marker("0 = floor 1. Set before entering a portal.");
-            ImGui::PushItemWidth(inputItemWidth);
-            ImGui::InputInt("##AngelSlayerFloorInputInt", &angelSlayerFloorValue);
-            ImGui::PopItemWidth();
-
             ImGui::EndChild();
             ImGui::EndTabItem();
         }
@@ -152,14 +165,6 @@ void GameHook::GameImGui(void) {
                 GameHook::InfJumps(GameHook::infJumps_toggle);
             }
 
-            ImGui::Checkbox("Witch Time Multiplier ##WitchTimeToggle", &GameHook::witchTimeMultiplier_toggle);
-            help_marker("Adjust how long Witch Time lasts");
-            if (GameHook::witchTimeMultiplier_toggle) {
-                ImGui::PushItemWidth(inputItemWidth);
-                ImGui::InputFloat("##WitchTimeMultiplier", &GameHook::witchTimeMultiplier, 0, 0, "%.1f");
-                ImGui::PopItemWidth();
-            }
-
             if (ImGui::Checkbox("Disable After Burner Bounce", &GameHook::disableAfterBurnerBounce_toggle)) {
                 DisableAfterBurnerBounce(GameHook::disableAfterBurnerBounce_toggle);
             }
@@ -167,6 +172,14 @@ void GameHook::GameImGui(void) {
             ImGui::Checkbox("Cancellable After Burner", &GameHook::cancellableAfterBurner_toggle);
 
             ImGui::Checkbox("Cancellable Falling Kick", &GameHook::cancellableFallingKick_toggle);
+
+            ImGui::Checkbox("Witch Time Multiplier ##WitchTimeToggle", &GameHook::witchTimeMultiplier_toggle);
+            help_marker("Adjust how long Witch Time lasts");
+            if (GameHook::witchTimeMultiplier_toggle) {
+                ImGui::PushItemWidth(inputItemWidth);
+                ImGui::InputFloat("##WitchTimeMultiplier", &GameHook::witchTimeMultiplier, 0, 0, "%.1f");
+                ImGui::PopItemWidth();
+            }
 
             ImGui::Text("Third Accessory");
             ImGui::PushItemWidth(inputItemWidth);
@@ -219,24 +232,58 @@ void GameHook::GameImGui(void) {
                 ImGui::Text("");
                 break;
             }
+
             ImGui::EndChild();
             ImGui::EndTabItem();
         }
 
         if (ImGui::BeginTabItem("Stats")) {
             ImGui::BeginChild("StatsChild");
-
             ImGui::Text("Halos");
             ImGui::InputInt("##HaloInputInt", &halosValue, 1, 100);
 
             ImGui::Text("Chapters Played");
+            ImGui::PushItemWidth(inputItemWidth);
             ImGui::InputInt("##ChapterInputInt", &chaptersPlayedValue, 1, 100);
-
+            ImGui::PopItemWidth();
             ImGui::Text("Combo Points");
+            ImGui::PushItemWidth(inputItemWidth);
             ImGui::InputInt("##ComboPointsInputInt", &comboPointsValue, 10, 100);
+            ImGui::PopItemWidth();
 
             ImGui::Text("Combo Multiplier");
-            ImGui::InputFloat("##ComboMultiplierInputFloat", &comboMultiplierValue, 1, 10, "% .1f");
+            ImGui::PushItemWidth(inputItemWidth);
+            ImGui::InputFloat("##ComboMultiplierInputFloat", &comboMultiplierValue, 1, 10, "%.1f");
+            ImGui::PopItemWidth();
+
+            ImGui::Text("Current Angel Slayer Floor");
+            help_marker("0 = floor 1. Set before entering a portal.");
+            ImGui::PushItemWidth(inputItemWidth);
+            ImGui::InputInt("##AngelSlayerFloorInputInt", &angelSlayerFloorValue);
+            ImGui::PopItemWidth();
+
+            ImGui::Text("Weapon Set A:");
+            help_marker("WIP, requires entering and exiting the weapon select menu to apply");
+            ImGui::PushItemWidth(inputItemWidth);
+            ImGui::InputInt("##WeaponA1InputInt", &weaponA1Value, 1, 10);
+            ImGui::SameLine();
+            ImGui::Text(GameHook::WeaponNames(weaponA1Value));
+            ImGui::InputInt("##WeaponA2InputInt", &weaponA2Value, 1, 10);
+            ImGui::SameLine();
+            ImGui::Text(GameHook::WeaponNames(weaponA2Value));
+            ImGui::Text("Weapon Set B:");
+            ImGui::InputInt("##WeaponB1InputInt", &weaponB1Value, 1, 10);
+            ImGui::SameLine();
+            ImGui::Text(GameHook::WeaponNames(weaponB1Value));
+            ImGui::InputInt("##WeaponB2InputInt", &weaponB2Value, 1, 10);
+            ImGui::SameLine();
+            ImGui::Text(GameHook::WeaponNames(weaponB2Value));
+            ImGui::PopItemWidth();
+
+            if (ImGui::Button("Call Weapon Swap")) {
+                GameHook::WeaponSwapCaller();
+            }
+            help_marker("WIP, requires entering and exiting the weapon select menu once to load weapons initially. 3 different weapon loads will crash.");
 
             ImGui::Spacing();
             ImGui::Separator();
@@ -324,7 +371,7 @@ void GameHook::GameImGui(void) {
                 ImGui::PopItemWidth();
             }
 
-            ImGui::Checkbox("Show Combo UI", &GameHook::showComboUI_toggle);
+            ImGui::Checkbox("Show 9.9+ Combo Multiplier UI", &GameHook::showComboUI_toggle);
             help_marker("Open a window that shows your current combo multiplier when passing 9.9x");
             if (GameHook::showComboUI_toggle) {
                 ImGui::PushItemWidth(inputItemWidth);
@@ -407,7 +454,7 @@ void GameHook::GameImGui(void) {
             ImGui::PushItemWidth(inputItemWidth);
             ImGui::InputInt("##AreaIDInputInt", &areaJumpValue, ImGuiInputTextFlags_EnterReturnsTrue);
             ImGui::PopItemWidth();
-            help_marker("Press Enter after typing to teleport.\n2576 = mission select\n528 = proving grounds\n2816 = angel slayer\n276 = train station");
+            help_marker("2576 = mission select\n528 = proving grounds\n2816 = angel slayer\n276 = train station");
             if (ImGui::Button("Jump to mission select")) {
                 areaJumpValue = 2576;
             }
@@ -563,6 +610,43 @@ void GameHook::ImGuiStyle(void) {
     colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.4588f, 0.45880f, 0.4588f, 0.35f);
 }
 
+const char* GameHook::WeaponNames(int weaponID) {
+    switch (weaponID) {
+    case 0:
+        return "Scarborough Fair";
+    case 1:
+        return "Onyx Roses";
+    case 2:
+        return "Shuraba";
+    case 3:
+        return "Kulshedra";
+    case 6:
+        return "Durga";
+    case 7:
+        return "Lt. Col. Kilgore";
+    case 8:
+        return "Odette";
+    case 10:
+        return "Handguns";
+    case 11:
+        return "Handguns";
+    case 13:
+        return "Onyx Roses Alt";
+    case 14:
+        return "Durga Alt";
+    case 15:
+        return "Lt. Col. Kilgore Alt";
+    case 16:
+        return "Pillowtalk";
+    case 17:
+        return "Bazillions";
+    case 18:
+        return "Rodin";
+    default:
+        return "";
+    }
+}
+
 void GameHook::BackgroundImGui(void) {
     if (GameHook::showMessages_toggle) {
         if (GameHook::showMessageTimerF1 > 0) {
@@ -596,3 +680,4 @@ void GameHook::BackgroundImGui(void) {
         }
     }
 }
+
