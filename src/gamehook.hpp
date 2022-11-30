@@ -19,6 +19,7 @@ public:
 	static bool disableDaze_toggle;
 	static bool freezeTimer_toggle;
 	static bool disableAfterBurnerBounce_toggle;
+	static bool areaJumpPatch_toggle;
 	// patch functions
 	static void TakeNoDamage(bool enabled);
 	static void DisableKilling(bool enabled);
@@ -29,6 +30,7 @@ public:
 	static void DisableDaze(bool enabled);
 	static void FreezeTimer(bool enabled);
 	static void DisableAfterBurnerBounce(bool enabled);
+	static void AreaJumpPatch(bool enabled);
 
 	static void SaveStates_SaveState();
 	static void SaveStates_LoadState();
@@ -78,6 +80,7 @@ public:
 	static uintptr_t enemySlotsAddress;
 	static uintptr_t angelSlayerFloorAddress;
 	static uintptr_t difficultyAddress;
+	static uintptr_t areaJumpAddress;
 
 	// imgui
 	static void GameImGui(void);

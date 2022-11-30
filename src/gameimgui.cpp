@@ -27,6 +27,7 @@ uintptr_t GameHook::hudDisplayAddress = 0xF2B714;
 uintptr_t GameHook::enemySlotsAddress = 0x5A56A88;
 uintptr_t GameHook::angelSlayerFloorAddress = 0x509E87C;
 uintptr_t GameHook::difficultyAddress = 0x5A985A0;
+uintptr_t GameHook::areaJumpAddress = 0x05A978E8;
 
 void help_marker(const char* desc) {
     ImGui::SameLine();
@@ -42,9 +43,9 @@ void help_marker(const char* desc) {
 
 inline void under_line(const ImColor& col) {
     ImVec2 min = ImGui::GetItemRectMin();
-    ImVec2 max = ImGui::GetItemRectMax();
-    min.y = max.y;
-    ImGui::GetWindowDrawList()->AddLine(min, max, col, 1.0f);
+ImVec2 max = ImGui::GetItemRectMax();
+min.y = max.y;
+ImGui::GetWindowDrawList()->AddLine(min, max, col, 1.0f);
 }
 
 void GameHook::GameImGui(void) {
@@ -62,6 +63,7 @@ void GameHook::GameImGui(void) {
     bool& hudDisplayValue = *(bool*)GameHook::hudDisplayAddress;
     int& angelSlayerFloorValue = *(int*)GameHook::angelSlayerFloorAddress;
     int& difficultyValue = *(int*)GameHook::difficultyAddress;
+    int& areaJumpValue = *(int*)GameHook::areaJumpAddress;
 
     if (ImGui::Button("Save config")) {
         GameHook::onConfigSave(GameHook::cfg);
@@ -106,8 +108,7 @@ void GameHook::GameImGui(void) {
             ImGui::InputInt("##DifficultyInputInt", &difficultyValue);
             ImGui::PopItemWidth();
             ImGui::SameLine();
-            switch (difficultyValue)
-            {
+            switch (difficultyValue) {
             case 0:
                 ImGui::Text("Very Easy");
                 break;
@@ -401,6 +402,20 @@ void GameHook::GameImGui(void) {
                     GameHook::animSwapSourceAnim1 = GameHook::animSwapCurrentAnim;
                 }
             }
+
+            ImGui::Text("Area Jump Test");
+            ImGui::PushItemWidth(inputItemWidth);
+            ImGui::InputInt("##AreaIDInputInt", &areaJumpValue, ImGuiInputTextFlags_EnterReturnsTrue);
+            ImGui::PopItemWidth();
+            help_marker("Press Enter after typing to teleport.\n2576 = mission select\n528 = proving grounds\n2816 = angel slayer\n276 = train station");
+            if (ImGui::Button("Jump to mission select")) {
+                areaJumpValue = 2576;
+            }
+            help_marker("Depending on when this is pressed it could crash. Haven't tested it much gl");
+            if (ImGui::Checkbox("Patch Area Jump Correction", &GameHook::areaJumpPatch_toggle)) {
+                GameHook::AreaJumpPatch(GameHook::areaJumpPatch_toggle);
+            }
+            help_marker("Sometimes the area jump ID gets reset, presumably to correct it if you input something out of bounds. This removes that.");
 
             ImGui::EndChild();
             ImGui::EndTabItem();

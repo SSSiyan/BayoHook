@@ -9,6 +9,7 @@ bool GameHook::noClip_toggle(false);
 bool GameHook::disableDaze_toggle(false);
 bool GameHook::freezeTimer_toggle(false);
 bool GameHook::disableAfterBurnerBounce_toggle(false);
+bool GameHook::areaJumpPatch_toggle(false);
 
 // patches
 void GameHook::TakeNoDamage(bool enabled) {
@@ -79,6 +80,15 @@ void GameHook::DisableAfterBurnerBounce(bool enabled) {
 	else {
 		GameHook::_patch((char*)(0x959B23), (char*)"\x0F\x84\x37\x03\x00\x00", 6); // enemy
 		GameHook::_patch((char*)(0x959E2C), (char*)"\x74\x5E", 2); // wall
+	}
+}
+
+void GameHook::AreaJumpPatch(bool enabled) {
+	if (enabled) {
+		GameHook::_nop((char*)(0x4FC2FB), 6); // enemy
+	}
+	else {
+		GameHook::_patch((char*)(0x4FC2FB), (char*)"\x89\x83\x28\x08\x00\x00", 6); // enemy
 	}
 }
 
@@ -453,6 +463,8 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	showMessages_toggle = cfg.get<bool>("ShowMessagesToggle").value_or(true);
 	disableAfterBurnerBounce_toggle = cfg.get<bool>("DisableAfterBurnerBounceToggle").value_or(false);
 	DisableAfterBurnerBounce(disableAfterBurnerBounce_toggle);
+	//areaJumpPatch_toggle = cfg.get<bool>("AreaJumpPatchToggle").value_or(false);
+	//AreaJumpPatch(areaJumpPatch_toggle);
 	// detours
 	enemyHP_no_damage_toggle = cfg.get<bool>("DealNoDamageToggle").value_or(false);
 	DisableKilling(enemyHP_no_damage_toggle);
@@ -486,6 +498,7 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("FreezeTimerToggle", freezeTimer_toggle);
 	cfg.set<bool>("ShowMessagesToggle", showMessages_toggle);
 	cfg.set<bool>("DisableAfterBurnerBounceToggle", disableAfterBurnerBounce_toggle);
+	//cfg.set<bool>("AreaJumpPatchToggle", areaJumpPatch_toggle);
 	// detours
 	cfg.set<bool>("DealNoDamageToggle", enemyHP_no_damage_toggle);
 	cfg.set<bool>("OneHitKillToggle", enemyHP_one_hit_kill_toggle);
