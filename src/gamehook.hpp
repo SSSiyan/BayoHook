@@ -18,6 +18,7 @@ public:
 	static bool noClip_toggle;
 	static bool disableDaze_toggle;
 	static bool freezeTimer_toggle;
+	static bool disableDivekickBounce_toggle;
 	// patch functions
 	static void TakeNoDamage(bool enabled);
 	static void DisableKilling(bool enabled);
@@ -27,6 +28,8 @@ public:
 	static void NoClip(bool enabled);
 	static void DisableDaze(bool enabled);
 	static void FreezeTimer(bool enabled);
+	static void DisableDivekickBounce(bool enabled);
+
 	static void SaveStates_SaveState();
 	static void SaveStates_LoadState();
 

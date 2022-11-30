@@ -147,6 +147,10 @@ void GameHook::GameImGui(void) {
                 ImGui::PopItemWidth();
             }
 
+            if (ImGui::Checkbox("Disable Divekick Bounce", &GameHook::disableDivekickBounce_toggle)) {
+                DisableDivekickBounce(GameHook::disableDivekickBounce_toggle);
+            }
+
             ImGui::Text("Third Accessory");
             ImGui::PushItemWidth(inputItemWidth);
             ImGui::InputInt("##ThirdAccessoryInputInt", &thirdAccessoryValue, 1, 100);

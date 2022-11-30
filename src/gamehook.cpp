@@ -8,6 +8,7 @@ bool GameHook::disableClicking_toggle(false);
 bool GameHook::noClip_toggle(false);
 bool GameHook::disableDaze_toggle(false);
 bool GameHook::freezeTimer_toggle(false);
+bool GameHook::disableDivekickBounce_toggle(false);
 
 // patches
 void GameHook::TakeNoDamage(bool enabled) {
@@ -68,6 +69,17 @@ void GameHook::DisableKilling(bool enabled) {
 		GameHook::_patch((char*)(0x4572D2), (char*) "\xEB\x0C", 2);
 	else
 		GameHook::_patch((char*)(0x4572D2), (char*)"\x75\x0C", 2);
+}
+
+void GameHook::DisableDivekickBounce(bool enabled) {
+	if (enabled) {
+		GameHook::_nop((char*)(0x959B23), 6); // enemy
+		GameHook::_patch((char*)(0x959E2C), (char*)"\xEB\x5E", 6); // wall
+	}
+	else {
+		GameHook::_patch((char*)(0x959B23), (char*)"\x0F\x84\x37\x03\x00\x00", 6); // enemy
+		GameHook::_patch((char*)(0x959E2C), (char*)"\x74\x5E", 2); // wall
+	}
 }
 
 // detours
@@ -380,6 +392,8 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	freezeTimer_toggle = cfg.get<bool>("FreezeTimerToggle").value_or(false);
 	FreezeTimer(freezeTimer_toggle);
 	showMessages_toggle = cfg.get<bool>("ShowMessagesToggle").value_or(true);
+	disableDivekickBounce_toggle = cfg.get<bool>("DisableDivekickBounceToggle").value_or(false);
+	DisableDivekickBounce(disableDivekickBounce_toggle);
 	// detours
 	enemyHP_no_damage_toggle = cfg.get<bool>("DealNoDamageToggle").value_or(false);
 	DisableKilling(enemyHP_no_damage_toggle);
@@ -409,6 +423,7 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("DisableDazeToggle", disableDaze_toggle);
 	cfg.set<bool>("FreezeTimerToggle", freezeTimer_toggle);
 	cfg.set<bool>("ShowMessagesToggle", showMessages_toggle);
+	cfg.set<bool>("DisableDivekickBounceToggle", disableDivekickBounce_toggle);
 	// detours
 	cfg.set<bool>("DealNoDamageToggle", enemyHP_no_damage_toggle);
 	cfg.set<bool>("OneHitKillToggle", enemyHP_one_hit_kill_toggle);
