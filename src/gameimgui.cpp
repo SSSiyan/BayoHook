@@ -370,9 +370,9 @@ void GameHook::GameImGui(void) {
             }
             help_marker("Play while tabbed out");
 
-            if (ImGui::Checkbox("Auto Skip Cutscenes", &GameHook::autoSkipCutscenes_toggle)) {
+            /*if (ImGui::Checkbox("Auto Skip Cutscenes", &GameHook::autoSkipCutscenes_toggle)) {
                 GameHook::AutoSkipCutscenes(GameHook::autoSkipCutscenes_toggle);
-            }
+            }*/
 
             ImGui::Checkbox("Force Input Type", &GameHook::inputIcons_toggle);
             help_marker("0 keyboard, 1 gamepad");

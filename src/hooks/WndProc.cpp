@@ -26,6 +26,7 @@ LRESULT CALLBACK Base::Hooks::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
 			break;
 		case VK_F2:
 			GameHook::takeNoDamage_toggle = !GameHook::takeNoDamage_toggle;
+			GameHook::TakeNoDamage(GameHook::takeNoDamage_toggle);
 			GameHook::showMessageTimerF2 = messageTimer;
 			break;
 		case VK_F3:

@@ -103,10 +103,10 @@ void GameHook::AreaJumpPatch(bool enabled) {
 
 void GameHook::AutoSkipCutscenes(bool enabled) {
 	if (enabled) {
-		GameHook::_patch((char*)(0x54493A), (char*)"\xEB\x0A", 2);
+		//GameHook::_patch((char*)(0x54493A), (char*)"\xEB\x0A", 2);
 	}
 	else {
-		GameHook::_patch((char*)(0x54493A), (char*)"\x75\x0A", 2);
+		//GameHook::_patch((char*)(0x54493A), (char*)"\x75\x0A", 2);
 	}
 }
 
