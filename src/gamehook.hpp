@@ -49,7 +49,7 @@ public:
 	static bool damageDealtMultiplier_toggle;
 	static float damageDealtMultiplierMult;
 	static bool customCameraDistance_toggle;
-	static float customCameraDistanceMultiplierMult;
+	static float customCameraDistance;
 	static bool lessClothes_toggle;
 	static bool inputIcons_toggle;
 	static int inputIconsValue;
@@ -84,7 +84,10 @@ public:
 	static uintptr_t currentCharacterAddress;
 	static uintptr_t thirdAccessoryAddress;
 	static uintptr_t hudDisplayAddress;
+	//static uintptr_t enemyListAddress;
+	//static uintptr_t enemyCountAddress;
 	static uintptr_t enemySlotsAddress;
+	static uintptr_t enemyLockedOnAddress;
 	static uintptr_t angelSlayerFloorAddress;
 	static uintptr_t difficultyAddress;
 	static uintptr_t areaJumpAddress;
@@ -94,6 +97,9 @@ public:
 	static uintptr_t WeaponB2Address;
 
 	// imgui
+	static float windowHeightHack;
+	static float maxWindowHeight;
+	static float windowHeightBorder;
 	static void GameImGui(void);
 	static bool showMessages_toggle;
 	static bool showComboUI_toggle;
@@ -105,6 +111,7 @@ public:
 	static int showMessageTimerF1;
 	static int showMessageTimerF2;
 	static int showMessageTimerF3;
+	static int showMessageTimerF4;
 	static int showMessageTimerF5;
 
 	// dev functions
@@ -116,7 +123,7 @@ public:
 
 	static inline const char* cfgString{ "../bayo_hook.cfg" };
 	static inline utils::Config cfg{ "bayo_hook.cfg" };
-	static inline const char* dllName{"BayoHook 0.5"};
+	static inline const char* dllName{"BayoHook 0.6"};
 	static inline const char* repoUrl{ "https://github.com/SSSiyan/BayoHook" };
 private:
 };

@@ -147,6 +147,7 @@ static __declspec(naked) void EnemyHPDetour(void) {
 		originalcode:
 		mov [esi+0x000006B4], eax
 		jmp dword ptr [enemyHP_jmp_ret]
+		// this hides test eax,eax in CE but it is still there
 	}
 }
 
@@ -197,7 +198,6 @@ float GameHook::damageDealtMultiplierMult = 1.0f;
 static __declspec(naked) void DamageDealtMultiplierDetour(void) {
 	_asm {
 		mov [esi+0x000006B8], eax // originalcode, early bytes to avoid EnemyHPDetour
-		mov [GameHook::haloDisplayValue], eax
 		cmp byte ptr [GameHook::damageDealtMultiplier_toggle], 0
 		je originalcode
 
@@ -209,6 +209,7 @@ static __declspec(naked) void DamageDealtMultiplierDetour(void) {
 
 		originalcode:
 		sub eax,edi
+		mov [GameHook::haloDisplayValue], eax // after damage subtraction
 		jmp dword ptr [damageDealtMultiplier_jmp_ret]
 	}
 }
@@ -216,19 +217,17 @@ static __declspec(naked) void DamageDealtMultiplierDetour(void) {
 std::unique_ptr<FunctionHook> customCameraDistanceHook;
 uintptr_t customCameraDistance_jmp_ret{ NULL };
 bool GameHook::customCameraDistance_toggle = false;
-float GameHook::customCameraDistanceMultiplierMult = 0.0f;
+float GameHook::customCameraDistance = 10.0f;
 static __declspec(naked) void CustomCameraDistanceDetour(void) {
 	_asm {
 		cmp byte ptr [GameHook::customCameraDistance_toggle], 0
 		je originalcode
 
-		cmp eax, 0xF2E630 // only change this value
-		jne originalcode
-		mulss xmm0,[GameHook::customCameraDistanceMultiplierMult]
+		fld dword ptr [GameHook::customCameraDistance]
+		jmp dword ptr [customCameraDistance_jmp_ret]
 
 		originalcode:
-		movss [eax],xmm0
-		pop esi
+		fld dword ptr [edi+0x00000B50]
 		jmp dword ptr [customCameraDistance_jmp_ret]
 	}
 }
@@ -483,7 +482,7 @@ void GameHook::InitializeDetours(void) {
 	install_hook_absolute(0x9E1808, witchTimeHook, &WitchTimeMultiplierDetour, &witchTimeMultiplier_jmp_ret, 6);
 	install_hook_absolute(0x8BCE4C, infMagicHook, &InfMagicDetour, &infMagic_jmp_ret, 8);
 	install_hook_absolute(0x4572B2, damageDealtMultiplierHook, &DamageDealtMultiplierDetour, &damageDealtMultiplier_jmp_ret, 8);
-	install_hook_absolute(0xC52491, customCameraDistanceHook, &CustomCameraDistanceDetour, &customCameraDistance_jmp_ret, 5);
+	install_hook_absolute(0xA941FA, customCameraDistanceHook, &CustomCameraDistanceDetour, &customCameraDistance_jmp_ret, 6);
 	install_hook_absolute(0x8B6C55, lessClothesHook, &LessClothesDetour, &lessClothes_jmp_ret, 6);
 	install_hook_absolute(0x4250F7, haloDisplayHook, &HaloDisplayDetour, &haloDisplay_jmp_ret, 5);
 	install_hook_absolute(0x4BD053, animSwapHook, &AnimSwapDetour, &animSwap_jmp_ret, 6);
@@ -527,7 +526,7 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	damageDealtMultiplier_toggle = cfg.get<bool>("DamageDealtMultiplierToggle").value_or(false);
 	damageDealtMultiplierMult = cfg.get<float>("DamageDealtMultiplierMult").value_or(1.0f);
 	customCameraDistance_toggle = cfg.get<bool>("CustomCameraDistanceToggle").value_or(false);
-	customCameraDistanceMultiplierMult = cfg.get<float>("CustomCameraDistanceMultiplier").value_or(1.0f);
+	customCameraDistance = cfg.get<float>("CustomCameraDistance").value_or(10.0f);
 	lessClothes_toggle = cfg.get<bool>("LessClothesToggle").value_or(false);
 	haloDisplay_toggle = cfg.get<bool>("HaloDisplayToggle").value_or(false);
 	inputIcons_toggle = cfg.get<bool>("InputIconsToggle").value_or(false);
@@ -564,7 +563,7 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("DamageDealtMultiplierToggle", damageDealtMultiplier_toggle);
 	cfg.set<float>("DamageDealtMultiplierMult", damageDealtMultiplierMult);
 	cfg.set<bool>("CustomCameraDistanceToggle", customCameraDistance_toggle);
-	cfg.set<float>("CustomCameraDistanceMultiplier", customCameraDistanceMultiplierMult);
+	cfg.set<float>("CustomCameraDistance", customCameraDistance);
 	cfg.set<bool>("LessClothesToggle", lessClothes_toggle);
 	cfg.set<bool>("HaloDisplayToggle", haloDisplay_toggle);
 	cfg.set<bool>("InputIconsToggle", inputIcons_toggle);

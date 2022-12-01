@@ -2,6 +2,9 @@
 #include <base.h>
 #include "gamehook.hpp"
 #include <array>
+float GameHook::windowHeightHack = 1080.0f;
+float GameHook::maxWindowHeight = 0.0f;
+float GameHook::windowHeightBorder = 0.0f;
 
 HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
 {
@@ -32,6 +35,9 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
 
 	if (!Data::InitImGui) return Data::oEndScene(pDevice);
 
+	GameHook::maxWindowHeight = ImGui::GetIO().DisplaySize.y * 0.9f;
+	GameHook::windowHeightBorder = ImGui::GetIO().DisplaySize.y * 0.1f;
+
 	ImGui_ImplDX9_NewFrame();
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
@@ -59,7 +65,7 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
 	}
 		
 	ImGui::SetNextWindowPos(ImVec2(0, 0)), ImGuiCond_Always;
-	ImGui::SetNextWindowSize(ImVec2(400, 500)), ImGuiCond_Always;
+	ImGui::SetNextWindowSize(ImVec2(450, GameHook::windowHeightHack)), ImGuiCond_Always; // 450, 500
     static bool HasDoneOnceMenuOn = false;
     static bool HasDoneOnceMenuOff = false;
 	if (Data::ShowMenu) {

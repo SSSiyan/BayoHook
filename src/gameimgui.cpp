@@ -2,6 +2,7 @@
 #include "gamehook.hpp"
 #include "LicenseStrings.hpp"
 #include <array>
+#include <algorithm>
 
 // system
 static float inputItemWidth = 100.0f;
@@ -13,6 +14,7 @@ float GameHook::comboUI_Y(0.0f);
 int GameHook::showMessageTimerF1 = 0;
 int GameHook::showMessageTimerF2 = 0;
 int GameHook::showMessageTimerF3 = 0;
+int GameHook::showMessageTimerF4 = 0;
 int GameHook::showMessageTimerF5 = 0;
 
 // update
@@ -25,6 +27,9 @@ uintptr_t GameHook::comboMultiplierAddress = 0x5BB51A0;
 uintptr_t GameHook::currentCharacterAddress = 0x5AA7484;
 uintptr_t GameHook::thirdAccessoryAddress = 0x5AA7468;
 uintptr_t GameHook::hudDisplayAddress = 0xF2B714;
+//uintptr_t GameHook::enemyListAddress = 0x42B01C;
+//uintptr_t GameHook::enemyCountAddress = 0xF2EE8C; // alternatives: 0x5B0E624 // 0x5A571F0 0x5B0E5E4 were funky
+uintptr_t GameHook::enemyLockedOnAddress = 0xF2B744;
 uintptr_t GameHook::enemySlotsAddress = 0x5A56A88;
 uintptr_t GameHook::angelSlayerFloorAddress = 0x509E87C;
 uintptr_t GameHook::difficultyAddress = 0x5A985A0;
@@ -54,11 +59,10 @@ ImGui::GetWindowDrawList()->AddLine(min, max, col, 1.0f);
 }
 
 void GameHook::GameImGui(void) {
-    uintptr_t actorPlayable = *(uintptr_t*)GameHook::playerPointerAddress;
+    //uintptr_t enemyList = *(uintptr_t*)GameHook::enemyListAddress;
+    //uintptr_t* enemy_ptr = (uintptr_t*)((uintptr_t)enemyList - 4 + GameHook::saveStates_CurrentEnemy * 4); // 0x5A56A8C // GameHook::enemySlotsAddress
 
-    uintptr_t* enemy_ptr = (uintptr_t*)((uintptr_t)GameHook::enemySlotsAddress + GameHook::saveStates_CurrentEnemy * 4); // 0x5A56A8C
-    uintptr_t enemy_base = *enemy_ptr;
-
+    //int& enemyCount = *(int*)GameHook::enemyCountAddress;
     int& halosValue = *(int*)GameHook::halosAddress;
     int& chaptersPlayedValue = *(int*)GameHook::chaptersPlayedAddress;
     int& comboPointsValue = *(int*)GameHook::comboPointsAddress;
@@ -115,6 +119,8 @@ void GameHook::GameImGui(void) {
                 GameHook::ForceDaze(GameHook::forceDaze_toggle);
             }
 
+            ImGui::Separator();
+
             ImGui::Checkbox("Turbo", &GameHook::turbo_toggle);
             if (GameHook::turbo_toggle) {
                 ImGui::PushItemWidth(inputItemWidth);
@@ -128,6 +134,8 @@ void GameHook::GameImGui(void) {
                 ImGui::InputFloat("##DamageDealtMultiplierrInputFloat", &GameHook::damageDealtMultiplierMult, 0.1f, 1, "%.1f");
                 ImGui::PopItemWidth();
             }
+
+            ImGui::Separator();
 
             ImGui::Text("Difficulty");
             ImGui::PushItemWidth(inputItemWidth);
@@ -167,6 +175,7 @@ void GameHook::GameImGui(void) {
             ImGui::InputInt("##AngelSlayerFloorInputInt", &angelSlayerFloorValue);
             ImGui::PopItemWidth();
 
+            GameHook::windowHeightHack = std::clamp(ImGui::GetCursorPosY() + GameHook::windowHeightBorder, 0.0f, GameHook::maxWindowHeight);
             ImGui::EndChild();
             ImGui::EndTabItem();
         }
@@ -174,7 +183,7 @@ void GameHook::GameImGui(void) {
         if (ImGui::BeginTabItem("Character")) {
             ImGui::BeginChild("CharacterChild");
 
-            if (ImGui::Checkbox("Infinite Jumps ##InfJumpsToggle", &GameHook::infJumps_toggle)) {
+            if (ImGui::Checkbox("Infinite Jumps (F4) ##InfJumpsToggle", &GameHook::infJumps_toggle)) {
                 GameHook::InfJumps(GameHook::infJumps_toggle);
             }
 
@@ -186,6 +195,8 @@ void GameHook::GameImGui(void) {
 
             ImGui::Checkbox("Cancellable Falling Kick", &GameHook::cancellableFallingKick_toggle);
 
+            ImGui::Separator();
+
             ImGui::Checkbox("Witch Time Multiplier ##WitchTimeToggle", &GameHook::witchTimeMultiplier_toggle);
             help_marker("Adjust how long Witch Time lasts");
             if (GameHook::witchTimeMultiplier_toggle) {
@@ -193,6 +204,8 @@ void GameHook::GameImGui(void) {
                 ImGui::InputFloat("##WitchTimeMultiplier", &GameHook::witchTimeMultiplier, 0, 0, "%.1f");
                 ImGui::PopItemWidth();
             }
+
+            ImGui::Separator();
 
             ImGui::Text("Third Accessory");
             ImGui::PushItemWidth(inputItemWidth);
@@ -246,6 +259,7 @@ void GameHook::GameImGui(void) {
                 break;
             }
 
+            GameHook::windowHeightHack = std::clamp(ImGui::GetCursorPosY() + GameHook::windowHeightBorder, 0.0f, GameHook::maxWindowHeight);
             ImGui::EndChild();
             ImGui::EndTabItem();
         }
@@ -290,12 +304,12 @@ void GameHook::GameImGui(void) {
             if (ImGui::Button("Call Weapon Swap")) {
                 GameHook::WeaponSwapCaller();
             }
-            help_marker("WIP, requires entering and exiting the weapon select menu once to load weapons initially. 3 different weapon loads will crash.");
+            help_marker("Attempt to refresh weapons without a pause\nRequires entering and exiting the weapon select menu once to load weapons initially. 3 different weapon loads will crash.");
 
-            ImGui::Spacing();
-            ImGui::Separator();
 
-            if (actorPlayable) { // != NULL
+            uintptr_t actorPlayable = *(uintptr_t*)GameHook::playerPointerAddress;
+
+            if (actorPlayable) {
                 float* playerXYZPos[3];
                 playerXYZPos[0] = (float*)(actorPlayable + 0xD0);
                 playerXYZPos[1] = (float*)(actorPlayable + 0xD4);
@@ -305,6 +319,7 @@ void GameHook::GameImGui(void) {
                 float& remainingWitchTimeValue = *(float*)(actorPlayable + 0x95D5C);
                 float& playerMagicValue = *(float*)GameHook::playerMagicAddress; // not player offset but keeping it here anyway
 
+                ImGui::Separator();
                 ImGui::Text("Player Position");
                 ImGui::InputFloat3("##Player Position", *playerXYZPos); // player
 
@@ -320,12 +335,14 @@ void GameHook::GameImGui(void) {
                 ImGui::InputFloat("##RemainingWitchTimeDurationInputFloat", &remainingWitchTimeValue, 10, 100, "%.0f");
             }
 
-            ImGui::Spacing();
-            ImGui::Separator();
+            /*if (enemyList && enemyCount) {
+                ImGui::Text("Enemy Slot");
+                help_marker("Slide until you find your enemy's XYZ moving similarly to what you see ingame\nNot 100% sure how this works yet so its a lil funky");
+                ImGui::SliderInt("##EnemyXYZPosInputInt", &GameHook::saveStates_CurrentEnemy, 1, enemyCount);
+            }*/
 
-            ImGui::Text("Enemy Slot");
-            help_marker("Slide until you find your enemy's XYZ moving similarly to what you see ingame\nNot 100% sure how this works yet so its a lil funky");
-            ImGui::SliderInt("##EnemyXYZPosInputInt", &GameHook::saveStates_CurrentEnemy, 1, 10);
+            uintptr_t* enemy_ptr = (uintptr_t*)GameHook::enemyLockedOnAddress;
+            uintptr_t enemy_base = *enemy_ptr;
 
             if (enemy_base) {
                 float* enemyXYZPos[3];
@@ -335,16 +352,30 @@ void GameHook::GameImGui(void) {
                 int& enemyHPValue = *(int*)(enemy_base + 0x6B4);
                 int& enemyMoveIDValue = *(int*)(enemy_base + 0x34C);
                 float& enemyAnimFrameValue = *(float*)(enemy_base + 0x3E4);
-                float& enemyDazeValue = *(float*)(enemy_base + 0xC94);
+                float& enemyDazeBuildupValue = *(float*)(enemy_base + 0xC94);
+                float& enemyDazeDurationValue = *(float*)(enemy_base + 0xC9C);
+
+                //uintptr_t* enemy_ptr = (uintptr_t*)GameHook::enemyLockedOnAddress;
+                //uintptr_t enemy_base = *enemy_ptr;
+                uintptr_t enemyHPPtr = *(uintptr_t*)(enemy_base + 0xA00);
+                int& enemyBossHPValue = *(int*)(enemyHPPtr + 0x6B4);
+
+                ImGui::Separator();
 
                 ImGui::Text("Enemy Position");
                 ImGui::InputFloat3("##EnemyXYZPosInputFloat", *enemyXYZPos);
                 ImGui::Text("Enemy HP");
                 ImGui::InputInt("##EnemyHPInputInt", &enemyHPValue);
                 ImGui::Text("Enemy Move ID");
-                ImGui::InputInt("##EnemyMoveIDInputInt", &enemyMoveIDValue, 1, 100);
-                ImGui::Text("Enemy Daze");
-                ImGui::InputFloat("##EnemyDazeInputFloat", &enemyDazeValue, 1, 10, "%.0f");
+                ImGui::InputInt("##EnemyMoveIDInputInt", &enemyMoveIDValue);
+                ImGui::Text("Enemy Daze Buildup");
+                ImGui::InputFloat("##EnemyDazeBuildupInputFloat", &enemyDazeBuildupValue, 10, 100, "%.0f");
+                ImGui::Text("Enemy Daze Duration");
+                ImGui::InputFloat("##EnemyDazeDurationInputFloat", &enemyDazeDurationValue, 10, 100, "%.0f");
+                if (enemyHPPtr) {
+                    ImGui::Text("Enemy Boss HP");
+                    ImGui::InputInt("##EnemyBossHPInputInt", &enemyBossHPValue);
+                }
 
                 ImGui::Text("SaveState");
                 help_marker("Save and load an enemy's position and animation");
@@ -356,6 +387,7 @@ void GameHook::GameImGui(void) {
                 }
             }
 
+            GameHook::windowHeightHack = std::clamp(ImGui::GetCursorPosY() + GameHook::windowHeightBorder, 0.0f, GameHook::maxWindowHeight);
             ImGui::EndChild();
             ImGui::EndTabItem();
         }
@@ -365,14 +397,42 @@ void GameHook::GameImGui(void) {
 
             ImGui::Checkbox("Show Hotkey Messages", &GameHook::showMessages_toggle);
 
+            ImGui::SameLine(sameLineWidth);
+
             if (ImGui::Checkbox("Focus Patch", &GameHook::focusPatch_toggle)) {
                 GameHook::FocusPatch(GameHook::focusPatch_toggle);
             }
             help_marker("Play while tabbed out");
 
+            ImGui::Checkbox("HUD Display", &hudDisplayValue);
+            help_marker("Show HP etc");
+
+            ImGui::SameLine(sameLineWidth);
+
+            ImGui::Checkbox("Enemy HP in Halo Display", &GameHook::haloDisplay_toggle);
+
+            if (ImGui::Checkbox("NoClip (F5)", &GameHook::noClip_toggle)) {
+                GameHook::NoClip(GameHook::noClip_toggle);
+            }
+
+            ImGui::SameLine(sameLineWidth);
+
+            if (ImGui::Checkbox("Freeze Timer", &GameHook::freezeTimer_toggle)) {
+                GameHook::FreezeTimer(GameHook::freezeTimer_toggle);
+            }
+
+            ImGui::Checkbox("Easier Mashing ##EasierMashToggle", &GameHook::easierMash_toggle);
+
+            ImGui::SameLine(sameLineWidth);
+
+            ImGui::Checkbox("Force Summoning Clothes ##LessClothesToggle", &GameHook::lessClothes_toggle);
+            help_marker("Only works on outfits that have this function");
+
             /*if (ImGui::Checkbox("Auto Skip Cutscenes", &GameHook::autoSkipCutscenes_toggle)) {
                 GameHook::AutoSkipCutscenes(GameHook::autoSkipCutscenes_toggle);
             }*/
+
+            ImGui::Separator();
 
             ImGui::Checkbox("Force Input Type", &GameHook::inputIcons_toggle);
             help_marker("0 keyboard, 1 gamepad");
@@ -391,48 +451,12 @@ void GameHook::GameImGui(void) {
                 ImGui::PopItemWidth();
             }
 
-            ImGui::Checkbox("Camera Distance Multiplier ##CameraDistanceMultiplierToggle", &GameHook::customCameraDistance_toggle);
+            ImGui::Checkbox("Custom Camera Distance ##CameraDistanceMultiplierToggle", &GameHook::customCameraDistance_toggle);
             if (GameHook::customCameraDistance_toggle) {
                 ImGui::PushItemWidth(inputItemWidth);
-                ImGui::InputFloat("##CustomCameraDistanceMultiplierInputFloat", &GameHook::customCameraDistanceMultiplierMult, 0.1f, 1, "%.1f");
+                ImGui::InputFloat("##CustomCameraDistanceInputFloat", &GameHook::customCameraDistance, 0.1f, 1, "%.1f");
                 ImGui::PopItemWidth();
             }
-
-            ImGui::Text("Character Select");
-            help_marker("Set while in costume select\nIf your game freezes at the end of a fight, flick the value back to default");
-            ImGui::PushItemWidth(inputItemWidth);
-            ImGui::InputInt("##CharacterSelectInputInt", &currentCharacterValue, 1, 100);
-            ImGui::PopItemWidth();
-            ImGui::SameLine();
-            switch (currentCharacterValue) {
-            case 0:
-                ImGui::Text("Bayonetta");
-                break;
-            case 1:
-                ImGui::Text("Jeanne");
-                break;
-            default:
-                ImGui::Text("");
-                break;
-            }
-
-            ImGui::Checkbox("HUD Display", &hudDisplayValue);
-            help_marker("Show HP etc");
-
-            ImGui::Checkbox("Enemy HP in Halo Display", &GameHook::haloDisplay_toggle);
-
-            if (ImGui::Checkbox("NoClip (F5)", &GameHook::noClip_toggle)) {
-                GameHook::NoClip(GameHook::noClip_toggle);
-            }
-
-            if (ImGui::Checkbox("Freeze Timer", &GameHook::freezeTimer_toggle)) {
-                GameHook::FreezeTimer(GameHook::freezeTimer_toggle);
-            }
-
-            ImGui::Checkbox("Easier Mashing ##EasierMashToggle", &GameHook::easierMash_toggle);
-
-            ImGui::Checkbox("Force Summoning Clothes ##LessClothesToggle", &GameHook::lessClothes_toggle);
-            help_marker("Only works on outfits that have this function");
 
             ImGui::Checkbox("Animation Swap Test ##AnimationSwapTestToggle", &GameHook::animSwap_toggle);
             help_marker("Do the move you want to see, hit the first button\nDo the move you want to replace, hit the second button");
@@ -461,11 +485,31 @@ void GameHook::GameImGui(void) {
                 }
             }
 
+            ImGui::Separator();
+
+            ImGui::Text("Character Select");
+            help_marker("Set while in costume select\nIf your game freezes at the end of a fight, flick the value back to default");
+            ImGui::PushItemWidth(inputItemWidth);
+            ImGui::InputInt("##CharacterSelectInputInt", &currentCharacterValue, 1, 100);
+            ImGui::PopItemWidth();
+            ImGui::SameLine();
+            switch (currentCharacterValue) {
+            case 0:
+                ImGui::Text("Bayonetta");
+                break;
+            case 1:
+                ImGui::Text("Jeanne");
+                break;
+            default:
+                ImGui::Text("");
+                break;
+            }
+
             ImGui::Text("Area Jump Test");
             ImGui::PushItemWidth(inputItemWidth);
             ImGui::InputInt("##AreaIDInputInt", &areaJumpValue, ImGuiInputTextFlags_EnterReturnsTrue);
             ImGui::PopItemWidth();
-            help_marker("2576 = mission select\n528 = proving grounds\n2816 = angel slayer\n276 = train station");
+            help_marker("VERY CRASHY BE WARNED\n2576 = mission select\n528 = proving grounds\n2816 = angel slayer\n276 = train station");
             if (ImGui::Button("Jump to mission select")) {
                 areaJumpValue = 2576;
             }
@@ -475,6 +519,7 @@ void GameHook::GameImGui(void) {
             }
             help_marker("Sometimes the area jump ID gets reset, presumably to correct it if you input something out of bounds. This removes that.");
 
+            GameHook::windowHeightHack = std::clamp(ImGui::GetCursorPosY() + GameHook::windowHeightBorder, 0.0f, GameHook::maxWindowHeight);
             ImGui::EndChild();
             ImGui::EndTabItem();
         }
@@ -539,6 +584,7 @@ void GameHook::GameImGui(void) {
             }
 
             ImGui::Separator();
+
             ImGui::Text("Licenses:");
             struct License {
                 std::string name;
@@ -553,7 +599,7 @@ void GameHook::GameImGui(void) {
                     ImGui::TextWrapped(license.text.c_str());
                 }
             }
-
+            GameHook::windowHeightHack = std::clamp(ImGui::GetCursorPosY() + GameHook::windowHeightBorder, 0.0f, GameHook::maxWindowHeight);
             ImGui::EndChild();
             ImGui::EndTabItem();
 
@@ -681,7 +727,13 @@ void GameHook::BackgroundImGui(void) {
                 ImGui::TextColored(ImVec4(0,1,0,1), "One Hit Kill OFF");
             GameHook::showMessageTimerF3--;
         }
-        //
+        if (GameHook::showMessageTimerF4 > 0) {
+            if (GameHook::infJumps_toggle)
+                ImGui::TextColored(ImVec4(0,1,0,1), "Infinite Jumps ON");
+            else
+                ImGui::TextColored(ImVec4(0,1,0,1), "Infinite Jumps OFF");
+            GameHook::showMessageTimerF4--;
+        }
         if (GameHook::showMessageTimerF5 > 0) {
             if (GameHook::noClip_toggle)
                 ImGui::TextColored(ImVec4(0,1,0,1), "NoClip ON");
@@ -691,4 +743,3 @@ void GameHook::BackgroundImGui(void) {
         }
     }
 }
-

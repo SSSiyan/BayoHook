@@ -37,6 +37,11 @@ LRESULT CALLBACK Base::Hooks::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
 			}
 			GameHook::showMessageTimerF3 = messageTimer;
 			break;
+		case VK_F4:
+			GameHook::infJumps_toggle = !GameHook::infJumps_toggle;
+			GameHook::InfJumps(GameHook::infJumps_toggle);
+			GameHook::showMessageTimerF4 = messageTimer;
+			break;
 		case VK_F5:
 			GameHook::noClip_toggle = !GameHook::noClip_toggle;
 			GameHook::NoClip(GameHook::noClip_toggle);
