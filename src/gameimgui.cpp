@@ -115,6 +115,13 @@ void GameHook::GameImGui(void) {
                 GameHook::ForceDaze(GameHook::forceDaze_toggle);
             }
 
+            ImGui::Checkbox("Turbo", &GameHook::turbo_toggle);
+            if (GameHook::turbo_toggle) {
+                ImGui::PushItemWidth(inputItemWidth);
+                ImGui::InputFloat("##TurboInputFloat", &GameHook::turboValue, 0.1f, 1, "%.1f");
+                ImGui::PopItemWidth();
+            }
+
             ImGui::Checkbox("Damage Dealt Multiplier ##DamageDealtMultiplierToggle", &GameHook::damageDealtMultiplier_toggle);
             if (GameHook::damageDealtMultiplier_toggle) {
                 ImGui::PushItemWidth(inputItemWidth);
@@ -152,6 +159,12 @@ void GameHook::GameImGui(void) {
             help_marker("0 = floor 1. Set before starting Angel Slayer.");
             ImGui::PushItemWidth(inputItemWidth);
             ImGui::InputInt("##InitialAngelSlayerFloorInputInt", &GameHook::initialAngelSlayerFloor);
+            ImGui::PopItemWidth();
+
+            ImGui::Text("Current Angel Slayer Floor");
+            help_marker("0 = floor 1. Set before entering a portal.");
+            ImGui::PushItemWidth(inputItemWidth);
+            ImGui::InputInt("##AngelSlayerFloorInputInt", &angelSlayerFloorValue);
             ImGui::PopItemWidth();
 
             ImGui::EndChild();
@@ -256,12 +269,6 @@ void GameHook::GameImGui(void) {
             ImGui::InputFloat("##ComboMultiplierInputFloat", &comboMultiplierValue, 1, 10, "%.1f");
             ImGui::PopItemWidth();
 
-            ImGui::Text("Current Angel Slayer Floor");
-            help_marker("0 = floor 1. Set before entering a portal.");
-            ImGui::PushItemWidth(inputItemWidth);
-            ImGui::InputInt("##AngelSlayerFloorInputInt", &angelSlayerFloorValue);
-            ImGui::PopItemWidth();
-
             ImGui::Text("Weapon Set A:");
             help_marker("WIP, requires entering and exiting the weapon select menu to apply");
             ImGui::PushItemWidth(inputItemWidth);
@@ -362,6 +369,10 @@ void GameHook::GameImGui(void) {
                 GameHook::FocusPatch(GameHook::focusPatch_toggle);
             }
             help_marker("Play while tabbed out");
+
+            if (ImGui::Checkbox("Auto Skip Cutscenes", &GameHook::autoSkipCutscenes_toggle)) {
+                GameHook::AutoSkipCutscenes(GameHook::autoSkipCutscenes_toggle);
+            }
 
             ImGui::Checkbox("Force Input Type", &GameHook::inputIcons_toggle);
             help_marker("0 keyboard, 1 gamepad");

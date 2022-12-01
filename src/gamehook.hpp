@@ -21,6 +21,7 @@ public:
 	static bool freezeTimer_toggle;
 	static bool disableAfterBurnerBounce_toggle;
 	static bool areaJumpPatch_toggle;
+	static bool autoSkipCutscenes_toggle;
 	// patch functions
 	static void TakeNoDamage(bool enabled);
 	static void DisableKilling(bool enabled);
@@ -33,6 +34,7 @@ public:
 	static void FreezeTimer(bool enabled);
 	static void DisableAfterBurnerBounce(bool enabled);
 	static void AreaJumpPatch(bool enabled);
+	static void AutoSkipCutscenes(bool enabled);
 	static void WeaponSwapCaller(void);
 
 	static void SaveStates_SaveState();
@@ -61,6 +63,8 @@ public:
 	static int initialAngelSlayerFloor;
 	static bool cancellableAfterBurner_toggle;
 	static bool cancellableFallingKick_toggle;
+	static bool turbo_toggle;
+	static float turboValue;
 
 	// update
 	static int saveStates_CurrentEnemy;

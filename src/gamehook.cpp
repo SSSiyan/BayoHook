@@ -11,6 +11,7 @@ bool GameHook::forceDaze_toggle(false);
 bool GameHook::freezeTimer_toggle(false);
 bool GameHook::disableAfterBurnerBounce_toggle(false);
 bool GameHook::areaJumpPatch_toggle(false);
+bool GameHook::autoSkipCutscenes_toggle(false);
 
 // patches
 void GameHook::TakeNoDamage(bool enabled) {
@@ -97,6 +98,15 @@ void GameHook::AreaJumpPatch(bool enabled) {
 	}
 	else {
 		GameHook::_patch((char*)(0x4FC2FB), (char*)"\x89\x83\x28\x08\x00\x00", 6); // enemy
+	}
+}
+
+void GameHook::AutoSkipCutscenes(bool enabled) {
+	if (enabled) {
+		GameHook::_patch((char*)(0x54493A), (char*)"\xEB\x0A", 2);
+	}
+	else {
+		GameHook::_patch((char*)(0x54493A), (char*)"\x75\x0A", 2);
 	}
 }
 
@@ -386,6 +396,23 @@ static __declspec(naked) void CancellableFallingKickDetour(void) {
 	}
 }
 
+std::unique_ptr<FunctionHook> turboHook;
+uintptr_t turbo_jmp_ret{ NULL };
+bool GameHook::turbo_toggle = false;
+float GameHook::turboValue = 1.0f;
+static __declspec(naked) void TurboHook(void) {
+	_asm {
+		cmp byte ptr [GameHook::turbo_toggle], 0
+		je originalcode
+
+		movss xmm0, [GameHook::turboValue]
+
+		originalcode:
+		movss [edi+0x44], xmm0
+		jmp dword ptr [turbo_jmp_ret]
+	}
+}
+
 int GameHook::saveStates_CurrentEnemy = 1;
 int GameHook::saveStates_SavedEnemyMoveID = 0;
 float GameHook::saveStates_SavedEnemyAnimFrame = 0.0f;
@@ -465,6 +492,7 @@ void GameHook::InitializeDetours(void) {
 	install_hook_absolute(0x41C8B5, initialAngelSlayerFloorHook, &InitialAngelSlayerFloorDetour, &initialAngelSlayerFloor_jmp_ret, 10);
 	install_hook_absolute(0x95ABD3, cancellableAfterBurnerHook, &CancellableAfterBurnerDetour, &cancellableAfterBurner_jmp_ret, 6);
 	install_hook_absolute(0x952142, cancellableFallingKickHook, &CancellableFallingKickDetour, &cancellableFallingKick_jmp_ret, 5);
+	install_hook_absolute(0x513FC7, turboHook, &TurboHook, &turbo_jmp_ret, 5);
 }
 
 void GameHook::onConfigLoad(const utils::Config& cfg) {
@@ -484,8 +512,11 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	showMessages_toggle = cfg.get<bool>("ShowMessagesToggle").value_or(true);
 	disableAfterBurnerBounce_toggle = cfg.get<bool>("DisableAfterBurnerBounceToggle").value_or(false);
 	DisableAfterBurnerBounce(disableAfterBurnerBounce_toggle);
+	autoSkipCutscenes_toggle = cfg.get<bool>("AutoSkipCutscenesToggle").value_or(false);
+	AutoSkipCutscenes(autoSkipCutscenes_toggle);
 	//areaJumpPatch_toggle = cfg.get<bool>("AreaJumpPatchToggle").value_or(false);
 	//AreaJumpPatch(areaJumpPatch_toggle);
+
 	// detours
 	enemyHP_no_damage_toggle = cfg.get<bool>("DealNoDamageToggle").value_or(false);
 	DisableKilling(enemyHP_no_damage_toggle);
@@ -508,6 +539,8 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	initialAngelSlayerFloor = cfg.get<int>("InitialAngelSlayerFloor").value_or(0);
 	cancellableAfterBurner_toggle = cfg.get<bool>("CancellableAfterBurner").value_or(false);
 	cancellableFallingKick_toggle = cfg.get<bool>("CancellableFallingKick").value_or(false);
+	turbo_toggle = cfg.get<bool>("TurboToggle").value_or(false);
+	turboValue = cfg.get<float>("TurboValue").value_or(1.0f);
 }
 
 void GameHook::onConfigSave(utils::Config& cfg) {
@@ -520,6 +553,7 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("FreezeTimerToggle", freezeTimer_toggle);
 	cfg.set<bool>("ShowMessagesToggle", showMessages_toggle);
 	cfg.set<bool>("DisableAfterBurnerBounceToggle", disableAfterBurnerBounce_toggle);
+	cfg.set<bool>("AutoSkipCutscenesToggle", autoSkipCutscenes_toggle);
 	//cfg.set<bool>("AreaJumpPatchToggle", areaJumpPatch_toggle);
 	// detours
 	cfg.set<bool>("DealNoDamageToggle", enemyHP_no_damage_toggle);
@@ -542,6 +576,8 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<int>("InitialAngelSlayerFloor", initialAngelSlayerFloor);
 	cfg.set<bool>("CancellableAfterBurner", cancellableAfterBurner_toggle);
 	cfg.set<bool>("CancellableFallingKick", cancellableFallingKick_toggle);
+	cfg.set<bool>("TurboToggle", turbo_toggle);
+	cfg.set<float>("TurboValue", turboValue);
 
 	cfg.save(GameHook::cfgString);
 }
