@@ -36,7 +36,8 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
 	if (!Data::InitImGui) return Data::oEndScene(pDevice);
 
 	GameHook::maxWindowHeight = ImGui::GetIO().DisplaySize.y * 0.9f;
-	GameHook::windowHeightBorder = ImGui::GetIO().DisplaySize.y * 0.1f;
+	//GameHook::windowHeightBorder = ImGui::GetIO().DisplaySize.y * 0.08f;
+	GameHook::windowHeightBorder = 100.0f;
 
 	ImGui_ImplDX9_NewFrame();
 	ImGui_ImplWin32_NewFrame();

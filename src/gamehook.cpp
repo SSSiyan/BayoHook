@@ -399,7 +399,7 @@ std::unique_ptr<FunctionHook> turboHook;
 uintptr_t turbo_jmp_ret{ NULL };
 bool GameHook::turbo_toggle = false;
 float GameHook::turboValue = 1.0f;
-static __declspec(naked) void TurboHook(void) {
+static __declspec(naked) void TurboHookDetour(void) {
 	_asm {
 		cmp byte ptr [GameHook::turbo_toggle], 0
 		je originalcode
@@ -409,6 +409,54 @@ static __declspec(naked) void TurboHook(void) {
 		originalcode:
 		movss [edi+0x44], xmm0
 		jmp dword ptr [turbo_jmp_ret]
+	}
+}
+
+std::unique_ptr<FunctionHook> altTeleInputHook;
+uintptr_t altTeleInput_jmp_ret{ NULL };
+uintptr_t altTeleInput_jmp_je = 0x8BE5B6;
+bool GameHook::altTeleInput_toggle = false;
+static int altTeleInput = 0x400; // dpad down = 0x4, taunt = 0x400
+static __declspec(naked) void AltTeleInputDetour(void) {
+	_asm {
+		cmp byte ptr [GameHook::altTeleInput_toggle], 0
+		je originalcode
+
+		push eax
+		mov eax, [altTeleInput]
+		test [ebx+0x00094B48], eax
+		pop eax
+		jmp dword ptr [altTeleInput_jmp_ret]
+
+		originalcode:
+		test [ebx+0x00094B48], eax
+		je jmp_je //Bayonetta.exe+4BE5B6
+		cmp [ebx+0x000939A0], esi
+		jmp dword ptr [altTeleInput_jmp_ret]
+
+		jmp_je:
+		jmp dword ptr [altTeleInput_jmp_je]
+	}
+}
+
+std::unique_ptr<FunctionHook> altTauntInputHook;
+uintptr_t altTauntInput_jmp_ret{ NULL };
+int tauntRemap = 4;
+static __declspec(naked) void AltTauntInputDetour(void) {
+	_asm {
+		cmp byte ptr [GameHook::altTeleInput_toggle], 0
+		je originalcode
+
+		mov eax,[ecx+eax*4+0x2C]
+		cmp eax, 0x400
+		jne retcode
+		mov eax, [tauntRemap]
+		jmp retcode
+
+		originalcode:
+		mov eax,[ecx+eax*4+0x2C]
+		retcode:
+		ret 0004
 	}
 }
 
@@ -491,7 +539,9 @@ void GameHook::InitializeDetours(void) {
 	install_hook_absolute(0x41C8B5, initialAngelSlayerFloorHook, &InitialAngelSlayerFloorDetour, &initialAngelSlayerFloor_jmp_ret, 10);
 	install_hook_absolute(0x95ABD3, cancellableAfterBurnerHook, &CancellableAfterBurnerDetour, &cancellableAfterBurner_jmp_ret, 6);
 	install_hook_absolute(0x952142, cancellableFallingKickHook, &CancellableFallingKickDetour, &cancellableFallingKick_jmp_ret, 5);
-	install_hook_absolute(0x513FC7, turboHook, &TurboHook, &turbo_jmp_ret, 5);
+	install_hook_absolute(0x513FC7, turboHook, &TurboHookDetour, &turbo_jmp_ret, 5);
+	install_hook_absolute(0x8BE592, altTeleInputHook, &AltTeleInputDetour, &altTeleInput_jmp_ret, 14);
+	install_hook_absolute(0x50137D, altTauntInputHook, &AltTauntInputDetour, &altTauntInput_jmp_ret, 7);
 }
 
 void GameHook::onConfigLoad(const utils::Config& cfg) {
@@ -540,6 +590,7 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	cancellableFallingKick_toggle = cfg.get<bool>("CancellableFallingKick").value_or(false);
 	turbo_toggle = cfg.get<bool>("TurboToggle").value_or(false);
 	turboValue = cfg.get<float>("TurboValue").value_or(1.0f);
+	altTeleInput_toggle = cfg.get<bool>("AltTeleInputToggle").value_or(false);
 }
 
 void GameHook::onConfigSave(utils::Config& cfg) {
@@ -577,6 +628,7 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("CancellableFallingKick", cancellableFallingKick_toggle);
 	cfg.set<bool>("TurboToggle", turbo_toggle);
 	cfg.set<float>("TurboValue", turboValue);
+	cfg.set<bool>("AltTeleInputToggle", altTeleInput_toggle);
 
 	cfg.save(GameHook::cfgString);
 }

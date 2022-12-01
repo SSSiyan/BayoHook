@@ -65,6 +65,7 @@ public:
 	static bool cancellableFallingKick_toggle;
 	static bool turbo_toggle;
 	static float turboValue;
+	static bool altTeleInput_toggle;
 
 	// update
 	static int saveStates_CurrentEnemy;

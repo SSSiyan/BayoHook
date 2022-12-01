@@ -195,6 +195,9 @@ void GameHook::GameImGui(void) {
 
             ImGui::Checkbox("Cancellable Falling Kick", &GameHook::cancellableFallingKick_toggle);
 
+            ImGui::Checkbox("Alt Teleport Input", &GameHook::altTeleInput_toggle);
+            help_marker("Teleport = Lockon + Taunt\nTaunt = Dpad Down");
+
             ImGui::Separator();
 
             ImGui::Checkbox("Witch Time Multiplier ##WitchTimeToggle", &GameHook::witchTimeMultiplier_toggle);
