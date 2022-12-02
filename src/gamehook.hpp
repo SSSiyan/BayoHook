@@ -69,9 +69,11 @@ public:
 	static bool disableSlowmo_toggle;
 
 	// update
-	static int saveStates_CurrentEnemy;
+	// static int saveStates_CurrentEnemy;
+	// static int saveStates_SavedEnemyMovePart;
+	// static float saveStates_SavedEnemyAnimFrame;
+	static bool saveStatesHotkeys_toggle;
 	static int saveStates_SavedEnemyMoveID;
-	static float saveStates_SavedEnemyAnimFrame;
 	static float saveStates_SavedEnemyXYZPos[3];
 	static int saveStates_SavedPlayerMoveID;
 	static float saveStates_SavedPlayerXYZPos[3];

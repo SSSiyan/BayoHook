@@ -47,6 +47,12 @@ LRESULT CALLBACK Base::Hooks::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
 			GameHook::NoClip(GameHook::noClip_toggle);
 			GameHook::showMessageTimerF5 = messageTimer;
 			break;
+		case VK_HOME: // page up
+			GameHook::SaveStates_SaveState();
+			break;
+		case VK_END: // page down
+			GameHook::SaveStates_LoadState();
+			break;
 		}
 	}
 	ImGui_ImplWin32_WndProcHandler(hWnd, uMsg, wParam, lParam);

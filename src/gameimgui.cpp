@@ -6,7 +6,7 @@
 
 // system
 static float inputItemWidth = 100.0f;
-static float sameLineWidth = 200.0f;
+static float sameLineWidth = 250.0f;
 bool GameHook::showMessages_toggle(false);
 bool GameHook::showComboUI_toggle(false);
 float GameHook::comboUI_X(0.0f);
@@ -107,7 +107,7 @@ void GameHook::GameImGui(void) {
 
             ImGui::SameLine(sameLineWidth);
 
-            ImGui::Checkbox("Inf Magic ##InfMagicToggle", &GameHook::inf_magic_toggle);
+            ImGui::Checkbox("Infinite Magic ##InfMagicToggle", &GameHook::inf_magic_toggle);
 
             if (ImGui::Checkbox("Disable Enemy Daze", &GameHook::disableDaze_toggle)) {
                 GameHook::DisableDaze(GameHook::disableDaze_toggle);
@@ -118,6 +118,7 @@ void GameHook::GameImGui(void) {
             if (ImGui::Checkbox("Force Enemy Daze", &GameHook::forceDaze_toggle)) {
                 GameHook::ForceDaze(GameHook::forceDaze_toggle);
             }
+            help_marker("Daze every loaded enemy");
 
             ImGui::Checkbox("Disable Slow Motion", &GameHook::disableSlowmo_toggle);
 
@@ -129,6 +130,8 @@ void GameHook::GameImGui(void) {
                 ImGui::InputFloat("##TurboInputFloat", &GameHook::turboValue, 0.1f, 1, "%.1f");
                 ImGui::PopItemWidth();
             }
+
+            ImGui::Separator();
 
             ImGui::Checkbox("Damage Dealt Multiplier ##DamageDealtMultiplierToggle", &GameHook::damageDealtMultiplier_toggle);
             if (GameHook::damageDealtMultiplier_toggle) {
@@ -165,6 +168,8 @@ void GameHook::GameImGui(void) {
                 break;
             }
 
+            ImGui::Separator();
+
             ImGui::Text("Initial Angel Slayer Floor");
             help_marker("0 = floor 1. Set before starting Angel Slayer.");
             ImGui::PushItemWidth(inputItemWidth);
@@ -189,11 +194,15 @@ void GameHook::GameImGui(void) {
                 GameHook::InfJumps(GameHook::infJumps_toggle);
             }
 
+            ImGui::SameLine(sameLineWidth);
+
             if (ImGui::Checkbox("Disable After Burner Bounce", &GameHook::disableAfterBurnerBounce_toggle)) {
                 DisableAfterBurnerBounce(GameHook::disableAfterBurnerBounce_toggle);
             }
 
             ImGui::Checkbox("Cancellable After Burner", &GameHook::cancellableAfterBurner_toggle);
+
+            ImGui::SameLine(sameLineWidth);
 
             ImGui::Checkbox("Cancellable Falling Kick", &GameHook::cancellableFallingKick_toggle);
 
@@ -212,12 +221,64 @@ void GameHook::GameImGui(void) {
 
             ImGui::Separator();
 
+            ImGui::Checkbox("Animation Swap Test ##AnimationSwapTestToggle", &GameHook::animSwap_toggle);
+            help_marker("Do the move you want to see, pause mid anim, hit the first button\nDo the move you want to replace, pause mid anim, hit the second button");
+            if (GameHook::animSwap_toggle) {
+                ImGui::Text("Current Anim ID");
+                ImGui::PushItemWidth(inputItemWidth);
+                ImGui::InputInt("##CurrentAnimIDInputInt", &GameHook::animSwapCurrentAnim, 0, 0);
+                ImGui::PopItemWidth();
+
+                ImGui::Text("Desired Anim ID");
+                ImGui::PushItemWidth(inputItemWidth);
+                ImGui::InputInt("##DesiredAnimID1InputInt", &GameHook::animSwapDesiredAnim1);
+                ImGui::PopItemWidth();
+                ImGui::SameLine();
+                if (ImGui::Button("Save Current Anim ID as desired")) {
+                    GameHook::animSwapDesiredAnim1 = GameHook::animSwapCurrentAnim;
+                }
+
+                ImGui::Text("Source Anim ID");
+                ImGui::PushItemWidth(inputItemWidth);
+                ImGui::InputInt("##SourceAnimID1InputInt", &GameHook::animSwapSourceAnim1);
+                ImGui::PopItemWidth();
+                ImGui::SameLine();
+                if (ImGui::Button("Save Current Anim ID as source")) {
+                    GameHook::animSwapSourceAnim1 = GameHook::animSwapCurrentAnim;
+                }
+            }
+
+            GameHook::windowHeightHack = std::clamp(ImGui::GetCursorPosY() + GameHook::windowHeightBorder, 0.0f, GameHook::maxWindowHeight);
+            ImGui::EndChild();
+            ImGui::EndTabItem();
+        }
+
+        if (ImGui::BeginTabItem("Stats")) {
+            ImGui::BeginChild("StatsChild");
+            ImGui::Text("Halos");
+            ImGui::PushItemWidth(inputItemWidth*2);
+            ImGui::InputInt("##HaloInputInt", &halosValue, 1, 100);
+            ImGui::PopItemWidth();
+
+            ImGui::Text("Chapters Played");
+            ImGui::PushItemWidth(inputItemWidth);
+            ImGui::InputInt("##ChapterInputInt", &chaptersPlayedValue, 1, 100);
+            ImGui::PopItemWidth();
+            ImGui::Text("Combo Points");
+            ImGui::PushItemWidth(inputItemWidth);
+            ImGui::InputInt("##ComboPointsInputInt", &comboPointsValue, 10, 100);
+            ImGui::PopItemWidth();
+
+            ImGui::Text("Combo Multiplier");
+            ImGui::PushItemWidth(inputItemWidth);
+            ImGui::InputFloat("##ComboMultiplierInputFloat", &comboMultiplierValue, 1, 10, "%.1f");
+            ImGui::PopItemWidth();
+
             ImGui::Text("Third Accessory");
             ImGui::PushItemWidth(inputItemWidth);
             ImGui::InputInt("##ThirdAccessoryInputInt", &thirdAccessoryValue, 1, 100);
             ImGui::PopItemWidth();
             ImGui::SameLine();
-
             switch (thirdAccessoryValue)
             {
             case 0:
@@ -264,30 +325,6 @@ void GameHook::GameImGui(void) {
                 break;
             }
 
-            GameHook::windowHeightHack = std::clamp(ImGui::GetCursorPosY() + GameHook::windowHeightBorder, 0.0f, GameHook::maxWindowHeight);
-            ImGui::EndChild();
-            ImGui::EndTabItem();
-        }
-
-        if (ImGui::BeginTabItem("Stats")) {
-            ImGui::BeginChild("StatsChild");
-            ImGui::Text("Halos");
-            ImGui::InputInt("##HaloInputInt", &halosValue, 1, 100);
-
-            ImGui::Text("Chapters Played");
-            ImGui::PushItemWidth(inputItemWidth);
-            ImGui::InputInt("##ChapterInputInt", &chaptersPlayedValue, 1, 100);
-            ImGui::PopItemWidth();
-            ImGui::Text("Combo Points");
-            ImGui::PushItemWidth(inputItemWidth);
-            ImGui::InputInt("##ComboPointsInputInt", &comboPointsValue, 10, 100);
-            ImGui::PopItemWidth();
-
-            ImGui::Text("Combo Multiplier");
-            ImGui::PushItemWidth(inputItemWidth);
-            ImGui::InputFloat("##ComboMultiplierInputFloat", &comboMultiplierValue, 1, 10, "%.1f");
-            ImGui::PopItemWidth();
-
             ImGui::Text("Weapon Set A:");
             help_marker("WIP, requires entering and exiting the weapon select menu to apply");
             ImGui::PushItemWidth(inputItemWidth);
@@ -327,6 +364,11 @@ void GameHook::GameImGui(void) {
                 ImGui::Separator();
                 ImGui::Text("Player Position");
                 ImGui::InputFloat3("##Player Position", *playerXYZPos); // player
+                if (ImGui::Button("Teleport to 0, 0, 0")) {
+                    *playerXYZPos[0] = 0.0f;
+                    *playerXYZPos[1] = 0.0f;
+                    *playerXYZPos[2] = 0.0f;
+                }
 
                 ImGui::Text("Player HP");
                 if (ImGui::InputInt("##PlayerHPInputInt", &playerHealthValue, 1, 100)) {
@@ -382,6 +424,8 @@ void GameHook::GameImGui(void) {
                     ImGui::InputInt("##EnemyBossHPInputInt", &enemyBossHPValue);
                 }
 
+                ImGui::Checkbox("Enable Save/Load Hotkeys", &GameHook::saveStatesHotkeys_toggle);
+                help_marker("Home = Save\nEnd = Load");
                 ImGui::Text("SaveState");
                 help_marker("Save and load an enemy's position and animation");
                 if (ImGui::Button("Save State")) {
@@ -401,13 +445,14 @@ void GameHook::GameImGui(void) {
             ImGui::BeginChild("SystemChild");
 
             ImGui::Checkbox("Show Hotkey Messages", &GameHook::showMessages_toggle);
+            help_marker("Show text in the corner of the screen when a hotkey is activated");
 
             ImGui::SameLine(sameLineWidth);
 
             if (ImGui::Checkbox("Focus Patch", &GameHook::focusPatch_toggle)) {
                 GameHook::FocusPatch(GameHook::focusPatch_toggle);
             }
-            help_marker("Play while tabbed out");
+            help_marker("Play while tabbed out\nUse with Force Input Type to disable keyboard button prompts");
 
             ImGui::Checkbox("HUD Display", &hudDisplayValue);
             help_marker("Show HP etc");
@@ -433,6 +478,8 @@ void GameHook::GameImGui(void) {
             ImGui::Checkbox("Force Summoning Clothes ##LessClothesToggle", &GameHook::lessClothes_toggle);
             help_marker("Only works on outfits that have this function");
 
+            ImGui::Checkbox("Save/Load Animation Hotkeys", &GameHook::saveStatesHotkeys_toggle);
+
             /*if (ImGui::Checkbox("Auto Skip Cutscenes", &GameHook::autoSkipCutscenes_toggle)) {
                 GameHook::AutoSkipCutscenes(GameHook::autoSkipCutscenes_toggle);
             }*/
@@ -447,6 +494,8 @@ void GameHook::GameImGui(void) {
                 ImGui::PopItemWidth();
             }
 
+            ImGui::Separator();
+
             ImGui::Checkbox("Show 9.9+ Combo Multiplier UI", &GameHook::showComboUI_toggle);
             help_marker("Open a window that shows your current combo multiplier when passing 9.9x");
             if (GameHook::showComboUI_toggle) {
@@ -456,38 +505,13 @@ void GameHook::GameImGui(void) {
                 ImGui::PopItemWidth();
             }
 
+            ImGui::Separator();
+
             ImGui::Checkbox("Custom Camera Distance ##CameraDistanceMultiplierToggle", &GameHook::customCameraDistance_toggle);
             if (GameHook::customCameraDistance_toggle) {
                 ImGui::PushItemWidth(inputItemWidth);
                 ImGui::InputFloat("##CustomCameraDistanceInputFloat", &GameHook::customCameraDistance, 0.1f, 1, "%.1f");
                 ImGui::PopItemWidth();
-            }
-
-            ImGui::Checkbox("Animation Swap Test ##AnimationSwapTestToggle", &GameHook::animSwap_toggle);
-            help_marker("Do the move you want to see, hit the first button\nDo the move you want to replace, hit the second button");
-            if (GameHook::animSwap_toggle) {
-                ImGui::Text("Current Anim ID");
-                ImGui::PushItemWidth(inputItemWidth);
-                ImGui::InputInt("##CurrentAnimIDInputInt", &GameHook::animSwapCurrentAnim);
-                ImGui::PopItemWidth();
-
-                ImGui::Text("Desired Anim ID");
-                ImGui::PushItemWidth(inputItemWidth);
-                ImGui::InputInt("##DesiredAnimID1InputInt", &GameHook::animSwapDesiredAnim1);
-                ImGui::PopItemWidth();
-                ImGui::SameLine();
-                if (ImGui::Button("Save Current Anim ID as desired")) {
-                    GameHook::animSwapDesiredAnim1 = GameHook::animSwapCurrentAnim;
-                }
-
-                ImGui::Text("Source Anim ID");
-                ImGui::PushItemWidth(inputItemWidth);
-                ImGui::InputInt("##SourceAnimID1InputInt", &GameHook::animSwapSourceAnim1);
-                ImGui::PopItemWidth();
-                ImGui::SameLine();
-                if (ImGui::Button("Save Current Anim ID as source")) {
-                    GameHook::animSwapSourceAnim1 = GameHook::animSwapCurrentAnim;
-                }
             }
 
             ImGui::Separator();
@@ -510,6 +534,8 @@ void GameHook::GameImGui(void) {
                 break;
             }
 
+            ImGui::Separator();
+
             ImGui::Text("Area Jump Test");
             ImGui::PushItemWidth(inputItemWidth);
             ImGui::InputInt("##AreaIDInputInt", &areaJumpValue, ImGuiInputTextFlags_EnterReturnsTrue);
@@ -529,15 +555,19 @@ void GameHook::GameImGui(void) {
             ImGui::EndTabItem();
         }
 
-        if (ImGui::BeginTabItem("Credits")) {
-            ImGui::BeginChild("CreditsChild");
+        if (ImGui::BeginTabItem("Info")) {
+            ImGui::BeginChild("InfoChild");
 
             ImGui::Text("Hotkeys:");
             ImGui::Text("F1 = Deal No Damage");
             ImGui::Text("F2 = Take No Damage");
             ImGui::Text("F3 = One Hit Kill");
+            ImGui::Text("F4 = Infinite Jumps");
             ImGui::Text("F5 = NoClip");
-
+            ImGui::Text("Home = Save Locked On Enemy Anim");
+            help_marker("if enabled in System");
+            ImGui::Text("End = Load Locked On Enemy Anim");
+            help_marker("if enabled in System");
             ImGui::Separator();
 
             struct ImGuiURL {

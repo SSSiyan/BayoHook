@@ -1,20 +1,7 @@
 #include "gamehook.hpp"
 
-// patch toggles
-bool GameHook::takeNoDamage_toggle(false);
-bool GameHook::focusPatch_toggle(false);
-bool GameHook::infJumps_toggle(false);
-bool GameHook::disableClicking_toggle(false);
-bool GameHook::noClip_toggle(false);
-bool GameHook::disableDaze_toggle(false);
-bool GameHook::forceDaze_toggle(false);
-bool GameHook::freezeTimer_toggle(false);
-bool GameHook::disableAfterBurnerBounce_toggle(false);
-bool GameHook::areaJumpPatch_toggle(false);
-bool GameHook::autoSkipCutscenes_toggle(false);
-bool GameHook::disableSlowmo_toggle(false);
-
 // patches
+bool GameHook::takeNoDamage_toggle(false);
 void GameHook::TakeNoDamage(bool enabled) {
 	if (enabled) 
 		GameHook::_nop((char*)(0x9D4329), 6);
@@ -22,6 +9,7 @@ void GameHook::TakeNoDamage(bool enabled) {
 		GameHook::_patch((char*)(0x9D4329), (char*)"\x89\x86\x08\x35\x09\x00", 6);
 }
 
+bool GameHook::focusPatch_toggle(false);
 void GameHook::FocusPatch(bool enabled) {
 	if (enabled) {
 		GameHook::_patch((char*)(0x49E519), (char*)"\xEB\x17", 2); // disable pausing tabbed out
@@ -33,6 +21,7 @@ void GameHook::FocusPatch(bool enabled) {
 	}
 }
 
+bool GameHook::infJumps_toggle(false);
 void GameHook::InfJumps(bool enabled) {
 	if (enabled) 
 		GameHook::_nop((char*)(0x9E8906), 6);
@@ -40,6 +29,7 @@ void GameHook::InfJumps(bool enabled) {
 		GameHook::_patch((char*)(0x9E8906), (char*)"\x01\xAE\x78\x35\x09\x00", 6);
 }
 
+bool GameHook::disableClicking_toggle(false);
 void GameHook::DisableClicking(bool enabled) {
 	if (enabled)
 		GameHook::_nop((char*)(0xC75747), 3);
@@ -47,6 +37,7 @@ void GameHook::DisableClicking(bool enabled) {
 		GameHook::_patch((char*)(0xC75747), (char*)"\x89\x70\x04", 3);
 }
 
+bool GameHook::noClip_toggle(false);
 void GameHook::NoClip(bool enabled) {
 	if (enabled)
 		GameHook::_nop((char*)(0xC13250), 7);
@@ -54,6 +45,7 @@ void GameHook::NoClip(bool enabled) {
 		GameHook::_patch((char*)(0xC13250), (char*)"\xC7\x41\x54\x01\x00\x00\x00", 7);
 }
 
+bool GameHook::disableDaze_toggle(false);
 void GameHook::DisableDaze(bool enabled) {
 	if (enabled)
 		GameHook::_patch((char*)(0x430CF4), (char*) "\xEB\x20", 2);
@@ -61,6 +53,7 @@ void GameHook::DisableDaze(bool enabled) {
 		GameHook::_patch((char*)(0x430CF4), (char*)"\x72\x20", 2);
 }
 
+bool GameHook::forceDaze_toggle(false);
 void GameHook::ForceDaze(bool enabled) {
 	if (enabled)
 		GameHook::_patch((char*)(0x65C75C), (char*)"\xF3\x0F\x10\x86\x98\x0C\x00\x00", 8);
@@ -68,6 +61,7 @@ void GameHook::ForceDaze(bool enabled) {
 		GameHook::_patch((char*)(0x65C75C), (char*)"\xF3\x0F\x10\x86\x9C\x0C\x00\x00", 8);
 }
 
+bool GameHook::freezeTimer_toggle(false);
 void GameHook::FreezeTimer(bool enabled) {
 	if (enabled)
 		GameHook::_nop((char*)(0x620C1D), 8);
@@ -75,6 +69,7 @@ void GameHook::FreezeTimer(bool enabled) {
 		GameHook::_patch((char*)(0x620C1D), (char*)"\xF3\x0F\x5C\x05\xF8\xD6\xD9\x00", 8);
 }
 
+// uses GameHook::enemyHP_no_damage_toggle
 void GameHook::DisableKilling(bool enabled) {
 	if (enabled)
 		GameHook::_patch((char*)(0x4572D2), (char*) "\xEB\x0C", 2);
@@ -82,6 +77,7 @@ void GameHook::DisableKilling(bool enabled) {
 		GameHook::_patch((char*)(0x4572D2), (char*)"\x75\x0C", 2);
 }
 
+bool GameHook::disableAfterBurnerBounce_toggle(false);
 void GameHook::DisableAfterBurnerBounce(bool enabled) {
 	if (enabled) {
 		GameHook::_nop((char*)(0x959B23), 6); // enemy
@@ -93,6 +89,7 @@ void GameHook::DisableAfterBurnerBounce(bool enabled) {
 	}
 }
 
+bool GameHook::areaJumpPatch_toggle(false);
 void GameHook::AreaJumpPatch(bool enabled) {
 	if (enabled) {
 		GameHook::_nop((char*)(0x4FC2FB), 6); // enemy
@@ -102,23 +99,13 @@ void GameHook::AreaJumpPatch(bool enabled) {
 	}
 }
 
+bool GameHook::autoSkipCutscenes_toggle(false);
 void GameHook::AutoSkipCutscenes(bool enabled) {
 	if (enabled) {
 		//GameHook::_patch((char*)(0x54493A), (char*)"\xEB\x0A", 2);
 	}
 	else {
 		//GameHook::_patch((char*)(0x54493A), (char*)"\x75\x0A", 2);
-	}
-}
-
-void GameHook::WeaponSwapCaller(void) {
-	uintptr_t weaponSwapCallAddress = 0x00C43FE1;
-	__asm {
-		pusha
-		pushf
-		call weaponSwapCallAddress
-		popf
-		popa
 	}
 }
 
@@ -464,6 +451,7 @@ static __declspec(naked) void AltTauntInputDetour(void) {
 std::unique_ptr<FunctionHook> disableSlowmoHook;
 uintptr_t disableSlowmo_jmp_ret{ NULL };
 static float disableSlowmoDefaultSpeed = 1.0f;
+bool GameHook::disableSlowmo_toggle = false;
 static __declspec(naked) void DisableSlowmoDetour(void) {
 	_asm {
 		cmp byte ptr [GameHook::disableSlowmo_toggle], 0
@@ -478,33 +466,51 @@ static __declspec(naked) void DisableSlowmoDetour(void) {
 	}
 }
 
-int GameHook::saveStates_CurrentEnemy = 1;
+// int GameHook::saveStates_CurrentEnemy = 1;
+// int GameHook::saveStates_SavedEnemyMovePart = 0;
+// float GameHook::saveStates_SavedEnemyAnimFrame = 0.0f;
+bool GameHook::saveStatesHotkeys_toggle = false;
 int GameHook::saveStates_SavedEnemyMoveID = 0;
-float GameHook::saveStates_SavedEnemyAnimFrame = 0.0f;
-float GameHook::saveStates_SavedEnemyXYZPos[3]{};
-int GameHook::saveStates_SavedPlayerMoveID;
+float GameHook::saveStates_SavedEnemyXYZPos[3]{0, 0, 0};
+int GameHook::saveStates_SavedPlayerMoveID = 0;
 float GameHook::saveStates_SavedPlayerXYZPos[3];
 void GameHook::SaveStates_SaveState() {
-	uintptr_t* enemy_ptr = (uintptr_t*)((uintptr_t)enemySlotsAddress + saveStates_CurrentEnemy * 4); // 0x5A56A8C
-	uintptr_t enemy_base = *enemy_ptr; 
-	if (enemy_base) {
-		GameHook::saveStates_SavedEnemyMoveID = *(int*)(enemy_base + 0x34C);
-		GameHook::saveStates_SavedEnemyAnimFrame = *(float*)(enemy_base + 0x3E4);
-		GameHook::saveStates_SavedEnemyXYZPos[0] = *(float*)(enemy_base + 0xD0);
-		GameHook::saveStates_SavedEnemyXYZPos[1] = *(float*)(enemy_base + 0xD4);
-		GameHook::saveStates_SavedEnemyXYZPos[2] = *(float*)(enemy_base + 0xD8);
+	if (GameHook::saveStatesHotkeys_toggle) {
+		uintptr_t* enemy_ptr = (uintptr_t*)GameHook::enemyLockedOnAddress;
+		uintptr_t enemy_base = *enemy_ptr;
+		if (enemy_base) {
+			// GameHook::saveStates_SavedEnemyAnimFrame = *(float*)(enemy_base + 0x3E4);
+			GameHook::saveStates_SavedEnemyMoveID = *(int*)(enemy_base + 0x34C);
+			// GameHook::saveStates_SavedEnemyMovePart = *(int*)(enemy_base + 0x350);
+			GameHook::saveStates_SavedEnemyXYZPos[0] = *(float*)(enemy_base + 0xD0);
+			GameHook::saveStates_SavedEnemyXYZPos[1] = *(float*)(enemy_base + 0xD4);
+			GameHook::saveStates_SavedEnemyXYZPos[2] = *(float*)(enemy_base + 0xD8);
+		}
 	}
 }
 void GameHook::SaveStates_LoadState() {
-	uintptr_t* enemy_ptr = (uintptr_t*)((uintptr_t)enemySlotsAddress + saveStates_CurrentEnemy * 4); // 0x5A56A8C
-	uintptr_t enemy_base = *enemy_ptr;
-	if (enemy_base) {
-		*(int*)(enemy_base + 0x34C) = GameHook::saveStates_SavedEnemyMoveID;
-		*(int*)(enemy_base + 0x350) = 0; // cancel current anim
-		*(float*)(enemy_base + 0x3E4) = GameHook::saveStates_SavedEnemyAnimFrame;
-		*(float*)(enemy_base + 0xD0) = GameHook::saveStates_SavedEnemyXYZPos[0];
-		*(float*)(enemy_base + 0xD4) = GameHook::saveStates_SavedEnemyXYZPos[1];
-		*(float*)(enemy_base + 0xD8) = GameHook::saveStates_SavedEnemyXYZPos[2];
+	if (GameHook::saveStatesHotkeys_toggle) {
+		uintptr_t* enemy_ptr = (uintptr_t*)GameHook::enemyLockedOnAddress;
+		uintptr_t enemy_base = *enemy_ptr;
+		if (enemy_base) {
+			// *(float*)(enemy_base + 0x3E4) = GameHook::saveStates_SavedEnemyAnimFrame;
+			*(int*)(enemy_base + 0x34C) = GameHook::saveStates_SavedEnemyMoveID;
+			*(int*)(enemy_base + 0x350) = 0; // cancel current anim
+			*(float*)(enemy_base + 0xD0) = GameHook::saveStates_SavedEnemyXYZPos[0];
+			*(float*)(enemy_base + 0xD4) = GameHook::saveStates_SavedEnemyXYZPos[1];
+			*(float*)(enemy_base + 0xD8) = GameHook::saveStates_SavedEnemyXYZPos[2];
+		}
+	}
+}
+
+void GameHook::WeaponSwapCaller(void) {
+	uintptr_t weaponSwapCallAddress = 0x00C43FE1;
+	__asm {
+		pusha
+		pushf
+		call weaponSwapCallAddress
+		popf
+		popa
 	}
 }
 
@@ -611,7 +617,7 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	turboValue = cfg.get<float>("TurboValue").value_or(1.0f);
 	altTeleInput_toggle = cfg.get<bool>("AltTeleInputToggle").value_or(false);
 	disableSlowmo_toggle = cfg.get<bool>("DisableSlowmoToggle").value_or(false);
-
+	saveStatesHotkeys_toggle = cfg.get<bool>("SaveStatesHotkeysToggle").value_or(false);
 }
 
 void GameHook::onConfigSave(utils::Config& cfg) {
@@ -651,6 +657,7 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<float>("TurboValue", turboValue);
 	cfg.set<bool>("AltTeleInputToggle", altTeleInput_toggle);
 	cfg.set<bool>("DisableSlowmoToggle", disableSlowmo_toggle);
+	cfg.set<bool>("SaveStatesHotkeysToggle", saveStatesHotkeys_toggle);
 
 	cfg.save(GameHook::cfgString);
 }
