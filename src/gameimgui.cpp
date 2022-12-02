@@ -119,6 +119,8 @@ void GameHook::GameImGui(void) {
                 GameHook::ForceDaze(GameHook::forceDaze_toggle);
             }
 
+            ImGui::Checkbox("Disable Slow Motion", &GameHook::disableSlowmo_toggle);
+
             ImGui::Separator();
 
             ImGui::Checkbox("Turbo", &GameHook::turbo_toggle);

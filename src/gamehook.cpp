@@ -12,6 +12,7 @@ bool GameHook::freezeTimer_toggle(false);
 bool GameHook::disableAfterBurnerBounce_toggle(false);
 bool GameHook::areaJumpPatch_toggle(false);
 bool GameHook::autoSkipCutscenes_toggle(false);
+bool GameHook::disableSlowmo_toggle(false);
 
 // patches
 void GameHook::TakeNoDamage(bool enabled) {
@@ -441,7 +442,7 @@ static __declspec(naked) void AltTeleInputDetour(void) {
 
 std::unique_ptr<FunctionHook> altTauntInputHook;
 uintptr_t altTauntInput_jmp_ret{ NULL };
-int tauntRemap = 4;
+static int altTauntInputTauntRemap = 4;
 static __declspec(naked) void AltTauntInputDetour(void) {
 	_asm {
 		cmp byte ptr [GameHook::altTeleInput_toggle], 0
@@ -450,13 +451,30 @@ static __declspec(naked) void AltTauntInputDetour(void) {
 		mov eax,[ecx+eax*4+0x2C]
 		cmp eax, 0x400
 		jne retcode
-		mov eax, [tauntRemap]
+		mov eax, [altTauntInputTauntRemap]
 		jmp retcode
 
 		originalcode:
 		mov eax,[ecx+eax*4+0x2C]
 		retcode:
 		ret 0004
+	}
+}
+
+std::unique_ptr<FunctionHook> disableSlowmoHook;
+uintptr_t disableSlowmo_jmp_ret{ NULL };
+static float disableSlowmoDefaultSpeed = 1.0f;
+static __declspec(naked) void DisableSlowmoDetour(void) {
+	_asm {
+		cmp byte ptr [GameHook::disableSlowmo_toggle], 0
+		je originalcode
+
+		movss xmm0, [disableSlowmoDefaultSpeed]
+		jmp dword ptr [disableSlowmo_jmp_ret]
+
+		originalcode:
+		movss xmm0, [ecx+0x38]
+		jmp dword ptr [disableSlowmo_jmp_ret]
 	}
 }
 
@@ -542,6 +560,7 @@ void GameHook::InitializeDetours(void) {
 	install_hook_absolute(0x513FC7, turboHook, &TurboHookDetour, &turbo_jmp_ret, 5);
 	install_hook_absolute(0x8BE592, altTeleInputHook, &AltTeleInputDetour, &altTeleInput_jmp_ret, 14);
 	install_hook_absolute(0x50137D, altTauntInputHook, &AltTauntInputDetour, &altTauntInput_jmp_ret, 7);
+	install_hook_absolute(0x513C1E, disableSlowmoHook, &DisableSlowmoDetour, &disableSlowmo_jmp_ret, 5);
 }
 
 void GameHook::onConfigLoad(const utils::Config& cfg) {
@@ -591,6 +610,8 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	turbo_toggle = cfg.get<bool>("TurboToggle").value_or(false);
 	turboValue = cfg.get<float>("TurboValue").value_or(1.0f);
 	altTeleInput_toggle = cfg.get<bool>("AltTeleInputToggle").value_or(false);
+	disableSlowmo_toggle = cfg.get<bool>("DisableSlowmoToggle").value_or(false);
+
 }
 
 void GameHook::onConfigSave(utils::Config& cfg) {
@@ -629,6 +650,7 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("TurboToggle", turbo_toggle);
 	cfg.set<float>("TurboValue", turboValue);
 	cfg.set<bool>("AltTeleInputToggle", altTeleInput_toggle);
+	cfg.set<bool>("DisableSlowmoToggle", disableSlowmo_toggle);
 
 	cfg.save(GameHook::cfgString);
 }

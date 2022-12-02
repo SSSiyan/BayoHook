@@ -66,6 +66,7 @@ public:
 	static bool turbo_toggle;
 	static float turboValue;
 	static bool altTeleInput_toggle;
+	static bool disableSlowmo_toggle;
 
 	// update
 	static int saveStates_CurrentEnemy;
