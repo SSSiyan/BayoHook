@@ -1,7 +1,7 @@
 #include "gamehook.hpp"
 
 // patches
-bool GameHook::takeNoDamage_toggle(false);
+bool GameHook::takeNoDamage_toggle = false;
 void GameHook::TakeNoDamage(bool enabled) {
 	if (enabled) 
 		GameHook::_nop((char*)(0x9D4329), 6);
@@ -9,7 +9,7 @@ void GameHook::TakeNoDamage(bool enabled) {
 		GameHook::_patch((char*)(0x9D4329), (char*)"\x89\x86\x08\x35\x09\x00", 6);
 }
 
-bool GameHook::focusPatch_toggle(false);
+bool GameHook::focusPatch_toggle = false;
 void GameHook::FocusPatch(bool enabled) {
 	if (enabled) {
 		GameHook::_patch((char*)(0x49E519), (char*)"\xEB\x17", 2); // disable pausing tabbed out
@@ -21,7 +21,7 @@ void GameHook::FocusPatch(bool enabled) {
 	}
 }
 
-bool GameHook::infJumps_toggle(false);
+bool GameHook::infJumps_toggle = false;
 void GameHook::InfJumps(bool enabled) {
 	if (enabled) 
 		GameHook::_nop((char*)(0x9E8906), 6);
@@ -29,7 +29,7 @@ void GameHook::InfJumps(bool enabled) {
 		GameHook::_patch((char*)(0x9E8906), (char*)"\x01\xAE\x78\x35\x09\x00", 6);
 }
 
-bool GameHook::disableClicking_toggle(false);
+bool GameHook::disableClicking_toggle = false;
 void GameHook::DisableClicking(bool enabled) {
 	if (enabled)
 		GameHook::_nop((char*)(0xC75747), 3);
@@ -37,7 +37,7 @@ void GameHook::DisableClicking(bool enabled) {
 		GameHook::_patch((char*)(0xC75747), (char*)"\x89\x70\x04", 3);
 }
 
-bool GameHook::noClip_toggle(false);
+bool GameHook::noClip_toggle= false;
 void GameHook::NoClip(bool enabled) {
 	if (enabled)
 		GameHook::_nop((char*)(0xC13250), 7);
@@ -45,7 +45,7 @@ void GameHook::NoClip(bool enabled) {
 		GameHook::_patch((char*)(0xC13250), (char*)"\xC7\x41\x54\x01\x00\x00\x00", 7);
 }
 
-bool GameHook::disableDaze_toggle(false);
+bool GameHook::disableDaze_toggle = false;
 void GameHook::DisableDaze(bool enabled) {
 	if (enabled)
 		GameHook::_patch((char*)(0x430CF4), (char*) "\xEB\x20", 2);
@@ -53,7 +53,7 @@ void GameHook::DisableDaze(bool enabled) {
 		GameHook::_patch((char*)(0x430CF4), (char*)"\x72\x20", 2);
 }
 
-bool GameHook::forceDaze_toggle(false);
+bool GameHook::forceDaze_toggle = false;
 void GameHook::ForceDaze(bool enabled) {
 	if (enabled)
 		GameHook::_patch((char*)(0x65C75C), (char*)"\xF3\x0F\x10\x86\x98\x0C\x00\x00", 8);
@@ -61,7 +61,7 @@ void GameHook::ForceDaze(bool enabled) {
 		GameHook::_patch((char*)(0x65C75C), (char*)"\xF3\x0F\x10\x86\x9C\x0C\x00\x00", 8);
 }
 
-bool GameHook::freezeTimer_toggle(false);
+bool GameHook::freezeTimer_toggle = false;
 void GameHook::FreezeTimer(bool enabled) {
 	if (enabled)
 		GameHook::_nop((char*)(0x620C1D), 8);
@@ -77,7 +77,7 @@ void GameHook::DisableKilling(bool enabled) {
 		GameHook::_patch((char*)(0x4572D2), (char*)"\x75\x0C", 2);
 }
 
-bool GameHook::disableAfterBurnerBounce_toggle(false);
+bool GameHook::disableAfterBurnerBounce_toggle = false;
 void GameHook::DisableAfterBurnerBounce(bool enabled) {
 	if (enabled) {
 		GameHook::_nop((char*)(0x959B23), 6); // enemy
@@ -89,7 +89,7 @@ void GameHook::DisableAfterBurnerBounce(bool enabled) {
 	}
 }
 
-bool GameHook::areaJumpPatch_toggle(false);
+bool GameHook::areaJumpPatch_toggle = false;
 void GameHook::AreaJumpPatch(bool enabled) {
 	if (enabled) {
 		GameHook::_nop((char*)(0x4FC2FB), 6); // enemy
@@ -99,13 +99,53 @@ void GameHook::AreaJumpPatch(bool enabled) {
 	}
 }
 
-bool GameHook::autoSkipCutscenes_toggle(false);
+bool GameHook::autoSkipCutscenes_toggle = false;
 void GameHook::AutoSkipCutscenes(bool enabled) {
 	if (enabled) {
 		//GameHook::_patch((char*)(0x54493A), (char*)"\xEB\x0A", 2);
 	}
 	else {
 		//GameHook::_patch((char*)(0x54493A), (char*)"\x75\x0A", 2);
+	}
+}
+
+bool GameHook::lessClothes_toggle = false;
+void GameHook::LessClothes(bool enabled) {
+	if (enabled) {
+		GameHook::_nop((char*)(0x8B6BD2), 2);
+	}
+	else {
+		GameHook::_patch((char*)(0x8B6BD2), (char*)"\x74\x0A", 2); // je 
+	}
+}
+
+bool GameHook::disableLockOnDodge_toggle = false;
+void GameHook::DisableLockOnDodge(bool enabled) {
+	if (enabled) {
+		GameHook::_patch((char*)(0x9E87CD), (char*)"\x39\xFF", 2);
+	}
+	else {
+		GameHook::_patch((char*)(0x9E87CD), (char*)"\x39\xDF", 2);
+	}
+}
+
+bool GameHook::noHoldDodgeOffset_toggle = false;
+void GameHook::NoHoldDodgeOffset(bool enabled) {
+	if (enabled) {
+		GameHook::_patch((char*)(0x8EF16B), (char*)"\xEB\x11", 2);
+	}
+	else {
+		GameHook::_patch((char*)(0x8EF16B), (char*)"\x74\x11", 2);
+	}
+}
+
+bool GameHook::jumpOffset_toggle = false;
+void GameHook::JumpOffset(bool enabled) {
+	if (enabled) {
+		GameHook::_patch((char*)(0x9E894F), (char*)"\xEB\x17", 2);
+	}
+	else {
+		GameHook::_patch((char*)(0x9E894F), (char*)"\x74\x0F", 2);
 	}
 }
 
@@ -217,23 +257,6 @@ static __declspec(naked) void CustomCameraDistanceDetour(void) {
 		originalcode:
 		fld dword ptr [edi+0x00000B50]
 		jmp dword ptr [customCameraDistance_jmp_ret]
-	}
-}
-
-std::unique_ptr<FunctionHook> lessClothesHook;
-uintptr_t lessClothes_jmp_ret{ NULL };
-bool GameHook::lessClothes_toggle = false;
-static __declspec(naked) void LessClothesDetour(void) {
-	_asm {
-		cmp byte ptr [GameHook::lessClothes_toggle], 0
-		je originalcode
-
-		mov byte ptr [esi+0x00096330], 6
-		mov byte ptr [esi+0x00096331], 0
-
-		originalcode:
-		mov eax,[esi+0x00096330]
-		jmp dword ptr [lessClothes_jmp_ret]
 	}
 }
 
@@ -436,13 +459,14 @@ static __declspec(naked) void AltTauntInputDetour(void) {
 		je originalcode
 
 		mov eax,[ecx+eax*4+0x2C]
-		cmp eax, 0x400
-		jne retcode
+		test eax, 0x400
+		jz retcode
 		mov eax, [altTauntInputTauntRemap]
 		jmp retcode
 
 		originalcode:
 		mov eax,[ecx+eax*4+0x2C]
+
 		retcode:
 		ret 0004
 	}
@@ -466,7 +490,131 @@ static __declspec(naked) void DisableSlowmoDetour(void) {
 	}
 }
 
-// int GameHook::saveStates_CurrentEnemy = 1;
+std::unique_ptr<FunctionHook> lowerDivekickHook;
+uintptr_t lowerDivekick_jmp_ret{ NULL };
+static float lowerDivekickTime = 7.0f;
+bool GameHook::lowerDivekick_toggle = false;
+static __declspec(naked) void LowerDivekickDetour(void) {
+	_asm {
+		cmp byte ptr [GameHook::lowerDivekick_toggle], 0
+		je originalcode
+
+		movss xmm0, [lowerDivekickTime]
+		comiss xmm0,[esi+0x00093594]
+		xorps xmm0,xmm0 // restore xmm0
+		jmp dword ptr [lowerDivekick_jmp_ret]
+
+		originalcode:
+		comiss xmm0, [esi+0x00093594]
+		jmp dword ptr [lowerDivekick_jmp_ret]
+	}
+}
+
+std::unique_ptr<FunctionHook> dualAfterBurnerHook;
+uintptr_t dualAfterBurner_jmp_ret{ NULL };
+bool GameHook::dualAfterBurner_toggle = false;
+uintptr_t dualAfterBurnerCall = 0x9E33D0;
+static __declspec(naked) void DualAfterBurnerDetour(void) {
+	_asm {
+		call dword ptr [dualAfterBurnerCall]
+		cmp byte ptr [GameHook::dualAfterBurner_toggle], 0
+		je jmpcode
+
+		// reuse stack
+		// movss xmm0,[Bayonetta.exe+9A0DD4]
+		sub esp, 0x14
+		// movss [esp+10],xmm0
+		// movss xmm0,[Bayonetta.exe+A280B0]
+		// movss [esp+0C],xmm0
+		// movss xmm0,[Bayonetta.exe+A2718C]
+		// movss [esp+08],xmm0
+		// xorps xmm0,xmm0
+		// movss [esp+04],xmm0
+		// movss xmm0,[Bayonetta.exe+99D79C]
+		// movss [esp],xmm0
+		push 0x03
+		mov ecx,esi
+		call dword ptr [dualAfterBurnerCall]
+
+		jmpcode:
+		jmp dword ptr [dualAfterBurner_jmp_ret]
+	}
+}
+
+std::unique_ptr<FunctionHook> getMotNameHook;
+uintptr_t getMotName_jmp_ret{ NULL };
+bool GameHook::getMotName_toggle = false;
+uintptr_t getMotName_playerTestAddress = NULL;
+uintptr_t getMotName_weaponTestAddress = NULL;
+char GameHook::getMotName_playerMotString[0x128]{};
+char GameHook::getMotName_weaponMotString[0x128]{};
+static __declspec(naked) void GetMotNameDetour(void) {
+	_asm {
+		cmp byte ptr [GameHook::getMotName_toggle], 0
+		je originalcode
+
+		push eax
+		cmp word ptr [edi], 0x6C70 // 'pl'
+		je writeplayermotname
+		cmp word ptr [edi], 0x7077 // 'wp'
+		je writeweaponmotname
+		jmp originalcodepop
+
+		writeplayermotname:
+		cmp [getMotName_playerTestAddress], edi
+		mov [getMotName_playerTestAddress], edi
+		je originalcodepop
+		mov eax, [edi]
+		mov dword ptr [GameHook::getMotName_playerMotString], eax
+		mov eax, [edi+0x04]
+		mov dword ptr [GameHook::getMotName_playerMotString+0x04], eax
+		mov eax, [edi+0x08]
+		mov dword ptr [GameHook::getMotName_playerMotString+0x08], eax
+		mov eax, [edi+0x0C]
+		mov dword ptr [GameHook::getMotName_playerMotString+0x0C], eax
+		mov eax, [edi+0x10]
+		mov dword ptr [GameHook::getMotName_playerMotString+0x10], eax
+		mov eax, [edi+0x14]
+		mov dword ptr [GameHook::getMotName_playerMotString+0x14], eax
+		mov eax, [edi+0x18]
+		mov dword ptr [GameHook::getMotName_playerMotString+0x18], eax
+		mov eax, [edi+0x1C]
+		mov dword ptr [GameHook::getMotName_playerMotString+0x1C], eax
+		jmp originalcodepop
+
+		writeweaponmotname:
+		cmp [getMotName_weaponTestAddress], edi
+		mov [getMotName_weaponTestAddress], edi
+		je originalcodepop
+		mov eax, [edi]
+		mov dword ptr [GameHook::getMotName_weaponMotString], eax
+		mov eax, [edi+0x04]
+		mov dword ptr [GameHook::getMotName_weaponMotString+0x04], eax
+		mov eax, [edi+0x08]
+		mov dword ptr [GameHook::getMotName_weaponMotString+0x08], eax
+		mov eax, [edi+0x0C]
+		mov dword ptr [GameHook::getMotName_weaponMotString+0x0C], eax
+		mov eax, [edi+0x10]
+		mov dword ptr [GameHook::getMotName_weaponMotString+0x10], eax
+		mov eax, [edi+0x14]
+		mov dword ptr [GameHook::getMotName_weaponMotString+0x14], eax
+		mov eax, [edi+0x18]
+		mov dword ptr [GameHook::getMotName_weaponMotString+0x18], eax
+		mov eax, [edi+0x1C]
+		mov dword ptr [GameHook::getMotName_weaponMotString+0x1C], eax
+		jmp originalcodepop
+
+		originalcodepop:
+		pop eax
+
+		originalcode:
+		mov al, [edi]
+		xor esi, esi
+		mov ebp, ecx
+		jmp dword ptr [getMotName_jmp_ret]
+	}
+}
+
 // int GameHook::saveStates_SavedEnemyMovePart = 0;
 // float GameHook::saveStates_SavedEnemyAnimFrame = 0.0f;
 bool GameHook::saveStatesHotkeys_toggle = false;
@@ -555,7 +703,6 @@ void GameHook::InitializeDetours(void) {
 	install_hook_absolute(0x8BCE4C, infMagicHook, &InfMagicDetour, &infMagic_jmp_ret, 8);
 	install_hook_absolute(0x4572B2, damageDealtMultiplierHook, &DamageDealtMultiplierDetour, &damageDealtMultiplier_jmp_ret, 8);
 	install_hook_absolute(0xA941FA, customCameraDistanceHook, &CustomCameraDistanceDetour, &customCameraDistance_jmp_ret, 6);
-	install_hook_absolute(0x8B6C55, lessClothesHook, &LessClothesDetour, &lessClothes_jmp_ret, 6);
 	install_hook_absolute(0x4250F7, haloDisplayHook, &HaloDisplayDetour, &haloDisplay_jmp_ret, 5);
 	install_hook_absolute(0x4BD053, animSwapHook, &AnimSwapDetour, &animSwap_jmp_ret, 6);
 	install_hook_absolute(0x411CD4, inputIconsHook, &InputIconsDetour, &inputIcons_jmp_ret, 13);
@@ -567,6 +714,9 @@ void GameHook::InitializeDetours(void) {
 	install_hook_absolute(0x8BE592, altTeleInputHook, &AltTeleInputDetour, &altTeleInput_jmp_ret, 14);
 	install_hook_absolute(0x50137D, altTauntInputHook, &AltTauntInputDetour, &altTauntInput_jmp_ret, 7);
 	install_hook_absolute(0x513C1E, disableSlowmoHook, &DisableSlowmoDetour, &disableSlowmo_jmp_ret, 5);
+	install_hook_absolute(0x9E93B9, lowerDivekickHook, &LowerDivekickDetour, &lowerDivekick_jmp_ret, 7);
+	install_hook_absolute(0x94CAAF, dualAfterBurnerHook, &DualAfterBurnerDetour, &dualAfterBurner_jmp_ret, 5);
+	install_hook_absolute(0xC798A7, getMotNameHook, &GetMotNameDetour, &getMotName_jmp_ret, 6);
 }
 
 void GameHook::onConfigLoad(const utils::Config& cfg) {
@@ -588,6 +738,12 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	DisableAfterBurnerBounce(disableAfterBurnerBounce_toggle);
 	autoSkipCutscenes_toggle = cfg.get<bool>("AutoSkipCutscenesToggle").value_or(false);
 	AutoSkipCutscenes(autoSkipCutscenes_toggle);
+	disableLockOnDodge_toggle = cfg.get<bool>("DisableLockOnDodgeToggle").value_or(false);
+	DisableLockOnDodge(disableLockOnDodge_toggle);
+	noHoldDodgeOffset_toggle = cfg.get<bool>("NoHoldDodgeOffsetToggle").value_or(false);
+	NoHoldDodgeOffset(noHoldDodgeOffset_toggle);
+	jumpOffset_toggle = cfg.get<bool>("JumpOffsetToggle").value_or(false);
+	JumpOffset(jumpOffset_toggle);
 	//areaJumpPatch_toggle = cfg.get<bool>("AreaJumpPatchToggle").value_or(false);
 	//AreaJumpPatch(areaJumpPatch_toggle);
 
@@ -617,6 +773,8 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	turboValue = cfg.get<float>("TurboValue").value_or(1.0f);
 	altTeleInput_toggle = cfg.get<bool>("AltTeleInputToggle").value_or(false);
 	disableSlowmo_toggle = cfg.get<bool>("DisableSlowmoToggle").value_or(false);
+	lowerDivekick_toggle = cfg.get<bool>("LowerDivekickToggle").value_or(false);
+	dualAfterBurner_toggle = cfg.get<bool>("DualAfterBurnerToggle").value_or(false);
 	saveStatesHotkeys_toggle = cfg.get<bool>("SaveStatesHotkeysToggle").value_or(false);
 }
 
@@ -631,6 +789,9 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("ShowMessagesToggle", showMessages_toggle);
 	cfg.set<bool>("DisableAfterBurnerBounceToggle", disableAfterBurnerBounce_toggle);
 	cfg.set<bool>("AutoSkipCutscenesToggle", autoSkipCutscenes_toggle);
+	cfg.set<bool>("DisableLockOnDodgeToggle", disableLockOnDodge_toggle);
+	cfg.set<bool>("NoHoldDodgeOffsetToggle", noHoldDodgeOffset_toggle);
+	cfg.set<bool>("JumpOffsetToggle", jumpOffset_toggle);
 	//cfg.set<bool>("AreaJumpPatchToggle", areaJumpPatch_toggle);
 	// detours
 	cfg.set<bool>("DealNoDamageToggle", enemyHP_no_damage_toggle);
@@ -657,6 +818,8 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<float>("TurboValue", turboValue);
 	cfg.set<bool>("AltTeleInputToggle", altTeleInput_toggle);
 	cfg.set<bool>("DisableSlowmoToggle", disableSlowmo_toggle);
+	cfg.set<bool>("LowerDivekickToggle", lowerDivekick_toggle);
+	cfg.set<bool>("DualAfterBurnerToggle", dualAfterBurner_toggle);
 	cfg.set<bool>("SaveStatesHotkeysToggle", saveStatesHotkeys_toggle);
 
 	cfg.save(GameHook::cfgString);

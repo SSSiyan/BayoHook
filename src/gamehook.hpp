@@ -22,6 +22,10 @@ public:
 	static bool disableAfterBurnerBounce_toggle;
 	static bool areaJumpPatch_toggle;
 	static bool autoSkipCutscenes_toggle;
+	static bool lessClothes_toggle;
+	static bool disableLockOnDodge_toggle;
+	static bool noHoldDodgeOffset_toggle;
+	static bool jumpOffset_toggle;
 	// patch functions
 	static void TakeNoDamage(bool enabled);
 	static void DisableKilling(bool enabled);
@@ -35,8 +39,12 @@ public:
 	static void DisableAfterBurnerBounce(bool enabled);
 	static void AreaJumpPatch(bool enabled);
 	static void AutoSkipCutscenes(bool enabled);
-	static void WeaponSwapCaller(void);
+	static void LessClothes(bool enabled);
+	static void DisableLockOnDodge(bool enabled);
+	static void NoHoldDodgeOffset(bool enabled);
+	static void JumpOffset(bool enabled);
 
+	static void WeaponSwapCaller(void);
 	static void SaveStates_SaveState();
 	static void SaveStates_LoadState();
 
@@ -50,7 +58,6 @@ public:
 	static float damageDealtMultiplierMult;
 	static bool customCameraDistance_toggle;
 	static float customCameraDistance;
-	static bool lessClothes_toggle;
 	static bool inputIcons_toggle;
 	static int inputIconsValue;
 	static bool haloDisplay_toggle;
@@ -67,11 +74,14 @@ public:
 	static float turboValue;
 	static bool altTeleInput_toggle;
 	static bool disableSlowmo_toggle;
+	static bool lowerDivekick_toggle;
+	static bool dualAfterBurner_toggle;
+
+	static bool getMotName_toggle;
+	static char getMotName_weaponMotString[0x128];
+	static char getMotName_playerMotString[0x128];
 
 	// update
-	// static int saveStates_CurrentEnemy;
-	// static int saveStates_SavedEnemyMovePart;
-	// static float saveStates_SavedEnemyAnimFrame;
 	static bool saveStatesHotkeys_toggle;
 	static int saveStates_SavedEnemyMoveID;
 	static float saveStates_SavedEnemyXYZPos[3];
@@ -88,8 +98,6 @@ public:
 	static uintptr_t currentCharacterAddress;
 	static uintptr_t thirdAccessoryAddress;
 	static uintptr_t hudDisplayAddress;
-	//static uintptr_t enemyListAddress;
-	//static uintptr_t enemyCountAddress;
 	static uintptr_t enemySlotsAddress;
 	static uintptr_t enemyLockedOnAddress;
 	static uintptr_t angelSlayerFloorAddress;
@@ -104,6 +112,7 @@ public:
 	static float windowHeightHack;
 	static float maxWindowHeight;
 	static float windowHeightBorder;
+	static float windowWidth;
 	static void GameImGui(void);
 	static bool showMessages_toggle;
 	static bool showComboUI_toggle;
@@ -127,7 +136,7 @@ public:
 
 	static inline const char* cfgString{ "../bayo_hook.cfg" };
 	static inline utils::Config cfg{ "bayo_hook.cfg" };
-	static inline const char* dllName{"BayoHook 0.6"};
+	static inline const char* dllName{"BayoHook 0.69"};
 	static inline const char* repoUrl{ "https://github.com/SSSiyan/BayoHook" };
 private:
 };
