@@ -26,6 +26,7 @@ public:
 	static bool disableLockOnDodge_toggle;
 	static bool noHoldDodgeOffset_toggle;
 	static bool jumpOffset_toggle;
+	static bool alwaysWalkOnWalls_toggle;
 	// patch functions
 	static void TakeNoDamage(bool enabled);
 	static void DisableKilling(bool enabled);
@@ -43,6 +44,7 @@ public:
 	static void DisableLockOnDodge(bool enabled);
 	static void NoHoldDodgeOffset(bool enabled);
 	static void JumpOffset(bool enabled);
+	static void AlwaysWalkOnWalls(bool enabled);
 
 	static void WeaponSwapCaller(void);
 	static void SaveStates_SaveState();

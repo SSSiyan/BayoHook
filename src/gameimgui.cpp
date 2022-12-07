@@ -233,6 +233,10 @@ void GameHook::GameImGui(void) {
                 JumpOffset(jumpOffset_toggle);
             }
 
+            if (ImGui::Checkbox("Always Walk On Walls", &GameHook::alwaysWalkOnWalls_toggle)) {
+                AlwaysWalkOnWalls(alwaysWalkOnWalls_toggle);
+            }
+
             ImGui::Separator();
 
             ImGui::Checkbox("Witch Time Multiplier ##WitchTimeToggle", &GameHook::witchTimeMultiplier_toggle);

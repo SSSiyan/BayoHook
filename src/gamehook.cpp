@@ -149,6 +149,18 @@ void GameHook::JumpOffset(bool enabled) {
 	}
 }
 
+bool GameHook::alwaysWalkOnWalls_toggle = false;
+void GameHook::AlwaysWalkOnWalls(bool enabled) {
+	if (enabled) {
+		GameHook::_nop((char*)(0x520496), 10);
+		GameHook::_patch((char*)(0x9CB8C4), (char*)"\x81\x0D\x24\xDE\x1A\x05\x00\x00\x10\x00", 10);
+	}
+	else {
+		GameHook::_patch((char*)(0x520496), (char*)"\x81\x25\x24\xDE\x1A\x05\xFF\xFF\xEF\xFF", 10);
+		GameHook::_patch((char*)(0x9CB8C4), (char*)"\xF7\x05\x24\xDE\x1A\x05\x00\x00\x10\x00", 10);
+	}
+}
+
 // detours
 std::unique_ptr<FunctionHook> enemyHPHook;
 uintptr_t enemyHP_jmp_ret{ NULL };
@@ -744,6 +756,8 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	NoHoldDodgeOffset(noHoldDodgeOffset_toggle);
 	jumpOffset_toggle = cfg.get<bool>("JumpOffsetToggle").value_or(false);
 	JumpOffset(jumpOffset_toggle);
+	alwaysWalkOnWalls_toggle = cfg.get<bool>("AlwaysWalkOnWalls").value_or(false);
+	AlwaysWalkOnWalls(alwaysWalkOnWalls_toggle);
 	//areaJumpPatch_toggle = cfg.get<bool>("AreaJumpPatchToggle").value_or(false);
 	//AreaJumpPatch(areaJumpPatch_toggle);
 
@@ -792,6 +806,7 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("DisableLockOnDodgeToggle", disableLockOnDodge_toggle);
 	cfg.set<bool>("NoHoldDodgeOffsetToggle", noHoldDodgeOffset_toggle);
 	cfg.set<bool>("JumpOffsetToggle", jumpOffset_toggle);
+	cfg.set<bool>("AlwaysWalkOnWalls", alwaysWalkOnWalls_toggle);
 	//cfg.set<bool>("AreaJumpPatchToggle", areaJumpPatch_toggle);
 	// detours
 	cfg.set<bool>("DealNoDamageToggle", enemyHP_no_damage_toggle);
