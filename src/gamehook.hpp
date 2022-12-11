@@ -80,6 +80,7 @@ public:
 	static bool disableSlowmo_toggle;
 	static bool lowerDivekick_toggle;
 	static bool dualAfterBurner_toggle;
+	static bool loadReplace_toggle;
 
 	static bool getMotName_toggle;
 	static char getMotName_weaponMotString[0x128];

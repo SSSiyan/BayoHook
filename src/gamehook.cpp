@@ -565,6 +565,30 @@ static __declspec(naked) void DualAfterBurnerDetour(void) {
 	}
 }
 
+std::unique_ptr<FunctionHook> loadReplaceHook;
+uintptr_t loadReplace_jmp_ret{ NULL };
+bool GameHook::loadReplace_toggle = false;
+static __declspec(naked) void LoadReplaceDetour(void) {
+	_asm {
+		cmp byte ptr [GameHook::loadReplace_toggle], 0
+		je originalcode
+
+		push ecx
+		cmp edx, 0x622180 // AA
+		je angelattack
+		jmp originalcode
+
+		angelattack:
+		mov edx, 0x00619DD0 // stage select
+		jmp originalcode
+
+		originalcode:
+		mov ecx, [eax+0x08]
+		call edx
+		jmp dword ptr [loadReplace_jmp_ret]
+	}
+}
+
 std::unique_ptr<FunctionHook> getMotNameHook;
 uintptr_t getMotName_jmp_ret{ NULL };
 bool GameHook::getMotName_toggle = false;
@@ -740,7 +764,8 @@ void GameHook::InitializeDetours(void) {
 	install_hook_absolute(0x513C1E, disableSlowmoHook, &DisableSlowmoDetour, &disableSlowmo_jmp_ret, 5);
 	install_hook_absolute(0x9E93B9, lowerDivekickHook, &LowerDivekickDetour, &lowerDivekick_jmp_ret, 7);
 	install_hook_absolute(0x94CAAF, dualAfterBurnerHook, &DualAfterBurnerDetour, &dualAfterBurner_jmp_ret, 5);
-	install_hook_absolute(0xC798A7, getMotNameHook, &GetMotNameDetour, &getMotName_jmp_ret, 6);
+	install_hook_absolute(0x94CAAF, dualAfterBurnerHook, &DualAfterBurnerDetour, &dualAfterBurner_jmp_ret, 5);
+	install_hook_absolute(0x6222D0, loadReplaceHook, &LoadReplaceDetour, &loadReplace_jmp_ret, 6);
 }
 
 void GameHook::onConfigLoad(const utils::Config& cfg) {
@@ -803,6 +828,7 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	disableSlowmo_toggle = cfg.get<bool>("DisableSlowmoToggle").value_or(false);
 	lowerDivekick_toggle = cfg.get<bool>("LowerDivekickToggle").value_or(false);
 	dualAfterBurner_toggle = cfg.get<bool>("DualAfterBurnerToggle").value_or(false);
+	loadReplace_toggle = cfg.get<bool>("LoadReplaceToggle").value_or(false);
 	saveStatesHotkeys_toggle = cfg.get<bool>("SaveStatesHotkeysToggle").value_or(false);
 }
 
@@ -850,6 +876,7 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("DisableSlowmoToggle", disableSlowmo_toggle);
 	cfg.set<bool>("LowerDivekickToggle", lowerDivekick_toggle);
 	cfg.set<bool>("DualAfterBurnerToggle", dualAfterBurner_toggle);
+	cfg.set<bool>("LoadReplaceToggle", loadReplace_toggle);
 	cfg.set<bool>("SaveStatesHotkeysToggle", saveStatesHotkeys_toggle);
 
 	cfg.save(GameHook::cfgString);

@@ -563,6 +563,9 @@ void GameHook::GameImGui(void) {
             }
             help_marker("Pick up Halos from further away");
 
+            ImGui::Checkbox("Skip Angel Attack", &GameHook::loadReplace_toggle);
+            help_marker("Load Mission Select instead of Angel Attack");
+
             ImGui::Separator();
 
             ImGui::Checkbox("Force Input Type", &GameHook::inputIcons_toggle);
