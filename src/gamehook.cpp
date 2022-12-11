@@ -99,13 +99,15 @@ void GameHook::AreaJumpPatch(bool enabled) {
 	}
 }
 
-bool GameHook::autoSkipCutscenes_toggle = false;
-void GameHook::AutoSkipCutscenes(bool enabled) {
+bool GameHook::easyCutsceneSkip_toggle = false;
+void GameHook::EasyCutsceneSkip(bool enabled) {
 	if (enabled) {
-		//GameHook::_patch((char*)(0x54493A), (char*)"\xEB\x0A", 2);
+		GameHook::_patch((char*)(0x48FEC4), (char*)"\x90\x90", 2);
+		GameHook::_patch((char*)(0x48FEC6), (char*)"\xF7\x05\xCC\x93\xA4\x05\x16\x00\x00\x00", 10); // X Pressed
 	}
 	else {
-		//GameHook::_patch((char*)(0x54493A), (char*)"\x75\x0A", 2);
+		GameHook::_patch((char*)(0x48FEC4), (char*)"\x74\x10", 2); // R2 Held
+		GameHook::_patch((char*)(0x48FEC6), (char*)"\xF7\x05\xCC\x93\xA4\x05\x00\x02\x00\x00", 10); // Select Pressed
 	}
 }
 
@@ -158,6 +160,16 @@ void GameHook::AlwaysWalkOnWalls(bool enabled) {
 	else {
 		GameHook::_patch((char*)(0x520496), (char*)"\x81\x25\x24\xDE\x1A\x05\xFF\xFF\xEF\xFF", 10);
 		GameHook::_patch((char*)(0x9CB8C4), (char*)"\xF7\x05\x24\xDE\x1A\x05\x00\x00\x10\x00", 10);
+	}
+}
+
+bool GameHook::getMoreHalos_toggle = false;
+void GameHook::GetMoreHalos (bool enabled) {
+	if (enabled) {
+		GameHook::_nop((char*)(0x49479A), 2);
+	}
+	else {
+		GameHook::_patch((char*)(0x49479A), (char*)"\x76\x0A", 2); // jna
 	}
 }
 
@@ -664,7 +676,7 @@ void GameHook::SaveStates_LoadState() {
 }
 
 void GameHook::WeaponSwapCaller(void) {
-	uintptr_t weaponSwapCallAddress = 0x00C43FE1;
+	uintptr_t weaponSwapCallAddress = 0xC43ED0;
 	__asm {
 		pusha
 		pushf
@@ -748,16 +760,18 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	showMessages_toggle = cfg.get<bool>("ShowMessagesToggle").value_or(true);
 	disableAfterBurnerBounce_toggle = cfg.get<bool>("DisableAfterBurnerBounceToggle").value_or(false);
 	DisableAfterBurnerBounce(disableAfterBurnerBounce_toggle);
-	autoSkipCutscenes_toggle = cfg.get<bool>("AutoSkipCutscenesToggle").value_or(false);
-	AutoSkipCutscenes(autoSkipCutscenes_toggle);
+	easyCutsceneSkip_toggle = cfg.get<bool>("EasyCutsceneSkipToggle").value_or(false);
+	EasyCutsceneSkip(easyCutsceneSkip_toggle);
 	disableLockOnDodge_toggle = cfg.get<bool>("DisableLockOnDodgeToggle").value_or(false);
 	DisableLockOnDodge(disableLockOnDodge_toggle);
 	noHoldDodgeOffset_toggle = cfg.get<bool>("NoHoldDodgeOffsetToggle").value_or(false);
 	NoHoldDodgeOffset(noHoldDodgeOffset_toggle);
 	jumpOffset_toggle = cfg.get<bool>("JumpOffsetToggle").value_or(false);
 	JumpOffset(jumpOffset_toggle);
-	alwaysWalkOnWalls_toggle = cfg.get<bool>("AlwaysWalkOnWalls").value_or(false);
+	alwaysWalkOnWalls_toggle = cfg.get<bool>("AlwaysWalkOnWallsToggle").value_or(false);
 	AlwaysWalkOnWalls(alwaysWalkOnWalls_toggle);
+	getMoreHalos_toggle = cfg.get<bool>("GetMoreHalosToggle").value_or(false);
+	GetMoreHalos(getMoreHalos_toggle);
 	//areaJumpPatch_toggle = cfg.get<bool>("AreaJumpPatchToggle").value_or(false);
 	//AreaJumpPatch(areaJumpPatch_toggle);
 
@@ -781,8 +795,8 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	comboUI_X = cfg.get<float>("ComboUI_X").value_or(0.875f);
 	comboUI_Y = cfg.get<float>("ComboUI_Y").value_or(0.215f);
 	initialAngelSlayerFloor = cfg.get<int>("InitialAngelSlayerFloor").value_or(0);
-	cancellableAfterBurner_toggle = cfg.get<bool>("CancellableAfterBurner").value_or(false);
-	cancellableFallingKick_toggle = cfg.get<bool>("CancellableFallingKick").value_or(false);
+	cancellableAfterBurner_toggle = cfg.get<bool>("CancellableAfterBurnerToggle").value_or(false);
+	cancellableFallingKick_toggle = cfg.get<bool>("CancellableFallingKickToggle").value_or(false);
 	turbo_toggle = cfg.get<bool>("TurboToggle").value_or(false);
 	turboValue = cfg.get<float>("TurboValue").value_or(1.0f);
 	altTeleInput_toggle = cfg.get<bool>("AltTeleInputToggle").value_or(false);
@@ -802,11 +816,12 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("FreezeTimerToggle", freezeTimer_toggle);
 	cfg.set<bool>("ShowMessagesToggle", showMessages_toggle);
 	cfg.set<bool>("DisableAfterBurnerBounceToggle", disableAfterBurnerBounce_toggle);
-	cfg.set<bool>("AutoSkipCutscenesToggle", autoSkipCutscenes_toggle);
+	cfg.set<bool>("EasyCutsceneSkipToggle", easyCutsceneSkip_toggle);
 	cfg.set<bool>("DisableLockOnDodgeToggle", disableLockOnDodge_toggle);
 	cfg.set<bool>("NoHoldDodgeOffsetToggle", noHoldDodgeOffset_toggle);
 	cfg.set<bool>("JumpOffsetToggle", jumpOffset_toggle);
-	cfg.set<bool>("AlwaysWalkOnWalls", alwaysWalkOnWalls_toggle);
+	cfg.set<bool>("AlwaysWalkOnWallsToggle", alwaysWalkOnWalls_toggle);
+	cfg.set<bool>("GetMoreHalosToggle", getMoreHalos_toggle);
 	//cfg.set<bool>("AreaJumpPatchToggle", areaJumpPatch_toggle);
 	// detours
 	cfg.set<bool>("DealNoDamageToggle", enemyHP_no_damage_toggle);
@@ -827,8 +842,8 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<float>("ComboUI_X", comboUI_X);
 	cfg.set<float>("ComboUI_Y", comboUI_Y);
 	cfg.set<int>("InitialAngelSlayerFloor", initialAngelSlayerFloor);
-	cfg.set<bool>("CancellableAfterBurner", cancellableAfterBurner_toggle);
-	cfg.set<bool>("CancellableFallingKick", cancellableFallingKick_toggle);
+	cfg.set<bool>("CancellableAfterBurnerToggle", cancellableAfterBurner_toggle);
+	cfg.set<bool>("CancellableFallingKickToggle", cancellableFallingKick_toggle);
 	cfg.set<bool>("TurboToggle", turbo_toggle);
 	cfg.set<float>("TurboValue", turboValue);
 	cfg.set<bool>("AltTeleInputToggle", altTeleInput_toggle);

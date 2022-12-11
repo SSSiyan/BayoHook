@@ -21,12 +21,13 @@ public:
 	static bool freezeTimer_toggle;
 	static bool disableAfterBurnerBounce_toggle;
 	static bool areaJumpPatch_toggle;
-	static bool autoSkipCutscenes_toggle;
+	static bool easyCutsceneSkip_toggle;
 	static bool lessClothes_toggle;
 	static bool disableLockOnDodge_toggle;
 	static bool noHoldDodgeOffset_toggle;
 	static bool jumpOffset_toggle;
 	static bool alwaysWalkOnWalls_toggle;
+	static bool getMoreHalos_toggle;
 	// patch functions
 	static void TakeNoDamage(bool enabled);
 	static void DisableKilling(bool enabled);
@@ -39,12 +40,13 @@ public:
 	static void FreezeTimer(bool enabled);
 	static void DisableAfterBurnerBounce(bool enabled);
 	static void AreaJumpPatch(bool enabled);
-	static void AutoSkipCutscenes(bool enabled);
+	static void EasyCutsceneSkip(bool enabled);
 	static void LessClothes(bool enabled);
 	static void DisableLockOnDodge(bool enabled);
 	static void NoHoldDodgeOffset(bool enabled);
 	static void JumpOffset(bool enabled);
 	static void AlwaysWalkOnWalls(bool enabled);
+	static void GetMoreHalos(bool enabled);
 
 	static void WeaponSwapCaller(void);
 	static void SaveStates_SaveState();

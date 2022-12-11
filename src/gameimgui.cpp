@@ -396,7 +396,7 @@ void GameHook::GameImGui(void) {
             if (ImGui::Button("Call Weapon Swap")) {
                 GameHook::WeaponSwapCaller();
             }
-            help_marker("Attempt to refresh weapons without a pause\nRequires entering and exiting the weapon select menu once to load weapons initially. 3 different weapon loads will crash.");
+            help_marker("Attempt to refresh weapons without a pause\nRequires changing a weapon manually in the weapon select menu once to load weapons initially.");
 
             ImGui::Checkbox("Get Mot Names", &GameHook::getMotName_toggle);
             if (GameHook::getMotName_toggle) {
@@ -553,9 +553,15 @@ void GameHook::GameImGui(void) {
             ImGui::SameLine(sameLineWidth);
             ImGui::Checkbox("Save/Load Animation Hotkeys", &GameHook::saveStatesHotkeys_toggle);
 
-            /*if (ImGui::Checkbox("Auto Skip Cutscenes", &GameHook::autoSkipCutscenes_toggle)) {
-                GameHook::AutoSkipCutscenes(GameHook::autoSkipCutscenes_toggle);
-            }*/
+            if (ImGui::Checkbox("Easy Cutscene Skip", &GameHook::easyCutsceneSkip_toggle)) {
+                GameHook::EasyCutsceneSkip(GameHook::easyCutsceneSkip_toggle);
+            }
+            help_marker("Move cutscene skip (R2+Select) to X");
+            ImGui::SameLine(sameLineWidth);
+            if (ImGui::Checkbox("Get More Halos", &GameHook::getMoreHalos_toggle)) {
+                GameHook::GetMoreHalos(GameHook::getMoreHalos_toggle);
+            }
+            help_marker("Pick up Halos from further away");
 
             ImGui::Separator();
 
