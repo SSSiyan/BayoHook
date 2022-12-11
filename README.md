@@ -5,6 +5,8 @@ This dll will give you access to training, gameplay, and quality of life options
 
 Builds are intended for use on the Steam version of the game and will crash on other versions.
 
+Please back up your save before using this hook. Savedata can be found in `C:\Program Files (x86)\Steam\userdata\[steamid]\460790\remote`.
+
 ## Download
 Releases can be found [here.](https://github.com/SSSiyan/BayoHook/releases)
 
