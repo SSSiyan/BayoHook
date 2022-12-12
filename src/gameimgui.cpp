@@ -120,6 +120,20 @@ void GameHook::GameImGui(void) {
             }
             help_marker("Daze every loaded enemy");
 
+            if (ImGui::Checkbox("More Enemy Attacks", &GameHook::moreEnemyAttacks_toggle)) {
+                GameHook::lessEnemyAttacks_toggle = false;
+                GameHook::LessEnemyAttacks(GameHook::lessEnemyAttacks_toggle);
+                GameHook::MoreEnemyAttacks(GameHook::moreEnemyAttacks_toggle);
+            }
+            help_marker("Remove the cooldown that starts when an enemy attacks");
+            ImGui::SameLine(sameLineWidth);
+            if (ImGui::Checkbox("Less Enemy Attacks", &GameHook::lessEnemyAttacks_toggle)) {
+                GameHook::moreEnemyAttacks_toggle = false;
+                GameHook::MoreEnemyAttacks(GameHook::moreEnemyAttacks_toggle);
+                GameHook::LessEnemyAttacks(GameHook::lessEnemyAttacks_toggle);
+            }
+            help_marker("Freeze the cooldown that starts when an enemy attacks");
+
             ImGui::Checkbox("Disable Slow Motion", &GameHook::disableSlowmo_toggle);
 
             //ImGui::SameLine(sameLineWidth);

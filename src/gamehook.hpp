@@ -28,6 +28,8 @@ public:
 	static bool jumpOffset_toggle;
 	static bool alwaysWalkOnWalls_toggle;
 	static bool getMoreHalos_toggle;
+	static bool moreEnemyAttacks_toggle;
+	static bool lessEnemyAttacks_toggle;
 	// patch functions
 	static void TakeNoDamage(bool enabled);
 	static void DisableKilling(bool enabled);
@@ -47,6 +49,9 @@ public:
 	static void JumpOffset(bool enabled);
 	static void AlwaysWalkOnWalls(bool enabled);
 	static void GetMoreHalos(bool enabled);
+	static void MoreEnemyAttacks(bool enabled);
+	static void LessEnemyAttacks(bool enabled);
+
 
 	static void WeaponSwapCaller(void);
 	static void SaveStates_SaveState();

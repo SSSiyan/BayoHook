@@ -173,6 +173,26 @@ void GameHook::GetMoreHalos (bool enabled) {
 	}
 }
 
+bool GameHook::moreEnemyAttacks_toggle = false;
+void GameHook::MoreEnemyAttacks (bool enabled) {
+	if (enabled) {
+		GameHook::_nop((char*)(0x65DEC1), 6);
+	}
+	else {
+		GameHook::_patch((char*)(0x65DEC1), (char*)"\x0F\x84\x51\x06\x00\x00", 6); // je
+	}
+}
+
+bool GameHook::lessEnemyAttacks_toggle = false;
+void GameHook::LessEnemyAttacks (bool enabled) {
+	if (enabled) {
+		GameHook::_patch((char*)(0x65DEC1), (char*)"\xE9\x52\x06\x00\x00\x90", 6); // jmp
+	}
+	else {
+		GameHook::_patch((char*)(0x65DEC1), (char*)"\x0F\x84\x51\x06\x00\x00", 6); // je
+	}
+}
+
 // detours
 std::unique_ptr<FunctionHook> enemyHPHook;
 uintptr_t enemyHP_jmp_ret{ NULL };
@@ -797,6 +817,11 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	AlwaysWalkOnWalls(alwaysWalkOnWalls_toggle);
 	getMoreHalos_toggle = cfg.get<bool>("GetMoreHalosToggle").value_or(false);
 	GetMoreHalos(getMoreHalos_toggle);
+	moreEnemyAttacks_toggle = cfg.get<bool>("MoreEnemyAttacksToggle").value_or(false);
+	MoreEnemyAttacks(moreEnemyAttacks_toggle);
+	lessEnemyAttacks_toggle = cfg.get<bool>("LessEnemyAttacksToggle").value_or(false);
+	LessEnemyAttacks(lessEnemyAttacks_toggle);
+
 	//areaJumpPatch_toggle = cfg.get<bool>("AreaJumpPatchToggle").value_or(false);
 	//AreaJumpPatch(areaJumpPatch_toggle);
 
@@ -848,6 +873,9 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("JumpOffsetToggle", jumpOffset_toggle);
 	cfg.set<bool>("AlwaysWalkOnWallsToggle", alwaysWalkOnWalls_toggle);
 	cfg.set<bool>("GetMoreHalosToggle", getMoreHalos_toggle);
+	cfg.set<bool>("MoreEnemyAttacksToggle", moreEnemyAttacks_toggle);
+	cfg.set<bool>("LessEnemyAttacksToggle", lessEnemyAttacks_toggle);
+
 	//cfg.set<bool>("AreaJumpPatchToggle", areaJumpPatch_toggle);
 	// detours
 	cfg.set<bool>("DealNoDamageToggle", enemyHP_no_damage_toggle);
