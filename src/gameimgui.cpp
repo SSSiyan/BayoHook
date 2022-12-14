@@ -38,6 +38,10 @@ uintptr_t GameHook::WeaponA1Address = 0x5AA741C;
 uintptr_t GameHook::WeaponA2Address = 0x5AA7420;
 uintptr_t GameHook::WeaponB1Address = 0x5AA742C;
 uintptr_t GameHook::WeaponB2Address = 0x5AA7430;
+uintptr_t GameHook::HeapSCNAddress = 0x5A57A78;
+uintptr_t GameHook::bayo_getAssetHandleAddress = 0xC5F5E0;
+uintptr_t GameHook::bayoActor_allocInitAttachPointsAddress = 0x451B20;
+uintptr_t GameHook::bayoActor_attachBoneAddress = 0x454C20;
 
 void help_marker(const char* desc) {
     ImGui::SameLine();

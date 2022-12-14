@@ -219,6 +219,7 @@
     <ClCompile Include="include\minhook\src\hook.c" />
     <ClCompile Include="include\minhook\src\trampoline.c" />
     <ClCompile Include="src\base.cpp" />
+    <ClCompile Include="src\bayonetta.cpp" />
     <ClCompile Include="src\gamehook.cpp" />
     <ClCompile Include="src\gameimgui.cpp" />
     <ClCompile Include="src\hooks\EndScene.cpp" />
@@ -256,6 +257,7 @@
     <ClInclude Include="include\minhook\src\hde\table64.h" />
     <ClInclude Include="include\minhook\src\trampoline.h" />
     <ClInclude Include="src\base.h" />
+    <ClInclude Include="src\bayonetta.h" />
     <ClInclude Include="src\gamehook.hpp" />
     <ClInclude Include="src\LicenseStrings.hpp" />
     <ClInclude Include="src\pch.h" />

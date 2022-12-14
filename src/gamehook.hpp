@@ -117,6 +117,10 @@ public:
 	static uintptr_t WeaponA2Address;
 	static uintptr_t WeaponB1Address;
 	static uintptr_t WeaponB2Address;
+	static uintptr_t HeapSCNAddress;
+	static uintptr_t bayo_getAssetHandleAddress;
+	static uintptr_t bayoActor_allocInitAttachPointsAddress;
+	static uintptr_t bayoActor_attachBoneAddress;
 
 	// imgui
 	static float windowHeightHack;

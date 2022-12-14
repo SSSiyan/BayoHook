@@ -1,4 +1,5 @@
 #include "gamehook.hpp"
+#include "bayonetta.h"
 
 // patches
 bool GameHook::takeNoDamage_toggle = false;
@@ -682,6 +683,35 @@ static __declspec(naked) void GetMotNameDetour(void) {
 	}
 }
 
+
+std::unique_ptr<FunctionHook> pl0012AttHook;
+uintptr_t pl0012Att_jmp_ret{ NULL };
+uintptr_t pl0012Att_jmp_jnz = 0x9F5B54;
+static __declspec(naked) void pl0012AttDetour(void) {
+	_asm {
+		push ecx
+		push edx
+		push esi
+		call bayoPl0012_loadATT
+		pop ecx
+		pop edx
+		test eax, eax
+		jnz success
+		jmp originalcode
+
+		originalcode:
+		push ebx
+		push ebp
+		push edi
+		push dword ptr[GameHook::HeapSCNAddress]
+		jmp dword ptr[pl0012Att_jmp_ret]
+
+		success:
+		jmp dword ptr[pl0012Att_jmp_jnz]
+	}
+}
+
+
 // int GameHook::saveStates_SavedEnemyMovePart = 0;
 // float GameHook::saveStates_SavedEnemyAnimFrame = 0.0f;
 bool GameHook::saveStatesHotkeys_toggle = false;
@@ -785,6 +815,7 @@ void GameHook::InitializeDetours(void) {
 	install_hook_absolute(0x94CAAF, dualAfterBurnerHook, &DualAfterBurnerDetour, &dualAfterBurner_jmp_ret, 5);
 	//install_hook_absolute(0xC798A7, getMotNameHook, &GetMotNameDetour, &getMotName_jmp_ret, 6);
 	install_hook_absolute(0x6222D0, loadReplaceHook, &LoadReplaceDetour, &loadReplace_jmp_ret, 6);
+	install_hook_absolute(0x9F5B1C, pl0012AttHook, &pl0012AttDetour, &pl0012Att_jmp_ret, 8);
 }
 
 void GameHook::onConfigLoad(const utils::Config& cfg) {
