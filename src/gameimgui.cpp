@@ -25,6 +25,7 @@ uintptr_t GameHook::playerMagicAddress = 0x5AA74AC;
 uintptr_t GameHook::comboPointsAddress = 0x5BB519C;
 uintptr_t GameHook::comboMultiplierAddress = 0x5BB51A0;
 uintptr_t GameHook::currentCharacterAddress = 0x5AA7484;
+uintptr_t GameHook::currentCostumeAddress = 0x5AA747C;
 uintptr_t GameHook::thirdAccessoryAddress = 0x5AA7468;
 uintptr_t GameHook::hudDisplayAddress = 0xF2B714;
 //uintptr_t GameHook::enemyListAddress = 0x42B01C;
@@ -68,6 +69,7 @@ void GameHook::GameImGui(void) {
     int& comboPointsValue = *(int*)GameHook::comboPointsAddress;
     float& comboMultiplierValue = *(float*)GameHook::comboMultiplierAddress;
     int& currentCharacterValue = *(int*)GameHook::currentCharacterAddress;
+    int& currentCostumeValue = *(int*)GameHook::currentCostumeAddress;
     int& thirdAccessoryValue = *(int*)GameHook::thirdAccessoryAddress;
     bool& hudDisplayValue = *(bool*)GameHook::hudDisplayAddress;
     int& angelSlayerFloorValue = *(int*)GameHook::angelSlayerFloorAddress;
@@ -310,55 +312,20 @@ void GameHook::GameImGui(void) {
                 break;
             }
 
+            ImGui::Text("Costume Select");
+            help_marker("Set while in mission select");
+            ImGui::PushItemWidth(inputItemWidth);
+            ImGui::InputInt("##CostumeSelectInputInt", &currentCostumeValue, 1, 100);
+            ImGui::PopItemWidth();
+            ImGui::SameLine();
+            ImGui::Text(GameHook::CostumeNames(currentCostumeValue));
+
             ImGui::Text("Third Accessory");
             ImGui::PushItemWidth(inputItemWidth);
             ImGui::InputInt("##ThirdAccessoryInputInt", &thirdAccessoryValue, 1, 100);
             ImGui::PopItemWidth();
             ImGui::SameLine();
-            switch (thirdAccessoryValue) {
-            case 0:
-                ImGui::Text("None");
-                break;
-            case 1:
-                ImGui::Text("Sergey's Lover");
-                break;
-            case 2:
-                ImGui::Text("Infernal Communicator");
-                break;
-            case 3:
-                ImGui::Text("Pulley's Butterfly");
-                break;
-            case 4:
-                ImGui::Text("Selene's Light");
-                break;
-            case 5:
-                ImGui::Text("Star of Dinéta");
-                break;
-            case 6:
-                ImGui::Text("Evil Harvest Rosary");
-                break;
-            case 7:
-                ImGui::Text("Gaze of Despair");
-                break;
-            case 8:
-                ImGui::Text("Moon of Mahaa-Kalaa");
-                break;
-            case 9:
-                ImGui::Text("Eternal Testimony");
-                break;
-            case 10:
-                ImGui::Text("Bracelet of Time");
-                break;
-            case 11:
-                ImGui::Text("Climax Brace");
-                break;
-            case 12:
-                ImGui::Text("Immortal Marionette");
-                break;
-            default:
-                ImGui::Text("");
-                break;
-            }
+            ImGui::Text(GameHook::AccessoryNames(thirdAccessoryValue));
 
             GameHook::windowHeightHack = std::clamp(ImGui::GetCursorPosY() + GameHook::windowHeightBorder, 0.0f, GameHook::maxWindowHeight);
             ImGui::EndChild();
@@ -811,6 +778,109 @@ const char* GameHook::WeaponNames(int weaponID) {
         return "Bazillions";
     case 18:
         return "Rodin";
+    default:
+        return "";
+    }
+}
+
+const char* GameHook::CostumeNames(int costumeID) {
+    switch (costumeID) {
+    case 0:
+        return "Bayonetta Default";
+    case 1:
+        return "Bayonetta P.E. A";
+    case 2:
+        return "Bayonetta P.E. B";
+    case 3:
+        return "Bayonetta P.E. C";
+    case 4:
+        return "Bayonetta d'Arc";
+    case 5:
+        return "Bayonetta Old";
+    case 6:
+        return "Bayonetta Umbra";
+    case 7:
+        return "Bayonetta Various A";
+    case 8:
+        return "Bayonetta Various B";
+    case 9:
+        return "Bayonetta Various C";
+    case 10:
+        return "Bayonetta Umbran Komachi A";
+    case 11:
+        return "Bayonetta Umbran Komachi B";
+    case 12:
+        return "Bayonetta Umbran Komachi C";
+    case 13:
+        return "Bayonetta Nun";
+    case 14:
+        return "Bayonetta Queen";
+    case 15:
+        return "Jeanne Default";
+    case 16:
+        return "Jeanne P.E. A";
+    case 17:
+        return "Jeanne P.E. B";
+    case 18:
+        return "Jeanne P.E. C";
+    case 19:
+        return "Jeanne Formal B";
+    case 20:
+        return "Jeanne Formal A";
+    case 21:
+        return "Jeanne Old";
+    case 22:
+        return "Jeanne Umbra";
+    case 23:
+        return "Jeanne Various A";
+    case 24:
+        return "Jeanne Various B";
+    case 25:
+        return "Jeanne Various C";
+    case 26:
+        return "Jeanne Umbran Komachi A";
+    case 27:
+        return "Jeanne Umbran Komachi B";
+    case 28:
+        return "Jeanne Umbran Komachi C";
+    case 29:
+        return "Jeanne Nun";
+    case 30:
+        return "Jeanne Queen";
+    case 31:
+        return "Little King Zero";
+    default:
+        return "";
+    }
+}
+const char* GameHook::AccessoryNames(int accessoryID) {
+    switch (accessoryID) {
+    case 0:
+        return "None";
+    case 1:
+        return "Sergey's Lover";
+    case 2:
+        return "Infernal Communicator";
+    case 3:
+        return "Pulley's Butterfly";
+    case 4:
+        return "Selene's Light";
+    case 5:
+        return "Star of Dinéta";
+    case 6:
+        return "Evil Harvest Rosary";
+    case 7:
+        return "Gaze of Despair";
+    case 8:
+        return "Moon of Mahaa-Kalaa";
+    case 9:
+        return "Eternal Testimony";
+    case 10:
+        return "Bracelet of Time";
+    case 11:
+        return "Climax Brace";
+    case 12:
+        return "Immortal Marionette";
     default:
         return "";
     }

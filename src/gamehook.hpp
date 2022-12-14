@@ -106,6 +106,7 @@ public:
 	static uintptr_t comboPointsAddress;
 	static uintptr_t comboMultiplierAddress;
 	static uintptr_t currentCharacterAddress;
+	static uintptr_t currentCostumeAddress;
 	static uintptr_t thirdAccessoryAddress;
 	static uintptr_t hudDisplayAddress;
 	static uintptr_t enemySlotsAddress;
@@ -131,6 +132,8 @@ public:
 	static void BackgroundImGui(void);
 	static void ImGuiStyle(void);
 	static const char* WeaponNames(int weaponID);
+	static const char* CostumeNames(int costumeID);
+	static const char* AccessoryNames(int accessoryID);
 	static int showMessageTimerF1;
 	static int showMessageTimerF2;
 	static int showMessageTimerF3;

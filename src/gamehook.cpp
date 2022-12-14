@@ -601,6 +601,7 @@ static __declspec(naked) void LoadReplaceDetour(void) {
 		angelattack:
 		mov edx, 0x00619DD0 // stage select
 		jmp originalcode
+
 		originalcode:
 		mov ecx, [eax+0x08]
 		call edx
