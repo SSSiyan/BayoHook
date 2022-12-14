@@ -25,7 +25,7 @@ bayoActor_loadATT(void* actor, void* attHandle) {
         numAttachPoints,
         GameHook::HeapSCNAddress);
     for (i = 0; i < numAttachPoints; i++) {
-        ((void (__thiscall*)(void*, int, int, int))GameHook::bayoActor_attachBoneAddress)(
+        ((void (__thiscall *)(void*, int, int, int))GameHook::bayoActor_attachBoneAddress)(
             actor,
             pAttachPoints[i].sourceBoneIndex,
             pAttachPoints[i].targetBoneIndex,
@@ -36,7 +36,7 @@ bayoActor_loadATT(void* actor, void* attHandle) {
 
 int __stdcall
 bayoPl0012_loadATT(void* actor) {
-    void * attHandle = ((void* (__cdecl*)(const char *))GameHook::bayo_getAssetHandleAddress)(
+    void * attHandle = ((void* (__cdecl *)(const char *))GameHook::bayo_getAssetHandleAddress)(
         "pl0012.dat\\pl0012.att");
     return bayoActor_loadATT(actor, attHandle);
 }

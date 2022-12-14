@@ -693,8 +693,8 @@ static __declspec(naked) void pl0012AttDetour(void) {
 		push edx
 		push esi
 		call bayoPl0012_loadATT
-		pop ecx
 		pop edx
+		pop ecx
 		test eax, eax
 		jnz success
 		jmp originalcode
