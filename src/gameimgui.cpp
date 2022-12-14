@@ -411,8 +411,8 @@ void GameHook::GameImGui(void) {
                 GameHook::WeaponSwapCaller();
             }
             help_marker("Attempt to refresh weapons without a pause\nRequires changing a weapon manually in the weapon select menu once to load weapons initially.");
-
-            ImGui::Checkbox("Get Mot Names", &GameHook::getMotName_toggle);
+            
+            /*ImGui::Checkbox("Get Mot Names", &GameHook::getMotName_toggle);
             if (GameHook::getMotName_toggle) {
                 ImGui::Text("Player Mot");
                 if (GameHook::getMotName_playerMotString)
@@ -424,10 +424,9 @@ void GameHook::GameImGui(void) {
                     ImGui::Text(GameHook::getMotName_weaponMotString);
                 else
                     ImGui::Text("");
-            }
-
+            }*/
+            
             uintptr_t actorPlayable = *(uintptr_t*)GameHook::playerPointerAddress;
-
             if (actorPlayable) {
                 float* playerXYZPos[3];
                 playerXYZPos[0] = (float*)(actorPlayable + 0xD0);

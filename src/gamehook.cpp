@@ -590,10 +590,10 @@ uintptr_t loadReplace_jmp_ret{ NULL };
 bool GameHook::loadReplace_toggle = false;
 static __declspec(naked) void LoadReplaceDetour(void) {
 	_asm {
+		push ecx
 		cmp byte ptr [GameHook::loadReplace_toggle], 0
 		je originalcode
 
-		push ecx
 		cmp edx, 0x622180 // AA
 		je angelattack
 		jmp originalcode
@@ -601,7 +601,6 @@ static __declspec(naked) void LoadReplaceDetour(void) {
 		angelattack:
 		mov edx, 0x00619DD0 // stage select
 		jmp originalcode
-
 		originalcode:
 		mov ecx, [eax+0x08]
 		call edx
@@ -784,7 +783,7 @@ void GameHook::InitializeDetours(void) {
 	install_hook_absolute(0x513C1E, disableSlowmoHook, &DisableSlowmoDetour, &disableSlowmo_jmp_ret, 5);
 	install_hook_absolute(0x9E93B9, lowerDivekickHook, &LowerDivekickDetour, &lowerDivekick_jmp_ret, 7);
 	install_hook_absolute(0x94CAAF, dualAfterBurnerHook, &DualAfterBurnerDetour, &dualAfterBurner_jmp_ret, 5);
-	install_hook_absolute(0x94CAAF, dualAfterBurnerHook, &DualAfterBurnerDetour, &dualAfterBurner_jmp_ret, 5);
+	//install_hook_absolute(0xC798A7, getMotNameHook, &GetMotNameDetour, &getMotName_jmp_ret, 6);
 	install_hook_absolute(0x6222D0, loadReplaceHook, &LoadReplaceDetour, &loadReplace_jmp_ret, 6);
 }
 
