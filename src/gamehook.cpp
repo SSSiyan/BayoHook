@@ -682,6 +682,283 @@ static __declspec(naked) void GetMotNameDetour(void) {
 	}
 }
 
+std::unique_ptr<FunctionHook> pl0012Hook;
+const char* pl0012att = "pl0012.dat\\pl0012.att";
+const char* pl0012flg = "pl0012.dat\\pl0012.flg";
+static __declspec(naked) void pl0012Detour(void) {
+	_asm {
+		push    ebp
+		push    edi
+		push    esi
+		mov     esi, 12973536
+		push    ebx
+		mov     ebx, ecx
+		sub     esp, 24
+		push    15139064
+		call    esi
+		mov     edi, eax
+		mov     DWORD PTR[esp], 15139040
+		call    esi
+		pop     ecx
+		mov     ecx, ebx
+		pop     ebp
+		push    edi
+		push    eax
+		mov     eax, 5106176
+		call    eax
+		pop     edx
+		pop     ecx
+		test    eax, eax
+		je		L1
+		sub     esp, 12
+		push    [pl0012att]
+		call    esi
+		mov     esi, eax
+		add     esp, 16
+		test    eax, eax
+		je		L3
+		mov     edi, DWORD PTR[eax]
+		test    edi, edi
+		jle		L3
+		sub     esp, 8
+		mov     ecx, ebx
+		mov     eax, 4528928
+		add     esi, 4
+		push    94730872
+		push    edi
+		call    eax
+		lea     eax, [edi + edi * 2]
+		mov     edi, 4541472
+		lea     ebp, [esi + eax * 4]
+		pop     eax
+		pop     edx
+
+		L4:
+		sub     esp, 4
+		mov     ecx, ebx
+		push    DWORD PTR[esi + 8]
+		add     esi, 12
+		push    DWORD PTR[esi - 8]
+		push    DWORD PTR[esi - 12]
+		call    edi
+		pop     eax
+		cmp     ebp, esi
+		jne		L4
+
+		L5:
+		sub     esp, 12
+		mov     esi, 12973536
+		mov     edi, 12958688
+		push    15139396
+		call    esi
+		lea     ecx, [ebx + 3056]
+		mov     DWORD PTR[esp], eax
+		call    edi
+		push    15139368
+		call    esi
+		lea     ecx, [ebx + 3072]
+		mov     DWORD PTR[esp], eax
+		call    edi
+		push    15139340
+		call    esi
+		lea     ecx, [ebx + 3088]
+		mov     DWORD PTR[esp], eax
+		call    edi
+		push    15139312
+		call    esi
+		lea     ecx, [ebx + 3104]
+		mov     DWORD PTR[esp], eax
+		call    edi
+		mov     ecx, ebx
+		mov     eax, 4867920
+		push    19
+		call    eax
+		push    [pl0012flg]
+		call    esi
+		mov     esi, eax
+		add     esp, 16
+		test    eax, eax
+		je		L19
+		mov     ecx, DWORD PTR[eax + 4]
+		test    ecx, ecx
+		je		L7
+		mov     edi, DWORD PTR[eax + 8]
+		test    edi, edi
+		je		L7
+		add     edi, eax
+		xor		ebp, ebp
+
+		L9:
+		sub     esp, 12
+		mov     ecx, ebx
+		push    DWORD PTR[edi]
+		mov     eax, 4862688
+		call    eax
+		add     esp, 12
+		test    eax, eax
+		je		L8
+		mov     ecx, DWORD PTR[eax + 112]
+		mov     eax, DWORD PTR[ecx + 16]
+		and		eax, DWORD PTR[edi + 4]
+		or		eax, DWORD PTR[edi + 8]
+		mov     DWORD PTR[ecx + 16], eax
+
+		L8:
+		add     ebp, 1
+		add     edi, 12
+		cmp     ebp, DWORD PTR[esi + 4]
+		jb		L9
+
+		L7:
+		mov     edx, DWORD PTR[esi + 12]
+		test    edx, edx
+		je		L10
+		mov     eax, DWORD PTR[esi + 16]
+		test    eax, eax
+		je		L10
+		xor		edi, edi
+		lea     ebp, [esi + eax]
+
+		L12:
+		sub     esp, 12
+		mov     ecx, ebx
+		push    DWORD PTR[ebp + 0 + edi * 8]
+		mov     eax, 4862688
+		call    eax
+		add     esp, 12
+		test    eax, eax
+		je		L11
+		mov     ecx, DWORD PTR[ebp + 4 + edi * 8]
+		mov     DWORD PTR[eax + 84], ecx
+
+		L11:
+		add     edi, 1
+		cmp     edi, DWORD PTR[esi + 12]
+		jb		L12
+
+		L10:
+		mov     eax, DWORD PTR[esi + 20]
+		test    eax, eax
+		je		L13
+		mov     eax, DWORD PTR[esi + 24]
+		test    eax, eax
+		je		L13
+		xor		ebp, ebp
+		lea     edi, [esi + eax]
+
+		L15:
+		sub     esp, 12
+		mov     ecx, ebx
+		push    DWORD PTR[edi + ebp * 8]
+		mov     eax, 4862688
+		call    eax
+		mov     ecx, eax
+		add     esp, 12
+		test    eax, eax
+		je		L14
+		sub     esp, 12
+		mov     eax, 4849216
+		push    DWORD PTR[edi + 4 + ebp * 8]
+		call    eax
+		add     esp, 12
+
+		L14:
+		add     ebp, 1
+		cmp     ebp, DWORD PTR[esi + 20]
+		jb		L15
+
+		L13:
+		mov     eax, DWORD PTR[ebx]
+		sub     esp, 12
+		mov     ecx, ebx
+		push    0
+		mov     eax, DWORD PTR[eax + 8]
+		call	eax
+		mov     eax, 1
+		mov     DWORD PTR[ebx + 26912], 0
+		add     esp, 12
+
+		L1:
+		add     esp, 12
+		pop     ebx
+		pop     esi
+		pop     edi
+		pop     ebp
+		ret
+
+		L3:
+		sub     esp, 8
+		mov     ecx, ebx
+		mov     eax, 4528928
+		mov     esi, 4541472
+		push    94730872
+		push    3
+		call    eax
+		mov     ecx, ebx
+		sub     esp, 12
+		push    0
+		push    9
+		push    0
+		call    esi
+		mov     ecx, ebx
+		push    0
+		push    15
+		push    41
+		call    esi
+		mov     ecx, ebx
+		push    0
+		push    6
+		push    82
+		call    esi
+		add     esp, 20
+		jmp		L5
+
+		L19:
+		xor		edi, edi
+		mov     esi, 4862688
+
+		L6:
+		sub     esp, 12
+		mov     ecx, ebx
+		push    edi
+		call    esi
+		add     esp, 12
+		test    eax, eax
+		je		L16
+		mov     edx, DWORD PTR[eax + 112]
+		mov     eax, DWORD PTR[edx + 16]
+		and		eax, -65
+		or		ah, 32
+		mov     DWORD PTR[edx + 16], eax
+
+		L16:
+		add     edi, 1
+		cmp     edi, 4
+		jne		L6
+		mov     edi, 8
+		mov     esi, 4862688
+
+		L18:
+		sub     esp, 12
+		mov     ecx, ebx
+		push    edi
+		call    esi
+		add     esp, 12
+		test    eax, eax
+		je		L17
+		mov     edx, DWORD PTR[eax + 112]
+		mov     eax, DWORD PTR[edx + 16]
+		and		eax, -65
+		or		ah, 32
+		mov     DWORD PTR[edx + 16], eax
+
+		L17:
+		add     edi, 1
+		cmp     edi, 12
+		jne		L18
+		jmp		L13
+	}
+}
 // int GameHook::saveStates_SavedEnemyMovePart = 0;
 // float GameHook::saveStates_SavedEnemyAnimFrame = 0.0f;
 bool GameHook::saveStatesHotkeys_toggle = false;
@@ -785,6 +1062,7 @@ void GameHook::InitializeDetours(void) {
 	install_hook_absolute(0x94CAAF, dualAfterBurnerHook, &DualAfterBurnerDetour, &dualAfterBurner_jmp_ret, 5);
 	//install_hook_absolute(0xC798A7, getMotNameHook, &GetMotNameDetour, &getMotName_jmp_ret, 6);
 	install_hook_absolute(0x6222D0, loadReplaceHook, &LoadReplaceDetour, &loadReplace_jmp_ret, 6);
+	install_hook_absolute(0x9F5AF0, pl0012Hook, &pl0012Detour, NULL, 0);
 }
 
 void GameHook::onConfigLoad(const utils::Config& cfg) {
