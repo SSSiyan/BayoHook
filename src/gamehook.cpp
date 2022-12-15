@@ -193,6 +193,16 @@ void GameHook::LessEnemyAttacks (bool enabled) {
 	}
 }
 
+bool GameHook::infBirdTime_toggle = false;
+void GameHook::InfBirdTime (bool enabled) {
+	if (enabled) {
+		GameHook::_patch((char*)(0x8BDD17), (char*)"\xEB\x1D", 2); // jmp
+	}
+	else {
+		GameHook::_patch((char*)(0x8BDD17), (char*)"\x75\x1D", 2); // jne
+	}
+}
+
 // detours
 std::unique_ptr<FunctionHook> enemyHPHook;
 uintptr_t enemyHP_jmp_ret{ NULL };
@@ -245,17 +255,18 @@ static __declspec(naked) void WitchTimeMultiplierDetour(void) {
 std::unique_ptr<FunctionHook> infMagicHook;
 uintptr_t infMagic_jmp_ret{ NULL };
 bool GameHook::inf_magic_toggle = false;
+float GameHook::inf_magic_value = 1200.0f;
 static __declspec(naked) void InfMagicDetour(void) {
 	_asm {
 		push eax
+		mov eax, [GameHook::playerMagicAddress]
 		cmp byte ptr [GameHook::inf_magic_toggle], 0
 		je originalcode
 
-		mov eax, [GameHook::playerMagicAddress]
-		mov dword ptr [eax], 0x44fa0000 // 2000
+		movss xmm0, [GameHook::inf_magic_value]
+		movss [eax], xmm0
 
 		originalcode:
-		mov eax, [GameHook::playerMagicAddress] // i hate that i have to do this
 		movss xmm0, [eax]
 		pop eax
 		jmp dword ptr [infMagic_jmp_ret]
@@ -469,6 +480,7 @@ static __declspec(naked) void TurboHookDetour(void) {
 
 std::unique_ptr<FunctionHook> altTeleInputHook;
 uintptr_t altTeleInput_jmp_ret{ NULL };
+uintptr_t altTeleInput_jmp_jle = 0x8BE5AC;
 uintptr_t altTeleInput_jmp_je = 0x8BE5B6;
 bool GameHook::altTeleInput_toggle = false;
 static int altTeleInput = 0x400; // dpad down = 0x4, taunt = 0x400
@@ -481,18 +493,55 @@ static __declspec(naked) void AltTeleInputDetour(void) {
 		mov eax, [altTeleInput]
 		test [ebx+0x00094B48], eax
 		pop eax
+		jnz teleport
+		jmp jmp_je
+
+		teleport:
+		mov dword ptr [ebx+0x0009399C],0x00000001
 		jmp dword ptr [altTeleInput_jmp_ret]
 
 		originalcode:
 		test [ebx+0x00094B48], eax
-		je jmp_je //Bayonetta.exe+4BE5B6
+		je jmp_je
 		cmp [ebx+0x000939A0], esi
-		jmp dword ptr [altTeleInput_jmp_ret]
+		jle jmp_jle
+		mov dword ptr [ebx+0x0009399C],0x0000000A // frames mashed
+		jmp dword ptr [altTeleInput_jmp_ret] // Bayonetta.exe+4BE5A2, accept teleport
+
+		jmp_jle:
+		jmp dword ptr [altTeleInput_jmp_jle]
 
 		jmp_je:
-		jmp dword ptr [altTeleInput_jmp_je]
+		jmp dword ptr [altTeleInput_jmp_je] // Bayonetta.exe+4BE5B6, deny teleport
 	}
 }
+/*
+	// ORIGINAL CODE - INJECTION POINT: Bayonetta.exe+4BE592
+		Bayonetta.exe+4BE567: 83 CF FF                       - or edi,-01
+		Bayonetta.exe+4BE56A: 39 B3 9C 39 09 00              - cmp [ebx+0009399C],esi
+		Bayonetta.exe+4BE570: 7E 06                          - jle Bayonetta.exe+4BE578
+		Bayonetta.exe+4BE572: 01 BB 9C 39 09 00              - add [ebx+0009399C],edi
+		Bayonetta.exe+4BE578: 39 B3 A0 39 09 00              - cmp [ebx+000939A0],esi
+		Bayonetta.exe+4BE57E: 7E 06                          - jle Bayonetta.exe+4BE586
+		Bayonetta.exe+4BE580: 01 BB A0 39 09 00              - add [ebx+000939A0],edi
+		Bayonetta.exe+4BE586: 6A 05                          - push 05
+		Bayonetta.exe+4BE588: B9 D0 7E A9 05                 - mov ecx,Bayonetta.exe+5697ED0
+		Bayonetta.exe+4BE58D: E8 DE 2D C4 FF                 - call Bayonetta.exe+101370
+		// ---------- INJECTING HERE ----------
+		Bayonetta.exe+4BE592: 85 83 48 4B 09 00              - test [ebx+00094B48],eax
+		// ---------- DONE INJECTING  ----------
+		Bayonetta.exe+4BE598: 74 1C                          - je Bayonetta.exe+4BE5B6
+		Bayonetta.exe+4BE59A: 39 B3 A0 39 09 00              - cmp [ebx+000939A0],esi
+		Bayonetta.exe+4BE5A0: 7E 0A                          - jle Bayonetta.exe+4BE5AC
+		Bayonetta.exe+4BE5A2: C7 83 9C 39 09 00 0A 00 00 00  - mov [ebx+0009399C],0000000A
+		Bayonetta.exe+4BE5AC: C7 83 A0 39 09 00 0F 00 00 00  - mov [ebx+000939A0],0000000F
+		Bayonetta.exe+4BE5B6: 6A 0B                          - push 0B
+		Bayonetta.exe+4BE5B8: B9 D0 7E A9 05                 - mov ecx,Bayonetta.exe+5697ED0
+		Bayonetta.exe+4BE5BD: E8 AE 2D C4 FF                 - call Bayonetta.exe+101370
+		Bayonetta.exe+4BE5C2: 85 83 44 4B 09 00              - test [ebx+00094B44],eax
+		Bayonetta.exe+4BE5C8: 75 21                          - jne Bayonetta.exe+4BE5EB
+}
+*/
 
 std::unique_ptr<FunctionHook> altTauntInputHook;
 uintptr_t altTauntInput_jmp_ret{ NULL };
@@ -779,7 +828,7 @@ void GameHook::InitializeDetours(void) {
 	install_hook_absolute(0x95ABD3, cancellableAfterBurnerHook, &CancellableAfterBurnerDetour, &cancellableAfterBurner_jmp_ret, 6);
 	install_hook_absolute(0x952142, cancellableFallingKickHook, &CancellableFallingKickDetour, &cancellableFallingKick_jmp_ret, 5);
 	install_hook_absolute(0x513FC7, turboHook, &TurboHookDetour, &turbo_jmp_ret, 5);
-	install_hook_absolute(0x8BE592, altTeleInputHook, &AltTeleInputDetour, &altTeleInput_jmp_ret, 14);
+	install_hook_absolute(0x8BE592, altTeleInputHook, &AltTeleInputDetour, &altTeleInput_jmp_ret, 26);
 	install_hook_absolute(0x50137D, altTauntInputHook, &AltTauntInputDetour, &altTauntInput_jmp_ret, 7);
 	install_hook_absolute(0x513C1E, disableSlowmoHook, &DisableSlowmoDetour, &disableSlowmo_jmp_ret, 5);
 	install_hook_absolute(0x9E93B9, lowerDivekickHook, &LowerDivekickDetour, &lowerDivekick_jmp_ret, 7);
@@ -821,7 +870,8 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	MoreEnemyAttacks(moreEnemyAttacks_toggle);
 	lessEnemyAttacks_toggle = cfg.get<bool>("LessEnemyAttacksToggle").value_or(false);
 	LessEnemyAttacks(lessEnemyAttacks_toggle);
-
+	infBirdTime_toggle = cfg.get<bool>("InfBirdTimeToggle").value_or(false);
+	InfBirdTime(infBirdTime_toggle);
 	//areaJumpPatch_toggle = cfg.get<bool>("AreaJumpPatchToggle").value_or(false);
 	//AreaJumpPatch(areaJumpPatch_toggle);
 
@@ -832,6 +882,7 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	witchTimeMultiplier_toggle = cfg.get<bool>("WitchTimeMultiplierToggle").value_or(false);
 	witchTimeMultiplier = cfg.get<float>("WitchTimeMultiplier").value_or(1.0f);
 	inf_magic_toggle = cfg.get<bool>("InfMagicToggle").value_or(false);
+	inf_magic_value = cfg.get<float>("InfMagicValue").value_or(1200.0f);
 	damageDealtMultiplier_toggle = cfg.get<bool>("DamageDealtMultiplierToggle").value_or(false);
 	damageDealtMultiplierMult = cfg.get<float>("DamageDealtMultiplierMult").value_or(1.0f);
 	customCameraDistance_toggle = cfg.get<bool>("CustomCameraDistanceToggle").value_or(false);
@@ -875,7 +926,7 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("GetMoreHalosToggle", getMoreHalos_toggle);
 	cfg.set<bool>("MoreEnemyAttacksToggle", moreEnemyAttacks_toggle);
 	cfg.set<bool>("LessEnemyAttacksToggle", lessEnemyAttacks_toggle);
-
+	cfg.set<bool>("InfBirdTimeToggle", infBirdTime_toggle);
 	//cfg.set<bool>("AreaJumpPatchToggle", areaJumpPatch_toggle);
 	// detours
 	cfg.set<bool>("DealNoDamageToggle", enemyHP_no_damage_toggle);
@@ -883,6 +934,7 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("WitchTimeMultiplierToggle", witchTimeMultiplier_toggle);
 	cfg.set<float>("WitchTimeMultiplier", witchTimeMultiplier);
 	cfg.set<bool>("InfMagicToggle", inf_magic_toggle);
+	cfg.set<float>("InfMagicValue", inf_magic_value);
 	cfg.set<bool>("DamageDealtMultiplierToggle", damageDealtMultiplier_toggle);
 	cfg.set<float>("DamageDealtMultiplierMult", damageDealtMultiplierMult);
 	cfg.set<bool>("CustomCameraDistanceToggle", customCameraDistance_toggle);

@@ -28,8 +28,6 @@ uintptr_t GameHook::currentCharacterAddress = 0x5AA7484;
 uintptr_t GameHook::currentCostumeAddress = 0x5AA747C;
 uintptr_t GameHook::thirdAccessoryAddress = 0x5AA7468;
 uintptr_t GameHook::hudDisplayAddress = 0xF2B714;
-//uintptr_t GameHook::enemyListAddress = 0x42B01C;
-//uintptr_t GameHook::enemyCountAddress = 0xF2EE8C; // alternatives: 0x5B0E624 // 0x5A571F0 0x5B0E5E4 were funky
 uintptr_t GameHook::enemyLockedOnAddress = 0xF2B744;
 uintptr_t GameHook::enemySlotsAddress = 0x5A56A88;
 uintptr_t GameHook::angelSlayerFloorAddress = 0x509E87C;
@@ -60,10 +58,6 @@ ImGui::GetWindowDrawList()->AddLine(min, max, col, 1.0f);
 }
 
 void GameHook::GameImGui(void) {
-    //uintptr_t enemyList = *(uintptr_t*)GameHook::enemyListAddress;
-    //uintptr_t* enemy_ptr = (uintptr_t*)((uintptr_t)enemyList - 4 + GameHook::saveStates_CurrentEnemy * 4); // 0x5A56A8C // GameHook::enemySlotsAddress
-
-    //int& enemyCount = *(int*)GameHook::enemyCountAddress;
     int& halosValue = *(int*)GameHook::halosAddress;
     int& chaptersPlayedValue = *(int*)GameHook::chaptersPlayedAddress;
     int& comboPointsValue = *(int*)GameHook::comboPointsAddress;
@@ -109,7 +103,7 @@ void GameHook::GameImGui(void) {
 
             ImGui::SameLine(sameLineWidth);
 
-            ImGui::Checkbox("Infinite Magic ##InfMagicToggle", &GameHook::inf_magic_toggle);
+            ImGui::Checkbox("Disable Slow Motion", &GameHook::disableSlowmo_toggle);
 
             if (ImGui::Checkbox("Disable Enemy Daze", &GameHook::disableDaze_toggle)) {
                 GameHook::DisableDaze(GameHook::disableDaze_toggle);
@@ -136,9 +130,11 @@ void GameHook::GameImGui(void) {
             }
             help_marker("Freeze the cooldown that starts when an enemy attacks");
 
-            ImGui::Checkbox("Disable Slow Motion", &GameHook::disableSlowmo_toggle);
+            ImGui::Separator();
 
-            //ImGui::SameLine(sameLineWidth);
+            ImGui::Checkbox("Freeze Magic ##InfMagicToggle", &GameHook::inf_magic_toggle);
+            if (GameHook::inf_magic_toggle)
+                ImGui::SliderFloat("##InfiniteMagicValue", &GameHook::inf_magic_value, 0, 1200);
 
             ImGui::Separator();
 
@@ -251,6 +247,10 @@ void GameHook::GameImGui(void) {
 
             if (ImGui::Checkbox("Always Walk On Walls", &GameHook::alwaysWalkOnWalls_toggle)) {
                 AlwaysWalkOnWalls(alwaysWalkOnWalls_toggle);
+            }
+            ImGui::SameLine(sameLineWidth);
+            if (ImGui::Checkbox("Infinite Crow Within", &GameHook::infBirdTime_toggle)) {
+                InfBirdTime(infBirdTime_toggle);
             }
 
             ImGui::Separator();
@@ -444,15 +444,8 @@ void GameHook::GameImGui(void) {
                 }
             }
 
-            /*if (enemyList && enemyCount) {
-                ImGui::Text("Enemy Slot");
-                help_marker("Slide until you find your enemy's XYZ moving similarly to what you see ingame\nNot 100% sure how this works yet so its a lil funky");
-                ImGui::SliderInt("##EnemyXYZPosInputInt", &GameHook::saveStates_CurrentEnemy, 1, enemyCount);
-            }*/
-
             uintptr_t* enemy_ptr = (uintptr_t*)GameHook::enemyLockedOnAddress;
             uintptr_t enemy_base = *enemy_ptr;
-
             if (enemy_base) {
                 float* enemyXYZPos[3];
                 enemyXYZPos[0] = (float*)(enemy_base + 0xD0);
@@ -464,8 +457,6 @@ void GameHook::GameImGui(void) {
                 float& enemyDazeBuildupValue = *(float*)(enemy_base + 0xC94);
                 float& enemyDazeDurationValue = *(float*)(enemy_base + 0xC9C);
 
-                //uintptr_t* enemy_ptr = (uintptr_t*)GameHook::enemyLockedOnAddress;
-                //uintptr_t enemy_base = *enemy_ptr;
                 uintptr_t enemyHPPtr = *(uintptr_t*)(enemy_base + 0xA00);
                 int& enemyBossHPValue = *(int*)(enemyHPPtr + 0x6B4);
 
