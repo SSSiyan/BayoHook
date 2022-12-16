@@ -268,48 +268,53 @@ void GameHook::GameImGui(void) {
             ImGui::Checkbox("Move Swap Test ##MoveSwapTestToggle", &GameHook::moveIDSwap_toggle);
             help_marker("Do the move you want to see, pause mid anim, hit the first button\nDo the move you want to replace, pause mid anim, hit the second button");
             if (GameHook::moveIDSwap_toggle) {
-                ImGui::Text("Current Anim ID");
-                ImGui::PushItemWidth(inputItemWidth);
-                ImGui::InputInt("##CurrentMoveIDInputInt", &GameHook::moveIDSwapCurrentMove, 0, 0);
-                ImGui::PopItemWidth();
+                uintptr_t actorPlayable = *(uintptr_t*)GameHook::playerPointerAddress;
+                if (actorPlayable) {
+                    int& playerMoveIDValue = *(int*)(actorPlayable + 0x34C);
+                    ImGui::Text("Current Move ID");
 
-                ImGui::Separator();
+                    ImGui::PushItemWidth(inputItemWidth);
+                    ImGui::InputInt("##CurrentStringIDInputInt", &playerMoveIDValue, 0, 0);
+                    ImGui::PopItemWidth();
 
-                ImGui::Text("Desired Move ID 1");
-                ImGui::PushItemWidth(inputItemWidth);
-                ImGui::InputInt("##DesiredMoveIDInputInt1", &GameHook::moveIDSwapDesiredMove1);
-                ImGui::PopItemWidth();
-                ImGui::SameLine();
-                if (ImGui::Button("Save Current Move ID as desired ##1")) {
-                    GameHook::moveIDSwapDesiredMove1 = GameHook::moveIDSwapCurrentMove;
-                }
-                ImGui::Text("Source Anim ID 1");
-                ImGui::PushItemWidth(inputItemWidth);
-                ImGui::InputInt("##SourceMoveIDInputInt1", &GameHook::moveIDSwapSourceMove1);
-                ImGui::PopItemWidth();
-                ImGui::SameLine();
-                if (ImGui::Button("Save Current Move ID as source ##2")) {
-                    GameHook::moveIDSwapSourceMove1 = GameHook::moveIDSwapCurrentMove;
-                }
+                    ImGui::Text("Desired Move ID 1");
+                    ImGui::PushItemWidth(inputItemWidth);
+                    ImGui::InputInt("##DesiredMoveIDInputInt1", &GameHook::moveIDSwapDesiredMove1);
+                    ImGui::PopItemWidth();
+                    ImGui::SameLine();
+                    if (ImGui::Button("Save Current Move ID as desired ##1")) {
+                        GameHook::moveIDSwapDesiredMove1 = playerMoveIDValue;
+                    }
+                    ImGui::Text("Source Anim ID 1");
+                    ImGui::PushItemWidth(inputItemWidth);
+                    ImGui::InputInt("##SourceMoveIDInputInt1", &GameHook::moveIDSwapSourceMove1);
+                    ImGui::PopItemWidth();
+                    ImGui::SameLine();
+                    if (ImGui::Button("Save Current Move ID as source ##2")) {
+                        GameHook::moveIDSwapSourceMove1 = playerMoveIDValue;
+                    }
 
-                ImGui::Separator();
+                    ImGui::Separator();
 
-                ImGui::Text("Desired Move ID 2");
-                ImGui::PushItemWidth(inputItemWidth);
-                ImGui::InputInt("##DesiredMoveIDInputInt2", &GameHook::moveIDSwapDesiredMove2);
-                ImGui::PopItemWidth();
-                ImGui::SameLine();
-                if (ImGui::Button("Save Current Move ID as desired ##2")) {
-                    GameHook::moveIDSwapDesiredMove2 = GameHook::moveIDSwapCurrentMove;
+                    ImGui::Text("Desired Move ID 2");
+                    ImGui::PushItemWidth(inputItemWidth);
+                    ImGui::InputInt("##DesiredMoveIDInputInt2", &GameHook::moveIDSwapDesiredMove2);
+                    ImGui::PopItemWidth();
+                    ImGui::SameLine();
+                    if (ImGui::Button("Save Current Move ID as desired ##2")) {
+                        GameHook::moveIDSwapDesiredMove2 = playerMoveIDValue;
+                    }
+                    ImGui::Text("Source Anim ID 2");
+                    ImGui::PushItemWidth(inputItemWidth);
+                    ImGui::InputInt("##SourceMoveIDInputInt2", &GameHook::moveIDSwapSourceMove2);
+                    ImGui::PopItemWidth();
+                    ImGui::SameLine();
+                    if (ImGui::Button("Save Current Move ID as source ##2")) {
+                        GameHook::moveIDSwapSourceMove2 = playerMoveIDValue;
+                    }
                 }
-                ImGui::Text("Source Anim ID 2");
-                ImGui::PushItemWidth(inputItemWidth);
-                ImGui::InputInt("##SourceMoveIDInputInt2", &GameHook::moveIDSwapSourceMove2);
-                ImGui::PopItemWidth();
-                ImGui::SameLine();
-                if (ImGui::Button("Save Current Move ID as source ##2")) {
-                    GameHook::moveIDSwapSourceMove2 = GameHook::moveIDSwapCurrentMove;
-                }
+                else
+                    ImGui::Text("Load in to a stage to see these stats");
             }
 
             ImGui::Separator();
@@ -317,84 +322,127 @@ void GameHook::GameImGui(void) {
             ImGui::Checkbox("String Swap Test ##StringSwapTestToggle", &GameHook::stringIDSwap_toggle);
             help_marker("Do the string you want to see, pause mid anim, hit the first button\nDo the string you want to replace, pause mid anim, hit the second button");
             if (GameHook::stringIDSwap_toggle) {
-                ImGui::Text("Current String ID");
-                ImGui::PushItemWidth(inputItemWidth);
-                ImGui::InputInt("##CurrentStringIDInputInt", &GameHook::stringIDSwapCurrentString, 0, 0);
-                ImGui::PopItemWidth();
+                uintptr_t actorPlayable = *(uintptr_t*)GameHook::playerPointerAddress;
+                if (actorPlayable) {
+                    int& playerStringIDValue = *(int*)(actorPlayable + 0x95C64);
+                    ImGui::Text("Current String ID");
+                    ImGui::PushItemWidth(inputItemWidth);
+                    ImGui::InputInt("##CurrentStringIDInputInt", &playerStringIDValue, 0, 0);
+                    ImGui::PopItemWidth();
 
-                ImGui::Separator();
+                    ImGui::Separator();
 
-                ImGui::Text("Desired String ID 1");
-                ImGui::PushItemWidth(inputItemWidth);
-                ImGui::InputInt("##DesiredStringIDInputInt1", &GameHook::stringIDSwapDesiredString1);
-                ImGui::PopItemWidth();
-                ImGui::SameLine();
-                if (ImGui::Button("Save Current String ID as desired ##1")) {
-                    GameHook::stringIDSwapDesiredString1 = GameHook::stringIDSwapCurrentString;
-                }
-                ImGui::Text("Source Anim ID 1");
-                ImGui::PushItemWidth(inputItemWidth);
-                ImGui::InputInt("##SourceStringIDInputInt1", &GameHook::stringIDSwapSourceString1);
-                ImGui::PopItemWidth();
-                ImGui::SameLine();
-                if (ImGui::Button("Save Current String ID as source ##1")) {
-                    GameHook::stringIDSwapSourceString1 = GameHook::stringIDSwapCurrentString;
-                }
+                    ImGui::Text("Desired String ID 1");
+                    ImGui::PushItemWidth(inputItemWidth);
+                    ImGui::InputInt("##DesiredStringIDInputInt1", &GameHook::stringIDSwapDesiredString1);
+                    ImGui::PopItemWidth();
+                    ImGui::SameLine();
+                    if (ImGui::Button("Save Current String ID as desired ##1")) {
+                        GameHook::stringIDSwapDesiredString1 = playerStringIDValue;
+                    }
+                    ImGui::Text("Source Anim ID 1");
+                    ImGui::PushItemWidth(inputItemWidth);
+                    ImGui::InputInt("##SourceStringIDInputInt1", &GameHook::stringIDSwapSourceString1);
+                    ImGui::PopItemWidth();
+                    ImGui::SameLine();
+                    if (ImGui::Button("Save Current String ID as source ##1")) {
+                        GameHook::stringIDSwapSourceString1 = playerStringIDValue;
+                    }
 
-                ImGui::Separator();
+                    ImGui::Separator();
 
-                ImGui::Text("Desired String ID 2");
-                ImGui::PushItemWidth(inputItemWidth);
-                ImGui::InputInt("##DesiredStringIDInputInt2", &GameHook::stringIDSwapDesiredString2);
-                ImGui::PopItemWidth();
-                ImGui::SameLine();
-                if (ImGui::Button("Save Current String ID as desired ##2")) {
-                    GameHook::stringIDSwapDesiredString2 = GameHook::stringIDSwapCurrentString;
+                    ImGui::Text("Desired String ID 2");
+                    ImGui::PushItemWidth(inputItemWidth);
+                    ImGui::InputInt("##DesiredStringIDInputInt2", &GameHook::stringIDSwapDesiredString2);
+                    ImGui::PopItemWidth();
+                    ImGui::SameLine();
+                    if (ImGui::Button("Save Current String ID as desired ##2")) {
+                        GameHook::stringIDSwapDesiredString2 = playerStringIDValue;
+                    }
+                    ImGui::Text("Source Anim ID 2");
+                    ImGui::PushItemWidth(inputItemWidth);
+                    ImGui::InputInt("##SourceStringIDInputInt2", &GameHook::stringIDSwapSourceString2);
+                    ImGui::PopItemWidth();
+                    ImGui::SameLine();
+                    if (ImGui::Button("Save Current String ID as source ##2")) {
+                        GameHook::stringIDSwapSourceString2 = playerStringIDValue;
+                    }
                 }
-                ImGui::Text("Source Anim ID 2");
-                ImGui::PushItemWidth(inputItemWidth);
-                ImGui::InputInt("##SourceStringIDInputInt2", &GameHook::stringIDSwapSourceString2);
-                ImGui::PopItemWidth();
-                ImGui::SameLine();
-                if (ImGui::Button("Save Current String ID as source ##2")) {
-                    GameHook::stringIDSwapSourceString2 = GameHook::stringIDSwapCurrentString;
-                }
+                else
+                    ImGui::Text("Load in to a stage to see these stats");
             }
 
             ImGui::Separator();
 
-            ImGui::Text("Character Select");
-            help_marker("Set while in costume select\nIf your game freezes at the end of a fight, flick the value back to default");
-            ImGui::PushItemWidth(inputItemWidth);
-            ImGui::InputInt("##CharacterSelectInputInt", &currentCharacterValue, 1, 100);
-            ImGui::PopItemWidth();
-            ImGui::SameLine();
-            switch (currentCharacterValue) {
-            case 0:
-                ImGui::Text("Bayonetta");
-                break;
-            case 1:
-                ImGui::Text("Jeanne");
-                break;
-            default:
-                ImGui::Text("");
-                break;
+            
+            static bool comboMakerTest1 = false;
+            ImGui::Checkbox("Combo Maker Test 1", &comboMakerTest1);
+            help_marker("For now these will only apply while the menu is open because it was coded in 10 mins pls understand");
+            if (comboMakerTest1) {
+                uintptr_t actorPlayable = *(uintptr_t*)GameHook::playerPointerAddress;
+                if (actorPlayable) {
+                    int& playerMoveIDValue = *(int*)(actorPlayable + 0x34C);
+                    int& playerStringIDValue = *(int*)(actorPlayable + 0x95C64);
+                    static int comboMakerMoveID;
+                    static int comboMakerStringID;
+                    ImGui::Text("Current MoveID = %i", playerMoveIDValue);
+                    ImGui::Text("Current String ID = %i", playerStringIDValue);
+                    ImGui::Text("if MoveID ==");
+                    ImGui::SameLine();
+                    ImGui::PushItemWidth(inputItemWidth);
+                    ImGui::InputInt("##ComboMakerMoveID1InputInt", &comboMakerMoveID);
+                    ImGui::PopItemWidth();
+                    ImGui::Text("then StringID =");
+                    ImGui::SameLine();
+                    ImGui::PushItemWidth(inputItemWidth);
+                    ImGui::InputInt("##ComboMakerStringID1", &comboMakerStringID);
+                    ImGui::PopItemWidth();
+                    if (playerMoveIDValue == comboMakerMoveID) {
+                        playerStringIDValue = comboMakerStringID;
+                    }
+                }
+                else
+                    ImGui::Text("Load in to a stage to see these stats");
             }
 
-            ImGui::Text("Costume Select");
-            help_marker("Set while in mission select");
-            ImGui::PushItemWidth(inputItemWidth);
-            ImGui::InputInt("##CostumeSelectInputInt", &currentCostumeValue, 1, 100);
-            ImGui::PopItemWidth();
-            ImGui::SameLine();
-            ImGui::Text(GameHook::CostumeNames(currentCostumeValue));
-
-            ImGui::Text("Third Accessory");
-            ImGui::PushItemWidth(inputItemWidth);
-            ImGui::InputInt("##ThirdAccessoryInputInt", &thirdAccessoryValue, 1, 100);
-            ImGui::PopItemWidth();
-            ImGui::SameLine();
-            ImGui::Text(GameHook::AccessoryNames(thirdAccessoryValue));
+            ImGui::Separator();
+            static bool comboMakerTest2 = false;
+            ImGui::Checkbox("Combo Maker Test 2", &comboMakerTest2);
+            help_marker("This one has an extra conditional");
+            if (comboMakerTest2) {
+                uintptr_t actorPlayable = *(uintptr_t*)GameHook::playerPointerAddress;
+                if (actorPlayable) {
+                    int& playerMoveIDValue = *(int*)(actorPlayable + 0x34C);
+                    int& playerAttackCount = *(int*)(actorPlayable + 0x95CBC);
+                    int& playerStringIDValue = *(int*)(actorPlayable + 0x95C64);
+                    static int comboMakerMoveID;
+                    static int comboMakerMovePart;
+                    static int comboMakerStringID;
+                    ImGui::Text("Current MoveID = %i", playerMoveIDValue);
+                    ImGui::Text("Current Number In String = %i", playerAttackCount);
+                    ImGui::Text("Current String ID = %i", playerStringIDValue);
+                    ImGui::Text("if MoveID ==");
+                    ImGui::SameLine();
+                    ImGui::PushItemWidth(inputItemWidth);
+                    ImGui::InputInt("##ComboMakerMoveID2InputInt", &comboMakerMoveID);
+                    ImGui::PopItemWidth();
+                    ImGui::Text("and current attack number in string ==");
+                    ImGui::SameLine();
+                    ImGui::PushItemWidth(inputItemWidth);
+                    ImGui::InputInt("##ComboMakerMovePart2InputInt", &comboMakerMovePart);
+                    ImGui::PopItemWidth();
+                    ImGui::Text("then StringID =");
+                    ImGui::SameLine();
+                    ImGui::PushItemWidth(inputItemWidth);
+                    ImGui::InputInt("##ComboMakerStringID2", &comboMakerStringID);
+                    ImGui::PopItemWidth();
+                    if (playerMoveIDValue == comboMakerMoveID && playerAttackCount == comboMakerMovePart) {
+                        playerStringIDValue = comboMakerStringID;
+                    }
+                }
+                else 
+                    ImGui::Text("Load in to a stage to see these stats");
+            }
 
             GameHook::windowHeightHack = std::clamp(ImGui::GetCursorPosY() + GameHook::windowHeightBorder, 0.0f, GameHook::maxWindowHeight);
             ImGui::EndChild();
@@ -403,51 +451,90 @@ void GameHook::GameImGui(void) {
 
         if (ImGui::BeginTabItem("Stats")) {
             ImGui::BeginChild("StatsChild");
-            ImGui::Checkbox("HUD Display", &hudDisplayValue);
-            help_marker("Show HP etc");
+            if (ImGui::CollapsingHeader("Stats")) {
+                ImGui::TreePush("StatsTree");
+                ImGui::Checkbox("HUD Display", &hudDisplayValue);
+                help_marker("Show HP etc");
 
-            ImGui::Text("Halos");
-            ImGui::PushItemWidth(inputItemWidth * 2);
-            ImGui::InputInt("##HaloInputInt", &halosValue, 1, 100);
-            ImGui::PopItemWidth();
+                ImGui::Text("Halos");
+                ImGui::PushItemWidth(inputItemWidth * 2);
+                ImGui::InputInt("##HaloInputInt", &halosValue, 1, 100);
+                ImGui::PopItemWidth();
 
-            ImGui::Text("Chapters Played");
-            ImGui::PushItemWidth(inputItemWidth);
-            ImGui::InputInt("##ChapterInputInt", &chaptersPlayedValue, 1, 100);
-            ImGui::PopItemWidth();
-            ImGui::Text("Combo Points");
-            ImGui::PushItemWidth(inputItemWidth);
-            ImGui::InputInt("##ComboPointsInputInt", &comboPointsValue, 10, 100);
-            ImGui::PopItemWidth();
+                ImGui::Text("Chapters Played");
+                ImGui::PushItemWidth(inputItemWidth);
+                ImGui::InputInt("##ChapterInputInt", &chaptersPlayedValue, 1, 100);
+                ImGui::PopItemWidth();
 
-            ImGui::Text("Combo Multiplier");
-            ImGui::PushItemWidth(inputItemWidth);
-            ImGui::InputFloat("##ComboMultiplierInputFloat", &comboMultiplierValue, 1, 10, "%.1f");
-            ImGui::PopItemWidth();
+                ImGui::Text("Combo Points");
+                ImGui::PushItemWidth(inputItemWidth);
+                ImGui::InputInt("##ComboPointsInputInt", &comboPointsValue, 10, 100);
+                ImGui::PopItemWidth();
 
-            ImGui::Text("Weapon Set A:");
-            help_marker("WIP, requires entering and exiting the weapon select menu to apply");
-            ImGui::PushItemWidth(inputItemWidth);
-            ImGui::InputInt("##WeaponA1InputInt", &weaponA1Value, 1, 10);
-            ImGui::SameLine();
-            ImGui::Text(GameHook::WeaponNames(weaponA1Value));
-            ImGui::InputInt("##WeaponA2InputInt", &weaponA2Value, 1, 10);
-            ImGui::SameLine();
-            ImGui::Text(GameHook::WeaponNames(weaponA2Value));
-            ImGui::Text("Weapon Set B:");
-            ImGui::InputInt("##WeaponB1InputInt", &weaponB1Value, 1, 10);
-            ImGui::SameLine();
-            ImGui::Text(GameHook::WeaponNames(weaponB1Value));
-            ImGui::InputInt("##WeaponB2InputInt", &weaponB2Value, 1, 10);
-            ImGui::SameLine();
-            ImGui::Text(GameHook::WeaponNames(weaponB2Value));
-            ImGui::PopItemWidth();
+                ImGui::Text("Combo Multiplier");
+                ImGui::PushItemWidth(inputItemWidth);
+                ImGui::InputFloat("##ComboMultiplierInputFloat", &comboMultiplierValue, 1, 10, "%.1f");
+                ImGui::PopItemWidth();
 
-            if (ImGui::Button("Call Weapon Swap")) {
-                GameHook::WeaponSwapCaller();
+                ImGui::Text("Character");
+                help_marker("Set while in costume select\nIf your game freezes at the end of a fight, flick the value back to default");
+                ImGui::PushItemWidth(inputItemWidth);
+                ImGui::InputInt("##CharacterSelectInputInt", &currentCharacterValue, 1, 100);
+                ImGui::PopItemWidth();
+                ImGui::SameLine();
+                switch (currentCharacterValue) {
+                case 0:
+                    ImGui::Text("Bayonetta");
+                    break;
+                case 1:
+                    ImGui::Text("Jeanne");
+                    break;
+                default:
+                    ImGui::Text("");
+                    break;
+                }
+
+                ImGui::Text("Costume");
+                help_marker("Set while in mission select");
+                ImGui::PushItemWidth(inputItemWidth);
+                ImGui::InputInt("##CostumeSelectInputInt", &currentCostumeValue, 1, 100);
+                ImGui::PopItemWidth();
+                ImGui::SameLine();
+                ImGui::Text(GameHook::CostumeNames(currentCostumeValue));
+
+                ImGui::Text("Third Accessory");
+                ImGui::PushItemWidth(inputItemWidth);
+                ImGui::InputInt("##ThirdAccessoryInputInt", &thirdAccessoryValue, 1, 100);
+                ImGui::PopItemWidth();
+                ImGui::SameLine();
+                ImGui::Text(GameHook::AccessoryNames(thirdAccessoryValue));
+
+                ImGui::Text("Weapon Set A:");
+                help_marker("WIP, requires entering and exiting the weapon select menu to apply");
+                ImGui::PushItemWidth(inputItemWidth);
+                ImGui::InputInt("##WeaponA1InputInt", &weaponA1Value, 1, 10);
+                ImGui::SameLine();
+                ImGui::Text(GameHook::WeaponNames(weaponA1Value));
+                ImGui::InputInt("##WeaponA2InputInt", &weaponA2Value, 1, 10);
+                ImGui::SameLine();
+                ImGui::Text(GameHook::WeaponNames(weaponA2Value));
+                ImGui::Text("Weapon Set B:");
+                ImGui::InputInt("##WeaponB1InputInt", &weaponB1Value, 1, 10);
+                ImGui::SameLine();
+                ImGui::Text(GameHook::WeaponNames(weaponB1Value));
+                ImGui::InputInt("##WeaponB2InputInt", &weaponB2Value, 1, 10);
+                ImGui::SameLine();
+                ImGui::Text(GameHook::WeaponNames(weaponB2Value));
+                ImGui::PopItemWidth();
+
+                if (ImGui::Button("Call Weapon Swap")) {
+                    GameHook::WeaponSwapCaller();
+                }
+                help_marker("Attempt to refresh weapons without a pause\nRequires changing a weapon manually in the weapon select menu once to load weapons initially.");
+
+                ImGui::TreePop();
             }
-            help_marker("Attempt to refresh weapons without a pause\nRequires changing a weapon manually in the weapon select menu once to load weapons initially.");
-            
+
             /*ImGui::Checkbox("Get Mot Names", &GameHook::getMotName_toggle);
             if (GameHook::getMotName_toggle) {
                 ImGui::Text("Player Mot");
@@ -462,136 +549,148 @@ void GameHook::GameImGui(void) {
                     ImGui::Text("");
             }*/
             
-            uintptr_t actorPlayable = *(uintptr_t*)GameHook::playerPointerAddress;
-            if (actorPlayable) {
-                float& playerMagicValue = *(float*)GameHook::playerMagicAddress; // not player offset but keeping it here anyway
-                float* playerXYZPos[3];
-                playerXYZPos[0] = (float*)(actorPlayable + 0xD0);
-                playerXYZPos[1] = (float*)(actorPlayable + 0xD4);
-                playerXYZPos[2] = (float*)(actorPlayable + 0xD8);
-                /*float* playerXYZScale[3]; // gets written every frame
-                playerXYZScale[0] = (float*)(actorPlayable + 0xF0);
-                playerXYZScale[1] = (float*)(actorPlayable + 0xF4);
-                playerXYZScale[2] = (float*)(actorPlayable + 0xF8);*/
-                int& playerMoveID = *(int*)(actorPlayable + 0x34C);
-                int& playerMovePart = *(int*)(actorPlayable + 0x350);
-                int& playerMoveSomething = *(int*)(actorPlayable + 0x354);
-                float& playerAnimFrame = *(float*)(actorPlayable + 0x3E4);
-                int& playerHealthValue2 = *(int*)(actorPlayable + 0x6B4); // red damage
-                float& playerRemainingInvincibility = *(float*)(actorPlayable + 0x730);
-                int& playerHealthValue = *(int*)(actorPlayable + 0x93508); // health
-                int& playerStringID = *(int*)(actorPlayable + 0x95C64);
-                // int& playerAttackCount = *(int*)(actorPlayable + 0x95CBC);
-                float& remainingWitchTimeValue = *(float*)(actorPlayable + 0x95D5C);
-                float* playerHairColour[3];
-                playerHairColour[0] = (float*)(actorPlayable + 0x96C00);
-                playerHairColour[1] = (float*)(actorPlayable + 0x96C04);
-                playerHairColour[2] = (float*)(actorPlayable + 0x96C08);
+            if (ImGui::CollapsingHeader("Player Stats")) {
+                ImGui::TreePush("PlayerStatsTree");
+                uintptr_t actorPlayable = *(uintptr_t*)GameHook::playerPointerAddress;
+                if (actorPlayable) {
+                    float& playerMagicValue = *(float*)GameHook::playerMagicAddress; // not player offset but keeping it here anyway
+                    float* playerXYZPos[3];
+                    playerXYZPos[0] = (float*)(actorPlayable + 0xD0);
+                    playerXYZPos[1] = (float*)(actorPlayable + 0xD4);
+                    playerXYZPos[2] = (float*)(actorPlayable + 0xD8);
+                    int& playerMoveID = *(int*)(actorPlayable + 0x34C);
+                    int& playerMovePart = *(int*)(actorPlayable + 0x350);
+                    int& playerMoveSomething = *(int*)(actorPlayable + 0x354);
+                    float& playerAnimFrame = *(float*)(actorPlayable + 0x3E4);
+                    int& playerHealthValue2 = *(int*)(actorPlayable + 0x6B4); // red damage
+                    float& playerRemainingInvincibility = *(float*)(actorPlayable + 0x730);
+                    int& playerHealthValue = *(int*)(actorPlayable + 0x93508); // health
+                    int& playerStringID = *(int*)(actorPlayable + 0x95C64);
+                    int& playerAttackCount = *(int*)(actorPlayable + 0x95CBC);
+                    float& remainingWitchTimeValue = *(float*)(actorPlayable + 0x95D5C);
+                    float* playerHairColour[3];
+                    playerHairColour[0] = (float*)(actorPlayable + 0x96C00);
+                    playerHairColour[1] = (float*)(actorPlayable + 0x96C04);
+                    playerHairColour[2] = (float*)(actorPlayable + 0x96C08);
 
-                ImGui::Separator();
-                ImGui::Text("Player Position");
-                ImGui::InputFloat3("##PlayerPositionInputFloat3", *playerXYZPos);
-                if (ImGui::Button("Teleport to 0, 0, 0")) {
-                    *playerXYZPos[0] = 0.0f;
-                    *playerXYZPos[1] = 0.0f;
-                    *playerXYZPos[2] = 0.0f;
+                    ImGui::Separator();
+
+                    ImGui::Text("Player Position");
+                    ImGui::InputFloat3("##PlayerPositionInputFloat3", *playerXYZPos);
+                    if (ImGui::Button("Teleport to 0, 0, 0")) {
+                        *playerXYZPos[0] = 0.0f;
+                        *playerXYZPos[1] = 0.0f;
+                        *playerXYZPos[2] = 0.0f;
+                    }
+
+                    ImGui::Text("Player HP");
+                    if (ImGui::InputInt("##PlayerHPInputInt", &playerHealthValue, 1, 100)) {
+                        playerHealthValue2 = playerHealthValue;
+                    }
+
+                    ImGui::Text("Player MP");
+                    ImGui::InputFloat("##PlayerMPInputFloat", &playerMagicValue, 1, 100, "%.0f");
+
+                    ImGui::Text("Player Remaining Witch Time Duration");
+                    ImGui::InputFloat("##PlayerRemainingWitchTimeDurationInputFloat", &remainingWitchTimeValue, 10, 100, "%.0f");
+
+                    ImGui::Text("Player Remaining Invinciblity");
+                    ImGui::InputFloat("##PlayerRemainingInvinciblityInputFloat", &playerRemainingInvincibility, 10, 100, "%.0f");
+
+                    ImGui::Text("Player Animation Frame");
+                    ImGui::InputFloat("##PlayerAnimationFrameInputFloat", &playerAnimFrame, 10, 100, "%.0f");
+
+                    ImGui::Text("Player Move ID");
+                    ImGui::InputInt("##PlayerMoveIDInputInt", &playerMoveID);
+
+                    ImGui::Text("Player Move Part");
+                    ImGui::InputInt("##PlayerMovePartInputInt", &playerMovePart);
+
+                    ImGui::Text("Player String ID");
+                    ImGui::InputInt("##PlayerStringIDInputInt", &playerStringID);
+
+                    ImGui::Text("Player Move Something");
+                    ImGui::InputInt("##PlayerMoveSomethingInputInt", &playerMoveSomething);
+
+                    ImGui::Text("Player Attack Count");
+                    ImGui::InputInt("##PlayerAttackCountInputInt", &playerAttackCount);
+
+                    ImGui::Text("Player Hair Colour");
+                    ImGui::InputFloat3("##PlayerHairColourInputFloat3", *playerHairColour);
+
+                    /*uintptr_t armWeaveOffset = *(uintptr_t*)(actorPlayable + 0x937C0);
+                    if (armWeaveOffset) {
+                        float* armWeaveScale[3];
+                        armWeaveScale[0] = (float*)(armWeaveOffset + 0xF0);
+                        armWeaveScale[1] = (float*)(armWeaveOffset + 0xF4);
+                        armWeaveScale[2] = (float*)(armWeaveOffset + 0xF8);
+                        ImGui::Text("Arm Weave Scale");
+                        ImGui::InputFloat3("##ArmWeaveScaleInputFloat3", *armWeaveScale);
+                    }
+                    uintptr_t legWeaveOffset = *(uintptr_t*)(actorPlayable + 0x937D0);
+                    if (legWeaveOffset) {
+                        float* legWeaveScale[3];
+                        legWeaveScale[0] = (float*)(legWeaveOffset + 0xF0);
+                        legWeaveScale[1] = (float*)(legWeaveOffset + 0xF4);
+                        legWeaveScale[2] = (float*)(legWeaveOffset + 0xF8);
+                        ImGui::Text("Leg Weave Scale");
+                        ImGui::InputFloat3("##LegWeaveScaleInputFloat3", *legWeaveScale);
+                    }*/
                 }
-
-                ImGui::Text("Player HP");
-                if (ImGui::InputInt("##PlayerHPInputInt", &playerHealthValue, 1, 100)) {
-                    playerHealthValue2 = playerHealthValue;
-                }
-
-                ImGui::Text("Player MP");
-                ImGui::InputFloat("##PlayerMPInputFloat", &playerMagicValue, 1, 100, "%.0f");
-
-                ImGui::Text("Player Remaining Witch Time Duration");
-                ImGui::InputFloat("##PlayerRemainingWitchTimeDurationInputFloat", &remainingWitchTimeValue, 10, 100, "%.0f");
-
-                ImGui::Text("Player Remaining Invinciblity");
-                ImGui::InputFloat("##PlayerRemainingInvinciblityInputFloat", &playerRemainingInvincibility, 10, 100, "%.0f");
-
-                ImGui::Text("Player Animation Frame");
-                ImGui::InputFloat("##PlayerAnimationFrameInputFloat", &playerAnimFrame, 10, 100, "%.0f");
-
-                ImGui::Text("Player Move ID");
-                ImGui::InputInt("##PlayerMoveIDInputInt", &playerMoveID);
-
-                ImGui::Text("Player Move Part");
-                ImGui::InputInt("##PlayerMovePartInputInt", &playerMovePart);
-
-                ImGui::Text("Player String ID");
-                ImGui::InputInt("##PlayerStringIDInputInt", &playerStringID);
-
-                ImGui::Text("Player Move Something");
-                ImGui::InputInt("##PlayerMoveSomethingInputInt", &playerMoveSomething);
-
-                ImGui::Text("Player Hair Colour");
-                ImGui::InputFloat3("##PlayerHairColourInputFloat3", *playerHairColour);
-
-                /*uintptr_t armWeaveOffset = *(uintptr_t*)(actorPlayable + 0x937C0);
-                if (armWeaveOffset) {
-                    float* armWeaveScale[3];
-                    armWeaveScale[0] = (float*)(armWeaveOffset + 0xF0);
-                    armWeaveScale[1] = (float*)(armWeaveOffset + 0xF4);
-                    armWeaveScale[2] = (float*)(armWeaveOffset + 0xF8);
-                    ImGui::Text("Arm Weave Scale");
-                    ImGui::InputFloat3("##ArmWeaveScaleInputFloat3", *armWeaveScale);
-                }
-                uintptr_t legWeaveOffset = *(uintptr_t*)(actorPlayable + 0x937D0);
-                if (legWeaveOffset) {
-                    float* legWeaveScale[3];
-                    legWeaveScale[0] = (float*)(legWeaveOffset + 0xF0);
-                    legWeaveScale[1] = (float*)(legWeaveOffset + 0xF4);
-                    legWeaveScale[2] = (float*)(legWeaveOffset + 0xF8);
-                    ImGui::Text("Leg Weave Scale");
-                    ImGui::InputFloat3("##LegWeaveScaleInputFloat3", *legWeaveScale);
-                }*/
+                else
+                    ImGui::Text("Load in to a stage to see these stats");
+                ImGui::TreePop();
             }
 
-            uintptr_t* enemy_ptr = (uintptr_t*)GameHook::enemyLockedOnAddress;
-            uintptr_t enemy_base = *enemy_ptr;
-            if (enemy_base) {
-                float* enemyXYZPos[3];
-                enemyXYZPos[0] = (float*)(enemy_base + 0xD0);
-                enemyXYZPos[1] = (float*)(enemy_base + 0xD4);
-                enemyXYZPos[2] = (float*)(enemy_base + 0xD8);
-                int& enemyHPValue = *(int*)(enemy_base + 0x6B4);
-                int& enemyMoveIDValue = *(int*)(enemy_base + 0x34C);
-                float& enemyAnimFrameValue = *(float*)(enemy_base + 0x3E4);
-                float& enemyDazeBuildupValue = *(float*)(enemy_base + 0xC94);
-                float& enemyDazeDurationValue = *(float*)(enemy_base + 0xC9C);
+            if (ImGui::CollapsingHeader("Locked On Enemy Stats")) {
+                ImGui::TreePush("LockedOnEnemyStatsTree");
+                uintptr_t* enemy_ptr = (uintptr_t*)GameHook::enemyLockedOnAddress;
+                uintptr_t enemy_base = *enemy_ptr;
+                if (enemy_base) {
+                    float* enemyXYZPos[3];
+                    enemyXYZPos[0] = (float*)(enemy_base + 0xD0);
+                    enemyXYZPos[1] = (float*)(enemy_base + 0xD4);
+                    enemyXYZPos[2] = (float*)(enemy_base + 0xD8);
+                    int& enemyHPValue = *(int*)(enemy_base + 0x6B4);
+                    int& enemyMoveIDValue = *(int*)(enemy_base + 0x34C);
+                    float& enemyAnimFrameValue = *(float*)(enemy_base + 0x3E4);
+                    float& enemyDazeBuildupValue = *(float*)(enemy_base + 0xC94);
+                    float& enemyDazeDurationValue = *(float*)(enemy_base + 0xC9C);
 
-                uintptr_t enemyHPPtr = *(uintptr_t*)(enemy_base + 0xA00);
-                int& enemyBossHPValue = *(int*)(enemyHPPtr + 0x6B4);
+                    uintptr_t enemyHPPtr = *(uintptr_t*)(enemy_base + 0xA00);
+                    int& enemyBossHPValue = *(int*)(enemyHPPtr + 0x6B4);
 
-                ImGui::Separator();
+                    ImGui::Separator();
 
-                ImGui::Text("Enemy Position");
-                ImGui::InputFloat3("##EnemyXYZPosInputFloat", *enemyXYZPos);
-                ImGui::Text("Enemy HP");
-                ImGui::InputInt("##EnemyHPInputInt", &enemyHPValue);
-                ImGui::Text("Enemy Move ID");
-                ImGui::InputInt("##EnemyMoveIDInputInt", &enemyMoveIDValue);
-                ImGui::Text("Enemy Daze Buildup");
-                ImGui::InputFloat("##EnemyDazeBuildupInputFloat", &enemyDazeBuildupValue, 10, 100, "%.0f");
-                ImGui::Text("Enemy Daze Duration");
-                ImGui::InputFloat("##EnemyDazeDurationInputFloat", &enemyDazeDurationValue, 10, 100, "%.0f");
-                if (enemyHPPtr) {
-                    ImGui::Text("Enemy Boss HP");
-                    ImGui::InputInt("##EnemyBossHPInputInt", &enemyBossHPValue);
+                    ImGui::Text("Enemy Position");
+                    ImGui::InputFloat3("##EnemyXYZPosInputFloat", *enemyXYZPos);
+                    ImGui::Text("Enemy HP");
+                    ImGui::InputInt("##EnemyHPInputInt", &enemyHPValue);
+                    ImGui::Text("Enemy Move ID");
+                    ImGui::InputInt("##EnemyMoveIDInputInt", &enemyMoveIDValue);
+                    ImGui::Text("Enemy Daze Buildup");
+                    ImGui::InputFloat("##EnemyDazeBuildupInputFloat", &enemyDazeBuildupValue, 10, 100, "%.0f");
+                    ImGui::Text("Enemy Daze Duration");
+                    ImGui::InputFloat("##EnemyDazeDurationInputFloat", &enemyDazeDurationValue, 10, 100, "%.0f");
+                    if (enemyHPPtr) {
+                        ImGui::Text("Enemy Boss HP");
+                        ImGui::InputInt("##EnemyBossHPInputInt", &enemyBossHPValue);
+                    }
+
+                    ImGui::Checkbox("Enable Save/Load Hotkeys", &GameHook::saveStatesHotkeys_toggle);
+                    help_marker("Home = Save\nEnd = Load");
+                    ImGui::Text("SaveState");
+                    help_marker("Save and load an enemy's position and animation");
+                    if (ImGui::Button("Save State")) {
+                        GameHook::SaveStates_SaveState();
+                    }
+                    if (ImGui::Button("Load State")) {
+                        GameHook::SaveStates_LoadState();
+                    }
                 }
-
-                ImGui::Checkbox("Enable Save/Load Hotkeys", &GameHook::saveStatesHotkeys_toggle);
-                help_marker("Home = Save\nEnd = Load");
-                ImGui::Text("SaveState");
-                help_marker("Save and load an enemy's position and animation");
-                if (ImGui::Button("Save State")) {
-                    GameHook::SaveStates_SaveState();
-                }
-                if (ImGui::Button("Load State")) {
-                    GameHook::SaveStates_LoadState();
-                }
+                else
+                    ImGui::Text("Lock on to an enemy to see these stats");
+                ImGui::TreePop();
             }
 
             GameHook::windowHeightHack = std::clamp(ImGui::GetCursorPosY() + GameHook::windowHeightBorder, 0.0f, GameHook::maxWindowHeight);
@@ -645,10 +744,9 @@ void GameHook::GameImGui(void) {
             ImGui::Separator();
 
             ImGui::Checkbox("Force Input Type", &GameHook::inputIcons_toggle);
-            help_marker("0 keyboard, 1 gamepad");
             if (GameHook::inputIcons_toggle) {
                 ImGui::PushItemWidth(inputItemWidth);
-                ImGui::InputInt("##InputIconsInputInt", &GameHook::inputIconsValue, 1, 100);
+                ImGui::InputInt(GetInputTypeName(inputIconsValue), &GameHook::inputIconsValue, 1, 100);
                 ImGui::PopItemWidth();
             }
 
@@ -750,9 +848,10 @@ void GameHook::GameImGui(void) {
             ImGui::Separator();
 
             ImGui::Text("This trainer was made by:");
-            static std::array<ImGuiURL, 5> links1{
+            static std::array<ImGuiURL, 6> links1{
                 ImGuiURL { "SSSiyan", "https://twitter.com/sssiyan" },
                 ImGuiURL { "GarudaKK", "https://www.youtube.com/@GarudaPSN" },
+                ImGuiURL { "Kerilk", "https://github.com/Kerilk" },
                 ImGuiURL { "CreativeHandle", "https://twitter.com/CreativeHandler" },
                 ImGuiURL { "deepdarkkapustka", "https://www.youtube.com/@mstislavcapusta7573" },
                 ImGuiURL { "TheDarkness", "https://steamcommunity.com/id/TheDarkness704/" },
@@ -994,6 +1093,17 @@ const char* GameHook::AccessoryNames(int accessoryID) {
         return "Climax Brace";
     case 12:
         return "Immortal Marionette";
+    default:
+        return "";
+    }
+}
+
+const char* GameHook::GetInputTypeName(int inputTypeID) {
+    switch (inputTypeID) {
+    case 0:
+        return "Keyboard";
+    case 1:
+        return "Gamepad";
     default:
         return "";
     }

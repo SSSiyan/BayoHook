@@ -79,25 +79,23 @@ public:
 	static int inputIconsValue;
 	static bool haloDisplay_toggle;
 	static int haloDisplayValue;
-
+	//
 	static bool moveIDSwap_toggle;
-	static int moveIDSwapCurrentMove;
 
 	static int moveIDSwapSourceMove1;
 	static int moveIDSwapSourceMove2;
 
 	static int moveIDSwapDesiredMove1;
 	static int moveIDSwapDesiredMove2;
-
+	//
 	static bool stringIDSwap_toggle;
-	static int stringIDSwapCurrentString;
 
 	static int stringIDSwapSourceString1;
 	static int stringIDSwapSourceString2;
 
 	static int stringIDSwapDesiredString1;
 	static int stringIDSwapDesiredString2;
-
+	//
 	static bool easierMash_toggle;
 	static int initialAngelSlayerFloor;
 	static bool cancellableAfterBurner_toggle;
@@ -159,6 +157,7 @@ public:
 	static const char* WeaponNames(int weaponID);
 	static const char* CostumeNames(int costumeID);
 	static const char* AccessoryNames(int accessoryID);
+	static const char* GetInputTypeName(int inputID);
 	static int showMessageTimerF1;
 	static int showMessageTimerF2;
 	static int showMessageTimerF3;
