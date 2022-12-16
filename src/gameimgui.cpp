@@ -459,18 +459,33 @@ void GameHook::GameImGui(void) {
             
             uintptr_t actorPlayable = *(uintptr_t*)GameHook::playerPointerAddress;
             if (actorPlayable) {
+                float& playerMagicValue = *(float*)GameHook::playerMagicAddress; // not player offset but keeping it here anyway
                 float* playerXYZPos[3];
                 playerXYZPos[0] = (float*)(actorPlayable + 0xD0);
                 playerXYZPos[1] = (float*)(actorPlayable + 0xD4);
                 playerXYZPos[2] = (float*)(actorPlayable + 0xD8);
-                int& playerHealthValue = *(int*)(actorPlayable + 0x93508);
+                /*float* playerXYZScale[3]; // gets written every frame
+                playerXYZScale[0] = (float*)(actorPlayable + 0xF0);
+                playerXYZScale[1] = (float*)(actorPlayable + 0xF4);
+                playerXYZScale[2] = (float*)(actorPlayable + 0xF8);*/
+                int& playerMoveID = *(int*)(actorPlayable + 0x34C);
+                int& playerMovePart = *(int*)(actorPlayable + 0x350);
+                int& playerMoveSomething = *(int*)(actorPlayable + 0x354);
+                float& playerAnimFrame = *(float*)(actorPlayable + 0x3E4);
                 int& playerHealthValue2 = *(int*)(actorPlayable + 0x6B4); // red damage
+                float& playerRemainingInvincibility = *(float*)(actorPlayable + 0x730);
+                int& playerHealthValue = *(int*)(actorPlayable + 0x93508); // health
+                int& playerStringID = *(int*)(actorPlayable + 0x95C64);
+                // int& playerAttackCount = *(int*)(actorPlayable + 0x95CBC);
                 float& remainingWitchTimeValue = *(float*)(actorPlayable + 0x95D5C);
-                float& playerMagicValue = *(float*)GameHook::playerMagicAddress; // not player offset but keeping it here anyway
+                float* playerHairColour[3];
+                playerHairColour[0] = (float*)(actorPlayable + 0x96C00);
+                playerHairColour[1] = (float*)(actorPlayable + 0x96C04);
+                playerHairColour[2] = (float*)(actorPlayable + 0x96C08);
 
                 ImGui::Separator();
                 ImGui::Text("Player Position");
-                ImGui::InputFloat3("##Player Position", *playerXYZPos); // player
+                ImGui::InputFloat3("##PlayerPositionInputFloat3", *playerXYZPos);
                 if (ImGui::Button("Teleport to 0, 0, 0")) {
                     *playerXYZPos[0] = 0.0f;
                     *playerXYZPos[1] = 0.0f;
@@ -485,17 +500,38 @@ void GameHook::GameImGui(void) {
                 ImGui::Text("Player MP");
                 ImGui::InputFloat("##PlayerMPInputFloat", &playerMagicValue, 1, 100, "%.0f");
 
-                ImGui::Text("Remaining Witch Time Duration");
-                ImGui::InputFloat("##RemainingWitchTimeDurationInputFloat", &remainingWitchTimeValue, 10, 100, "%.0f");
+                ImGui::Text("Player Remaining Witch Time Duration");
+                ImGui::InputFloat("##PlayerRemainingWitchTimeDurationInputFloat", &remainingWitchTimeValue, 10, 100, "%.0f");
 
-                uintptr_t armWeaveOffset = *(uintptr_t*)(actorPlayable + 0x937C0);
+                ImGui::Text("Player Remaining Invinciblity");
+                ImGui::InputFloat("##PlayerRemainingInvinciblityInputFloat", &playerRemainingInvincibility, 10, 100, "%.0f");
+
+                ImGui::Text("Player Animation Frame");
+                ImGui::InputFloat("##PlayerAnimationFrameInputFloat", &playerAnimFrame, 10, 100, "%.0f");
+
+                ImGui::Text("Player Move ID");
+                ImGui::InputInt("##PlayerMoveIDInputInt", &playerMoveID);
+
+                ImGui::Text("Player Move Part");
+                ImGui::InputInt("##PlayerMovePartInputInt", &playerMovePart);
+
+                ImGui::Text("Player String ID");
+                ImGui::InputInt("##PlayerStringIDInputInt", &playerStringID);
+
+                ImGui::Text("Player Move Something");
+                ImGui::InputInt("##PlayerMoveSomethingInputInt", &playerMoveSomething);
+
+                ImGui::Text("Player Hair Colour");
+                ImGui::InputFloat3("##PlayerHairColourInputFloat3", *playerHairColour);
+
+                /*uintptr_t armWeaveOffset = *(uintptr_t*)(actorPlayable + 0x937C0);
                 if (armWeaveOffset) {
                     float* armWeaveScale[3];
                     armWeaveScale[0] = (float*)(armWeaveOffset + 0xF0);
                     armWeaveScale[1] = (float*)(armWeaveOffset + 0xF4);
                     armWeaveScale[2] = (float*)(armWeaveOffset + 0xF8);
                     ImGui::Text("Arm Weave Scale");
-                    ImGui::InputFloat3("##ArmWeaveScaleInputFloat", *armWeaveScale);
+                    ImGui::InputFloat3("##ArmWeaveScaleInputFloat3", *armWeaveScale);
                 }
                 uintptr_t legWeaveOffset = *(uintptr_t*)(actorPlayable + 0x937D0);
                 if (legWeaveOffset) {
@@ -504,8 +540,8 @@ void GameHook::GameImGui(void) {
                     legWeaveScale[1] = (float*)(legWeaveOffset + 0xF4);
                     legWeaveScale[2] = (float*)(legWeaveOffset + 0xF8);
                     ImGui::Text("Leg Weave Scale");
-                    ImGui::InputFloat3("##LegWeaveScaleInputFloat", *legWeaveScale);
-                }
+                    ImGui::InputFloat3("##LegWeaveScaleInputFloat3", *legWeaveScale);
+                }*/
             }
 
             uintptr_t* enemy_ptr = (uintptr_t*)GameHook::enemyLockedOnAddress;
