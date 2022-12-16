@@ -213,6 +213,18 @@ void GameHook::WeaponSwapOffset (bool enabled) {
 	}
 }
 
+bool GameHook::retainPillowTalkCharge_toggle = false;
+void GameHook::RetainPillowTalkCharge (bool enabled) {
+	if (enabled) {
+		GameHook::_nop((char*)(0xA2B491), 8);
+	}
+	else {
+		GameHook::_patch((char*)(0xA2B491), (char*)"\xF3\x0F\x11\x86\x2C\x33\x00\x00", 8);
+	}
+}
+
+
+
 // detours
 std::unique_ptr<FunctionHook> enemyHPHook;
 uintptr_t enemyHP_jmp_ret{ NULL };
@@ -752,6 +764,25 @@ static __declspec(naked) void LoadReplaceDetour(void) {
 		mov ecx, [eax+0x08]
 		call edx
 		jmp dword ptr [loadReplace_jmp_ret]
+	}
+}
+
+std::unique_ptr<FunctionHook> longerPillowTalkChargeHook;
+uintptr_t longerPillowTalkCharge_jmp_ret{ NULL };
+bool GameHook::longerPillowTalkCharge_toggle = false;
+float GameHook::longerPillowTalkChargeMult = 2.0f;
+static __declspec(naked) void LongerPillowTalkChargeDetour(void) {
+	_asm {
+		cmp byte ptr [GameHook::longerPillowTalkCharge_toggle], 0
+		je originalcode
+
+		movss xmm0, [esp+0x04]
+		mulss xmm0, [GameHook::longerPillowTalkChargeMult]
+		jmp dword ptr [longerPillowTalkCharge_jmp_ret]
+
+		originalcode:
+		movss xmm0, [esp+0x04] // from [00DA0DE8]
+		jmp dword ptr [longerPillowTalkCharge_jmp_ret]
 	}
 }
 
@@ -1981,6 +2012,7 @@ void GameHook::InitializeDetours(void) {
 	install_hook_absolute(0x94CAAF, dualAfterBurnerHook, &DualAfterBurnerDetour, &dualAfterBurner_jmp_ret, 5);
 	//install_hook_absolute(0xC798A7, getMotNameHook, &GetMotNameDetour, &getMotName_jmp_ret, 6);
 	install_hook_absolute(0x6222D0, loadReplaceHook, &LoadReplaceDetour, &loadReplace_jmp_ret, 6);
+	install_hook_absolute(0x4CCCA0, longerPillowTalkChargeHook, &LongerPillowTalkChargeDetour, &longerPillowTalkCharge_jmp_ret, 6);
 	install_hook_absolute(0x9F5AF0, pl0012Hook, &pl0012Detour, NULL, 0);
 	install_hook_absolute(0x9FC890, pl0031Hook, &pl0031Detour, NULL, 0);
 	install_hook_absolute(0xA17420, pl004cHook, &pl004cDetour, NULL, 0);
@@ -2023,6 +2055,8 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	InfBirdTime(infBirdTime_toggle);
 	weaponSwapOffset_toggle = cfg.get<bool>("WeaponSwapOffsetToggle").value_or(false);
 	WeaponSwapOffset(weaponSwapOffset_toggle);
+	retainPillowTalkCharge_toggle = cfg.get<bool>("RetainPillowTalkChargeToggle").value_or(false);
+	RetainPillowTalkCharge(retainPillowTalkCharge_toggle);
 	//areaJumpPatch_toggle = cfg.get<bool>("AreaJumpPatchToggle").value_or(false);
 	//AreaJumpPatch(areaJumpPatch_toggle);
 
@@ -2056,6 +2090,7 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	lowerDivekick_toggle = cfg.get<bool>("LowerDivekickToggle").value_or(false);
 	dualAfterBurner_toggle = cfg.get<bool>("DualAfterBurnerToggle").value_or(false);
 	loadReplace_toggle = cfg.get<bool>("LoadReplaceToggle").value_or(false);
+	longerPillowTalkCharge_toggle = cfg.get<bool>("LongerPillowTalkCharge").value_or(false);
 	saveStatesHotkeys_toggle = cfg.get<bool>("SaveStatesHotkeysToggle").value_or(false);
 }
 
@@ -2079,6 +2114,7 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("LessEnemyAttacksToggle", lessEnemyAttacks_toggle);
 	cfg.set<bool>("InfBirdTimeToggle", infBirdTime_toggle);
 	cfg.set<bool>("WeaponSwapOffsetToggle", weaponSwapOffset_toggle);
+	cfg.set<bool>("RetainPillowTalkChargeToggle", retainPillowTalkCharge_toggle);
 
 	//cfg.set<bool>("AreaJumpPatchToggle", areaJumpPatch_toggle);
 	// detours
@@ -2110,6 +2146,7 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("LowerDivekickToggle", lowerDivekick_toggle);
 	cfg.set<bool>("DualAfterBurnerToggle", dualAfterBurner_toggle);
 	cfg.set<bool>("LoadReplaceToggle", loadReplace_toggle);
+	cfg.set<bool>("LongerPillowTalkCharge", longerPillowTalkCharge_toggle);
 	cfg.set<bool>("SaveStatesHotkeysToggle", saveStatesHotkeys_toggle);
 
 	cfg.save(GameHook::cfgString);

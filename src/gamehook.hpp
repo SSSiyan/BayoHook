@@ -32,6 +32,7 @@ public:
 	static bool lessEnemyAttacks_toggle;
 	static bool infBirdTime_toggle;
 	static bool weaponSwapOffset_toggle;
+	static bool retainPillowTalkCharge_toggle;
 	// patch functions
 	static void TakeNoDamage(bool enabled);
 	static void DisableKilling(bool enabled);
@@ -55,6 +56,7 @@ public:
 	static void LessEnemyAttacks(bool enabled);
 	static void InfBirdTime(bool enabled);
 	static void WeaponSwapOffset(bool enabled);
+	static void RetainPillowTalkCharge(bool enabled);
 
 	static void WeaponSwapCaller(void);
 	static void SaveStates_SaveState();
@@ -105,6 +107,8 @@ public:
 	static bool lowerDivekick_toggle;
 	static bool dualAfterBurner_toggle;
 	static bool loadReplace_toggle;
+	static bool longerPillowTalkCharge_toggle;
+	static float longerPillowTalkChargeMult;
 
 	static bool getMotName_toggle;
 	static char getMotName_weaponMotString[0x128];

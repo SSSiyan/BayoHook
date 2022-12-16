@@ -237,6 +237,13 @@ void GameHook::GameImGui(void) {
                 InfBirdTime(infBirdTime_toggle);
             }
 
+            ImGui::Checkbox("Longer Pillow Talk Charge", &longerPillowTalkCharge_toggle);
+            ImGui::SameLine(sameLineWidth);
+            if (ImGui::Checkbox("Retain Pillow Talk Charge", &GameHook::retainPillowTalkCharge_toggle)) {
+                RetainPillowTalkCharge(retainPillowTalkCharge_toggle);
+            }
+            help_marker("When swapping weaponset, remember pillow talk charge");
+
             if (ImGui::Checkbox("Always Walk On Walls", &GameHook::alwaysWalkOnWalls_toggle)) {
                 AlwaysWalkOnWalls(alwaysWalkOnWalls_toggle);
             }
