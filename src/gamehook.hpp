@@ -31,6 +31,7 @@ public:
 	static bool moreEnemyAttacks_toggle;
 	static bool lessEnemyAttacks_toggle;
 	static bool infBirdTime_toggle;
+	static bool weaponSwapOffset_toggle;
 	// patch functions
 	static void TakeNoDamage(bool enabled);
 	static void DisableKilling(bool enabled);
@@ -53,6 +54,7 @@ public:
 	static void MoreEnemyAttacks(bool enabled);
 	static void LessEnemyAttacks(bool enabled);
 	static void InfBirdTime(bool enabled);
+	static void WeaponSwapOffset(bool enabled);
 
 	static void WeaponSwapCaller(void);
 	static void SaveStates_SaveState();

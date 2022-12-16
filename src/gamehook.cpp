@@ -203,6 +203,16 @@ void GameHook::InfBirdTime (bool enabled) {
 	}
 }
 
+bool GameHook::weaponSwapOffset_toggle = false;
+void GameHook::WeaponSwapOffset (bool enabled) {
+	if (enabled) {
+		GameHook::_patch((char*)(0x9EB456), (char*)"\xEB\x1C\x90", 3); // jmp, nop
+	}
+	else {
+		GameHook::_patch((char*)(0x9EB456), (char*)"\x0F\x57\xC0", 3); // xorps xmm0,xmm0
+	}
+}
+
 // detours
 std::unique_ptr<FunctionHook> enemyHPHook;
 uintptr_t enemyHP_jmp_ret{ NULL };
@@ -1922,6 +1932,8 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	LessEnemyAttacks(lessEnemyAttacks_toggle);
 	infBirdTime_toggle = cfg.get<bool>("InfBirdTimeToggle").value_or(false);
 	InfBirdTime(infBirdTime_toggle);
+	weaponSwapOffset_toggle = cfg.get<bool>("WeaponSwapOffsetToggle").value_or(false);
+	WeaponSwapOffset(weaponSwapOffset_toggle);
 	//areaJumpPatch_toggle = cfg.get<bool>("AreaJumpPatchToggle").value_or(false);
 	//AreaJumpPatch(areaJumpPatch_toggle);
 
@@ -1977,6 +1989,8 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("MoreEnemyAttacksToggle", moreEnemyAttacks_toggle);
 	cfg.set<bool>("LessEnemyAttacksToggle", lessEnemyAttacks_toggle);
 	cfg.set<bool>("InfBirdTimeToggle", infBirdTime_toggle);
+	cfg.set<bool>("WeaponSwapOffsetToggle", weaponSwapOffset_toggle);
+
 	//cfg.set<bool>("AreaJumpPatchToggle", areaJumpPatch_toggle);
 	// detours
 	cfg.set<bool>("DealNoDamageToggle", enemyHP_no_damage_toggle);

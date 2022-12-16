@@ -87,9 +87,7 @@ void GameHook::GameImGui(void) {
                 if (GameHook::enemyHP_no_damage_toggle)
                     GameHook::enemyHP_one_hit_kill_toggle = false;
             }
-
             ImGui::SameLine(sameLineWidth);
-
             if (ImGui::Checkbox("Take No Damage (F2)", &GameHook::takeNoDamage_toggle)) {
                 GameHook::TakeNoDamage(GameHook::takeNoDamage_toggle);
             }
@@ -100,17 +98,13 @@ void GameHook::GameImGui(void) {
                     GameHook::DisableKilling(GameHook::enemyHP_no_damage_toggle);
                 }
             }
-
             ImGui::SameLine(sameLineWidth);
-
             ImGui::Checkbox("Disable Slow Motion", &GameHook::disableSlowmo_toggle);
 
             if (ImGui::Checkbox("Disable Enemy Daze", &GameHook::disableDaze_toggle)) {
                 GameHook::DisableDaze(GameHook::disableDaze_toggle);
             }
-
             ImGui::SameLine(sameLineWidth);
-
             if (ImGui::Checkbox("Force Enemy Daze", &GameHook::forceDaze_toggle)) {
                 GameHook::ForceDaze(GameHook::forceDaze_toggle);
             }
@@ -207,50 +201,44 @@ void GameHook::GameImGui(void) {
             if (ImGui::Checkbox("Infinite Jumps (F4) ##InfJumpsToggle", &GameHook::infJumps_toggle)) {
                 GameHook::InfJumps(GameHook::infJumps_toggle);
             }
-
             ImGui::SameLine(sameLineWidth);
-
             if (ImGui::Checkbox("Disable After Burner Bounce", &GameHook::disableAfterBurnerBounce_toggle)) {
                 DisableAfterBurnerBounce(GameHook::disableAfterBurnerBounce_toggle);
             }
 
             ImGui::Checkbox("Cancellable After Burner", &GameHook::cancellableAfterBurner_toggle);
-
             ImGui::SameLine(sameLineWidth);
-
             ImGui::Checkbox("Cancellable Falling Kick", &GameHook::cancellableFallingKick_toggle);
 
             ImGui::Checkbox("Alt Teleport Input", &GameHook::altTeleInput_toggle);
             help_marker("Teleport = Lockon + Taunt\nTaunt = Dpad Down");
-
             ImGui::SameLine(sameLineWidth);
-
             if (ImGui::Checkbox("Disable Lockon Jump Dodge", &GameHook::disableLockOnDodge_toggle)) {
                 GameHook::DisableLockOnDodge(GameHook::disableLockOnDodge_toggle);
             }
 
             ImGui::Checkbox("Lower Divekick Requirement", &GameHook::lowerDivekick_toggle);
-
             ImGui::SameLine(sameLineWidth);
-
             ImGui::Checkbox("Dual Gun After Burner", &GameHook::dualAfterBurner_toggle);
 
             if (ImGui::Checkbox("No Hold Dodge Offset", &GameHook::noHoldDodgeOffset_toggle)) {
                 NoHoldDodgeOffset(noHoldDodgeOffset_toggle);
             }
-
             ImGui::SameLine(sameLineWidth);
-
             if (ImGui::Checkbox("Jump Offset", &GameHook::jumpOffset_toggle)) {
                 JumpOffset(jumpOffset_toggle);
             }
 
-            if (ImGui::Checkbox("Always Walk On Walls", &GameHook::alwaysWalkOnWalls_toggle)) {
-                AlwaysWalkOnWalls(alwaysWalkOnWalls_toggle);
+            if (ImGui::Checkbox("Weapon Swap Offset", &GameHook::weaponSwapOffset_toggle)) {
+                WeaponSwapOffset(weaponSwapOffset_toggle);
             }
             ImGui::SameLine(sameLineWidth);
             if (ImGui::Checkbox("Infinite Crow Within", &GameHook::infBirdTime_toggle)) {
                 InfBirdTime(infBirdTime_toggle);
+            }
+
+            if (ImGui::Checkbox("Always Walk On Walls", &GameHook::alwaysWalkOnWalls_toggle)) {
+                AlwaysWalkOnWalls(alwaysWalkOnWalls_toggle);
             }
 
             ImGui::Separator();
