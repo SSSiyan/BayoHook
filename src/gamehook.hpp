@@ -75,10 +75,25 @@ public:
 	static int inputIconsValue;
 	static bool haloDisplay_toggle;
 	static int haloDisplayValue;
-	static bool animSwap_toggle;
-	static int animSwapCurrentAnim;
-	static int animSwapSourceAnim1;
-	static int animSwapDesiredAnim1;
+
+	static bool moveIDSwap_toggle;
+	static int moveIDSwapCurrentMove;
+
+	static int moveIDSwapSourceMove1;
+	static int moveIDSwapSourceMove2;
+
+	static int moveIDSwapDesiredMove1;
+	static int moveIDSwapDesiredMove2;
+
+	static bool stringIDSwap_toggle;
+	static int stringIDSwapCurrentString;
+
+	static int stringIDSwapSourceString1;
+	static int stringIDSwapSourceString2;
+
+	static int stringIDSwapDesiredString1;
+	static int stringIDSwapDesiredString2;
+
 	static bool easierMash_toggle;
 	static int initialAngelSlayerFloor;
 	static bool cancellableAfterBurner_toggle;

@@ -253,30 +253,99 @@ void GameHook::GameImGui(void) {
 
             ImGui::Separator();
 
-            ImGui::Checkbox("Animation Swap Test ##AnimationSwapTestToggle", &GameHook::animSwap_toggle);
+            ImGui::Checkbox("Move Swap Test ##MoveSwapTestToggle", &GameHook::moveIDSwap_toggle);
             help_marker("Do the move you want to see, pause mid anim, hit the first button\nDo the move you want to replace, pause mid anim, hit the second button");
-            if (GameHook::animSwap_toggle) {
+            if (GameHook::moveIDSwap_toggle) {
                 ImGui::Text("Current Anim ID");
                 ImGui::PushItemWidth(inputItemWidth);
-                ImGui::InputInt("##CurrentAnimIDInputInt", &GameHook::animSwapCurrentAnim, 0, 0);
+                ImGui::InputInt("##CurrentMoveIDInputInt", &GameHook::moveIDSwapCurrentMove, 0, 0);
                 ImGui::PopItemWidth();
 
-                ImGui::Text("Desired Anim ID");
+                ImGui::Separator();
+
+                ImGui::Text("Desired Move ID 1");
                 ImGui::PushItemWidth(inputItemWidth);
-                ImGui::InputInt("##DesiredAnimID1InputInt", &GameHook::animSwapDesiredAnim1);
+                ImGui::InputInt("##DesiredMoveIDInputInt1", &GameHook::moveIDSwapDesiredMove1);
                 ImGui::PopItemWidth();
                 ImGui::SameLine();
-                if (ImGui::Button("Save Current Anim ID as desired")) {
-                    GameHook::animSwapDesiredAnim1 = GameHook::animSwapCurrentAnim;
+                if (ImGui::Button("Save Current Move ID as desired ##1")) {
+                    GameHook::moveIDSwapDesiredMove1 = GameHook::moveIDSwapCurrentMove;
+                }
+                ImGui::Text("Source Anim ID 1");
+                ImGui::PushItemWidth(inputItemWidth);
+                ImGui::InputInt("##SourceMoveIDInputInt1", &GameHook::moveIDSwapSourceMove1);
+                ImGui::PopItemWidth();
+                ImGui::SameLine();
+                if (ImGui::Button("Save Current Move ID as source ##2")) {
+                    GameHook::moveIDSwapSourceMove1 = GameHook::moveIDSwapCurrentMove;
                 }
 
-                ImGui::Text("Source Anim ID");
+                ImGui::Separator();
+
+                ImGui::Text("Desired Move ID 2");
                 ImGui::PushItemWidth(inputItemWidth);
-                ImGui::InputInt("##SourceAnimID1InputInt", &GameHook::animSwapSourceAnim1);
+                ImGui::InputInt("##DesiredMoveIDInputInt2", &GameHook::moveIDSwapDesiredMove2);
                 ImGui::PopItemWidth();
                 ImGui::SameLine();
-                if (ImGui::Button("Save Current Anim ID as source")) {
-                    GameHook::animSwapSourceAnim1 = GameHook::animSwapCurrentAnim;
+                if (ImGui::Button("Save Current Move ID as desired ##2")) {
+                    GameHook::moveIDSwapDesiredMove2 = GameHook::moveIDSwapCurrentMove;
+                }
+                ImGui::Text("Source Anim ID 2");
+                ImGui::PushItemWidth(inputItemWidth);
+                ImGui::InputInt("##SourceMoveIDInputInt2", &GameHook::moveIDSwapSourceMove2);
+                ImGui::PopItemWidth();
+                ImGui::SameLine();
+                if (ImGui::Button("Save Current Move ID as source ##2")) {
+                    GameHook::moveIDSwapSourceMove2 = GameHook::moveIDSwapCurrentMove;
+                }
+            }
+
+            ImGui::Separator();
+
+            ImGui::Checkbox("String Swap Test ##StringSwapTestToggle", &GameHook::stringIDSwap_toggle);
+            help_marker("Do the string you want to see, pause mid anim, hit the first button\nDo the string you want to replace, pause mid anim, hit the second button");
+            if (GameHook::stringIDSwap_toggle) {
+                ImGui::Text("Current String ID");
+                ImGui::PushItemWidth(inputItemWidth);
+                ImGui::InputInt("##CurrentStringIDInputInt", &GameHook::stringIDSwapCurrentString, 0, 0);
+                ImGui::PopItemWidth();
+
+                ImGui::Separator();
+
+                ImGui::Text("Desired String ID 1");
+                ImGui::PushItemWidth(inputItemWidth);
+                ImGui::InputInt("##DesiredStringIDInputInt1", &GameHook::stringIDSwapDesiredString1);
+                ImGui::PopItemWidth();
+                ImGui::SameLine();
+                if (ImGui::Button("Save Current String ID as desired ##1")) {
+                    GameHook::stringIDSwapDesiredString1 = GameHook::stringIDSwapCurrentString;
+                }
+                ImGui::Text("Source Anim ID 1");
+                ImGui::PushItemWidth(inputItemWidth);
+                ImGui::InputInt("##SourceStringIDInputInt1", &GameHook::stringIDSwapSourceString1);
+                ImGui::PopItemWidth();
+                ImGui::SameLine();
+                if (ImGui::Button("Save Current String ID as source ##1")) {
+                    GameHook::stringIDSwapSourceString1 = GameHook::stringIDSwapCurrentString;
+                }
+
+                ImGui::Separator();
+
+                ImGui::Text("Desired String ID 2");
+                ImGui::PushItemWidth(inputItemWidth);
+                ImGui::InputInt("##DesiredStringIDInputInt2", &GameHook::stringIDSwapDesiredString2);
+                ImGui::PopItemWidth();
+                ImGui::SameLine();
+                if (ImGui::Button("Save Current String ID as desired ##2")) {
+                    GameHook::stringIDSwapDesiredString2 = GameHook::stringIDSwapCurrentString;
+                }
+                ImGui::Text("Source Anim ID 2");
+                ImGui::PushItemWidth(inputItemWidth);
+                ImGui::InputInt("##SourceStringIDInputInt2", &GameHook::stringIDSwapSourceString2);
+                ImGui::PopItemWidth();
+                ImGui::SameLine();
+                if (ImGui::Button("Save Current String ID as source ##2")) {
+                    GameHook::stringIDSwapSourceString2 = GameHook::stringIDSwapCurrentString;
                 }
             }
 

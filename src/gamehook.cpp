@@ -348,36 +348,123 @@ static __declspec(naked) void HaloDisplayDetour(void) {
 	}
 }
 
-std::unique_ptr<FunctionHook> animSwapHook;
-uintptr_t animSwap_jmp_ret{ NULL };
-uintptr_t animSwapCharacterAddress = 0xEF5A60;
-bool GameHook::animSwap_toggle = false;
-int GameHook::animSwapCurrentAnim = 0;
-int GameHook::animSwapSourceAnim1 = -1;
-int GameHook::animSwapDesiredAnim1 = 0;
-static __declspec(naked) void AnimSwapDetour(void) {
+std::unique_ptr<FunctionHook> moveIDSwapHook;
+uintptr_t moveIDSwap_jmp_ret{ NULL };
+bool GameHook::moveIDSwap_toggle = false;
+
+int GameHook::moveIDSwapCurrentMove = 0;
+
+int GameHook::moveIDSwapSourceMove1 = -1;
+int GameHook::moveIDSwapSourceMove2 = -1;
+int GameHook::moveIDSwapDesiredMove1 = 0;
+int GameHook::moveIDSwapDesiredMove2 = 0;
+
+static __declspec(naked) void MoveIDSwapDetour(void) {
 	_asm {
-		cmp byte ptr [GameHook::animSwap_toggle], 0
+		cmp byte ptr [GameHook::moveIDSwap_toggle], 0
 		je originalcode
 
 		push eax
-		mov eax, [animSwapCharacterAddress] // only edit player anim
+		mov eax, [GameHook::playerPointerAddress] // only edit player anim
 		cmp [eax], ecx
 		pop eax
 		jne originalcode
 
-		mov [GameHook::animSwapCurrentAnim], edx
-		cmp edx, [GameHook::animSwapSourceAnim1]
+		mov [GameHook::moveIDSwapCurrentMove], edx
+		cmp edx, [GameHook::moveIDSwapSourceMove1]
 		je newMove1
+		cmp edx, [GameHook::moveIDSwapSourceMove2]
+		je newMove2
 		jmp originalcode
 
 		newMove1:
-		mov edx, [GameHook::animSwapDesiredAnim1]
+		mov edx, [GameHook::moveIDSwapDesiredMove1]
+		jmp originalcode
+
+		newMove2:
+		mov edx, [GameHook::moveIDSwapDesiredMove2]
 		jmp originalcode
 
 		originalcode:
 		mov [ecx+0x0000034C], edx
-		jmp dword ptr [animSwap_jmp_ret]
+		jmp dword ptr [moveIDSwap_jmp_ret]
+	}
+}
+
+bool GameHook::stringIDSwap_toggle = false;
+int GameHook::stringIDSwapCurrentString = 0;
+std::unique_ptr<FunctionHook> punchStringIDSwapHook;
+uintptr_t punchStringIDSwap_jmp_ret{ NULL };
+
+int GameHook::stringIDSwapSourceString1 = -1;
+int GameHook::stringIDSwapSourceString2 = -1;
+
+int GameHook::stringIDSwapDesiredString1 = 0;
+int GameHook::stringIDSwapDesiredString2 = 0;
+static __declspec(naked) void PunchStringIDSwapDetour(void) {
+	_asm {
+		cmp byte ptr [GameHook::stringIDSwap_toggle], 0
+		je originalcode
+
+		push eax
+		mov eax, [GameHook::playerPointerAddress] // only edit player anim
+		cmp [eax], esi
+		pop eax
+		jne originalcode
+
+		mov [GameHook::stringIDSwapCurrentString], edx
+		cmp edx, [GameHook::stringIDSwapSourceString1]
+		je newString1
+		cmp edx, [GameHook::stringIDSwapSourceString2]
+		je newString2
+		jmp originalcode
+
+		newString1:
+		mov edx, [GameHook::stringIDSwapDesiredString1]
+		jmp originalcode
+
+		newString2:
+		mov edx, [GameHook::stringIDSwapDesiredString2]
+		jmp originalcode
+
+		originalcode:
+		mov [esi+0x00095C64], edx
+		jmp dword ptr [punchStringIDSwap_jmp_ret]
+	}
+}
+
+std::unique_ptr<FunctionHook> kickStringIDSwapHook;
+uintptr_t kickStringIDSwap_jmp_ret{ NULL };
+static __declspec(naked) void KickStringIDSwapDetour(void) {
+	_asm {
+		cmp byte ptr [GameHook::stringIDSwap_toggle], 0
+		je originalcode
+
+		push eax
+		mov eax, [GameHook::playerPointerAddress] // only edit player anim
+		cmp [eax], esi
+		pop eax
+		jne originalcode
+
+		mov [GameHook::stringIDSwapCurrentString], edx
+		cmp edx, [GameHook::stringIDSwapSourceString1]
+		je newString1
+		cmp edx, [GameHook::stringIDSwapSourceString2]
+		je newString2
+
+		jmp originalcode
+
+		newString1:
+		mov edx, [GameHook::stringIDSwapDesiredString1]
+		jmp originalcode
+
+		newString2:
+		mov edx, [GameHook::stringIDSwapDesiredString2]
+		jmp originalcode
+
+		originalcode:
+		mov [esi+0x00095C64], edx
+		jmp dword ptr [kickStringIDSwap_jmp_ret]
 	}
 }
 
@@ -1878,7 +1965,9 @@ void GameHook::InitializeDetours(void) {
 	install_hook_absolute(0x4572B2, damageDealtMultiplierHook, &DamageDealtMultiplierDetour, &damageDealtMultiplier_jmp_ret, 8);
 	install_hook_absolute(0xA941FA, customCameraDistanceHook, &CustomCameraDistanceDetour, &customCameraDistance_jmp_ret, 6);
 	install_hook_absolute(0x4250F7, haloDisplayHook, &HaloDisplayDetour, &haloDisplay_jmp_ret, 5);
-	install_hook_absolute(0x4BD053, animSwapHook, &AnimSwapDetour, &animSwap_jmp_ret, 6);
+	install_hook_absolute(0x4BD053, moveIDSwapHook, &MoveIDSwapDetour, &moveIDSwap_jmp_ret, 6);
+	install_hook_absolute(0x8D2A82, punchStringIDSwapHook, &PunchStringIDSwapDetour, &punchStringIDSwap_jmp_ret, 6);
+	install_hook_absolute(0x8D2AE5, kickStringIDSwapHook, &KickStringIDSwapDetour, &kickStringIDSwap_jmp_ret, 6);
 	install_hook_absolute(0x411CD4, inputIconsHook, &InputIconsDetour, &inputIcons_jmp_ret, 13);
 	install_hook_absolute(0x4A8EFF, easierMashHook, &EasierMashDetour, &easierMash_jmp_ret, 5);
 	install_hook_absolute(0x41C8B5, initialAngelSlayerFloorHook, &InitialAngelSlayerFloorDetour, &initialAngelSlayerFloor_jmp_ret, 10);
