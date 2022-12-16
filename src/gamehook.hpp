@@ -33,6 +33,7 @@ public:
 	static bool infBirdTime_toggle;
 	static bool weaponSwapOffset_toggle;
 	static bool retainPillowTalkCharge_toggle;
+	static bool swapMashToHold_toggle;
 	// patch functions
 	static void TakeNoDamage(bool enabled);
 	static void DisableKilling(bool enabled);
@@ -57,6 +58,7 @@ public:
 	static void InfBirdTime(bool enabled);
 	static void WeaponSwapOffset(bool enabled);
 	static void RetainPillowTalkCharge(bool enabled);
+	static void SwapMashToHold(bool enabled);
 
 	static void WeaponSwapCaller(void);
 	static void SaveStates_SaveState();

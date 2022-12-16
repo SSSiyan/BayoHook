@@ -23,10 +23,16 @@ void GameHook::FocusPatch(bool enabled) {
 
 bool GameHook::infJumps_toggle = false;
 void GameHook::InfJumps(bool enabled) {
-	if (enabled) 
-		GameHook::_nop((char*)(0x9E8906), 6);
-	else
-		GameHook::_patch((char*)(0x9E8906), (char*)"\x01\xAE\x78\x35\x09\x00", 6);
+	if (enabled) {
+		GameHook::_nop((char*)(0x9E8906), 6); // jumps
+		GameHook::_nop((char*)(0x9A120F), 6); // bird jumps
+		GameHook::_nop((char*)(0x9E8D8D), 6); // wall jumps
+	}
+	else {
+		GameHook::_patch((char*)(0x9E8906), (char*)"\x01\xAE\x78\x35\x09\x00", 6); // jumps
+		GameHook::_patch((char*)(0x9A120F), (char*)"\xFF\x86\x78\x35\x09\x00", 6); // bird jumps
+		GameHook::_patch((char*)(0x9E8D8D), (char*)"\x89\xBE\x90\x35\x09\x00", 6); // wall jumps
+	}
 }
 
 bool GameHook::disableClicking_toggle = false;
@@ -223,6 +229,15 @@ void GameHook::RetainPillowTalkCharge (bool enabled) {
 	}
 }
 
+bool GameHook::swapMashToHold_toggle = false;
+void GameHook::SwapMashToHold (bool enabled) {
+	if (enabled) {
+		GameHook::_nop((char*)(0x9D80DA), 2);
+	}
+	else {
+		GameHook::_patch((char*)(0x9D80DA), (char*)"\x74\x4E", 2);
+	}
+}
 
 
 // detours
@@ -2057,6 +2072,8 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	WeaponSwapOffset(weaponSwapOffset_toggle);
 	retainPillowTalkCharge_toggle = cfg.get<bool>("RetainPillowTalkChargeToggle").value_or(false);
 	RetainPillowTalkCharge(retainPillowTalkCharge_toggle);
+	swapMashToHold_toggle = cfg.get<bool>("SwapMashToHoldToggle").value_or(false);
+	SwapMashToHold(swapMashToHold_toggle);
 	//areaJumpPatch_toggle = cfg.get<bool>("AreaJumpPatchToggle").value_or(false);
 	//AreaJumpPatch(areaJumpPatch_toggle);
 
@@ -2115,6 +2132,7 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("InfBirdTimeToggle", infBirdTime_toggle);
 	cfg.set<bool>("WeaponSwapOffsetToggle", weaponSwapOffset_toggle);
 	cfg.set<bool>("RetainPillowTalkChargeToggle", retainPillowTalkCharge_toggle);
+	cfg.set<bool>("SwapMashToHoldToggle", swapMashToHold_toggle);
 
 	//cfg.set<bool>("AreaJumpPatchToggle", areaJumpPatch_toggle);
 	// detours

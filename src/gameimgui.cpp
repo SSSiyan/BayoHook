@@ -244,6 +244,11 @@ void GameHook::GameImGui(void) {
             }
             help_marker("When swapping weaponset, remember pillow talk charge");
 
+            if (ImGui::Checkbox("Swap Mashes To Holds", &GameHook::swapMashToHold_toggle)) {
+                SwapMashToHold(swapMashToHold_toggle);
+            }
+            help_marker("Swap mash inputs such as those used on Odette to hold inputs");
+            ImGui::SameLine(sameLineWidth);
             if (ImGui::Checkbox("Always Walk On Walls", &GameHook::alwaysWalkOnWalls_toggle)) {
                 AlwaysWalkOnWalls(alwaysWalkOnWalls_toggle);
             }
@@ -682,6 +687,23 @@ void GameHook::GameImGui(void) {
                 GameHook::AreaJumpPatch(GameHook::areaJumpPatch_toggle);
             }
             help_marker("Sometimes the area jump ID gets reset, presumably to correct it if you input something out of bounds. This removes that.");
+
+            uintptr_t actorPlayable = *(uintptr_t*)GameHook::playerPointerAddress;
+            if (actorPlayable) {
+                float* playerXYZPos[3];
+                playerXYZPos[0] = (float*)(actorPlayable + 0xD0);
+                playerXYZPos[1] = (float*)(actorPlayable + 0xD4);
+                playerXYZPos[2] = (float*)(actorPlayable + 0xD8);
+
+                ImGui::Separator();
+                ImGui::Text("Player Position");
+                ImGui::InputFloat3("##PlayerPositionInputFloat3", *playerXYZPos);
+                if (ImGui::Button("Teleport to 0, 0, 0")) {
+                    *playerXYZPos[0] = 0.0f;
+                    *playerXYZPos[1] = 0.0f;
+                    *playerXYZPos[2] = 0.0f;
+                }
+            }
 
             GameHook::windowHeightHack = std::clamp(ImGui::GetCursorPosY() + GameHook::windowHeightBorder, 0.0f, GameHook::maxWindowHeight);
             ImGui::EndChild();
