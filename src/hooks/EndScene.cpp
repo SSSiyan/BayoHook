@@ -81,7 +81,8 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
 	}
 		
 	ImGui::SetNextWindowPos(ImVec2(0, 0)), ImGuiCond_Always;
-	ImGui::SetNextWindowSize(ImVec2(30.0f * ImGui::GetFontSize(), 30.0f * ImGui::GetFontSize())), ImGuiCond_Always; // 450, 500
+	//ImGui::SetNextWindowSize(ImVec2(30.0f * ImGui::GetFontSize(), 30.0f * ImGui::GetFontSize())), ImGuiCond_Always; // 450, 500
+	ImGui::SetNextWindowSize(ImVec2(40.0f * ImGui::GetFontSize(), GameHook::windowHeightHack)), ImGuiCond_Always; // 450, 500
     static bool HasDoneOnceMenuOn = false;
     static bool HasDoneOnceMenuOff = false;
 	if (Data::ShowMenu) {
