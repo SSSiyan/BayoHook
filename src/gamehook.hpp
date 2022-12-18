@@ -7,6 +7,7 @@
 #include "libmem++/libmem.hpp"
 #include "MinHook/include/MinHook.h"
 #include "../utils/FunctionHook.hpp"
+#include "imgui/imgui.h"
 
 class GameHook {
 public:
@@ -114,7 +115,6 @@ public:
 	static char getMotName_weaponMotString[0x128];
 	static char getMotName_playerMotString[0x128];
 
-	// update
 	static bool saveStatesHotkeys_toggle;
 	static int saveStates_SavedEnemyMoveID;
 	static float saveStates_SavedEnemyXYZPos[3];
@@ -145,8 +145,10 @@ public:
 	// imgui
 	static float windowHeightHack;
 	static float maxWindowHeight;
-	static float windowHeightBorder;
 	static float windowWidth;
+	static float windowHeightBorder;
+	static float inputItemWidth;
+	static float sameLineWidth;
 	static float windowScalingFactor;
 	static void GameImGui(void);
 	static bool showMessages_toggle;
@@ -155,10 +157,13 @@ public:
 	static float comboUI_Y;
 	static void BackgroundImGui(void);
 	static void ImGuiStyle(void);
+	static void help_marker(const char* desc);
+	static inline void under_line(const ImColor& col);
 	static const char* WeaponNames(int weaponID);
 	static const char* CostumeNames(int costumeID);
 	static const char* AccessoryNames(int accessoryID);
 	static const char* GetInputTypeName(int inputID);
+	static int messageTimer;
 	static int showMessageTimerF1;
 	static int showMessageTimerF2;
 	static int showMessageTimerF3;

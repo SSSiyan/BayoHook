@@ -5,12 +5,19 @@
 #include <algorithm>
 
 // system
-static float inputItemWidth = 100.0f;
-static float sameLineWidth = GameHook::windowWidth * 0.5;
-bool GameHook::showMessages_toggle(false);
-bool GameHook::showComboUI_toggle(false);
-float GameHook::comboUI_X(0.0f);
-float GameHook::comboUI_Y(0.0f);
+float GameHook::windowWidth = 0.0f;
+float GameHook::windowHeightHack = 0.0f;
+float GameHook::windowHeightBorder = 0.0f;
+float GameHook::inputItemWidth = 0.0f;
+float GameHook::sameLineWidth = 0.0f;
+float GameHook::windowScalingFactor = 1.0f;
+
+float GameHook::maxWindowHeight = 0.0f;
+
+float GameHook::comboUI_X = 0.0f;
+float GameHook::comboUI_Y = 0.0f;
+bool GameHook::showMessages_toggle = false;
+bool GameHook::showComboUI_toggle = false;
 int GameHook::showMessageTimerF1 = 0;
 int GameHook::showMessageTimerF2 = 0;
 int GameHook::showMessageTimerF3 = 0;
@@ -38,25 +45,6 @@ uintptr_t GameHook::WeaponA2Address = 0x5AA7420;
 uintptr_t GameHook::WeaponB1Address = 0x5AA742C;
 uintptr_t GameHook::WeaponB2Address = 0x5AA7430;
 
-void help_marker(const char* desc) {
-    ImGui::SameLine();
-    ImGui::TextDisabled("(?)");
-    if (ImGui::IsItemHovered()) {
-        ImGui::BeginTooltip();
-        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
-        ImGui::TextUnformatted(desc);
-        ImGui::PopTextWrapPos();
-        ImGui::EndTooltip();
-    }
-}
-
-inline void under_line(const ImColor& col) {
-    ImVec2 min = ImGui::GetItemRectMin();
-ImVec2 max = ImGui::GetItemRectMax();
-min.y = max.y;
-ImGui::GetWindowDrawList()->AddLine(min, max, col, 1.0f);
-}
-
 void GameHook::GameImGui(void) {
     int& halosValue = *(int*)GameHook::halosAddress;
     int& chaptersPlayedValue = *(int*)GameHook::chaptersPlayedAddress;
@@ -73,6 +61,12 @@ void GameHook::GameImGui(void) {
     int& weaponA2Value = *(int*)GameHook::WeaponA2Address;
     int& weaponB1Value = *(int*)GameHook::WeaponB1Address;
     int& weaponB2Value = *(int*)GameHook::WeaponB2Address;
+
+    GameHook::windowWidth = 40.0f * ImGui::GetFontSize();
+    GameHook::sameLineWidth = windowWidth * 0.5f;
+    GameHook::inputItemWidth = windowWidth * 0.2f;
+    GameHook::maxWindowHeight = ImGui::GetIO().DisplaySize.y * 0.9f;
+    GameHook::windowHeightBorder = ImGui::GetFontSize() * 6.0f;
 
     if (ImGui::Button("Save config")) {
         GameHook::onConfigSave(GameHook::cfg);
@@ -954,6 +948,25 @@ void GameHook::ImGuiStyle(void) {
     colors[ImGuiCol_NavWindowingHighlight] = ImVec4(1.00f, 1.00f, 1.00f, 0.70f);
     colors[ImGuiCol_NavWindowingDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 0.20f);
     colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.4588f, 0.45880f, 0.4588f, 0.35f);
+}
+
+void GameHook::help_marker(const char* desc) {
+    ImGui::SameLine();
+    ImGui::TextDisabled("(?)");
+    if (ImGui::IsItemHovered()) {
+        ImGui::BeginTooltip();
+        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+        ImGui::TextUnformatted(desc);
+        ImGui::PopTextWrapPos();
+        ImGui::EndTooltip();
+    }
+}
+
+void GameHook::under_line(const ImColor& col) {
+    ImVec2 min = ImGui::GetItemRectMin();
+    ImVec2 max = ImGui::GetItemRectMax();
+    min.y = max.y;
+    ImGui::GetWindowDrawList()->AddLine(min, max, col, 1.0f);
 }
 
 const char* GameHook::WeaponNames(int weaponID) {

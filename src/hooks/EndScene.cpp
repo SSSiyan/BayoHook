@@ -2,11 +2,6 @@
 #include <base.h>
 #include "gamehook.hpp"
 #include <array>
-float GameHook::windowHeightHack = 0.0f;
-float GameHook::maxWindowHeight = 0.0f;
-float GameHook::windowHeightBorder = 0.0f;
-float GameHook::windowWidth = 500.0f;
-float GameHook::windowScalingFactor = 1.0f;
 
 HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
 {
@@ -50,10 +45,6 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
 
 	if (!Data::InitImGui) return Data::oEndScene(pDevice);
 
-	GameHook::maxWindowHeight = ImGui::GetIO().DisplaySize.y * 0.9f;
-	//GameHook::windowHeightBorder = ImGui::GetIO().DisplaySize.y * 0.08f;
-	GameHook::windowHeightBorder = 100.0f;
-
 	ImGui_ImplDX9_NewFrame();
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
@@ -81,31 +72,12 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
 	}
 		
 	ImGui::SetNextWindowPos(ImVec2(0, 0)), ImGuiCond_Always;
-	//ImGui::SetNextWindowSize(ImVec2(30.0f * ImGui::GetFontSize(), 30.0f * ImGui::GetFontSize())), ImGuiCond_Always; // 450, 500
-	ImGui::SetNextWindowSize(ImVec2(40.0f * ImGui::GetFontSize(), GameHook::windowHeightHack)), ImGuiCond_Always; // 450, 500
-    static bool HasDoneOnceMenuOn = false;
-    static bool HasDoneOnceMenuOff = false;
+	ImGui::SetNextWindowSize(ImVec2(GameHook::windowWidth, GameHook::windowHeightHack)), ImGuiCond_Always;
 	if (Data::ShowMenu) {
-        HasDoneOnceMenuOff = false;
-        if (HasDoneOnceMenuOn == false) {
-            ImGui::GetIO().MouseDrawCursor = true;
-            GameHook::disableClicking_toggle = true; // bayo
-            GameHook::DisableClicking(GameHook::disableClicking_toggle); // bayo
-            HasDoneOnceMenuOn = true;
-        }
 		ImGui::Begin(GameHook::dllName, NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
         GameHook::GameImGui();
 		ImGui::End();
 	}
-    else {
-        HasDoneOnceMenuOn = false;
-        if (HasDoneOnceMenuOff == false) {
-            ImGui::GetIO().MouseDrawCursor = false;
-            GameHook::disableClicking_toggle = false; // bayo
-            GameHook::DisableClicking(GameHook::disableClicking_toggle); // bayo
-            HasDoneOnceMenuOff = true;
-        }
-    }
 
 	ImGui::EndFrame();
 	ImGui::Render();
