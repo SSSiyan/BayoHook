@@ -25,6 +25,7 @@ bool              Base::Data::InitImGui  = false;
 
 bool Base::Init()
 {
+	ImGui_ImplWin32_EnableDpiAwareness();
 	Hooks::Init();
 	return true;
 }
