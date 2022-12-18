@@ -6,6 +6,7 @@ float GameHook::windowHeightHack = 0.0f;
 float GameHook::maxWindowHeight = 0.0f;
 float GameHook::windowHeightBorder = 0.0f;
 float GameHook::windowWidth = 500.0f;
+float GameHook::windowScalingFactor = 1.0f;
 
 HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
 {
@@ -25,10 +26,23 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
         pDevice->GetCreationParameters(&deviceParams);
 
 		Data::oWndProc = (WndProc_t)SetWindowLongPtr(deviceParams.hFocusWindow, WNDPROC_INDEX, (LONG_PTR)Hooks::WndProc);
+		
+		RECT rect;
+		::GetClientRect(deviceParams.hFocusWindow, &rect);
+		int height = rect.bottom - rect.top;
 
 		ImGui_ImplWin32_Init(deviceParams.hFocusWindow);
 		ImGui_ImplDX9_Init(pDevice);
 		Data::InitImGui = true;
+		float y_factor = ((float)height/720.0f) * GameHook::windowScalingFactor;
+		float dpi = ImGui_ImplWin32_GetDpiScaleForHwnd(deviceParams.hFocusWindow);
+		
+		static ImFontConfig cfg;
+		cfg.OversampleH = 2;
+		cfg.OversampleV = 1;
+		cfg.SizePixels = std::roundf(13.0f * y_factor * dpi);
+		io.Fonts->AddFontDefault(&cfg);
+		ImGui::GetStyle().ScaleAllSizes(y_factor * dpi);
 
         GameHook::InitializeDetours();
 		GameHook::onConfigLoad(GameHook::cfg);
@@ -67,7 +81,7 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
 	}
 		
 	ImGui::SetNextWindowPos(ImVec2(0, 0)), ImGuiCond_Always;
-	ImGui::SetNextWindowSize(ImVec2(GameHook::windowWidth, GameHook::windowHeightHack)), ImGuiCond_Always; // 450, 500
+	ImGui::SetNextWindowSize(ImVec2(30.0f * ImGui::GetFontSize(), 30.0f * ImGui::GetFontSize())), ImGuiCond_Always; // 450, 500
     static bool HasDoneOnceMenuOn = false;
     static bool HasDoneOnceMenuOff = false;
 	if (Data::ShowMenu) {
@@ -97,5 +111,5 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
 	ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
 	if(Data::ToDetach)
 		Base::Detach();
-	return Data::oEndScene(pDevice);
+	return pDevice->EndScene();
 }

@@ -43,6 +43,11 @@ namespace Base
 
 	namespace Hooks
 	{
+		// NOTE(): error C4430: missing type specifier - int assumed.
+		// screw this i'll just keep it in hooks.cpp.
+		// intellisense cheated me again
+		//FunctionHook* EndSceneHook{ nullptr };
+		//uintptr_t EndSceneCall = 0x0C53E2E; // absolute address
 		bool Init();
 		bool Shutdown();
 		HRESULT __stdcall EndScene(LPDIRECT3DDEVICE9 pDevice);

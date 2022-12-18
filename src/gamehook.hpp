@@ -147,6 +147,7 @@ public:
 	static float maxWindowHeight;
 	static float windowHeightBorder;
 	static float windowWidth;
+	static float windowScalingFactor;
 	static void GameImGui(void);
 	static bool showMessages_toggle;
 	static bool showComboUI_toggle;
