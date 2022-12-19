@@ -97,6 +97,14 @@ public:
 	static int stringIDSwapDesiredString1;
 	static int stringIDSwapDesiredString2;
 	//
+	static bool comboMakerTest1;
+	static int comboMakerMoveID1;
+	static int comboMakerMovePart1;
+	static int comboMakerStringID1;
+	static bool comboMakerTest2;
+	static int comboMakerMoveID2;
+	static int comboMakerMovePart2;
+	static int comboMakerStringID2;
 	static bool easierMash_toggle;
 	static int initialAngelSlayerFloor;
 	static bool cancellableAfterBurner_toggle;
@@ -150,6 +158,7 @@ public:
 	static float inputItemWidth;
 	static float sameLineWidth;
 	static float windowScalingFactor;
+	static void GameTick(void);
 	static void GameImGui(void);
 	static bool showMessages_toggle;
 	static bool showComboUI_toggle;

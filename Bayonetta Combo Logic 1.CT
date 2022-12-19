@@ -1,0 +1,400 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CheatTable CheatEngineTableVersion="34">
+  <CheatEntries>
+    <CheatEntry>
+      <ID>1480</ID>
+      <Description>"Combo Maker"</Description>
+      <LastState/>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>// Siyan's assembly 101:
+  //if statements:
+    // cmp = compare
+    // je = jump if equal
+    // jne = jump if not equal
+    // jmp = jump (always jump no matter the result of the comparison)
+
+  // comparing / writing data:
+    // # = decimal. By default cheat engine assumes hex, so we specify decimal every time with #
+    // esi = player. e.g. moveID is at player+34C [esi+34C]
+    // mov = move. Use this to write data, e.g. "mov [esi+95CBC],#1" to write 1 to string ID
+    // data types: if you're writing to a float, type (float) before your number instead of #
+
+  // backing up / restoring registers (you shouldn't need this often, most things are a direct offset from the player)
+    // push xxx = back up a register
+    // pop xxx = restore the regsiter
+    // ensure any time a push is hit, a pop will also be hit.
+
+  // other notes
+      // some values are written on tick, and so we can't override them this easily.
+        // For example, whip mode is written on tick until a combo starts.
+
+[ENABLE]
+aobscanmodule(ComboMaker1,Bayonetta.exe,83 BE 64 5C 09 00 00 75 0A) // should be unique
+alloc(newmem,$1000)
+label(originalcode)
+label(return)
+
+newmem:
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+originalcode:
+  cmp dword ptr [esi+00095C64],00
+  jmp return
+
+ComboMaker1:
+  jmp newmem
+  nop 2
+return:
+registersymbol(ComboMaker1)
+
+[DISABLE]
+ComboMaker1:
+  db 83 BE 64 5C 09 00 00
+unregistersymbol(ComboMaker1)
+dealloc(newmem)
+</AssemblerScript>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>1453</ID>
+      <Description>"Combo Maker Examples"</Description>
+      <LastState/>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>// Siyan's assembly 101:
+  //if statements:
+    // cmp = compare
+    // je = jump if equal
+    // jne = jump if not equal
+    // jmp = jump (always jump no matter the result of the comparison)
+
+  // comparing / writing data:
+    // # = decimal. By default cheat engine assumes hex, so we specify decimal every time with #
+    // esi = player. e.g. moveID is at player+34C [esi+34C]
+      // find these offsets by looking in the main Cheat Engine screen.
+    // mov = move. Use this to write data, e.g. "mov [esi+95CBC],#1" to write 1 to string ID
+    // data types: if you're writing to a float, type (float) before your number instead of #
+
+  // backing up / restoring registers (you shouldn't need this often, most things are a direct offset from the player)
+    // push xxx = back up a register
+    // pop xxx = restore the regsiter
+    // ensure any time a push is hit, a pop will also be hit.
+
+  // other notes
+      // some values are written on tick, and so we can't override them this easily.
+        // For example, whip mode is written on tick until a combo starts.
+
+[ENABLE]
+aobscanmodule(ComboMaker1,Bayonetta.exe,83 BE 64 5C 09 00 00 75 0A) // should be unique
+alloc(newmem,$1000)
+label(originalcode)
+label(return)
+
+newmem:
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  // this example compares a moveID, then how far you are into a string. If both are correct, replace the stringID.
+  newCombo1:
+    cmp [esi+34C],#55 // compare moveID (Scarborough grounded P string)
+    jne newCombo2 // if incorrect moveID, check for next combo
+    cmp [esi+95CBC],#1 // Number In String
+    jne newCombo2 // if incorrect number in string, check for next combo
+    mov [esi+95C64],#10 // write stringID
+    jmp newCombo2 // replaced stringID, jump to originalcode
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  // this example compares your current weapon, then a moveID. If both are correct, charge Pillowtalk.
+  newCombo2:
+    cmp [Bayonetta.exe+56A744C],0 // compare weaponset for weaponset A
+    je newCombo2CheckWeaponsetA // if yes, check weaponset A hand
+    jmp newCombo2CheckWeaponsetB // else, check weaponset B hand
+
+    newCombo2CheckWeaponsetA:
+      cmp [05AA741C],#16 // hand slot A, check for pillowtalk
+      je newCombo2CheckCorrectWeapon // correct weapon
+      jmp newCombo3 // incorrect weapon
+    newCombo2CheckWeaponsetB:
+      cmp [05AA742C],#16 // hand slot B, check for pillowtalk
+      je newCombo2CheckCorrectWeapon // correct weapon
+      jmp newCombo3 // incorrect weapon
+
+    newCombo2CheckCorrectWeapon:
+      cmp [esi+34C],#106 // Move ID (last punch in PKP with swords)
+      jne originalcode
+      push eax // back up eax before we put something else in it
+      mov eax,[esi+5BC0] // put pillowtalk pointer in eax
+      mov [eax+332C],(float)100 // charge pillowtalk, 300 is default
+      pop eax // restore eax
+      jmp originalcode
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  newCombo3:
+  jmp originalcode
+
+originalcode:
+  cmp dword ptr [esi+00095C64],00
+  jmp return
+
+ComboMaker1:
+  jmp newmem
+  nop 2
+return:
+registersymbol(ComboMaker1)
+
+[DISABLE]
+ComboMaker1:
+  db 83 BE 64 5C 09 00 00
+unregistersymbol(ComboMaker1)
+dealloc(newmem)
+</AssemblerScript>
+      <CheatEntries>
+        <CheatEntry>
+          <ID>1454</ID>
+          <Description>"+0 Base"</Description>
+          <ShowAsSigned>0</ShowAsSigned>
+          <VariableType>4 Bytes</VariableType>
+          <Address>Bayonetta.exe+AF5A60</Address>
+          <Offsets>
+            <Offset>0</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>1481</ID>
+          <Description>"+34C MoveID"</Description>
+          <ShowAsSigned>0</ShowAsSigned>
+          <VariableType>4 Bytes</VariableType>
+          <Address>Bayonetta.exe+AF5A60</Address>
+          <Offsets>
+            <Offset>34C</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>1456</ID>
+          <Description>"+350 Move Part"</Description>
+          <ShowAsSigned>0</ShowAsSigned>
+          <VariableType>4 Bytes</VariableType>
+          <Address>Bayonetta.exe+AF5A60</Address>
+          <Offsets>
+            <Offset>350</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>1458</ID>
+          <Description>"+3E4 Anim Frame"</Description>
+          <ShowAsSigned>0</ShowAsSigned>
+          <VariableType>Float</VariableType>
+          <Address>Bayonetta.exe+AF5A60</Address>
+          <Offsets>
+            <Offset>3E4</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>1478</ID>
+          <Description>"+730 remaining iframes"</Description>
+          <ShowAsSigned>0</ShowAsSigned>
+          <VariableType>Float</VariableType>
+          <Address>Bayonetta.exe+AF5A60</Address>
+          <Offsets>
+            <Offset>730</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>1459</ID>
+          <Description>"+5BC0 Pillowtalk?"</Description>
+          <ShowAsHex>1</ShowAsHex>
+          <ShowAsSigned>0</ShowAsSigned>
+          <VariableType>4 Bytes</VariableType>
+          <Address>Bayonetta.exe+AF5A60</Address>
+          <Offsets>
+            <Offset>5BC0</Offset>
+          </Offsets>
+          <CheatEntries>
+            <CheatEntry>
+              <ID>1462</ID>
+              <Description>"+332C Remaining Buff Duration"</Description>
+              <ShowAsSigned>0</ShowAsSigned>
+              <VariableType>Float</VariableType>
+              <Address>Bayonetta.exe+AF5A60</Address>
+              <Offsets>
+                <Offset>332C</Offset>
+                <Offset>5BC0</Offset>
+              </Offsets>
+            </CheatEntry>
+          </CheatEntries>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>1479</ID>
+          <Description>"+93508 playerHP"</Description>
+          <ShowAsSigned>0</ShowAsSigned>
+          <VariableType>4 Bytes</VariableType>
+          <Address>Bayonetta.exe+AF5A60</Address>
+          <Offsets>
+            <Offset>93508</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>1465</ID>
+          <Description>"+95CBC Number In String"</Description>
+          <ShowAsSigned>0</ShowAsSigned>
+          <VariableType>Float</VariableType>
+          <Address>Bayonetta.exe+AF5A60</Address>
+          <Offsets>
+            <Offset>95CBC</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>1472</ID>
+          <Description>"+93578 playerJumpCount"</Description>
+          <ShowAsSigned>0</ShowAsSigned>
+          <VariableType>4 Bytes</VariableType>
+          <Address>Bayonetta.exe+AF5A60</Address>
+          <Offsets>
+            <Offset>93578</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>1473</ID>
+          <Description>"+93578 playerWalljumpCount"</Description>
+          <ShowAsSigned>0</ShowAsSigned>
+          <VariableType>4 Bytes</VariableType>
+          <Address>Bayonetta.exe+AF5A60</Address>
+          <Offsets>
+            <Offset>93590</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>1474</ID>
+          <Description>"+9358C playerDivekickCount"</Description>
+          <ShowAsSigned>0</ShowAsSigned>
+          <VariableType>4 Bytes</VariableType>
+          <Address>Bayonetta.exe+AF5A60</Address>
+          <Offsets>
+            <Offset>9358C</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>1475</ID>
+          <Description>"+95C8C Whip mode"</Description>
+          <DropDownList DisplayValueAsItem="1">0:Whip
+1:Slap
+</DropDownList>
+          <ShowAsSigned>0</ShowAsSigned>
+          <VariableType>4 Bytes</VariableType>
+          <Address>Bayonetta.exe+AF5A60</Address>
+          <Offsets>
+            <Offset>95C8C</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>1466</ID>
+          <Description>"[Static] Weaponset A Hand"</Description>
+          <DropDownList DisplayValueAsItem="1">0:Scarborough Fair
+1:Onyx Roses
+2:Shuraba
+3:Kulshedra
+6:Durga
+7:Lt. Col. Kilgore
+8:Odette
+9:Sai Fung
+10:Handguns Again
+11:Handguns
+13:Onyx Roses Alt
+14:Durga Alt
+15:Lt. Col. Kilgore Alt
+16:Pillowtalk
+17:Bazillions
+18:Rodin
+</DropDownList>
+          <ShowAsSigned>0</ShowAsSigned>
+          <VariableType>4 Bytes</VariableType>
+          <Address>05AA741C</Address>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>1467</ID>
+          <Description>"[Static] Weaponset A Foot"</Description>
+          <DropDownList DisplayValueAsItem="1">0:Scarborough Fair
+1:Onyx Roses
+2:Shuraba
+3:Kulshedra
+6:Durga
+7:Lt. Col. Kilgore
+8:Odette
+9:Sai Fung
+10:Handguns Again
+11:Handguns
+13:Onyx Roses Alt
+14:Durga Alt
+15:Lt. Col. Kilgore Alt
+16:Pillowtalk
+17:Bazillions
+18:Rodin
+</DropDownList>
+          <ShowAsSigned>0</ShowAsSigned>
+          <VariableType>4 Bytes</VariableType>
+          <Address>05AA7420</Address>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>1468</ID>
+          <Description>"[Static] Weaponset B Hand"</Description>
+          <DropDownList DisplayValueAsItem="1">0:Scarborough Fair
+1:Onyx Roses
+2:Shuraba
+3:Kulshedra
+6:Durga
+7:Lt. Col. Kilgore
+8:Odette
+9:Sai Fung
+10:Handguns Again
+11:Handguns
+13:Onyx Roses Alt
+14:Durga Alt
+15:Lt. Col. Kilgore Alt
+16:Pillowtalk
+17:Bazillions
+18:Rodin
+</DropDownList>
+          <ShowAsSigned>0</ShowAsSigned>
+          <VariableType>4 Bytes</VariableType>
+          <Address>05AA742C</Address>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>1469</ID>
+          <Description>"[Static] Weaponset B Foot"</Description>
+          <DropDownList DisplayValueAsItem="1">0:Scarborough Fair
+1:Onyx Roses
+2:Shuraba
+3:Kulshedra
+6:Durga
+7:Lt. Col. Kilgore
+8:Odette
+9:Sai Fung
+10:Handguns Again
+11:Handguns
+13:Onyx Roses Alt
+14:Durga Alt
+15:Lt. Col. Kilgore Alt
+16:Pillowtalk
+17:Bazillions
+18:Rodin
+</DropDownList>
+          <ShowAsSigned>0</ShowAsSigned>
+          <VariableType>4 Bytes</VariableType>
+          <Address>05AA7430</Address>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>1470</ID>
+          <Description>"[Static] Weaponset"</Description>
+          <DropDownList DisplayValueAsItem="1">0:A
+1:B
+</DropDownList>
+          <VariableType>4 Bytes</VariableType>
+          <Address>Bayonetta.exe+56A744C</Address>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>1476</ID>
+          <Description>"[Static] playerMP"</Description>
+          <ShowAsSigned>0</ShowAsSigned>
+          <VariableType>Float</VariableType>
+          <Address>Bayonetta.exe+5697ED0+F5DC</Address>
+        </CheatEntry>
+      </CheatEntries>
+    </CheatEntry>
+  </CheatEntries>
+  <UserdefinedSymbols/>
+</CheatTable>

@@ -2173,6 +2173,16 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	loadReplace_toggle = cfg.get<bool>("LoadReplaceToggle").value_or(false);
 	longerPillowTalkCharge_toggle = cfg.get<bool>("LongerPillowTalkCharge").value_or(false);
 	saveStatesHotkeys_toggle = cfg.get<bool>("SaveStatesHotkeysToggle").value_or(false);
+
+	//tick
+	/*comboMakerTest1 = cfg.get<bool>("ComboMakerTest1Toggle").value_or(false);
+	comboMakerMoveID1 = cfg.get<int>("ComboMakerMoveID1").value_or(-1);
+	comboMakerMovePart1 = cfg.get<int>("ComboMakerMovePart1").value_or(-1);
+	comboMakerStringID1 = cfg.get<int>("ComboMakerStringID1").value_or(-1);
+	comboMakerTest2 = cfg.get<bool>("ComboMakerTest2Toggle").value_or(false);
+	comboMakerMoveID2 = cfg.get<int>("ComboMakerMoveID2").value_or(-1);
+	comboMakerMovePart2 = cfg.get<int>("ComboMakerMovePart2").value_or(-1);
+	comboMakerStringID2 = cfg.get<int>("ComboMakerStringID2").value_or(-1);*/
 }
 
 void GameHook::onConfigSave(utils::Config& cfg) {
@@ -2230,6 +2240,16 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("LoadReplaceToggle", loadReplace_toggle);
 	cfg.set<bool>("LongerPillowTalkCharge", longerPillowTalkCharge_toggle);
 	cfg.set<bool>("SaveStatesHotkeysToggle", saveStatesHotkeys_toggle);
+
+	//tick
+	/*cfg.set<bool>("ComboMakerTest1Toggle", comboMakerTest1);
+	cfg.set<int>("ComboMakerMoveID1", comboMakerMoveID1);
+	cfg.set<int>("ComboMakerMovePart1", comboMakerMovePart1);
+	cfg.set<int>("ComboMakerStringID1", comboMakerStringID1);
+	cfg.set<bool>("ComboMakerTest2Toggle", comboMakerTest2);
+	cfg.set<int>("ComboMakerMoveID2", comboMakerMoveID2);
+	cfg.set<int>("ComboMakerMovePart2", comboMakerMovePart2);
+	cfg.set<int>("ComboMakerStringID2", comboMakerStringID2);*/
 
 	cfg.save(GameHook::cfgString);
 }
