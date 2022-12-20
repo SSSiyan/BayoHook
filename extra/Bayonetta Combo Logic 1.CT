@@ -6,8 +6,8 @@
       <Description>"Combo Maker"</Description>
       <LastState/>
       <VariableType>Auto Assembler Script</VariableType>
-      <AssemblerScript>// An easy way to use this file is to hit "copy raw contents" at the top right of the github screen, open Cheat Engine and hit ctrl v.
-        // Siyan's assembly 101:
+      <AssemblerScript>// An easy way to download this file is to hit "copy raw contents" at the top right of the github screen, open Cheat Engine and hit ctrl v.
+// Siyan's assembly 101:
   //if statements:
     // cmp = compare
     // je = jump if equal
