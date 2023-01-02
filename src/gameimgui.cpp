@@ -202,6 +202,43 @@ void GameHook::GameImGui(void) {
 
             ImGui::Separator();
 
+            ImGui::Text("Character");
+            help_marker("Set while in costume select\nIf your game freezes at the end of a fight, flick the value back to default");
+            ImGui::PushItemWidth(inputItemWidth);
+            ImGui::InputInt("##CharacterSelectInputInt", &currentCharacterValue, 1, 100);
+            ImGui::PopItemWidth();
+            ImGui::SameLine();
+            switch (currentCharacterValue) {
+            case 0:
+                ImGui::Text("Bayonetta");
+                break;
+            case 1:
+                ImGui::Text("Jeanne");
+                break;
+            default:
+                ImGui::Text("");
+                break;
+            }
+
+            ImGui::Text("Costume");
+            help_marker("Set while in mission select");
+            ImGui::PushItemWidth(inputItemWidth);
+            ImGui::InputInt("##CostumeSelectInputInt", &currentCostumeValue, 1, 100);
+            ImGui::PopItemWidth();
+            ImGui::SameLine();
+            ImGui::Text(GameHook::CostumeNames(currentCostumeValue));
+
+            ImGui::Separator();
+
+            ImGui::Text("Third Accessory");
+            ImGui::PushItemWidth(inputItemWidth);
+            ImGui::InputInt("##ThirdAccessoryInputInt", &thirdAccessoryValue, 1, 100);
+            ImGui::PopItemWidth();
+            ImGui::SameLine();
+            ImGui::Text(GameHook::AccessoryNames(thirdAccessoryValue));
+
+            ImGui::Separator();
+
             ImGui::Text("Initial Angel Slayer Floor");
             help_marker("0 = floor 1. Set before starting Angel Slayer.");
             ImGui::PushItemWidth(inputItemWidth);
@@ -414,39 +451,6 @@ void GameHook::GameImGui(void) {
                 ImGui::InputFloat("##ComboMultiplierInputFloat", &comboMultiplierValue, 1, 10, "%.1f");
                 ImGui::PopItemWidth();
 
-                ImGui::Text("Character");
-                help_marker("Set while in costume select\nIf your game freezes at the end of a fight, flick the value back to default");
-                ImGui::PushItemWidth(inputItemWidth);
-                ImGui::InputInt("##CharacterSelectInputInt", &currentCharacterValue, 1, 100);
-                ImGui::PopItemWidth();
-                ImGui::SameLine();
-                switch (currentCharacterValue) {
-                case 0:
-                    ImGui::Text("Bayonetta");
-                    break;
-                case 1:
-                    ImGui::Text("Jeanne");
-                    break;
-                default:
-                    ImGui::Text("");
-                    break;
-                }
-
-                ImGui::Text("Costume");
-                help_marker("Set while in mission select");
-                ImGui::PushItemWidth(inputItemWidth);
-                ImGui::InputInt("##CostumeSelectInputInt", &currentCostumeValue, 1, 100);
-                ImGui::PopItemWidth();
-                ImGui::SameLine();
-                ImGui::Text(GameHook::CostumeNames(currentCostumeValue));
-
-                ImGui::Text("Third Accessory");
-                ImGui::PushItemWidth(inputItemWidth);
-                ImGui::InputInt("##ThirdAccessoryInputInt", &thirdAccessoryValue, 1, 100);
-                ImGui::PopItemWidth();
-                ImGui::SameLine();
-                ImGui::Text(GameHook::AccessoryNames(thirdAccessoryValue));
-
                 ImGui::Text("Weapon Set A:");
                 help_marker("WIP, requires entering and exiting the weapon select menu to apply");
                 ImGui::PushItemWidth(inputItemWidth);
@@ -510,6 +514,7 @@ void GameHook::GameImGui(void) {
                     playerHairColour[0] = (float*)(actorPlayable + 0x96C00);
                     playerHairColour[1] = (float*)(actorPlayable + 0x96C04);
                     playerHairColour[2] = (float*)(actorPlayable + 0x96C08);
+                    static float playerTempHairColour[3]{ 1.0f, 1.0f, 1.0f };
 
                     ImGui::Separator();
 
@@ -554,7 +559,27 @@ void GameHook::GameImGui(void) {
                     ImGui::InputInt("##PlayerAttackCountInputInt", &playerAttackCount);
 
                     ImGui::Text("Player Hair Colour");
-                    ImGui::InputFloat3("##PlayerHairColourInputFloat3", *playerHairColour);
+                    if (ImGui::ColorEdit3("##PlayerHairColourEdit3", playerTempHairColour)) { // ImGuiColorEditFlags_PickerHueWheel sry che
+                        *playerHairColour[0] = playerTempHairColour[0] * 5.0f;
+                        *playerHairColour[1] = playerTempHairColour[1] * 5.0f;
+                        *playerHairColour[2] = playerTempHairColour[2] * 5.0f;
+                    }
+                    ImGui::SameLine();
+                    if (ImGui::Button("Reset##ResetHairColourButton")) {
+                        playerTempHairColour[0] = 1.0f;
+                        playerTempHairColour[1] = 1.0f;
+                        playerTempHairColour[2] = 1.0f;
+                        *playerHairColour[0] = playerTempHairColour[0];
+                        *playerHairColour[1] = playerTempHairColour[1];
+                        *playerHairColour[2] = playerTempHairColour[2];
+                    }
+
+                    /*static float hairIntensity = 1.0f;
+                    if (ImGui::SliderFloat("Intensity", &hairIntensity, 0.0f, 10.0f)) {
+                        *playerHairColour[0] = *playerHairColour[0] * hairIntensity;
+                        *playerHairColour[1] = *playerHairColour[1] * hairIntensity;
+                        *playerHairColour[2] = *playerHairColour[2] * hairIntensity;
+                    }*/
 
                     /*uintptr_t armWeaveOffset = *(uintptr_t*)(actorPlayable + 0x937C0);
                     if (armWeaveOffset) {
@@ -749,6 +774,7 @@ void GameHook::GameImGui(void) {
             ImGui::Separator();
 
             ImGui::Checkbox("Combo Maker Test 1", &GameHook::comboMakerTest1);
+            GameHook::help_marker("Compare to a moveid and number in attack string to swap out specific combo route transitions");
             GameHook::help_marker("Should you want more freedom than this provides,\n"
                 "I've included a Cheat Engine table with examples and a script ready for editing in the Github repo's \"extra\" folder\n"
                 "(link to repo in the Info tab)");

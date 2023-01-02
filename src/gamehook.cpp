@@ -560,7 +560,7 @@ static __declspec(naked) void LateKickStringIDSwapDetour(void) {
 std::unique_ptr<FunctionHook> inputIconsHook;
 uintptr_t inputIcons_jmp_ret{ NULL };
 bool GameHook::inputIcons_toggle = false;
-int GameHook::inputIconsValue = 1; // 0 keyboard, 1 gamepad
+int GameHook::inputIconsValue = 0; // 0 keyboard, 1 gamepad
 static __declspec(naked) void InputIconsDetour(void) {
 	_asm {
 		cmp byte ptr [GameHook::inputIcons_toggle], 0
@@ -2023,11 +2023,11 @@ void GameHook::SaveStates_LoadState() {
 void GameHook::WeaponSwapCaller(void) {
 	uintptr_t weaponSwapCallAddress = 0xC43ED0;
 	__asm {
-		pusha
-		pushf
+		pushad
+		pushfd
 		call weaponSwapCallAddress
-		popf
-		popa
+		popfd
+		popad
 	}
 }
 
