@@ -541,7 +541,7 @@ void GameHook::GameImGui(void) {
                     ImGui::InputFloat("##PlayerRemainingInvinciblityInputFloat", &playerRemainingInvincibility, 10, 100, "%.0f");
 
                     ImGui::Text("Player Animation Frame");
-                    ImGui::InputFloat("##PlayerAnimationFrameInputFloat", &playerAnimFrame, 10, 100, "%.0f");
+                    ImGui::InputFloat("##PlayerAnimationFrameInputFloat", &playerAnimFrame, 1, 10, "%.0f");
 
                     ImGui::Text("Player Move ID");
                     ImGui::InputInt("##PlayerMoveIDInputInt", &playerMoveID);
