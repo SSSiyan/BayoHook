@@ -372,6 +372,11 @@ void GameHook::GameImGui(void) {
             ImGui::Checkbox("Skip Angel Attack", &GameHook::loadReplace_toggle);
             help_marker("Load Mission Select instead of Angel Attack");
 
+            ImGui::SameLine(sameLineWidth);
+            if (ImGui::Checkbox("60 FPS Cutscenes", &GameHook::sixtyFpsCutscenes_toggle)) {
+                GameHook::SixtyFpsCutscenes(GameHook::sixtyFpsCutscenes_toggle);
+            }
+
             ImGui::Separator();
 
             ImGui::Checkbox("Force Input Type", &GameHook::inputIcons_toggle);
