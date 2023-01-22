@@ -35,6 +35,7 @@ public:
 	static bool weaponSwapOffset_toggle;
 	static bool retainPillowTalkCharge_toggle;
 	static bool swapMashToHold_toggle;
+	static bool sixtyFpsCutscenes_toggle;
 	// patch functions
 	static void TakeNoDamage(bool enabled);
 	static void DisableKilling(bool enabled);
@@ -60,6 +61,7 @@ public:
 	static void WeaponSwapOffset(bool enabled);
 	static void RetainPillowTalkCharge(bool enabled);
 	static void SwapMashToHold(bool enabled);
+	static void SixtyFpsCutscenes(bool enabled);
 
 	static void WeaponSwapCaller(void);
 	static void SaveStates_SaveState();

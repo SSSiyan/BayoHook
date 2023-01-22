@@ -239,6 +239,18 @@ void GameHook::SwapMashToHold (bool enabled) {
 	}
 }
 
+bool GameHook::sixtyFpsCutscenes_toggle = true;
+void GameHook::SixtyFpsCutscenes(bool enabled) {
+	if (enabled) {
+		GameHook::_nop((char*)(0x45B4A7), 2);
+		GameHook::_patch((char*)(0x45B4BA), (char*)"\xEB", 1); // jmp
+	}
+	else {
+		GameHook::_patch((char*)(0x45B4A7), (char*)"\x74\x28", 2); // jz
+		GameHook::_patch((char*)(0x45B4BA), (char*)"\x74", 1); // jz
+	}
+}
+
 
 // detours
 std::unique_ptr<FunctionHook> enemyHPHook;
@@ -2138,6 +2150,8 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	RetainPillowTalkCharge(retainPillowTalkCharge_toggle);
 	swapMashToHold_toggle = cfg.get<bool>("SwapMashToHoldToggle").value_or(false);
 	SwapMashToHold(swapMashToHold_toggle);
+	sixtyFpsCutscenes_toggle = cfg.get<bool>("60FpsCutscenes").value_or(true);
+	SixtyFpsCutscenes(sixtyFpsCutscenes_toggle);
 	//areaJumpPatch_toggle = cfg.get<bool>("AreaJumpPatchToggle").value_or(false);
 	//AreaJumpPatch(areaJumpPatch_toggle);
 
@@ -2207,6 +2221,7 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("WeaponSwapOffsetToggle", weaponSwapOffset_toggle);
 	cfg.set<bool>("RetainPillowTalkChargeToggle", retainPillowTalkCharge_toggle);
 	cfg.set<bool>("SwapMashToHoldToggle", swapMashToHold_toggle);
+	cfg.set<bool>("60FpsCutscenes", sixtyFpsCutscenes_toggle);
 
 	//cfg.set<bool>("AreaJumpPatchToggle", areaJumpPatch_toggle);
 	// detours
