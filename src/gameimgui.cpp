@@ -908,11 +908,12 @@ void GameHook::GameImGui(void) {
             ImGui::Separator();
 
             ImGui::Text("This trainer was made by:");
-            static std::array<ImGuiURL, 6> links1{
+            static std::array<ImGuiURL, 7> links1{
                 ImGuiURL { "SSSiyan", "https://twitter.com/sssiyan" },
                 ImGuiURL { "GarudaKK", "https://www.youtube.com/@GarudaPSN" },
                 ImGuiURL { "Kerilk", "https://github.com/Kerilk" },
                 ImGuiURL { "CreativeHandle", "https://twitter.com/CreativeHandler" },
+                ImGuiURL { "Skyth (Asilkan)", "https://github.com/blueskythlikesclouds" },
                 ImGuiURL { "deepdarkkapustka", "https://www.youtube.com/@mstislavcapusta7573" },
                 ImGuiURL { "TheDarkness", "https://steamcommunity.com/id/TheDarkness704/" },
             };
