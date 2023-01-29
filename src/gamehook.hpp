@@ -9,6 +9,8 @@
 #include "../utils/FunctionHook.hpp"
 #include "imgui/imgui.h"
 
+#include <base.h> // for Data::ShowMenu
+
 class GameHook {
 public:
 	// patch toggles
@@ -111,8 +113,10 @@ public:
 	static int initialAngelSlayerFloor;
 	static bool cancellableAfterBurner_toggle;
 	static bool cancellableFallingKick_toggle;
+	static bool openMenuPause_toggle;
 	static bool turbo_toggle;
 	static float turboValue;
+	static float turboZero;
 	static bool altTeleInput_toggle;
 	static bool disableSlowmo_toggle;
 	static bool lowerDivekick_toggle;

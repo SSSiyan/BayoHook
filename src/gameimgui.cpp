@@ -377,6 +377,8 @@ void GameHook::GameImGui(void) {
                 GameHook::SixtyFpsCutscenes(GameHook::sixtyFpsCutscenes_toggle);
             }
 
+            ImGui::Checkbox("Pause When Opening BayoHook", &GameHook::openMenuPause_toggle);
+
             ImGui::Separator();
 
             ImGui::Checkbox("Force Input Type", &GameHook::inputIcons_toggle);

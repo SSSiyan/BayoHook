@@ -661,14 +661,27 @@ static __declspec(naked) void CancellableFallingKickDetour(void) {
 
 std::unique_ptr<FunctionHook> turboHook;
 uintptr_t turbo_jmp_ret{ NULL };
+bool GameHook::openMenuPause_toggle = false;
 bool GameHook::turbo_toggle = false;
 float GameHook::turboValue = 1.0f;
+float GameHook::turboZero = 0.0f;
 static __declspec(naked) void TurboHookDetour(void) {
 	_asm {
+		cmp byte ptr [GameHook::openMenuPause_toggle], 1
+		je zerospeed
+		jmp turbocheck
+
+		zerospeed:
+		cmp byte ptr [Base::Data::ShowMenu], 0
+		je turbocheck
+		movss xmm0, [GameHook::turboZero]
+		jmp originalcode
+
+		turbocheck:
 		cmp byte ptr [GameHook::turbo_toggle], 0
 		je originalcode
-
 		movss xmm0, [GameHook::turboValue]
+		jmp originalcode
 
 		originalcode:
 		movss [edi+0x44], xmm0
@@ -2178,6 +2191,7 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	initialAngelSlayerFloor = cfg.get<int>("InitialAngelSlayerFloor").value_or(0);
 	cancellableAfterBurner_toggle = cfg.get<bool>("CancellableAfterBurnerToggle").value_or(false);
 	cancellableFallingKick_toggle = cfg.get<bool>("CancellableFallingKickToggle").value_or(false);
+	openMenuPause_toggle = cfg.get<bool>("OpenMenuPauseToggle").value_or(false);
 	turbo_toggle = cfg.get<bool>("TurboToggle").value_or(false);
 	turboValue = cfg.get<float>("TurboValue").value_or(1.0f);
 	altTeleInput_toggle = cfg.get<bool>("AltTeleInputToggle").value_or(false);
@@ -2246,6 +2260,7 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<int>("InitialAngelSlayerFloor", initialAngelSlayerFloor);
 	cfg.set<bool>("CancellableAfterBurnerToggle", cancellableAfterBurner_toggle);
 	cfg.set<bool>("CancellableFallingKickToggle", cancellableFallingKick_toggle);
+	cfg.set<bool>("OpenMenuPauseToggle", openMenuPause_toggle);
 	cfg.set<bool>("TurboToggle", turbo_toggle);
 	cfg.set<float>("TurboValue", turboValue);
 	cfg.set<bool>("AltTeleInputToggle", altTeleInput_toggle);
