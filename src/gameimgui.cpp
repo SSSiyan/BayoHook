@@ -148,7 +148,9 @@ void GameHook::GameImGui(void) {
             }
             help_marker("Freeze the cooldown that starts when an enemy attacks");
 
-            ImGui::Checkbox("Standardized Witch Time", &GameHook::jeanneBayoWT_toggle);
+            if (ImGui::Checkbox("Standardized Witch Time", &GameHook::jeanneBayoWT_toggle)) {
+                GameHook::JeanneBayoWT(GameHook::jeanneBayoWT_toggle);
+            }
             help_marker("Give Jeanne Bayonetta's Witch Time activation leniency");
 
             ImGui::Separator();
