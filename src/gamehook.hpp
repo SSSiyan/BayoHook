@@ -38,6 +38,7 @@ public:
 	static bool retainPillowTalkCharge_toggle;
 	static bool swapMashToHold_toggle;
 	static bool sixtyFpsCutscenes_toggle;
+	static bool jeanneBayoWT_toggle;
 	// patch functions
 	static void TakeNoDamage(bool enabled);
 	static void DisableKilling(bool enabled);
@@ -64,6 +65,7 @@ public:
 	static void RetainPillowTalkCharge(bool enabled);
 	static void SwapMashToHold(bool enabled);
 	static void SixtyFpsCutscenes(bool enabled);
+	static void JeanneBayoWT(bool enabled);
 
 	static void WeaponSwapCaller(void);
 	static void SaveStates_SaveState();
@@ -86,18 +88,13 @@ public:
 	static int haloDisplayValue;
 	//
 	static bool moveIDSwap_toggle;
-
 	static int moveIDSwapSourceMove1;
 	static int moveIDSwapSourceMove2;
-
 	static int moveIDSwapDesiredMove1;
 	static int moveIDSwapDesiredMove2;
-	//
 	static bool stringIDSwap_toggle;
-
 	static int stringIDSwapSourceString1;
 	static int stringIDSwapSourceString2;
-
 	static int stringIDSwapDesiredString1;
 	static int stringIDSwapDesiredString2;
 	//
@@ -124,11 +121,11 @@ public:
 	static bool loadReplace_toggle;
 	static bool longerPillowTalkCharge_toggle;
 	static float longerPillowTalkChargeMult;
-
+	//
 	static bool getMotName_toggle;
 	static char getMotName_weaponMotString[0x128];
 	static char getMotName_playerMotString[0x128];
-
+	//
 	static bool saveStatesHotkeys_toggle;
 	static int saveStates_SavedEnemyMoveID;
 	static float saveStates_SavedEnemyXYZPos[3];

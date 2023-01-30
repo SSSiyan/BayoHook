@@ -148,6 +148,9 @@ void GameHook::GameImGui(void) {
             }
             help_marker("Freeze the cooldown that starts when an enemy attacks");
 
+            ImGui::Checkbox("Standardized Witch Time", &GameHook::jeanneBayoWT_toggle);
+            help_marker("Give Jeanne Bayonetta's Witch Time activation leniency");
+
             ImGui::Separator();
 
             ImGui::Checkbox("Freeze Magic ##InfMagicToggle", &GameHook::inf_magic_toggle);
@@ -214,6 +217,9 @@ void GameHook::GameImGui(void) {
                 break;
             case 1:
                 ImGui::Text("Jeanne");
+                break;
+            case 2:
+                ImGui::Text("Little King Zero");
                 break;
             default:
                 ImGui::Text("");
