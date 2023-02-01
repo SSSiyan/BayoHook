@@ -322,6 +322,9 @@ void GameHook::GameImGui(void) {
                 AlwaysWalkOnWalls(alwaysWalkOnWalls_toggle);
             }
 
+            ImGui::Checkbox("Always Witch Time", &GameHook::alwaysWitchTime_toggle);
+            help_marker("Activate Witch Time even with a mistimed dodge");
+
             ImGui::Separator();
 
             ImGui::Checkbox("Witch Time Multiplier ##WitchTimeToggle", &GameHook::witchTimeMultiplier_toggle);

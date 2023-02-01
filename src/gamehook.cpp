@@ -882,19 +882,37 @@ static __declspec(naked) void LoadReplaceDetour(void) {
 std::unique_ptr<FunctionHook> longerPillowTalkChargeHook;
 uintptr_t longerPillowTalkCharge_jmp_ret{ NULL };
 bool GameHook::longerPillowTalkCharge_toggle = false;
-float GameHook::longerPillowTalkChargeMult = 2.0f;
+float longerPillowTalkChargeMult = 2.0f;
 static __declspec(naked) void LongerPillowTalkChargeDetour(void) {
 	_asm {
 		cmp byte ptr [GameHook::longerPillowTalkCharge_toggle], 0
 		je originalcode
 
 		movss xmm0, [esp+0x04]
-		mulss xmm0, [GameHook::longerPillowTalkChargeMult]
+		mulss xmm0, [longerPillowTalkChargeMult]
 		jmp dword ptr [longerPillowTalkCharge_jmp_ret]
 
 		originalcode:
 		movss xmm0, [esp+0x04] // from [00DA0DE8]
 		jmp dword ptr [longerPillowTalkCharge_jmp_ret]
+	}
+}
+
+std::unique_ptr<FunctionHook> alwaysWitchTimeHook;
+uintptr_t alwaysWitchTime_jmp_ret{ NULL };
+bool GameHook::alwaysWitchTime_toggle = false;
+float alwaysWitchTimeTimer = 120.0f;
+static __declspec(naked) void AlwaysWitchTimeDetour(void) {
+	_asm {
+		cmp byte ptr [GameHook::alwaysWitchTime_toggle], 0
+		je originalcode
+
+		movss xmm1, [alwaysWitchTimeTimer]
+		jmp dword ptr [alwaysWitchTime_jmp_ret]
+
+		originalcode:
+		movss xmm1, [esi+0x00000704]
+		jmp dword ptr [alwaysWitchTime_jmp_ret]
 	}
 }
 
@@ -2127,6 +2145,7 @@ void GameHook::InitializeDetours(void) {
 	//install_hook_absolute(0xC798A7, getMotNameHook, &GetMotNameDetour, &getMotName_jmp_ret, 6);
 	install_hook_absolute(0x6222D0, loadReplaceHook, &LoadReplaceDetour, &loadReplace_jmp_ret, 6);
 	install_hook_absolute(0x4CCCA0, longerPillowTalkChargeHook, &LongerPillowTalkChargeDetour, &longerPillowTalkCharge_jmp_ret, 6);
+	install_hook_absolute(0x8EF527, alwaysWitchTimeHook, &AlwaysWitchTimeDetour, &alwaysWitchTime_jmp_ret, 8);
 	install_hook_absolute(0x9F5AF0, pl0012Hook, &pl0012Detour, NULL, 0);
 	install_hook_absolute(0x9FC890, pl0031Hook, &pl0031Detour, NULL, 0);
 	install_hook_absolute(0xA17420, pl004cHook, &pl004cDetour, NULL, 0);
@@ -2211,7 +2230,8 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	lowerDivekick_toggle = cfg.get<bool>("LowerDivekickToggle").value_or(false);
 	dualAfterBurner_toggle = cfg.get<bool>("DualAfterBurnerToggle").value_or(false);
 	loadReplace_toggle = cfg.get<bool>("LoadReplaceToggle").value_or(false);
-	longerPillowTalkCharge_toggle = cfg.get<bool>("LongerPillowTalkCharge").value_or(false);
+	longerPillowTalkCharge_toggle = cfg.get<bool>("LongerPillowTalkChargeToggle").value_or(false);
+	alwaysWitchTime_toggle = cfg.get<bool>("AlwaysWitchTimeToggle").value_or(false);
 	saveStatesHotkeys_toggle = cfg.get<bool>("SaveStatesHotkeysToggle").value_or(false);
 
 	//tick
@@ -2281,7 +2301,8 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("LowerDivekickToggle", lowerDivekick_toggle);
 	cfg.set<bool>("DualAfterBurnerToggle", dualAfterBurner_toggle);
 	cfg.set<bool>("LoadReplaceToggle", loadReplace_toggle);
-	cfg.set<bool>("LongerPillowTalkCharge", longerPillowTalkCharge_toggle);
+	cfg.set<bool>("LongerPillowTalkChargeToggle", longerPillowTalkCharge_toggle);
+	cfg.set<bool>("AlwaysWitchTimeToggle", alwaysWitchTime_toggle);
 	cfg.set<bool>("SaveStatesHotkeysToggle", saveStatesHotkeys_toggle);
 
 	//tick

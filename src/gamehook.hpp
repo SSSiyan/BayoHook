@@ -120,7 +120,7 @@ public:
 	static bool dualAfterBurner_toggle;
 	static bool loadReplace_toggle;
 	static bool longerPillowTalkCharge_toggle;
-	static float longerPillowTalkChargeMult;
+	static bool alwaysWitchTime_toggle;
 	//
 	static bool getMotName_toggle;
 	static char getMotName_weaponMotString[0x128];
@@ -191,7 +191,7 @@ public:
 
 	static inline const char* cfgString{ "../bayo_hook.cfg" };
 	static inline utils::Config cfg{ "bayo_hook.cfg" };
-	static inline const char* dllName{"BayoHook 1.07"};
+	static inline const char* dllName{"BayoHook 1.08"};
 	static inline const char* repoUrl{ "https://github.com/SSSiyan/BayoHook" };
 private:
 };
