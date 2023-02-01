@@ -261,6 +261,15 @@ void GameHook::JeanneBayoWT(bool enabled) {
 	}
 }
 
+bool GameHook::infDivekick_toggle = true;
+void GameHook::InfDivekick(bool enabled) {
+	if (enabled) {
+		GameHook::_nop((char*)(0x9E93F5), 2);
+	}
+	else {
+		GameHook::_patch((char*)(0x9E93F5), (char*)"\x73\x24", 2); // jae
+	}
+}
 
 // detours
 std::unique_ptr<FunctionHook> enemyHPHook;
@@ -2194,8 +2203,10 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	SwapMashToHold(swapMashToHold_toggle);
 	sixtyFpsCutscenes_toggle = cfg.get<bool>("60FpsCutscenes").value_or(false);
 	SixtyFpsCutscenes(sixtyFpsCutscenes_toggle);
-	jeanneBayoWT_toggle = cfg.get<bool>("jeanneBayoWTToggle").value_or(false);
+	jeanneBayoWT_toggle = cfg.get<bool>("JeanneBayoWTToggle").value_or(false);
 	JeanneBayoWT(jeanneBayoWT_toggle);
+	infDivekick_toggle = cfg.get<bool>("InfDivekickToggle").value_or(false);
+	InfDivekick(infDivekick_toggle);
 	//areaJumpPatch_toggle = cfg.get<bool>("AreaJumpPatchToggle").value_or(false);
 	//AreaJumpPatch(areaJumpPatch_toggle);
 
@@ -2268,7 +2279,8 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("RetainPillowTalkChargeToggle", retainPillowTalkCharge_toggle);
 	cfg.set<bool>("SwapMashToHoldToggle", swapMashToHold_toggle);
 	cfg.set<bool>("60FpsCutscenes", sixtyFpsCutscenes_toggle);
-	cfg.set<bool>("jeanneBayoWTToggle", jeanneBayoWT_toggle);
+	cfg.set<bool>("JeanneBayoWTToggle", jeanneBayoWT_toggle);
+	cfg.set<bool>("InfDivekickToggle", infDivekick_toggle);
 
 	//cfg.set<bool>("AreaJumpPatchToggle", areaJumpPatch_toggle);
 	// detours

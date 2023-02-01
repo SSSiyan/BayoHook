@@ -148,11 +148,6 @@ void GameHook::GameImGui(void) {
             }
             help_marker("Freeze the cooldown that starts when an enemy attacks");
 
-            if (ImGui::Checkbox("Standardized Witch Time", &GameHook::jeanneBayoWT_toggle)) {
-                GameHook::JeanneBayoWT(GameHook::jeanneBayoWT_toggle);
-            }
-            help_marker("Give Jeanne Bayonetta's Witch Time activation leniency");
-
             ImGui::Separator();
 
             ImGui::Checkbox("Freeze Magic ##InfMagicToggle", &GameHook::inf_magic_toggle);
@@ -324,6 +319,15 @@ void GameHook::GameImGui(void) {
 
             ImGui::Checkbox("Always Witch Time", &GameHook::alwaysWitchTime_toggle);
             help_marker("Activate Witch Time even with a mistimed dodge");
+            ImGui::SameLine(sameLineWidth);
+            if (ImGui::Checkbox("Standardized Witch Time", &GameHook::jeanneBayoWT_toggle)) {
+                GameHook::JeanneBayoWT(GameHook::jeanneBayoWT_toggle);
+            }
+            help_marker("Give Jeanne Bayonetta's Witch Time activation leniency");
+
+            if (ImGui::Checkbox("Infinite Divekicks", &GameHook::infDivekick_toggle)) {
+                InfDivekick(infDivekick_toggle);
+            }
 
             ImGui::Separator();
 

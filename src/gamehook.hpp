@@ -39,6 +39,7 @@ public:
 	static bool swapMashToHold_toggle;
 	static bool sixtyFpsCutscenes_toggle;
 	static bool jeanneBayoWT_toggle;
+	static bool infDivekick_toggle;
 	// patch functions
 	static void TakeNoDamage(bool enabled);
 	static void DisableKilling(bool enabled);
@@ -66,6 +67,7 @@ public:
 	static void SwapMashToHold(bool enabled);
 	static void SixtyFpsCutscenes(bool enabled);
 	static void JeanneBayoWT(bool enabled);
+	static void InfDivekick(bool enabled);
 
 	static void WeaponSwapCaller(void);
 	static void SaveStates_SaveState();
