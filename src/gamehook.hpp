@@ -108,6 +108,7 @@ public:
 	static int comboMakerMoveID2;
 	static int comboMakerMovePart2;
 	static int comboMakerStringID2;
+	//
 	static bool easierMash_toggle;
 	static int initialAngelSlayerFloor;
 	static bool cancellableAfterBurner_toggle;
@@ -193,7 +194,7 @@ public:
 
 	static inline const char* cfgString{ "../bayo_hook.cfg" };
 	static inline utils::Config cfg{ "bayo_hook.cfg" };
-	static inline const char* dllName{"BayoHook 1.08"};
+	static inline const char* dllName{"BayoHook 1.10"};
 	static inline const char* repoUrl{ "https://github.com/SSSiyan/BayoHook" };
 private:
 };
