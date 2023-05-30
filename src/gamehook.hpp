@@ -40,6 +40,7 @@ public:
 	static bool sixtyFpsCutscenes_toggle;
 	static bool jeanneBayoWT_toggle;
 	static bool infDivekick_toggle;
+	static bool parryOffset_toggle;
 	// patch functions
 	static void TakeNoDamage(bool enabled);
 	static void DisableKilling(bool enabled);
@@ -68,6 +69,8 @@ public:
 	static void SixtyFpsCutscenes(bool enabled);
 	static void JeanneBayoWT(bool enabled);
 	static void InfDivekick(bool enabled);
+	static void TauntWithTimeBracelet(bool enabled);
+	static void ParryOffset(bool enabled);
 
 	static void WeaponSwapCaller(void);
 	static void SaveStates_SaveState();
@@ -118,6 +121,7 @@ public:
 	static float turboValue;
 	static float turboZero;
 	static bool altTeleInput_toggle;
+	static bool tauntWithTimeBracelet_toggle;
 	static bool disableSlowmo_toggle;
 	static bool lowerDivekick_toggle;
 	static bool dualAfterBurner_toggle;

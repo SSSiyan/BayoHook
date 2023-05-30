@@ -277,9 +277,10 @@ void GameHook::GameImGui(void) {
             ImGui::Checkbox("Alt Teleport Input", &GameHook::altTeleInput_toggle);
             help_marker("Teleport = Lockon + Taunt\nTaunt = Dpad Down");
             ImGui::SameLine(sameLineWidth);
-            if (ImGui::Checkbox("Disable Lockon Jump Dodge", &GameHook::disableLockOnDodge_toggle)) {
-                GameHook::DisableLockOnDodge(GameHook::disableLockOnDodge_toggle);
+            if (ImGui::Checkbox("Taunt With Time Bracelet", &GameHook::tauntWithTimeBracelet_toggle)) {
+                TauntWithTimeBracelet(GameHook::tauntWithTimeBracelet_toggle);
             }
+            help_marker("Taunt = Dpad Down");
 
             ImGui::Checkbox("Lower Divekick Requirement", &GameHook::lowerDivekick_toggle);
             ImGui::SameLine(sameLineWidth);
@@ -297,8 +298,8 @@ void GameHook::GameImGui(void) {
                 WeaponSwapOffset(weaponSwapOffset_toggle);
             }
             ImGui::SameLine(sameLineWidth);
-            if (ImGui::Checkbox("Infinite Crow Within", &GameHook::infBirdTime_toggle)) {
-                InfBirdTime(infBirdTime_toggle);
+            if (ImGui::Checkbox("Parry Offset", &GameHook::parryOffset_toggle)) {
+                ParryOffset(parryOffset_toggle);
             }
 
             ImGui::Checkbox("Longer Pillow Talk Charge", &longerPillowTalkCharge_toggle);
@@ -327,6 +328,14 @@ void GameHook::GameImGui(void) {
 
             if (ImGui::Checkbox("Infinite Divekicks", &GameHook::infDivekick_toggle)) {
                 InfDivekick(infDivekick_toggle);
+            }
+            ImGui::SameLine(sameLineWidth);
+            if (ImGui::Checkbox("Disable Lockon Jump Dodge", &GameHook::disableLockOnDodge_toggle)) {
+                GameHook::DisableLockOnDodge(GameHook::disableLockOnDodge_toggle);
+            }
+
+            if (ImGui::Checkbox("Infinite Crow Within", &GameHook::infBirdTime_toggle)) {
+                InfBirdTime(infBirdTime_toggle);
             }
 
             ImGui::Separator();

@@ -271,6 +271,28 @@ void GameHook::InfDivekick(bool enabled) {
 	}
 }
 
+bool GameHook::tauntWithTimeBracelet_toggle = false;
+void GameHook::TauntWithTimeBracelet (bool enabled) {
+	if (enabled) {
+		GameHook::_nop((char*)(0x9E74CF), 2);
+	}
+	else {
+		GameHook::_patch((char*)(0x9E74CF), (char*)"\x75\x69", 2); // jne
+	}
+}
+
+bool GameHook::parryOffset_toggle = false;
+void GameHook::ParryOffset (bool enabled) {
+	if (enabled) {
+		GameHook::_patch((char*)(0x8F0CA6), (char*)"\x83\xC4\x04\x90\x90", 5); // add esp,4 nop nop // Parry
+		GameHook::_patch((char*)(0x8F0D45), (char*)"\x83\xC4\x04\x90\x90", 5); // add esp,4 nop nop // Perfect Parry
+	}
+	else {
+		GameHook::_patch((char*)(0x8F0CA6), (char*)"\xE8\xF5\x1B\xFE\xFF", 5); // call Bayonetta.exe+4D28A0 // Parry
+		GameHook::_patch((char*)(0x8F0D45), (char*)"\xE8\x56\x1B\xFE\xFF", 5); // call Bayonetta.exe+4D28A0 // Perfect Parry
+	}
+}
+
 // detours
 std::unique_ptr<FunctionHook> enemyHPHook;
 uintptr_t enemyHP_jmp_ret{ NULL };
@@ -745,34 +767,7 @@ static __declspec(naked) void AltTeleInputDetour(void) {
 		jmp dword ptr [altTeleInput_jmp_je] // Bayonetta.exe+4BE5B6, deny teleport
 	}
 }
-/*
-	// ORIGINAL CODE - INJECTION POINT: Bayonetta.exe+4BE592
-		Bayonetta.exe+4BE567: 83 CF FF                       - or edi,-01
-		Bayonetta.exe+4BE56A: 39 B3 9C 39 09 00              - cmp [ebx+0009399C],esi
-		Bayonetta.exe+4BE570: 7E 06                          - jle Bayonetta.exe+4BE578
-		Bayonetta.exe+4BE572: 01 BB 9C 39 09 00              - add [ebx+0009399C],edi
-		Bayonetta.exe+4BE578: 39 B3 A0 39 09 00              - cmp [ebx+000939A0],esi
-		Bayonetta.exe+4BE57E: 7E 06                          - jle Bayonetta.exe+4BE586
-		Bayonetta.exe+4BE580: 01 BB A0 39 09 00              - add [ebx+000939A0],edi
-		Bayonetta.exe+4BE586: 6A 05                          - push 05
-		Bayonetta.exe+4BE588: B9 D0 7E A9 05                 - mov ecx,Bayonetta.exe+5697ED0
-		Bayonetta.exe+4BE58D: E8 DE 2D C4 FF                 - call Bayonetta.exe+101370
-		// ---------- INJECTING HERE ----------
-		Bayonetta.exe+4BE592: 85 83 48 4B 09 00              - test [ebx+00094B48],eax
-		// ---------- DONE INJECTING  ----------
-		Bayonetta.exe+4BE598: 74 1C                          - je Bayonetta.exe+4BE5B6
-		Bayonetta.exe+4BE59A: 39 B3 A0 39 09 00              - cmp [ebx+000939A0],esi
-		Bayonetta.exe+4BE5A0: 7E 0A                          - jle Bayonetta.exe+4BE5AC
-		Bayonetta.exe+4BE5A2: C7 83 9C 39 09 00 0A 00 00 00  - mov [ebx+0009399C],0000000A
-		Bayonetta.exe+4BE5AC: C7 83 A0 39 09 00 0F 00 00 00  - mov [ebx+000939A0],0000000F
-		Bayonetta.exe+4BE5B6: 6A 0B                          - push 0B
-		Bayonetta.exe+4BE5B8: B9 D0 7E A9 05                 - mov ecx,Bayonetta.exe+5697ED0
-		Bayonetta.exe+4BE5BD: E8 AE 2D C4 FF                 - call Bayonetta.exe+101370
-		Bayonetta.exe+4BE5C2: 85 83 44 4B 09 00              - test [ebx+00094B44],eax
-		Bayonetta.exe+4BE5C8: 75 21                          - jne Bayonetta.exe+4BE5EB
-}
-*/
-
+/* // unused since adding TauntWithTimeBracelet
 std::unique_ptr<FunctionHook> altTauntInputHook;
 uintptr_t altTauntInput_jmp_ret{ NULL };
 static int altTauntInputTauntRemap = 4;
@@ -792,6 +787,44 @@ static __declspec(naked) void AltTauntInputDetour(void) {
 
 		retcode:
 		ret 0004
+	}
+}
+*/
+std::unique_ptr<FunctionHook> tauntWithTimeBracelet2Hook; // tap taunt
+uintptr_t tauntWithTimeBracelet2_jmp_ret{ NULL };
+static __declspec(naked) void TauntWithTimeBracelet2Detour(void) {
+	_asm {
+		cmp byte ptr [GameHook::tauntWithTimeBracelet_toggle], 1
+		je cheatcode
+		cmp byte ptr [GameHook::altTeleInput_toggle], 1
+		je cheatcode
+		jmp originalcode
+
+		cheatcode:
+		mov eax,4
+
+		originalcode:
+		test [esi+0x00094B4C],eax
+		jmp [tauntWithTimeBracelet2_jmp_ret]
+	}
+}
+
+std::unique_ptr<FunctionHook> tauntWithTimeBracelet3Hook; // hold taunt
+uintptr_t tauntWithTimeBracelet3_jmp_ret{ NULL };
+static __declspec(naked) void TauntWithTimeBracelet3Detour(void) {
+	_asm {
+		cmp byte ptr [GameHook::tauntWithTimeBracelet_toggle], 1
+		je cheatcode
+		cmp byte ptr [GameHook::altTeleInput_toggle], 1
+		je cheatcode
+		jmp originalcode
+
+		cheatcode:
+		mov eax,4
+
+		originalcode:
+		test [ebx+0x00094B44],eax
+		jmp [tauntWithTimeBracelet3_jmp_ret]
 	}
 }
 
@@ -2147,7 +2180,9 @@ void GameHook::InitializeDetours(void) {
 	install_hook_absolute(0x952142, cancellableFallingKickHook, &CancellableFallingKickDetour, &cancellableFallingKick_jmp_ret, 5);
 	install_hook_absolute(0x513FC7, turboHook, &TurboHookDetour, &turbo_jmp_ret, 5);
 	install_hook_absolute(0x8BE592, altTeleInputHook, &AltTeleInputDetour, &altTeleInput_jmp_ret, 26);
-	install_hook_absolute(0x50137D, altTauntInputHook, &AltTauntInputDetour, &altTauntInput_jmp_ret, 7);
+	//install_hook_absolute(0x50137D, altTauntInputHook, &AltTauntInputDetour, &altTauntInput_jmp_ret, 7);
+	install_hook_absolute(0x9E751A, tauntWithTimeBracelet2Hook, &TauntWithTimeBracelet2Detour, &tauntWithTimeBracelet2_jmp_ret, 6);
+	install_hook_absolute(0x8BE5C2, tauntWithTimeBracelet3Hook, &TauntWithTimeBracelet3Detour, &tauntWithTimeBracelet3_jmp_ret, 6);
 	install_hook_absolute(0x513C1E, disableSlowmoHook, &DisableSlowmoDetour, &disableSlowmo_jmp_ret, 5);
 	install_hook_absolute(0x9E93B9, lowerDivekickHook, &LowerDivekickDetour, &lowerDivekick_jmp_ret, 7);
 	install_hook_absolute(0x94CAAF, dualAfterBurnerHook, &DualAfterBurnerDetour, &dualAfterBurner_jmp_ret, 5);
@@ -2209,6 +2244,8 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	InfDivekick(infDivekick_toggle);
 	//areaJumpPatch_toggle = cfg.get<bool>("AreaJumpPatchToggle").value_or(false);
 	//AreaJumpPatch(areaJumpPatch_toggle);
+	parryOffset_toggle = cfg.get<bool>("ParryOffsetToggle").value_or(false);
+	ParryOffset(parryOffset_toggle);
 
 	// detours
 	enemyHP_no_damage_toggle = cfg.get<bool>("DealNoDamageToggle").value_or(false);
@@ -2281,6 +2318,7 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("60FpsCutscenes", sixtyFpsCutscenes_toggle);
 	cfg.set<bool>("JeanneBayoWTToggle", jeanneBayoWT_toggle);
 	cfg.set<bool>("InfDivekickToggle", infDivekick_toggle);
+	cfg.set<bool>("ParryOffsetToggle", parryOffset_toggle);
 
 	//cfg.set<bool>("AreaJumpPatchToggle", areaJumpPatch_toggle);
 	// detours
