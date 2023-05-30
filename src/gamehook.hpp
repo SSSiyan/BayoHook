@@ -111,6 +111,8 @@ public:
 	static int comboMakerMoveID2;
 	static int comboMakerMovePart2;
 	static int comboMakerStringID2;
+	static bool forceThirdAccessory_toggle;
+	static int desiredThirdAccessory;
 	//
 	static bool easierMash_toggle;
 	static int initialAngelSlayerFloor;

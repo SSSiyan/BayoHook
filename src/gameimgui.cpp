@@ -52,6 +52,8 @@ bool GameHook::comboMakerTest2 = false;
 int GameHook::comboMakerMoveID2 = 0;
 int GameHook::comboMakerMovePart2 = 0;
 int GameHook::comboMakerStringID2 = 0;
+bool GameHook::forceThirdAccessory_toggle = false;
+int GameHook::desiredThirdAccessory = 0;
 
 void GameHook::GameTick(void) {
     uintptr_t actorPlayable = *(uintptr_t*)GameHook::playerPointerAddress;
@@ -174,6 +176,18 @@ void GameHook::GameImGui(void) {
 
             ImGui::Separator();
 
+            ImGui::Checkbox("Third Accessory", &GameHook::forceThirdAccessory_toggle);
+            if (GameHook::forceThirdAccessory_toggle) {
+                ImGui::PushItemWidth(inputItemWidth);
+                ImGui::InputInt("##ThirdAccessoryInputInt", &GameHook::desiredThirdAccessory, 1, 10);
+                ImGui::PopItemWidth();
+                ImGui::SameLine();
+                ImGui::Text(GameHook::AccessoryNames(thirdAccessoryValue));
+                thirdAccessoryValue = GameHook::desiredThirdAccessory;
+            }
+
+            ImGui::Separator();
+
             ImGui::Text("Difficulty");
             ImGui::PushItemWidth(inputItemWidth);
             ImGui::InputInt("##DifficultyInputInt", &difficultyValue);
@@ -230,15 +244,6 @@ void GameHook::GameImGui(void) {
             ImGui::PopItemWidth();
             ImGui::SameLine();
             ImGui::Text(GameHook::CostumeNames(currentCostumeValue));
-
-            ImGui::Separator();
-
-            ImGui::Text("Third Accessory");
-            ImGui::PushItemWidth(inputItemWidth);
-            ImGui::InputInt("##ThirdAccessoryInputInt", &thirdAccessoryValue, 1, 100);
-            ImGui::PopItemWidth();
-            ImGui::SameLine();
-            ImGui::Text(GameHook::AccessoryNames(thirdAccessoryValue));
 
             ImGui::Separator();
 

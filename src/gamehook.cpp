@@ -2291,6 +2291,8 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	comboMakerMoveID2 = cfg.get<int>("ComboMakerMoveID2").value_or(-1);
 	comboMakerMovePart2 = cfg.get<int>("ComboMakerMovePart2").value_or(-1);
 	comboMakerStringID2 = cfg.get<int>("ComboMakerStringID2").value_or(-1);*/
+	GameHook::forceThirdAccessory_toggle = cfg.get<bool>("ForceThirdAccessoryToggle").value_or(false);
+	GameHook::desiredThirdAccessory = cfg.get<int>("DesiredThirdAccessoryValue").value_or(0);
 }
 
 void GameHook::onConfigSave(utils::Config& cfg) {
@@ -2365,5 +2367,7 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<int>("ComboMakerMovePart2", comboMakerMovePart2);
 	cfg.set<int>("ComboMakerStringID2", comboMakerStringID2);*/
 
+	cfg.set<bool>("ForceThirdAccessoryToggle", forceThirdAccessory_toggle);
+	cfg.set<int>("DesiredThirdAccessoryValue", desiredThirdAccessory);
 	cfg.save(GameHook::cfgString);
 }
