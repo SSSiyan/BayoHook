@@ -198,7 +198,7 @@ public:
 
 	static inline const char* cfgString{ "../bayo_hook.cfg" };
 	static inline utils::Config cfg{ "bayo_hook.cfg" };
-	static inline const char* dllName{"BayoHook 1.10"};
+	static inline const char* dllName{"BayoHook 1.11"};
 	static inline const char* repoUrl{ "https://github.com/SSSiyan/BayoHook" };
 private:
 };
