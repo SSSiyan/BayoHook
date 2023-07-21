@@ -2281,6 +2281,7 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	longerPillowTalkCharge_toggle = cfg.get<bool>("LongerPillowTalkChargeToggle").value_or(false);
 	alwaysWitchTime_toggle = cfg.get<bool>("AlwaysWitchTimeToggle").value_or(false);
 	saveStatesHotkeys_toggle = cfg.get<bool>("SaveStatesHotkeysToggle").value_or(false);
+	tauntWithTimeBracelet_toggle = cfg.get<bool>("TauntWithTimeBraceletToggle").value_or(false);
 
 	//tick
 	/*comboMakerTest1 = cfg.get<bool>("ComboMakerTest1Toggle").value_or(false);
@@ -2356,6 +2357,7 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("LongerPillowTalkChargeToggle", longerPillowTalkCharge_toggle);
 	cfg.set<bool>("AlwaysWitchTimeToggle", alwaysWitchTime_toggle);
 	cfg.set<bool>("SaveStatesHotkeysToggle", saveStatesHotkeys_toggle);
+	cfg.set<bool>("TauntWithTimeBraceletToggle", tauntWithTimeBracelet_toggle);
 
 	//tick
 	/*cfg.set<bool>("ComboMakerTest1Toggle", comboMakerTest1);
