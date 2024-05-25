@@ -408,6 +408,10 @@ void GameHook::GameImGui(void) {
 
             ImGui::Checkbox("Pause When Opening BayoHook", &GameHook::openMenuPause_toggle);
 
+            if (ImGui::Checkbox("Remove Vignette", &GameHook::removeVignette_toggle)) {
+                GameHook::RemoveVignette(GameHook::removeVignette_toggle);
+            }
+
             ImGui::Separator();
 
             ImGui::Checkbox("Force Input Type", &GameHook::inputIcons_toggle);
@@ -939,7 +943,7 @@ void GameHook::GameImGui(void) {
             ImGui::Separator();
 
             ImGui::Text("This trainer was made by:");
-            static std::array<ImGuiURL, 7> links1{
+            static std::array<ImGuiURL, 8> links1{
                 ImGuiURL { "SSSiyan", "https://twitter.com/sssiyan" },
                 ImGuiURL { "GarudaKK", "https://www.youtube.com/@GarudaPSN" },
                 ImGuiURL { "Kerilk", "https://github.com/Kerilk" },
@@ -947,6 +951,7 @@ void GameHook::GameImGui(void) {
                 ImGuiURL { "Skyth", "https://github.com/blueskythlikesclouds" },
                 ImGuiURL { "deepdarkkapustka", "https://www.youtube.com/@mstislavcapusta7573" },
                 ImGuiURL { "TheDarkness", "https://steamcommunity.com/id/TheDarkness704/" },
+                ImGuiURL { "Jan Schatter", "https://www.flickr.com/people/116494253@N05/" },
             };
             for (auto& link : links1) {
                 link.draw();

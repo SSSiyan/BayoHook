@@ -272,7 +272,7 @@ void GameHook::InfDivekick(bool enabled) {
 }
 
 bool GameHook::tauntWithTimeBracelet_toggle = false;
-void GameHook::TauntWithTimeBracelet (bool enabled) {
+void GameHook::TauntWithTimeBracelet(bool enabled) {
 	if (enabled) {
 		GameHook::_nop((char*)(0x9E74CF), 2);
 	}
@@ -282,7 +282,7 @@ void GameHook::TauntWithTimeBracelet (bool enabled) {
 }
 
 bool GameHook::parryOffset_toggle = false;
-void GameHook::ParryOffset (bool enabled) {
+void GameHook::ParryOffset(bool enabled) {
 	if (enabled) {
 		GameHook::_patch((char*)(0x8F0CA6), (char*)"\x83\xC4\x04\x90\x90", 5); // add esp,4 nop nop // Parry
 		GameHook::_patch((char*)(0x8F0D45), (char*)"\x83\xC4\x04\x90\x90", 5); // add esp,4 nop nop // Perfect Parry
@@ -290,6 +290,16 @@ void GameHook::ParryOffset (bool enabled) {
 	else {
 		GameHook::_patch((char*)(0x8F0CA6), (char*)"\xE8\xF5\x1B\xFE\xFF", 5); // call Bayonetta.exe+4D28A0 // Parry
 		GameHook::_patch((char*)(0x8F0D45), (char*)"\xE8\x56\x1B\xFE\xFF", 5); // call Bayonetta.exe+4D28A0 // Perfect Parry
+	}
+}
+
+bool GameHook::removeVignette_toggle = false;
+void GameHook::RemoveVignette(bool enabled) {
+	if (enabled) {
+		GameHook::_patch((char*)(0x43B06F), (char*)"\x90\x90\x90\x90", 4); // nop 4 
+	}
+	else {
+		GameHook::_patch((char*)(0x43B06F), (char*)"\xF3\x0F\x58\xD3", 4); // addss xmm2,xmm3
 	}
 }
 
@@ -2246,6 +2256,8 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	//AreaJumpPatch(areaJumpPatch_toggle);
 	parryOffset_toggle = cfg.get<bool>("ParryOffsetToggle").value_or(false);
 	ParryOffset(parryOffset_toggle);
+	removeVignette_toggle = cfg.get<bool>("RemoveVignetteToggle").value_or(false);
+	RemoveVignette(removeVignette_toggle);
 
 	// detours
 	enemyHP_no_damage_toggle = cfg.get<bool>("DealNoDamageToggle").value_or(false);
@@ -2322,6 +2334,7 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("JeanneBayoWTToggle", jeanneBayoWT_toggle);
 	cfg.set<bool>("InfDivekickToggle", infDivekick_toggle);
 	cfg.set<bool>("ParryOffsetToggle", parryOffset_toggle);
+	cfg.set<bool>("RemoveVignetteToggle", removeVignette_toggle);
 
 	//cfg.set<bool>("AreaJumpPatchToggle", areaJumpPatch_toggle);
 	// detours
