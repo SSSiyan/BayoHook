@@ -406,6 +406,11 @@ void GameHook::GameImGui(void) {
                 GameHook::SixtyFpsCutscenes(GameHook::sixtyFpsCutscenes_toggle);
             }
 
+            if (ImGui::Checkbox("Disable FPS Limiter", &GameHook::disableFpsLimiter_toggle)) {
+                GameHook::DisableFpsLimiter(GameHook::disableFpsLimiter_toggle);
+            }
+
+            ImGui::SameLine(sameLineWidth);
             ImGui::Checkbox("Pause When Opening BayoHook", &GameHook::openMenuPause_toggle);
 
             if (ImGui::Checkbox("Remove Vignette", &GameHook::removeVignette_toggle)) {

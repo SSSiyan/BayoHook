@@ -251,6 +251,20 @@ void GameHook::SixtyFpsCutscenes(bool enabled) {
 	}
 }
 
+bool GameHook::disableFpsLimiter_toggle = false;
+void GameHook::DisableFpsLimiter(bool enabled) {
+	if (enabled) {
+		GameHook::_patch((char*)(0xC54340), (char*)"\xC3", 1); // retn 
+		GameHook::_patch((char*)(0xC54430), (char*)"\xC3", 1); // retn 
+		GameHook::_patch((char*)(0x49E25D), (char*)"\x90\xE9", 2); // jmp
+	}
+	else {
+		GameHook::_patch((char*)(0xC54340), (char*)"\xF3", 1); // movss
+		GameHook::_patch((char*)(0xC54430), (char*)"\xF3", 1); // movss
+		GameHook::_patch((char*)(0x49E25D), (char*)"\x0F\x84", 2); // jz
+	}
+}
+
 bool GameHook::jeanneBayoWT_toggle = true;
 void GameHook::JeanneBayoWT(bool enabled) {
 	if (enabled) {
@@ -2248,6 +2262,8 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	SwapMashToHold(swapMashToHold_toggle);
 	sixtyFpsCutscenes_toggle = cfg.get<bool>("60FpsCutscenes").value_or(false);
 	SixtyFpsCutscenes(sixtyFpsCutscenes_toggle);
+	disableFpsLimiter_toggle = cfg.get<bool>("DisableFpsLimiter").value_or(false);
+	DisableFpsLimiter(disableFpsLimiter_toggle);
 	jeanneBayoWT_toggle = cfg.get<bool>("JeanneBayoWTToggle").value_or(false);
 	JeanneBayoWT(jeanneBayoWT_toggle);
 	infDivekick_toggle = cfg.get<bool>("InfDivekickToggle").value_or(false);
@@ -2331,6 +2347,7 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("RetainPillowTalkChargeToggle", retainPillowTalkCharge_toggle);
 	cfg.set<bool>("SwapMashToHoldToggle", swapMashToHold_toggle);
 	cfg.set<bool>("60FpsCutscenes", sixtyFpsCutscenes_toggle);
+	cfg.set<bool>("DisableFpsLimiter", disableFpsLimiter_toggle);
 	cfg.set<bool>("JeanneBayoWTToggle", jeanneBayoWT_toggle);
 	cfg.set<bool>("InfDivekickToggle", infDivekick_toggle);
 	cfg.set<bool>("ParryOffsetToggle", parryOffset_toggle);

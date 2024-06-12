@@ -38,6 +38,7 @@ public:
 	static bool retainPillowTalkCharge_toggle;
 	static bool swapMashToHold_toggle;
 	static bool sixtyFpsCutscenes_toggle;
+	static bool disableFpsLimiter_toggle;
 	static bool jeanneBayoWT_toggle;
 	static bool infDivekick_toggle;
 	static bool parryOffset_toggle;
@@ -68,6 +69,7 @@ public:
 	static void RetainPillowTalkCharge(bool enabled);
 	static void SwapMashToHold(bool enabled);
 	static void SixtyFpsCutscenes(bool enabled);
+	static void DisableFpsLimiter(bool enabled);
 	static void JeanneBayoWT(bool enabled);
 	static void InfDivekick(bool enabled);
 	static void TauntWithTimeBracelet(bool enabled);
