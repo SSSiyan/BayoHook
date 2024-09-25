@@ -342,6 +342,12 @@ void GameHook::GameImGui(void) {
             if (ImGui::Checkbox("Infinite Crow Within", &GameHook::infBirdTime_toggle)) {
                 InfBirdTime(infBirdTime_toggle);
             }
+            ImGui::SameLine(sameLineWidth);
+            if (ImGui::Checkbox("Disable Double Tap Inputs", &GameHook::disableDoubleTapHeelKick_toggle)) {
+                GameHook::DisableDoubleTapHeelKick(disableDoubleTapHeelKick_toggle);
+            }
+            ImGui::SameLine();
+            help_marker("Stiletto, Heel Slide etc");
 
             ImGui::Separator();
 

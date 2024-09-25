@@ -317,6 +317,16 @@ void GameHook::RemoveVignette(bool enabled) {
 	}
 }
 
+bool GameHook::disableDoubleTapHeelKick_toggle = false;
+void GameHook::DisableDoubleTapHeelKick(bool enabled) {
+	if (enabled) {
+		GameHook::_nop((char*)(0x9CE1CC), 8);
+	}
+	else {
+		GameHook::_patch((char*)(0x9CE1CC), (char*)"\xF3\x0F\x11\x86\x18\x36\x09\x00", 8); // puts 10 into doubletap timer
+	}
+}
+
 // detours
 std::unique_ptr<FunctionHook> enemyHPHook;
 uintptr_t enemyHP_jmp_ret{ NULL };
@@ -2274,6 +2284,8 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	ParryOffset(parryOffset_toggle);
 	removeVignette_toggle = cfg.get<bool>("RemoveVignetteToggle").value_or(false);
 	RemoveVignette(removeVignette_toggle);
+	disableDoubleTapHeelKick_toggle = cfg.get<bool>("DisableDoubleTapHeelKickToggle").value_or(false);
+	DisableDoubleTapHeelKick(disableDoubleTapHeelKick_toggle);
 
 	// detours
 	enemyHP_no_damage_toggle = cfg.get<bool>("DealNoDamageToggle").value_or(false);
@@ -2352,6 +2364,7 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("InfDivekickToggle", infDivekick_toggle);
 	cfg.set<bool>("ParryOffsetToggle", parryOffset_toggle);
 	cfg.set<bool>("RemoveVignetteToggle", removeVignette_toggle);
+	cfg.set<bool>("DisableDoubleTapHeelKickToggle", disableDoubleTapHeelKick_toggle);
 
 	//cfg.set<bool>("AreaJumpPatchToggle", areaJumpPatch_toggle);
 	// detours

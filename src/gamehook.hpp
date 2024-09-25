@@ -43,6 +43,7 @@ public:
 	static bool infDivekick_toggle;
 	static bool parryOffset_toggle;
 	static bool removeVignette_toggle;
+	static bool disableDoubleTapHeelKick_toggle;
 	// patch functions
 	static void TakeNoDamage(bool enabled);
 	static void DisableKilling(bool enabled);
@@ -75,6 +76,7 @@ public:
 	static void TauntWithTimeBracelet(bool enabled);
 	static void ParryOffset(bool enabled);
 	static void RemoveVignette(bool enabled);
+	static void DisableDoubleTapHeelKick(bool enabled);
 
 	static void WeaponSwapCaller(void);
 	static void SaveStates_SaveState();
@@ -204,7 +206,7 @@ public:
 
 	static inline const char* cfgString{ "../bayo_hook.cfg" };
 	static inline utils::Config cfg{ "bayo_hook.cfg" };
-	static inline const char* dllName{"BayoHook 1.11"};
+	static inline const char* dllName{"BayoHook 1.12"};
 	static inline const char* repoUrl{ "https://github.com/SSSiyan/BayoHook" };
 private:
 };
