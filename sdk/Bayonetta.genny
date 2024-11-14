@@ -1,0 +1,118 @@
+type void 0
+type bool 1 [[bool]]
+type uint8_t 1 [[u8]]
+type uint16_t 2 [[u16]]
+type int 4 [[u32]]
+type float 4 [[f32]]
+type wchar_t 2 [[u16]]
+type char 1 [[u8]]
+type uintptr_t 4 [[u32]]
+type virtual 4 [[u32]]
+
+enum PlayerForm {
+	Player = 0,
+	Panther = 1,
+	FirstPerson = 2,
+	Bird = 3
+}
+
+struct Vec3 {
+	float x;
+	float y;
+	float z;
+}
+
+struct LaserSword {
+	float buffDrainRate @ 0x6CC
+	float buffRemainingDuration @ 0x332C
+	float length @ 0x3330
+	// static charge duration at 0x00DA0DE8
+}
+
+struct WickedWeave {
+	Vec3 scale @ 0xF0
+}
+
+struct BayoLimb {
+	int isShooting @ 0x74
+	bool endOfStruct @ 0x18F
+}
+
+struct Player {
+	uintptr_t vtable @ 0x00
+	Vec3 pos @ 0xD0
+	Vec3 scale @ 0xF0
+	float camHeight @ 0x314
+	float alpha @ 0x324
+	int moveID @ 0x34C
+	int movePart @ 0x350
+	int moveUnkn1 @ 0x354
+	int summoningSomething @ 0x358
+	float animFrame @ 0x3E4
+	int playerInvuln @ 0x354
+	int playerAerial @ 0x69C
+	int hp @ 0x6B4
+	float speed @ 0x6CC
+	float iFramesRemaining @ 0x730
+	Vec3 colouredHairDurationRGB @ 0xCC0
+	float colouredHairTimer @ 0xCCC
+	LaserSword* laserSword @ 0x5BC0
+	bool noClip @ 0x93104
+	int dodgeCount @ 0x94794
+	int jumpCount @ 0x93578
+	int wallJumpCount @ 0x93578
+	int divekickCount @ 0x9358C
+	int m_JoySpinCnt @ 0x935E4
+	float m_RhythmTimer @ 0x93A04
+	int m_bRhythmActionSuccess @ 0x93A10
+	float m_RapidActPlusTimer @ 0x93A1C
+	float m_RapidActMinusTimer @ 0x93A24
+	WickedWeave* handWeave @ 0x937C0
+	WickedWeave* idkWeave1 @ 0x937C4
+	WickedWeave* idkWeave2 @ 0x937C8
+	WickedWeave* idkWeave3 @ 0x937CC
+	WickedWeave* legWeave @ 0x937D0
+	float batWithinTimer @ 0x94878
+	int m_RapidType @ 0x93A1C
+	float m_RapidActRate @ 0x93A20
+	float m_RapidActPlusTimer @ 0x93A24
+	float m_RapidActMinusWait @ 0x93A28
+	float m_RapidActMinusTimer2 @ 0x93A2C
+	BayoLimb* rightHand @ 0x93AC0
+	BayoLimb* leftHand @ 0x93C50
+	BayoLimb* rightLeg @ 0x93DE0
+	BayoLimb* leftLeg @ 0x93DE0
+	float batWithinFrames @ 0x94878
+	int clothesRelated1 @ 0x94A90
+	int clothesRelated2 @ 0x94A94
+	int inputsHold @ 0x94B44
+	int inputsDown @ 0x94B48
+	int inputsUp @ 0x94B4C
+	int stringID @ 0x95C64
+	float comboTimer @ 0x95C80 // static combo timer at 0x00DA0BC8
+	bool isWhipSlap @ 0x95C8C
+	int comboHit[7] @ 0x95C94
+	int playerAttackCount @ 0x95CBC
+	uintptr_t bayoSkeleton @ 0x9224C // some of this mapped out in CE
+	float birdTimer @ 0x9351C
+	float divekickCount2 @ 0x9358C
+	uintptr_t summoningHair @ 0x93710
+	uintptr_t summoningBody @ 0x93714 // gets ptr from 0x00
+	int hideEverythingInCutscene @ 0x94C00
+	int qteThing @ 0x95D88
+	int clothesRelated3 @ 0x94A90
+	float witchTimeDuration @ 0x95D5C
+	float witchTimeMaxProbably @ 0x95D60
+	int clothesRelated4 @ 0x95F08
+	int walkOnWallsEffect @ 0x95F18
+	int walkOnWallsRelated @ 0x95FC4
+	bool walkOnWalls @ 0x95ED4
+	int clothesTransformation @ 0x96330
+	float clothesTransformationTimer @ 0x96334
+	int cutsceneToggleMaybe @ 0x96338
+	int facePlate @ 0x965D0
+	int enemyCount @ 0x96B34
+	Vec3 colouredHairIntensityRGB @ 0x96C00
+	PlayerForm form @ 0x96B24
+	int clothesColourRGB @ 0x96B38
+}

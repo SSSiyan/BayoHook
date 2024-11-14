@@ -172,6 +172,7 @@
     <ClInclude Include="src\gamehook.hpp" />
     <ClInclude Include="src\LicenseStrings.hpp" />
     <ClInclude Include="src\pch.h" />
+    <ClInclude Include="src\sdk\Bayonetta.hpp" />
     <ClInclude Include="utils\Address.hpp" />
     <ClInclude Include="utils\config.hpp" />
     <ClInclude Include="utils\FunctionHook.hpp" />

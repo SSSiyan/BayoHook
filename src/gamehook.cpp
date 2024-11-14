@@ -992,6 +992,49 @@ static __declspec(naked) void AlwaysWitchTimeDetour(void) {
 	}
 }
 
+int __stdcall GetCustomWeave(localPlayer* player) {
+    int moveID = player->moveID;
+    for (int i = 0; i < GameHook::customWeaveCount; ++i) {
+        if (GameHook::customWeaveMoveIDArray[i] == moveID) {
+            return GameHook::customWeaveArray[i];
+        }
+    }
+    return 0;
+}
+
+std::unique_ptr<FunctionHook> customWeavesHook;
+uintptr_t customWeaves_jmp_ret{ NULL };
+bool GameHook::customWeaves_toggle = false;
+int GameHook::customWeaveArray[customWeaveCount]{};
+int GameHook::customWeaveMoveIDArray[customWeaveCount] {};
+uintptr_t customWeavePlayerPtr{ NULL };
+static __declspec(naked) void CustomWeavesDetour(void) { // player in esi
+	_asm {
+		cmp byte ptr [GameHook::customWeaves_toggle], 0
+		je originalcode
+
+		push eax // +4
+		push ecx // +8
+		push edx // +C
+		push esi // player
+		call dword ptr GetCustomWeave
+		test eax, eax
+		je dontReplace
+		mov [esp+0xC+8], eax
+		dontReplace:
+		// add esp, 4 // __cdecl
+		pop edx
+		pop ecx
+		pop eax
+
+		originalcode:
+		push ebx
+		push ebp
+		mov ebp, [esp+0x0C]
+		jmp dword ptr [customWeaves_jmp_ret]
+	}
+}
+
 std::unique_ptr<FunctionHook> getMotNameHook;
 uintptr_t getMotName_jmp_ret{ NULL };
 bool GameHook::getMotName_toggle = false;
@@ -2224,6 +2267,7 @@ void GameHook::InitializeDetours(void) {
 	install_hook_absolute(0x6222D0, loadReplaceHook, &LoadReplaceDetour, &loadReplace_jmp_ret, 6);
 	install_hook_absolute(0x4CCCA0, longerPillowTalkChargeHook, &LongerPillowTalkChargeDetour, &longerPillowTalkCharge_jmp_ret, 6);
 	install_hook_absolute(0x8EF527, alwaysWitchTimeHook, &AlwaysWitchTimeDetour, &alwaysWitchTime_jmp_ret, 8);
+	install_hook_absolute(0x87F270, customWeavesHook, &CustomWeavesDetour, &customWeaves_jmp_ret, 6);
 	install_hook_absolute(0x9F5AF0, pl0012Hook, &pl0012Detour, NULL, 0);
 	install_hook_absolute(0x9FC890, pl0031Hook, &pl0031Detour, NULL, 0);
 	install_hook_absolute(0xA17420, pl004cHook, &pl004cDetour, NULL, 0);
@@ -2322,6 +2366,11 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	alwaysWitchTime_toggle = cfg.get<bool>("AlwaysWitchTimeToggle").value_or(false);
 	saveStatesHotkeys_toggle = cfg.get<bool>("SaveStatesHotkeysToggle").value_or(false);
 	tauntWithTimeBracelet_toggle = cfg.get<bool>("TauntWithTimeBraceletToggle").value_or(false);
+	customWeaves_toggle = cfg.get<bool>("CustomWeavesToggle").value_or(false);
+	for (int i = 0; i < customWeaveCount; ++i) {
+		customWeaveMoveIDArray[i] = cfg.get<int>(std::string("CustomWeaveMoveIDArray[") + std::to_string(i) + "]").value_or(-1);
+		customWeaveArray[i] = cfg.get<int>(std::string("CustomWeaveArray[") + std::to_string(i) + "]").value_or(-1);
+	}
 
 	//tick
 	/*comboMakerTest1 = cfg.get<bool>("ComboMakerTest1Toggle").value_or(false);
@@ -2401,6 +2450,11 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("AlwaysWitchTimeToggle", alwaysWitchTime_toggle);
 	cfg.set<bool>("SaveStatesHotkeysToggle", saveStatesHotkeys_toggle);
 	cfg.set<bool>("TauntWithTimeBraceletToggle", tauntWithTimeBracelet_toggle);
+	cfg.set<bool>("CustomWeavesToggle", customWeaves_toggle);
+	for (int i = 0; i < customWeaveCount; ++i) {
+		cfg.set<int>(("CustomWeaveMoveIDArray[" + std::to_string(i) + "]").c_str(), customWeaveMoveIDArray[i]);
+		cfg.set<int>(("CustomWeaveArray[" + std::to_string(i) + "]").c_str(), customWeaveArray[i]);
+	}
 
 	//tick
 	/*cfg.set<bool>("ComboMakerTest1Toggle", comboMakerTest1);

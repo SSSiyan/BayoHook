@@ -824,7 +824,7 @@ void GameHook::GameImGui(void) {
 
             ImGui::Separator();
 
-            ImGui::Checkbox("Combo Maker Test 1", &GameHook::comboMakerTest1);
+            ImGui::Checkbox("Combo Maker [1]", &GameHook::comboMakerTest1);
             GameHook::help_marker("Compare to a moveid and number in attack string to swap out specific combo route transitions");
             GameHook::help_marker("Should you want more freedom than this provides,\n"
                 "I've included a Cheat Engine table with examples and a script ready for editing in the Github repo's \"extra\" folder\n"
@@ -861,8 +861,7 @@ void GameHook::GameImGui(void) {
 
             ImGui::Separator();
 
-            ImGui::Checkbox("Combo Maker Test 2", &GameHook::comboMakerTest2);
-            GameHook::help_marker("The same as 1, but again");
+            ImGui::Checkbox("Combo Maker [2]", &GameHook::comboMakerTest2);
             if (GameHook::comboMakerTest2) {
                 uintptr_t actorPlayable = *(uintptr_t*)GameHook::playerPointerAddress;
                 if (actorPlayable) {
@@ -891,6 +890,24 @@ void GameHook::GameImGui(void) {
                 }
                 else 
                     ImGui::Text("Load in to a stage to see these stats");
+            }
+
+            ImGui::Separator();
+
+            ImGui::Checkbox("Custom Weaves", &customWeaves_toggle);
+            if (customWeaves_toggle) {
+                for (int i = 0; i < customWeaveCount; ++i) {
+                    ImGui::PushItemWidth(inputItemWidth);
+                    ImGui::Text("Custom Weave %i", i+1);
+                    ImGui::Text("If moveID ==    ");
+                    ImGui::SameLine();
+                    ImGui::InputInt(("##customWeaveMoveIDArray" + std::to_string(i)).c_str(), &customWeaveMoveIDArray[i]);
+                    ImGui::Text("Then weaveID == ");
+                    ImGui::SameLine();
+                    ImGui::InputInt(("##customWeaveArray" + std::to_string(i)).c_str(), &customWeaveArray[i]);
+                    ImGui::PopItemWidth();
+                    ImGui::Separator();
+                }
             }
 
             ImGui::Separator();

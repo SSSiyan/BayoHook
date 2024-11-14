@@ -8,6 +8,7 @@
 #include "MinHook/include/MinHook.h"
 #include "../utils/FunctionHook.hpp"
 #include "imgui/imgui.h"
+#include "sdk/Bayonetta.hpp"
 
 #include <base.h> // for Data::ShowMenu
 
@@ -146,6 +147,10 @@ public:
 	static float saveStates_SavedEnemyXYZPos[3];
 	static int saveStates_SavedPlayerMoveID;
 	static float saveStates_SavedPlayerXYZPos[3];
+	static bool customWeaves_toggle;
+	static const int customWeaveCount = 20;
+	static int customWeaveArray[];
+	static int customWeaveMoveIDArray[];
 
 	// addresses
 	static uintptr_t playerPointerAddress;
@@ -167,6 +172,7 @@ public:
 	static uintptr_t WeaponA2Address;
 	static uintptr_t WeaponB1Address;
 	static uintptr_t WeaponB2Address;
+	static uintptr_t CustomWeavesAddress;
 
 	// imgui
 	static float windowHeightHack;
