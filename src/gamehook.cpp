@@ -462,19 +462,24 @@ static __declspec(naked) void HaloDisplayDetour(void) {
 	}
 }
 
+int __stdcall GetSwappedMoveID(int nextMoveID) {
+    for (int i = 0; i < GameHook::maxMoveIDSwaps; ++i) {
+		if (GameHook::moveIDSwap_toggles[i] && GameHook::moveIDSwapSourceMoves[i] == nextMoveID) {
+            return GameHook::moveIDSwapSwappedMoves[i];
+        }
+    }
+    return -1;
+}
+
 std::unique_ptr<FunctionHook> moveIDSwapHook;
 uintptr_t moveIDSwap_jmp_ret{ NULL };
-bool GameHook::moveIDSwap_toggle = false;
-
-int GameHook::moveIDSwapSourceMove1 = -1;
-int GameHook::moveIDSwapSourceMove2 = -1;
-int GameHook::moveIDSwapDesiredMove1 = 0;
-int GameHook::moveIDSwapDesiredMove2 = 0;
-
-static __declspec(naked) void MoveIDSwapDetour(void) {
+bool GameHook::moveIDSwap_toggles[maxMoveIDSwaps]{};
+int GameHook::moveIDSwapSourceMoves[maxMoveIDSwaps]{};
+int GameHook::moveIDSwapSwappedMoves[maxMoveIDSwaps]{};
+static __declspec(naked) void MoveIDSwapDetour(void) { // player in ecx
 	_asm {
-		cmp byte ptr [GameHook::moveIDSwap_toggle], 0
-		je originalcode
+		// cmp byte ptr [GameHook::moveIDSwap_toggle], 0
+		// je originalcode
 
 		push eax
 		mov eax, [GameHook::playerPointerAddress] // only edit player anim
@@ -482,22 +487,27 @@ static __declspec(naked) void MoveIDSwapDetour(void) {
 		pop eax
 		jne originalcode
 
-		cmp edx, [GameHook::moveIDSwapSourceMove1]
-		je newMove1
-		cmp edx, [GameHook::moveIDSwapSourceMove2]
-		je newMove2
-		jmp originalcode
 
-		newMove1:
-		mov edx, [GameHook::moveIDSwapDesiredMove1]
-		jmp originalcode
+		push eax // +4
+		push ecx // +8
+		push edx // +C
+		push edx // nextMoveID
+		call dword ptr GetSwappedMoveID
+		cmp eax, -1
+		je dontReplace
+		pop edx
+		pop ecx
+		mov [ecx+0x0000034C], eax
+		pop eax
+		jmp retcode
 
-		newMove2:
-		mov edx, [GameHook::moveIDSwapDesiredMove2]
-		jmp originalcode
-
+	dontReplace:
+		pop edx
+		pop ecx
+		pop eax
 		originalcode:
 		mov [ecx+0x0000034C], edx
+	retcode:
 		jmp dword ptr [moveIDSwap_jmp_ret]
 	}
 }
@@ -995,39 +1005,38 @@ static __declspec(naked) void AlwaysWitchTimeDetour(void) {
 int __stdcall GetCustomWeave(localPlayer* player) {
     int moveID = player->moveID;
     for (int i = 0; i < GameHook::customWeaveCount; ++i) {
-        if (GameHook::customWeaveMoveIDArray[i] == moveID) {
+        if (GameHook::customWeaves_toggles[i] && GameHook::customWeaveMoveIDArray[i] == moveID) {
             return GameHook::customWeaveArray[i];
         }
     }
-    return 0;
+    return -1;
 }
 
 std::unique_ptr<FunctionHook> customWeavesHook;
 uintptr_t customWeaves_jmp_ret{ NULL };
-bool GameHook::customWeaves_toggle = false;
+bool GameHook::customWeaves_toggles[customWeaveCount]{};
 int GameHook::customWeaveArray[customWeaveCount]{};
-int GameHook::customWeaveMoveIDArray[customWeaveCount] {};
+int GameHook::customWeaveMoveIDArray[customWeaveCount]{};
 uintptr_t customWeavePlayerPtr{ NULL };
 static __declspec(naked) void CustomWeavesDetour(void) { // player in esi
 	_asm {
-		cmp byte ptr [GameHook::customWeaves_toggle], 0
-		je originalcode
+		// cmp byte ptr [GameHook::customWeaves_toggle], 0
+		// je originalcode
 
 		push eax // +4
 		push ecx // +8
 		push edx // +C
 		push esi // player
 		call dword ptr GetCustomWeave
-		test eax, eax
+		cmp eax, -1
 		je dontReplace
 		mov [esp+0xC+8], eax
-		dontReplace:
-		// add esp, 4 // __cdecl
+	dontReplace:
 		pop edx
 		pop ecx
 		pop eax
 
-		originalcode:
+	// originalcode:
 		push ebx
 		push ebp
 		mov ebp, [esp+0x0C]
@@ -2268,6 +2277,8 @@ void GameHook::InitializeDetours(void) {
 	install_hook_absolute(0x4CCCA0, longerPillowTalkChargeHook, &LongerPillowTalkChargeDetour, &longerPillowTalkCharge_jmp_ret, 6);
 	install_hook_absolute(0x8EF527, alwaysWitchTimeHook, &AlwaysWitchTimeDetour, &alwaysWitchTime_jmp_ret, 8);
 	install_hook_absolute(0x87F270, customWeavesHook, &CustomWeavesDetour, &customWeaves_jmp_ret, 6);
+	int& thirdAccessoryValue = *(int*)GameHook::thirdAccessoryAddress;
+	thirdAccessoryValue = GameHook::desiredThirdAccessory;
 	install_hook_absolute(0x9F5AF0, pl0012Hook, &pl0012Detour, NULL, 0);
 	install_hook_absolute(0x9FC890, pl0031Hook, &pl0031Detour, NULL, 0);
 	install_hook_absolute(0xA17420, pl004cHook, &pl004cDetour, NULL, 0);
@@ -2366,22 +2377,24 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	alwaysWitchTime_toggle = cfg.get<bool>("AlwaysWitchTimeToggle").value_or(false);
 	saveStatesHotkeys_toggle = cfg.get<bool>("SaveStatesHotkeysToggle").value_or(false);
 	tauntWithTimeBracelet_toggle = cfg.get<bool>("TauntWithTimeBraceletToggle").value_or(false);
-	customWeaves_toggle = cfg.get<bool>("CustomWeavesToggle").value_or(false);
+	for (int i = 0; i < maxMoveIDSwaps; ++i) {
+		moveIDSwap_toggles[i] = cfg.get<bool>(std::string("MoveIDSwap_toggles[") + std::to_string(i) + "]").value_or(false);
+		moveIDSwapSourceMoves[i] = cfg.get<int>(std::string("MoveIDSwapSourceMoves[") + std::to_string(i) + "]").value_or(-1);
+		moveIDSwapSwappedMoves[i] = cfg.get<int>(std::string("MoveIDSwapSwappedMoves[") + std::to_string(i) + "]").value_or(-1);
+	}
+	for (int i = 0; i < maxComboMakers; ++i) {
+		comboMaker_toggles[i] = cfg.get<bool>(std::string("ComboMaker_toggles[") + std::to_string(i) + "]").value_or(false);
+		comboMakerMoveIDs[i] = cfg.get<int>(std::string("ComboMakerMoveIDs[") + std::to_string(i) + "]").value_or(-1);
+		comboMakerMoveParts[i] = cfg.get<int>(std::string("ComboMakerMoveParts[") + std::to_string(i) + "]").value_or(-1);
+		comboMakerStringIDs[i] = cfg.get<int>(std::string("ComboMakerStringIDs[") + std::to_string(i) + "]").value_or(-1);
+	}
 	for (int i = 0; i < customWeaveCount; ++i) {
+		customWeaves_toggles[i] = cfg.get<bool>(std::string("CustomWeaves_toggles[") + std::to_string(i) + "]").value_or(false);
 		customWeaveMoveIDArray[i] = cfg.get<int>(std::string("CustomWeaveMoveIDArray[") + std::to_string(i) + "]").value_or(-1);
 		customWeaveArray[i] = cfg.get<int>(std::string("CustomWeaveArray[") + std::to_string(i) + "]").value_or(-1);
 	}
 
 	//tick
-	/*comboMakerTest1 = cfg.get<bool>("ComboMakerTest1Toggle").value_or(false);
-	comboMakerMoveID1 = cfg.get<int>("ComboMakerMoveID1").value_or(-1);
-	comboMakerMovePart1 = cfg.get<int>("ComboMakerMovePart1").value_or(-1);
-	comboMakerStringID1 = cfg.get<int>("ComboMakerStringID1").value_or(-1);
-	comboMakerTest2 = cfg.get<bool>("ComboMakerTest2Toggle").value_or(false);
-	comboMakerMoveID2 = cfg.get<int>("ComboMakerMoveID2").value_or(-1);
-	comboMakerMovePart2 = cfg.get<int>("ComboMakerMovePart2").value_or(-1);
-	comboMakerStringID2 = cfg.get<int>("ComboMakerStringID2").value_or(-1);*/
-	GameHook::forceThirdAccessory_toggle = cfg.get<bool>("ForceThirdAccessoryToggle").value_or(false);
 	GameHook::desiredThirdAccessory = cfg.get<int>("DesiredThirdAccessoryValue").value_or(0);
 }
 
@@ -2450,23 +2463,25 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("AlwaysWitchTimeToggle", alwaysWitchTime_toggle);
 	cfg.set<bool>("SaveStatesHotkeysToggle", saveStatesHotkeys_toggle);
 	cfg.set<bool>("TauntWithTimeBraceletToggle", tauntWithTimeBracelet_toggle);
-	cfg.set<bool>("CustomWeavesToggle", customWeaves_toggle);
+	for (int i = 0; i < maxMoveIDSwaps; ++i) {
+		cfg.set<bool>(("MoveIDSwap_toggles[" + std::to_string(i) + "]").c_str(), moveIDSwap_toggles[i]);
+		cfg.set<int>(("MoveIDSwapSourceMoves[" + std::to_string(i) + "]").c_str(), moveIDSwapSourceMoves[i]);
+		cfg.set<int>(("MoveIDSwapSwappedMoves[" + std::to_string(i) + "]").c_str(), moveIDSwapSwappedMoves[i]);
+	}
+	for (int i = 0; i < maxComboMakers; ++i) {
+		cfg.set<bool>(("ComboMaker_toggles[" + std::to_string(i) + "]").c_str(), comboMaker_toggles[i]);
+		cfg.set<int>(("ComboMakerMoveIDs[" + std::to_string(i) + "]").c_str(), comboMakerMoveIDs[i]);
+		cfg.set<int>(("ComboMakerMoveParts[" + std::to_string(i) + "]").c_str(), comboMakerMoveParts[i]);
+		cfg.set<int>(("ComboMakerStringIDs[" + std::to_string(i) + "]").c_str(), comboMakerStringIDs[i]);
+	}
+	cfg.set<bool>("CustomWeavesToggle", customWeaves_toggles);
 	for (int i = 0; i < customWeaveCount; ++i) {
+		cfg.set<bool>(("CustomWeaves_toggles[" + std::to_string(i) + "]").c_str(), customWeaves_toggles[i]);
 		cfg.set<int>(("CustomWeaveMoveIDArray[" + std::to_string(i) + "]").c_str(), customWeaveMoveIDArray[i]);
 		cfg.set<int>(("CustomWeaveArray[" + std::to_string(i) + "]").c_str(), customWeaveArray[i]);
 	}
 
-	//tick
-	/*cfg.set<bool>("ComboMakerTest1Toggle", comboMakerTest1);
-	cfg.set<int>("ComboMakerMoveID1", comboMakerMoveID1);
-	cfg.set<int>("ComboMakerMovePart1", comboMakerMovePart1);
-	cfg.set<int>("ComboMakerStringID1", comboMakerStringID1);
-	cfg.set<bool>("ComboMakerTest2Toggle", comboMakerTest2);
-	cfg.set<int>("ComboMakerMoveID2", comboMakerMoveID2);
-	cfg.set<int>("ComboMakerMovePart2", comboMakerMovePart2);
-	cfg.set<int>("ComboMakerStringID2", comboMakerStringID2);*/
-
-	cfg.set<bool>("ForceThirdAccessoryToggle", forceThirdAccessory_toggle);
+	// tick
 	cfg.set<int>("DesiredThirdAccessoryValue", desiredThirdAccessory);
 	cfg.save(GameHook::cfgString);
 }

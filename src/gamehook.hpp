@@ -99,26 +99,28 @@ public:
 	static bool haloDisplay_toggle;
 	static int haloDisplayValue;
 	//
-	static bool moveIDSwap_toggle;
-	static int moveIDSwapSourceMove1;
-	static int moveIDSwapSourceMove2;
-	static int moveIDSwapDesiredMove1;
-	static int moveIDSwapDesiredMove2;
+	static const int maxMoveIDSwaps = 5;
+	static bool moveIDSwap_toggles[];
+	static int moveIDSwapSourceMoves[];
+	static int moveIDSwapSwappedMoves[];
+	//
 	static bool stringIDSwap_toggle;
 	static int stringIDSwapSourceString1;
 	static int stringIDSwapSourceString2;
 	static int stringIDSwapDesiredString1;
 	static int stringIDSwapDesiredString2;
 	//
-	static bool comboMakerTest1;
-	static int comboMakerMoveID1;
-	static int comboMakerMovePart1;
-	static int comboMakerStringID1;
-	static bool comboMakerTest2;
-	static int comboMakerMoveID2;
-	static int comboMakerMovePart2;
-	static int comboMakerStringID2;
-	static bool forceThirdAccessory_toggle;
+    static const int maxComboMakers = 5;
+    static bool comboMaker_toggles[];
+    static int comboMakerMoveIDs[];
+    static int comboMakerMoveParts[];
+    static int comboMakerStringIDs[];
+	//
+	static const int customWeaveCount = 20;
+	static bool customWeaves_toggles[];
+	static int customWeaveArray[];
+	static int customWeaveMoveIDArray[];
+	//
 	static int desiredThirdAccessory;
 	//
 	static bool easierMash_toggle;
@@ -147,10 +149,6 @@ public:
 	static float saveStates_SavedEnemyXYZPos[3];
 	static int saveStates_SavedPlayerMoveID;
 	static float saveStates_SavedPlayerXYZPos[3];
-	static bool customWeaves_toggle;
-	static const int customWeaveCount = 20;
-	static int customWeaveArray[];
-	static int customWeaveMoveIDArray[];
 
 	// addresses
 	static uintptr_t playerPointerAddress;

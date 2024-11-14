@@ -44,34 +44,25 @@ uintptr_t GameHook::WeaponB1Address = 0x5AA742C;
 uintptr_t GameHook::WeaponB2Address = 0x5AA7430;
 
 // tick
-bool GameHook::comboMakerTest1 = false;
-int GameHook::comboMakerMoveID1 = 0;
-int GameHook::comboMakerMovePart1 = 0;
-int GameHook::comboMakerStringID1 = 0;
-bool GameHook::comboMakerTest2 = false;
-int GameHook::comboMakerMoveID2 = 0;
-int GameHook::comboMakerMovePart2 = 0;
-int GameHook::comboMakerStringID2 = 0;
-bool GameHook::forceThirdAccessory_toggle = false;
+bool GameHook::comboMaker_toggles[maxComboMakers]{};
+int  GameHook::comboMakerMoveIDs[maxComboMakers]{};
+int  GameHook::comboMakerMoveParts[maxComboMakers]{};
+int  GameHook::comboMakerStringIDs[maxComboMakers]{};
+
 int GameHook::desiredThirdAccessory = 0;
 
-void GameHook::GameTick(void) {
+void GameHook::GameTick(void) { // also called while the menu isn't open
     uintptr_t actorPlayable = *(uintptr_t*)GameHook::playerPointerAddress;
     if (actorPlayable) {
-        if (comboMakerTest1) {
-            int& playerMoveIDValue = *(int*)(actorPlayable + 0x34C);
-            int& playerAttackCount = *(int*)(actorPlayable + 0x95CBC);
-            int& playerStringIDValue = *(int*)(actorPlayable + 0x95C64);
-            if (playerMoveIDValue == comboMakerMoveID1 && playerAttackCount == comboMakerMovePart1) {
-                playerStringIDValue = comboMakerStringID1;
-            }
-        }
-        if (comboMakerTest2) {
-            int& playerMoveIDValue = *(int*)(actorPlayable + 0x34C);
-            int& playerAttackCount = *(int*)(actorPlayable + 0x95CBC);
-            int& playerStringIDValue = *(int*)(actorPlayable + 0x95C64);
-            if (playerMoveIDValue == comboMakerMoveID2 && playerAttackCount == comboMakerMovePart2) {
-                playerStringIDValue = comboMakerStringID2;
+        int& playerMoveIDValue = *(int*)(actorPlayable + 0x34C);
+        int& playerAttackCount = *(int*)(actorPlayable + 0x95CBC);
+        int& playerStringIDValue = *(int*)(actorPlayable + 0x95C64);
+
+        for (int i = 0; i < maxComboMakers; ++i) {
+            if (comboMaker_toggles[i]) {
+                if (playerMoveIDValue == comboMakerMoveIDs[i] && playerAttackCount == comboMakerMoveParts[i]) {
+                    playerStringIDValue = comboMakerStringIDs[i];
+                }
             }
         }
     }
@@ -175,16 +166,14 @@ void GameHook::GameImGui(void) {
             }
 
             ImGui::Separator();
-
-            ImGui::Checkbox("Third Accessory", &GameHook::forceThirdAccessory_toggle);
-            if (GameHook::forceThirdAccessory_toggle) {
-                ImGui::PushItemWidth(inputItemWidth);
-                ImGui::InputInt("##ThirdAccessoryInputInt", &GameHook::desiredThirdAccessory, 1, 10);
-                ImGui::PopItemWidth();
-                ImGui::SameLine();
-                ImGui::Text(GameHook::AccessoryNames(thirdAccessoryValue));
-                thirdAccessoryValue = GameHook::desiredThirdAccessory;
-            }
+            
+            ImGui::Text("Third Accessory");
+            ImGui::PushItemWidth(inputItemWidth);
+            ImGui::InputInt("##ThirdAccessoryInputInt", &GameHook::desiredThirdAccessory, 1, 10);
+            ImGui::PopItemWidth();
+            ImGui::SameLine();
+            ImGui::Text(GameHook::AccessoryNames(thirdAccessoryValue));
+            thirdAccessoryValue = GameHook::desiredThirdAccessory;
 
             ImGui::Separator();
 
@@ -715,56 +704,100 @@ void GameHook::GameImGui(void) {
         if (ImGui::BeginTabItem("Extra")) {
             ImGui::BeginChild("ExtraChild");
 
-            ImGui::Checkbox("Move Swap Test ##MoveSwapTestToggle", &GameHook::moveIDSwap_toggle);
-            help_marker("Do the move you want to see, pause mid anim, hit the first button\nDo the move you want to replace, pause mid anim, hit the second button");
-            if (GameHook::moveIDSwap_toggle) {
-                uintptr_t actorPlayable = *(uintptr_t*)GameHook::playerPointerAddress;
-                if (actorPlayable) {
-                    int& playerMoveIDValue = *(int*)(actorPlayable + 0x34C);
-                    ImGui::Text("Current Move ID");
-
-                    ImGui::PushItemWidth(inputItemWidth);
-                    ImGui::InputInt("##CurrentStringIDInputInt", &playerMoveIDValue, 0, 0);
-                    ImGui::PopItemWidth();
-
-                    ImGui::Text("Desired Move ID 1");
-                    ImGui::PushItemWidth(inputItemWidth);
-                    ImGui::InputInt("##DesiredMoveIDInputInt1", &GameHook::moveIDSwapDesiredMove1);
-                    ImGui::PopItemWidth();
-                    ImGui::SameLine();
-                    if (ImGui::Button("Save Current Move ID as desired ##1")) {
-                        GameHook::moveIDSwapDesiredMove1 = playerMoveIDValue;
+            for (int i = 0; i < GameHook::maxMoveIDSwaps; ++i) {
+                ImGui::Checkbox(("Move Swap[" + std::to_string(i + 1) + "]").c_str(), &moveIDSwap_toggles[i]);
+                GameHook::help_marker("Do the move you want to see, pause mid anim, type your current moveID in the first box\n"
+                                        "Do the move you want to replace, pause mid anim, type your current moveID in the second box");
+                if (GameHook::moveIDSwap_toggles[i]) {
+                    uintptr_t actorPlayable = *(uintptr_t*)GameHook::playerPointerAddress;
+                    if (actorPlayable) {
+                        int& playerMoveIDValue = *(int*)(actorPlayable + 0x34C);
+                        ImGui::PushItemWidth(inputItemWidth);
+                        ImGui::Text("Current Move ID: %i", playerMoveIDValue);
+                        ImGui::Text("Replace moveID:");
+                        ImGui::SameLine();
+                        ImGui::InputInt(("##CurrentStringIDInputInt" + std::to_string(i)).c_str(), &GameHook::moveIDSwapSourceMoves[i], 0, 0);
+                        ImGui::SameLine();
+                        ImGui::Text("With:");
+                        ImGui::SameLine(); ImGui::InputInt(("##DesiredMoveIDInputInt" + std::to_string(i)).c_str(), &GameHook::moveIDSwapSwappedMoves[i]);
+                        ImGui::PopItemWidth();
                     }
-                    ImGui::Text("Source Anim ID 1");
-                    ImGui::PushItemWidth(inputItemWidth);
-                    ImGui::InputInt("##SourceMoveIDInputInt1", &GameHook::moveIDSwapSourceMove1);
-                    ImGui::PopItemWidth();
-                    ImGui::SameLine();
-                    if (ImGui::Button("Save Current Move ID as source ##2")) {
-                        GameHook::moveIDSwapSourceMove1 = playerMoveIDValue;
-                    }
-
-                    ImGui::Separator();
-
-                    ImGui::Text("Desired Move ID 2");
-                    ImGui::PushItemWidth(inputItemWidth);
-                    ImGui::InputInt("##DesiredMoveIDInputInt2", &GameHook::moveIDSwapDesiredMove2);
-                    ImGui::PopItemWidth();
-                    ImGui::SameLine();
-                    if (ImGui::Button("Save Current Move ID as desired ##2")) {
-                        GameHook::moveIDSwapDesiredMove2 = playerMoveIDValue;
-                    }
-                    ImGui::Text("Source Anim ID 2");
-                    ImGui::PushItemWidth(inputItemWidth);
-                    ImGui::InputInt("##SourceMoveIDInputInt2", &GameHook::moveIDSwapSourceMove2);
-                    ImGui::PopItemWidth();
-                    ImGui::SameLine();
-                    if (ImGui::Button("Save Current Move ID as source ##2")) {
-                        GameHook::moveIDSwapSourceMove2 = playerMoveIDValue;
-                    }
+                    else
+                        ImGui::Text("Load in to a stage to see these stats");
                 }
-                else
-                    ImGui::Text("Load in to a stage to see these stats");
+            }
+
+            ImGui::Separator();
+
+            for (int i = 0; i < maxComboMakers; ++i) {
+                ImGui::Checkbox(("Combo Maker[" + std::to_string(i + 1) + "]").c_str(), &comboMaker_toggles[i]);
+                if (comboMaker_toggles[i]) {
+                    uintptr_t actorPlayable = *(uintptr_t*)GameHook::playerPointerAddress;
+                    if (actorPlayable) {
+                        int& playerMoveIDValue = *(int*)(actorPlayable + 0x34C);
+                        int& playerAttackCount = *(int*)(actorPlayable + 0x95CBC);
+                        int& playerStringIDValue = *(int*)(actorPlayable + 0x95C64);
+
+                        ImGui::Text("Current MoveID: %i", playerMoveIDValue);
+                        ImGui::Text("Current Number In String: %i", playerAttackCount);
+                        ImGui::Text("Current String ID: %i", playerStringIDValue);
+
+                        ImGui::Text("if MoveID ==");
+                        ImGui::SameLine();
+
+                        // Unique input for MoveID
+                        std::string moveIDLabel = "##ComboMakerMoveID" + std::to_string(i) + "InputInt";
+                        ImGui::PushItemWidth(inputItemWidth);
+                        ImGui::InputInt(moveIDLabel.c_str(), &comboMakerMoveIDs[i]);
+                        ImGui::PopItemWidth();
+
+                        ImGui::Text("and current attack number in string ==");
+                        ImGui::SameLine();
+
+                        // Unique input for Move Part
+                        std::string movePartLabel = "##ComboMakerMovePart" + std::to_string(i) + "InputInt";
+                        ImGui::PushItemWidth(inputItemWidth);
+                        ImGui::InputInt(movePartLabel.c_str(), &comboMakerMoveParts[i]);
+                        ImGui::PopItemWidth();
+
+                        ImGui::Text("then StringID =");
+                        ImGui::SameLine();
+
+                        // Unique input for StringID
+                        std::string stringIDLabel = "##ComboMakerStringID" + std::to_string(i);
+                        ImGui::PushItemWidth(inputItemWidth);
+                        ImGui::InputInt(stringIDLabel.c_str(), &comboMakerStringIDs[i]);
+                        ImGui::PopItemWidth();
+                    }
+                    else
+                        ImGui::Text("Load in to a stage to see these stats");
+                }
+            }
+
+            ImGui::Separator();
+
+            for (int i = 0; i < customWeaveCount; ++i) {
+                ImGui::Checkbox(("Custom Weave[" + std::to_string(i + 1) + "]").c_str(), &customWeaves_toggles[i]);
+                if (customWeaves_toggles[i]) {
+                    uintptr_t actorPlayable = *(uintptr_t*)GameHook::playerPointerAddress;
+                    if (actorPlayable) {
+                        int& playerMoveIDValue = *(int*)(actorPlayable + 0x34C);
+                        ImGui::Text("Current MoveID: %i", playerMoveIDValue);
+                        ImGui::PushItemWidth(inputItemWidth);
+                        ImGui::Text("Custom Weave %i", i + 1);
+                        ImGui::Text("If moveID ==    ");
+                        ImGui::SameLine();
+                        ImGui::InputInt(("##customWeaveMoveIDArray" + std::to_string(i)).c_str(), &customWeaveMoveIDArray[i]);
+                        ImGui::SameLine();
+                        ImGui::Text("Then weaveID == ");
+                        ImGui::SameLine();
+                        ImGui::InputInt(("##customWeaveArray" + std::to_string(i)).c_str(), &customWeaveArray[i]);
+                        ImGui::PopItemWidth();
+                        ImGui::Separator();
+                    }
+                    else
+                        ImGui::Text("Load in to a stage to see these stats");
+                }
             }
 
             ImGui::Separator();
@@ -820,94 +853,6 @@ void GameHook::GameImGui(void) {
                 }
                 else
                     ImGui::Text("Load in to a stage to see these stats");
-            }
-
-            ImGui::Separator();
-
-            ImGui::Checkbox("Combo Maker [1]", &GameHook::comboMakerTest1);
-            GameHook::help_marker("Compare to a moveid and number in attack string to swap out specific combo route transitions");
-            GameHook::help_marker("Should you want more freedom than this provides,\n"
-                "I've included a Cheat Engine table with examples and a script ready for editing in the Github repo's \"extra\" folder\n"
-                "(link to repo in the Info tab)");
-            if (GameHook::comboMakerTest1) {
-                uintptr_t actorPlayable = *(uintptr_t*)GameHook::playerPointerAddress;
-                if (actorPlayable) {
-                    int& playerMoveIDValue = *(int*)(actorPlayable + 0x34C);
-                    int& playerAttackCount = *(int*)(actorPlayable + 0x95CBC);
-                    int& playerStringIDValue = *(int*)(actorPlayable + 0x95C64);
-                    ImGui::Text("Current MoveID = %i", playerMoveIDValue);
-                    ImGui::Text("Current Number In String = %i", playerAttackCount);
-                    ImGui::Text("Current String ID = %i", playerStringIDValue);
-                    ImGui::Text("if MoveID ==");
-                    ImGui::SameLine();
-                    ImGui::PushItemWidth(inputItemWidth);
-                    ImGui::InputInt("##ComboMakerMoveID1InputInt", &comboMakerMoveID1);
-                    ImGui::PopItemWidth();
-                    ImGui::Text("and current attack number in string ==");
-                    ImGui::SameLine();
-                    ImGui::PushItemWidth(inputItemWidth);
-                    ImGui::InputInt("##ComboMakerMovePart1InputInt", &comboMakerMovePart1);
-                    ImGui::PopItemWidth();
-                    ImGui::Text("then StringID =");
-                    ImGui::SameLine();
-                    ImGui::PushItemWidth(inputItemWidth);
-                    ImGui::InputInt("##ComboMakerStringID1", &comboMakerStringID1);
-                    ImGui::PopItemWidth();
-                    // written in void GameHook::GameTick(void)
-                }
-                else 
-                    ImGui::Text("Load in to a stage to see these stats");
-            }
-
-            ImGui::Separator();
-
-            ImGui::Checkbox("Combo Maker [2]", &GameHook::comboMakerTest2);
-            if (GameHook::comboMakerTest2) {
-                uintptr_t actorPlayable = *(uintptr_t*)GameHook::playerPointerAddress;
-                if (actorPlayable) {
-                    int& playerMoveIDValue = *(int*)(actorPlayable + 0x34C);
-                    int& playerAttackCount = *(int*)(actorPlayable + 0x95CBC);
-                    int& playerStringIDValue = *(int*)(actorPlayable + 0x95C64);
-                    ImGui::Text("Current MoveID = %i", playerMoveIDValue);
-                    ImGui::Text("Current Number In String = %i", playerAttackCount);
-                    ImGui::Text("Current String ID = %i", playerStringIDValue);
-                    ImGui::Text("if MoveID ==");
-                    ImGui::SameLine();
-                    ImGui::PushItemWidth(inputItemWidth);
-                    ImGui::InputInt("##ComboMakerMoveID2InputInt", &comboMakerMoveID2);
-                    ImGui::PopItemWidth();
-                    ImGui::Text("and current attack number in string ==");
-                    ImGui::SameLine();
-                    ImGui::PushItemWidth(inputItemWidth);
-                    ImGui::InputInt("##ComboMakerMovePart2InputInt", &comboMakerMovePart2);
-                    ImGui::PopItemWidth();
-                    ImGui::Text("then StringID =");
-                    ImGui::SameLine();
-                    ImGui::PushItemWidth(inputItemWidth);
-                    ImGui::InputInt("##ComboMakerStringID2", &comboMakerStringID2);
-                    ImGui::PopItemWidth();
-                    // written in void GameHook::GameTick(void)
-                }
-                else 
-                    ImGui::Text("Load in to a stage to see these stats");
-            }
-
-            ImGui::Separator();
-
-            ImGui::Checkbox("Custom Weaves", &customWeaves_toggle);
-            if (customWeaves_toggle) {
-                for (int i = 0; i < customWeaveCount; ++i) {
-                    ImGui::PushItemWidth(inputItemWidth);
-                    ImGui::Text("Custom Weave %i", i+1);
-                    ImGui::Text("If moveID ==    ");
-                    ImGui::SameLine();
-                    ImGui::InputInt(("##customWeaveMoveIDArray" + std::to_string(i)).c_str(), &customWeaveMoveIDArray[i]);
-                    ImGui::Text("Then weaveID == ");
-                    ImGui::SameLine();
-                    ImGui::InputInt(("##customWeaveArray" + std::to_string(i)).c_str(), &customWeaveArray[i]);
-                    ImGui::PopItemWidth();
-                    ImGui::Separator();
-                }
             }
 
             ImGui::Separator();
