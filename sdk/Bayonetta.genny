@@ -49,8 +49,8 @@ struct Player {
 	int moveUnkn1 @ 0x354
 	int summoningSomething @ 0x358
 	float animFrame @ 0x3E4
-	int playerInvuln @ 0x354
-	int playerAerial @ 0x69C
+	int invincibility @ 0x354
+	int aerial @ 0x69C
 	int hp @ 0x6B4
 	float speed @ 0x6CC
 	float iFramesRemaining @ 0x730
@@ -92,7 +92,7 @@ struct Player {
 	float comboTimer @ 0x95C80 // static combo timer at 0x00DA0BC8
 	bool isWhipSlap @ 0x95C8C
 	int comboHit[7] @ 0x95C94
-	int playerAttackCount @ 0x95CBC
+	int attackCount @ 0x95CBC
 	uintptr_t bayoSkeleton @ 0x9224C // some of this mapped out in CE
 	float birdTimer @ 0x9351C
 	float divekickCount2 @ 0x9358C
@@ -115,4 +115,15 @@ struct Player {
 	Vec3 colouredHairIntensityRGB @ 0x96C00
 	PlayerForm form @ 0x96B24
 	int clothesColourRGB @ 0x96B38
+}
+
+struct Enemy {
+	Vec3 pos @ 0xD0
+	int moveID @ 0x34C
+	float animFrame @ 0x3E4
+	int hp @ 0x6B4
+	float daze @ 0xC94
+	float dazeMax @ 0xC98
+	float dazeCurrentDuration @ 0xC9C // / 360
+	float dazeMaxDurationProbably @ 0xCA0
 }

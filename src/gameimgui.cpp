@@ -444,24 +444,14 @@ void GameHook::GameImGui(void) {
                 ImGui::Checkbox("HUD Display", &hudDisplayValue);
                 help_marker("Show HP etc");
 
-                ImGui::Text("Halos");
                 ImGui::PushItemWidth(inputItemWidth * 2);
-                ImGui::InputInt("##HaloInputInt", &halosValue, 1, 100);
+                ImGui::InputInt("Halos##HaloInputInt", &halosValue, 1, 100);
                 ImGui::PopItemWidth();
 
-                ImGui::Text("Chapters Played");
                 ImGui::PushItemWidth(inputItemWidth);
-                ImGui::InputInt("##ChapterInputInt", &chaptersPlayedValue, 1, 100);
-                ImGui::PopItemWidth();
-
-                ImGui::Text("Combo Points");
-                ImGui::PushItemWidth(inputItemWidth);
-                ImGui::InputInt("##ComboPointsInputInt", &comboPointsValue, 10, 100);
-                ImGui::PopItemWidth();
-
-                ImGui::Text("Combo Multiplier");
-                ImGui::PushItemWidth(inputItemWidth);
-                ImGui::InputFloat("##ComboMultiplierInputFloat", &comboMultiplierValue, 1, 10, "%.1f");
+                ImGui::InputInt("Chapters Played##ChapterInputInt", &chaptersPlayedValue, 1, 100);
+                ImGui::InputInt("Combo Points##ComboPointsInputInt", &comboPointsValue, 10, 100);
+                ImGui::InputFloat("Combo Multiplier##ComboMultiplierInputFloat", &comboMultiplierValue, 1, 10, "%.1f");
                 ImGui::PopItemWidth();
 
                 ImGui::Text("Weapon Set A:");
@@ -498,9 +488,9 @@ void GameHook::GameImGui(void) {
                 localPlayer* player = GetLocalPlayer();
                 if (player) {
                     float& playerMagicValue = *(float*)GameHook::playerMagicAddress; // not player offset but keeping it here anyway
-                    static Vec3 playerTempHairColour{ 1.0f, 1.0f, 1.0f };
 
                     ImGui::Separator();
+
                     ImGui::InputFloat3("Position##PlayerPositionInputFloat3", &player->pos.x);
                     if (ImGui::Button("Teleport to 0, 0, 0")) {
                         player->pos = { 0.0f, 0.0f, 0.0f };
@@ -529,38 +519,14 @@ void GameHook::GameImGui(void) {
 
             if (ImGui::CollapsingHeader("Locked On Enemy Stats")) {
                 ImGui::TreePush("LockedOnEnemyStatsTree");
-                uintptr_t* enemy_ptr = (uintptr_t*)GameHook::enemyLockedOnAddress;
-                uintptr_t enemy_base = *enemy_ptr;
-                if (enemy_base) {
-                    float* enemyXYZPos[3];
-                    enemyXYZPos[0] = (float*)(enemy_base + 0xD0);
-                    enemyXYZPos[1] = (float*)(enemy_base + 0xD4);
-                    enemyXYZPos[2] = (float*)(enemy_base + 0xD8);
-                    int& enemyHPValue = *(int*)(enemy_base + 0x6B4);
-                    int& enemyMoveIDValue = *(int*)(enemy_base + 0x34C);
-                    float& enemyAnimFrameValue = *(float*)(enemy_base + 0x3E4);
-                    float& enemyDazeBuildupValue = *(float*)(enemy_base + 0xC94);
-                    float& enemyDazeDurationValue = *(float*)(enemy_base + 0xC9C);
-
-                    uintptr_t enemyHPPtr = *(uintptr_t*)(enemy_base + 0xA00);
-                    int& enemyBossHPValue = *(int*)(enemyHPPtr + 0x6B4);
-
+                Enemy* enemy = *(Enemy**)GameHook::enemyLockedOnAddress;
+                if (enemy) {
                     ImGui::Separator();
-
-                    ImGui::Text("Enemy Position");
-                    ImGui::InputFloat3("##EnemyXYZPosInputFloat", *enemyXYZPos);
-                    ImGui::Text("Enemy HP");
-                    ImGui::InputInt("##EnemyHPInputInt", &enemyHPValue);
-                    ImGui::Text("Enemy Move ID");
-                    ImGui::InputInt("##EnemyMoveIDInputInt", &enemyMoveIDValue);
-                    ImGui::Text("Enemy Daze Buildup");
-                    ImGui::InputFloat("##EnemyDazeBuildupInputFloat", &enemyDazeBuildupValue, 10, 100, "%.0f");
-                    ImGui::Text("Enemy Daze Duration");
-                    ImGui::InputFloat("##EnemyDazeDurationInputFloat", &enemyDazeDurationValue, 10, 100, "%.0f");
-                    if (enemyHPPtr) {
-                        ImGui::Text("Enemy Boss HP");
-                        ImGui::InputInt("##EnemyBossHPInputInt", &enemyBossHPValue);
-                    }
+                    ImGui::InputFloat3("Position##EnemyXYZPosInputFloat", &enemy->pos.x);
+                    ImGui::InputInt("HP##EnemyHPInputInt", &enemy->hp);
+                    ImGui::InputInt("Move ID##EnemyMoveIDInputInt", &enemy->moveID);
+                    ImGui::InputFloat("Daze##EnemyDazeBuildupInputFloat", &enemy->daze, 10, 100, "%.0f");
+                    ImGui::InputFloat("Daze Duration##EnemyDazeDurationInputFloat", &enemy->dazeCurrentDuration, 10, 100, "%.0f");
 
                     ImGui::Checkbox("Enable Save/Load Hotkeys", &GameHook::saveStatesHotkeys_toggle);
                     help_marker("Home = Save\nEnd = Load");
