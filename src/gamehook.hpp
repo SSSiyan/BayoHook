@@ -194,6 +194,7 @@ public:
 	static void help_marker(const char* desc);
 	static inline void under_line(const ImColor& col);
 	static const char* weaponNames[16];
+	static const char* weaveNames[37];
 	static const char* costumeNames[32];
 	static const char* accessoryNames[13];
 	static int messageTimerFill;
@@ -215,7 +216,7 @@ public:
 
 	static inline const char* cfgString{ "../bayo_hook.cfg" };
 	static inline utils::Config cfg{ "bayo_hook.cfg" };
-	static inline const char* dllName{"BayoHook 1.12"};
+	static inline const char* dllName{"BayoHook 1.13"};
 	static inline const char* repoUrl{ "https://github.com/SSSiyan/BayoHook" };
 private:
 };

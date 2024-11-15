@@ -538,8 +538,8 @@ std::unique_ptr<FunctionHook> moveIDSwapHook;
 uintptr_t moveIDSwap_jmp_ret{ NULL };
 static __declspec(naked) void MoveIDSwapDetour(void) { // player in ecx
 	_asm {
-		// cmp byte ptr [GameHook::moveIDSwap_toggle], 0
-		// je originalcode
+		cmp byte ptr [GameHook::moveIDSwapsToggle], 0
+		je originalcode
 
 		push eax
 		mov eax, [GameHook::playerPointerAddress] // only edit player anim
@@ -565,7 +565,7 @@ static __declspec(naked) void MoveIDSwapDetour(void) { // player in ecx
 		pop edx
 		pop ecx
 		pop eax
-		originalcode:
+	originalcode:
 		mov [ecx+0x0000034C], edx
 	retcode:
 		jmp dword ptr [moveIDSwap_jmp_ret]
@@ -574,7 +574,7 @@ static __declspec(naked) void MoveIDSwapDetour(void) { // player in ecx
 
 int __stdcall GetSwappedStringID(int nextStringID) {
     for (int i = 0; i < GameHook::maxMoveIDSwaps; ++i) {
-		if (GameHook::moveIDSwap_toggles[i] && GameHook::stringIDSwapSourceStrings[i] == nextStringID) {
+		if (GameHook::stringIDSwap_toggles[i] && GameHook::stringIDSwapSourceStrings[i] == nextStringID) {
             return GameHook::stringIDSwapDesiredStrings[i];
         }
     }
@@ -585,8 +585,8 @@ std::unique_ptr<FunctionHook> punchStringIDSwapHook;
 uintptr_t punchStringIDSwap_jmp_ret{ NULL };
 static __declspec(naked) void PunchStringIDSwapDetour(void) {
 	_asm {
-		// cmp byte ptr [GameHook::stringIDSwap_toggle], 0
-		// je originalcode
+		cmp byte ptr [GameHook::stringSwapsToggle], 0
+		je originalcode
 
 		push eax
 		mov eax, [GameHook::playerPointerAddress] // only edit player anim
@@ -623,8 +623,8 @@ std::unique_ptr<FunctionHook> latePunchStringIDSwapHook;
 uintptr_t latePunchStringIDSwap_jmp_ret{ NULL };
 static __declspec(naked) void LatePunchStringIDSwapDetour(void) {
 	_asm {
-		// cmp byte ptr [GameHook::stringIDSwap_toggle], 0
-		// je originalcode
+		cmp byte ptr [GameHook::stringSwapsToggle], 0
+		je originalcode
 
 		push eax
 		mov eax, [GameHook::playerPointerAddress] // only edit player anim
@@ -660,8 +660,8 @@ std::unique_ptr<FunctionHook> kickStringIDSwapHook;
 uintptr_t kickStringIDSwap_jmp_ret{ NULL };
 static __declspec(naked) void KickStringIDSwapDetour(void) {
 	_asm {
-		// cmp byte ptr [GameHook::stringIDSwap_toggle], 0
-		// je originalcode
+		cmp byte ptr [GameHook::stringSwapsToggle], 0
+		je originalcode
 
 		push eax
 		mov eax, [GameHook::playerPointerAddress] // only edit player anim
@@ -697,8 +697,8 @@ std::unique_ptr<FunctionHook> lateKickStringIDSwapHook;
 uintptr_t lateKickStringIDSwap_jmp_ret{ NULL };
 static __declspec(naked) void LateKickStringIDSwapDetour(void) {
 	_asm {
-		// cmp byte ptr [GameHook::stringIDSwap_toggle], 0
-		// je originalcode
+		cmp byte ptr [GameHook::stringSwapsToggle], 0
+		je originalcode
 
 		push eax
 		mov eax, [GameHook::playerPointerAddress] // only edit player anim
@@ -2245,31 +2245,27 @@ float GameHook::saveStates_SavedEnemyXYZPos[3]{0, 0, 0};
 int GameHook::saveStates_SavedPlayerMoveID = 0;
 float GameHook::saveStates_SavedPlayerXYZPos[3];
 void GameHook::SaveStates_SaveState() {
-	if (GameHook::saveStatesHotkeys_toggle) {
-		uintptr_t* enemy_ptr = (uintptr_t*)GameHook::enemyLockedOnAddress;
-		uintptr_t enemy_base = *enemy_ptr;
-		if (enemy_base) {
-			// GameHook::saveStates_SavedEnemyAnimFrame = *(float*)(enemy_base + 0x3E4);
-			GameHook::saveStates_SavedEnemyMoveID = *(int*)(enemy_base + 0x34C);
-			// GameHook::saveStates_SavedEnemyMovePart = *(int*)(enemy_base + 0x350);
-			GameHook::saveStates_SavedEnemyXYZPos[0] = *(float*)(enemy_base + 0xD0);
-			GameHook::saveStates_SavedEnemyXYZPos[1] = *(float*)(enemy_base + 0xD4);
-			GameHook::saveStates_SavedEnemyXYZPos[2] = *(float*)(enemy_base + 0xD8);
-		}
+	uintptr_t* enemy_ptr = (uintptr_t*)GameHook::enemyLockedOnAddress;
+	uintptr_t enemy_base = *enemy_ptr;
+	if (enemy_base) {
+		// GameHook::saveStates_SavedEnemyAnimFrame = *(float*)(enemy_base + 0x3E4);
+		GameHook::saveStates_SavedEnemyMoveID = *(int*)(enemy_base + 0x34C);
+		// GameHook::saveStates_SavedEnemyMovePart = *(int*)(enemy_base + 0x350);
+		GameHook::saveStates_SavedEnemyXYZPos[0] = *(float*)(enemy_base + 0xD0);
+		GameHook::saveStates_SavedEnemyXYZPos[1] = *(float*)(enemy_base + 0xD4);
+		GameHook::saveStates_SavedEnemyXYZPos[2] = *(float*)(enemy_base + 0xD8);
 	}
 }
 void GameHook::SaveStates_LoadState() {
-	if (GameHook::saveStatesHotkeys_toggle) {
-		uintptr_t* enemy_ptr = (uintptr_t*)GameHook::enemyLockedOnAddress;
-		uintptr_t enemy_base = *enemy_ptr;
-		if (enemy_base) {
-			// *(float*)(enemy_base + 0x3E4) = GameHook::saveStates_SavedEnemyAnimFrame;
-			*(int*)(enemy_base + 0x34C) = GameHook::saveStates_SavedEnemyMoveID;
-			*(int*)(enemy_base + 0x350) = 0; // cancel current anim
-			*(float*)(enemy_base + 0xD0) = GameHook::saveStates_SavedEnemyXYZPos[0];
-			*(float*)(enemy_base + 0xD4) = GameHook::saveStates_SavedEnemyXYZPos[1];
-			*(float*)(enemy_base + 0xD8) = GameHook::saveStates_SavedEnemyXYZPos[2];
-		}
+	uintptr_t* enemy_ptr = (uintptr_t*)GameHook::enemyLockedOnAddress;
+	uintptr_t enemy_base = *enemy_ptr;
+	if (enemy_base) {
+		// *(float*)(enemy_base + 0x3E4) = GameHook::saveStates_SavedEnemyAnimFrame;
+		*(int*)(enemy_base + 0x34C) = GameHook::saveStates_SavedEnemyMoveID;
+		*(int*)(enemy_base + 0x350) = 0; // cancel current anim
+		*(float*)(enemy_base + 0xD0) = GameHook::saveStates_SavedEnemyXYZPos[0];
+		*(float*)(enemy_base + 0xD4) = GameHook::saveStates_SavedEnemyXYZPos[1];
+		*(float*)(enemy_base + 0xD8) = GameHook::saveStates_SavedEnemyXYZPos[2];
 	}
 }
 

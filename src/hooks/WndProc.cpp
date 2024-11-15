@@ -62,10 +62,14 @@ LRESULT CALLBACK Base::Hooks::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
 			GameHook::showMessageTimerF6 = GameHook::messageTimerFill;
 			break;
 		case VK_HOME:
-			GameHook::SaveStates_SaveState();
+			if (GameHook::saveStatesHotkeys_toggle) {
+				GameHook::SaveStates_SaveState();
+			}
 			break;
 		case VK_END:
-			GameHook::SaveStates_LoadState();
+			if (GameHook::saveStatesHotkeys_toggle) {
+				GameHook::SaveStates_LoadState();
+			}
 			break;
 		}
 	}
