@@ -34,7 +34,7 @@ struct WickedWeave {
 }
 
 struct BayoLimb {
-	int isShooting @ 0x74
+	bool isShooting @ 0x74
 	bool endOfStruct @ 0x18F
 }
 
@@ -57,7 +57,7 @@ struct LocalPlayer {
 	Vec3 colouredHairDurationRGB @ 0xCC0
 	float colouredHairTimer @ 0xCCC
 	LaserSword* laserSword @ 0x5BC0
-	bool noClip @ 0x93104
+	bool clip @ 0x93104
 	int dodgeCount @ 0x94794
 	int hp @ 0x93508
 	int jumpCount @ 0x93578
@@ -79,10 +79,10 @@ struct LocalPlayer {
 	float m_RapidActPlusTimer @ 0x93A24
 	float m_RapidActMinusWait @ 0x93A28
 	float m_RapidActMinusTimer2 @ 0x93A2C
-	BayoLimb* rightHand @ 0x93AC0
-	BayoLimb* leftHand @ 0x93C50
-	BayoLimb* rightLeg @ 0x93DE0
-	BayoLimb* leftLeg @ 0x93DE0
+	BayoLimb rightHand @ 0x93AC0
+	BayoLimb leftHand @ 0x93C50
+	BayoLimb rightLeg @ 0x93DE0
+	BayoLimb leftLeg @ 0x93F70
 	float batWithinFrames @ 0x94878
 	int clothesRelated1 @ 0x94A90
 	int clothesRelated2 @ 0x94A94

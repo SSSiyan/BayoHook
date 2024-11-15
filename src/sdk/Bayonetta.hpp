@@ -36,11 +36,12 @@ struct WickedWeave {
 #pragma pack(push, 1)
 struct BayoLimb {
     char pad_0[0x74];
-    int isShooting; // 0x74
-    char pad_78[0x117];
+    bool isShooting; // 0x74
+    char pad_75[0x11a];
     bool endOfStruct; // 0x18f
 }; // Size: 0x190
 #pragma pack(pop)
+
 
 #pragma pack(push, 1)
 struct LocalPlayer {
@@ -76,7 +77,7 @@ struct LocalPlayer {
     char pad_5bc4[0x8c688];
     uintptr_t bayoSkeleton; // 0x9224c
     char pad_92250[0xeb4];
-    bool noClip; // 0x93104
+    bool clip; // 0x93104
     char pad_93105[0x403];
     int hp; // 0x93508
     char pad_9350c[0x10];
@@ -107,12 +108,11 @@ struct LocalPlayer {
     float m_RapidActMinusWait; // 0x93a28
     float m_RapidActMinusTimer2; // 0x93a2c
     char pad_93a30[0x90];
-    BayoLimb* rightHand; // 0x93ac0
-    char pad_93ac4[0x18c];
-    BayoLimb* leftHand; // 0x93c50
-    char pad_93c54[0x18c];
-    BayoLimb* leftLeg; // 0x93de0
-    char pad_93de4[0x9b0];
+    BayoLimb rightHand; // 0x93ac0
+    BayoLimb leftHand; // 0x93c50
+    BayoLimb rightLeg; // 0x93de0
+    BayoLimb leftLeg; // 0x93f70
+    char pad_94100[0x694];
     int dodgeCount; // 0x94794
     char pad_94798[0xe0];
     float batWithinFrames; // 0x94878

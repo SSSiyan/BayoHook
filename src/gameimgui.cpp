@@ -539,7 +539,8 @@ void GameHook::GameImGui(void) {
                         player->pos = { 0.0f, 0.0f, 0.0f };
                     }
                     ImGui::PushItemWidth(inputItemWidth);
-                    ImGui::InputInt("HPDamage##PlayerHPInputInt", &player->hpDamage, 1, 100);
+                    ImGui::InputInt("HP##PlayerHPInputInt", &player->hp, 10, 100);
+                    ImGui::InputInt("HPDamage##PlayerHPDamageInputInt", &player->hpDamage, 10, 100);
                     ImGui::InputFloat("MP##PlayerMPInputFloat", &playerMagicValue, 1, 100, "%.0f");
                     ImGui::InputFloat("Remaining Witch Time Duration##PlayerRemainingWitchTimeDurationInputFloat", &player->witchTimeDuration, 10, 100, "%.0f");
                     ImGui::InputFloat("Remaining Invinciblity##PlayerRemainingInvinciblityInputFloat", &player->iFramesRemaining, 10, 100, "%.0f");
@@ -566,7 +567,7 @@ void GameHook::GameImGui(void) {
                 if (enemy) {
                     ImGui::Separator();
                     ImGui::InputFloat3("Position##EnemyXYZPosInputFloat", &enemy->pos.x);
-                    ImGui::InputInt("HP##EnemyHPInputInt", &enemy->hp);
+                    ImGui::InputInt("HP##EnemyHPInputInt", &enemy->hp, 10, 100);
                     ImGui::InputInt("Move ID##EnemyMoveIDInputInt", &enemy->moveID);
                     ImGui::InputFloat("Daze##EnemyDazeBuildupInputFloat", &enemy->daze, 10, 100, "%.0f");
                     ImGui::InputFloat("Daze Duration##EnemyDazeDurationInputFloat", &enemy->dazeCurrentDuration, 10, 100, "%.0f");
@@ -603,14 +604,19 @@ void GameHook::GameImGui(void) {
                     ImGui::InputInt("+358 summoningSomething", &player->summoningSomething);
                     ImGui::InputFloat("+3E4 animFrame", &player->animFrame);
                     ImGui::InputInt("+69C aerial", &player->aerial);
-                    ImGui::InputInt("+6B4 hpDamage", &player->hpDamage);
+                    ImGui::InputInt("+6B4 hpDamage", &player->hpDamage, 10, 100);
                     ImGui::InputFloat("+6CC speed", &player->speed);
                     ImGui::InputFloat("+730 iFramesRemaining", &player->iFramesRemaining);
                     ImGui::InputFloat3("+CC0 colouredHairDurationRGB", &player->colouredHairDurationRGB.x);
                     ImGui::InputFloat("+CCC colouredHairTimer", &player->colouredHairTimer);
                     ImGui::Text("+5BC0 laserSword: 0x%p", (void*)player->laserSword);
+                    ImGui::Indent();
+                    ImGui::InputFloat("+6cc buffDrainRate", &player->laserSword->buffDrainRate);
+                    ImGui::InputFloat("+332c buffRemainingDuration", &player->laserSword->buffRemainingDuration);
+                    ImGui::InputFloat("+3330 length", &player->laserSword->length);
+                    ImGui::Unindent();
                     ImGui::Text("+9224C bayoSkeleton: 0x%p", (void*)player->bayoSkeleton);
-                    ImGui::Checkbox("+93104 noClip", &player->noClip);
+                    ImGui::Checkbox("+93104 clip", &player->clip);
                     ImGui::InputInt("+93508 hp", &player->hp);
                     ImGui::InputFloat("+9351C birdTimer", &player->birdTimer);
                     ImGui::InputInt("+93578 wallJumpCount", &player->wallJumpCount);
@@ -619,10 +625,25 @@ void GameHook::GameImGui(void) {
                     ImGui::Text("+93710 summoningHair: 0x%p", (void*)player->summoningHair);
                     ImGui::Text("+93714 summoningBody: 0x%p", (void*)player->summoningBody);
                     ImGui::Text("+937C0 handWeave: 0x%p", (void*)player->handWeave);
+                    ImGui::Indent();
+                    ImGui::InputFloat3("+F0 scale##handweave", &player->handWeave->scale.x);
+                    ImGui::Unindent();
                     ImGui::Text("+937C4 idkWeave1: 0x%p", (void*)player->idkWeave1);
+                    ImGui::Indent();
+                    ImGui::InputFloat3("+F0 scale##idkweave1", &player->idkWeave1->scale.x);
+                    ImGui::Unindent();
                     ImGui::Text("+937C8 idkWeave2: 0x%p", (void*)player->idkWeave2);
+                    ImGui::Indent();
+                    ImGui::InputFloat3("+F0 scale##idkweave2", &player->idkWeave2->scale.x);
+                    ImGui::Unindent();
                     ImGui::Text("+937CC idkWeave3: 0x%p", (void*)player->idkWeave3);
+                    ImGui::Indent();
+                    ImGui::InputFloat3("+F0 scale##idkweave3", &player->idkWeave3->scale.x);
+                    ImGui::Unindent();
                     ImGui::Text("+937D0 legWeave: 0x%p", (void*)player->legWeave);
+                    ImGui::Indent();
+                    ImGui::InputFloat3("+F0 scale##legweave", &player->legWeave->scale.x);
+                    ImGui::Unindent();
                     ImGui::InputFloat("+93A04 m_RhythmTimer", &player->m_RhythmTimer);
                     ImGui::InputInt("+93A10 m_bRhythmActionSuccess", &player->m_bRhythmActionSuccess);
                     ImGui::InputInt("+93A1C m_RapidType", &player->m_RapidType);
@@ -630,11 +651,24 @@ void GameHook::GameImGui(void) {
                     ImGui::InputFloat("+93A24 m_RapidActMinusTimer", &player->m_RapidActMinusTimer);
                     ImGui::InputFloat("+93A28 m_RapidActMinusWait", &player->m_RapidActMinusWait);
                     ImGui::InputFloat("+93A2C m_RapidActMinusTimer2", &player->m_RapidActMinusTimer2);
-                    ImGui::Text("+93AC0 rightHand: 0x%p", (void*)player->rightHand);
-                    ImGui::Text("+93C50 leftHand: 0x%p", (void*)player->leftHand);
-                    ImGui::Text("+93DE0 leftLeg: 0x%p", (void*)player->leftLeg);
+                    ImGui::Text("+93AC0 rightHand: 0x%p", (void*)&player->rightHand);
+                    ImGui::Indent();
+                    ImGui::Checkbox("+74 isShooting##rightHand", &player->rightHand.isShooting);
+                    ImGui::Unindent();
+                    ImGui::Text("+93C50 leftHand: 0x%p", (void*)&player->leftHand);
+                    ImGui::Indent();
+                    ImGui::Checkbox("+74 isShooting##leftHand", &player->leftHand.isShooting);
+                    ImGui::Unindent();
+                    ImGui::Text("+93DE0 rightLeg: 0x%p", (void*)&player->rightLeg);
+                    ImGui::Indent();
+                    ImGui::Checkbox("+74 isShooting##rightLeg", &player->rightLeg.isShooting);
+                    ImGui::Unindent();
+                    ImGui::Text("+93DE0 leftLeg: 0x%p", (void*)&player->leftLeg);
+                    ImGui::Indent();
+                    ImGui::Checkbox("+74 isShooting##leftLeg", &player->leftLeg.isShooting);
+                    ImGui::Unindent();
                     ImGui::InputInt("+94794 dodgeCount", &player->dodgeCount);
-                    ImGui::InputFloat("+94878 batWithinFrames", &player->batWithinFrames);
+                    ImGui::InputFloat("+94878 batWithinFrames", &player->batWithinFrames, 10, 100, "%.0f");
                     ImGui::InputInt("+94A90 clothesRelated3", &player->clothesRelated3);
                     ImGui::InputInt("+94A94 clothesRelated2", &player->clothesRelated2);
                     ImGui::InputInt("+94B44 inputsHold", &player->inputsHold);
@@ -642,14 +676,14 @@ void GameHook::GameImGui(void) {
                     ImGui::InputInt("+94B4C inputsUp", &player->inputsUp);
                     ImGui::InputInt("+94C00 hideEverythingInCutscene", &player->hideEverythingInCutscene);
                     ImGui::InputInt("+95C64 stringID", &player->stringID);
-                    ImGui::InputFloat("+95C80 comboTimer", &player->comboTimer);
+                    ImGui::InputFloat("+95C80 comboTimer", &player->comboTimer, 10, 100, "%.0f");
                     ImGui::Checkbox("+95C8C isWhipSlap", &player->isWhipSlap);
                     for (int j = 0; j < 7; ++j) {
                         ImGui::Combo(("+95C94 comboHit[" + std::to_string(j) + "]").c_str(), &player->comboHit[j], "None\0Punch\0Kick\0Late Punch\0Late Kick\0");
                     }
                     ImGui::InputInt("+95CBC attackCount", &player->attackCount);
-                    ImGui::InputFloat("+95D5C witchTimeDuration", &player->witchTimeDuration);
-                    ImGui::InputFloat("+95D60 witchTimeMaxProbably", &player->witchTimeMaxProbably);
+                    ImGui::InputFloat("+95D5C witchTimeDuration", &player->witchTimeDuration, 10, 100, "%.0f");
+                    ImGui::InputFloat("+95D60 witchTimeMaxProbably", &player->witchTimeMaxProbably, 10,100, "%.0f");
                     ImGui::InputInt("+95D88 qteThing", &player->qteThing);
                     ImGui::Checkbox("+95ED4 walkOnWalls", &player->walkOnWalls);
                     ImGui::InputInt("+95F08 clothesRelated4", &player->clothesRelated4);
@@ -678,8 +712,9 @@ void GameHook::GameImGui(void) {
             ImGui::BeginChild("ExtraChild");
 
             ImGui::Checkbox("Move ID Swaps", &moveIDSwapsToggle);
-            GameHook::help_marker("Do the move you want to see, pause mid anim, type your current moveID in the first box\n"
-                "Do the move you want to replace, pause mid anim, type your current moveID in the second box");
+            GameHook::help_marker("Do the move you want to replace, pause mid anim, type your current moveID in the first box\n"
+                "Do the move you want to see, pause mid anim, type your current moveID in the second box\n"
+                "Don't forget to save once you're done for next boot!");
             if (GameHook::moveIDSwapsToggle) {
                 LocalPlayer* player = GetLocalPlayer();
                 if (player) {
