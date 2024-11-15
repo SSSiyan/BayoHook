@@ -56,12 +56,12 @@ struct localPlayer {
     private: char pad_328[0x24]; public:
     int moveID; // 0x34c
     int movePart; // 0x350
-    int playerInvuln; // 0x354
+    int invincibility; // 0x354
     int summoningSomething; // 0x358
     private: char pad_35c[0x88]; public:
     float animFrame; // 0x3e4
     private: char pad_3e8[0x2b4]; public:
-    int playerAerial; // 0x69c
+    int aerial; // 0x69c
     private: char pad_6a0[0x14]; public:
     int hp; // 0x6b4
     private: char pad_6b8[0x14]; public:
@@ -132,7 +132,7 @@ struct localPlayer {
     private: char pad_95c8d[0x7]; public:
     int comboHit[7]; // 0x95c94
     private: char pad_95cb0[0xc]; public:
-    int playerAttackCount; // 0x95cbc
+    int attackCount; // 0x95cbc
     private: char pad_95cc0[0x9c]; public:
     float witchTimeDuration; // 0x95d5c
     float witchTimeMaxProbably; // 0x95d60

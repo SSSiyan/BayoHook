@@ -1,5 +1,68 @@
 #include "gamehook.hpp"
 
+// system
+float GameHook::windowWidth = 0.0f;
+float GameHook::windowHeightHack = 0.0f;
+float GameHook::windowHeightBorder = 0.0f;
+float GameHook::inputItemWidth = 0.0f;
+float GameHook::sameLineWidth = 0.0f;
+float GameHook::windowScalingFactor = 1.0f;
+float GameHook::maxWindowHeight = 0.0f;
+float GameHook::comboUI_X = 0.0f;
+float GameHook::comboUI_Y = 0.0f;
+bool GameHook::showMessages_toggle = false;
+bool GameHook::showComboUI_toggle = false;
+int GameHook::showMessageTimerF1 = 0;
+int GameHook::showMessageTimerF2 = 0;
+int GameHook::showMessageTimerF3 = 0;
+int GameHook::showMessageTimerF4 = 0;
+int GameHook::showMessageTimerF5 = 0;
+int GameHook::showMessageTimerF6 = 0;
+
+// update
+uintptr_t GameHook::playerPointerAddress = 0xEF5A60;
+uintptr_t GameHook::halosAddress = 0x5AA74B4;
+uintptr_t GameHook::chaptersPlayedAddress = 0x5AA736C;
+uintptr_t GameHook::playerMagicAddress = 0x5AA74AC;
+uintptr_t GameHook::comboPointsAddress = 0x5BB519C;
+uintptr_t GameHook::comboMultiplierAddress = 0x5BB51A0;
+uintptr_t GameHook::currentCharacterAddress = 0x5AA7484;
+uintptr_t GameHook::currentCostumeAddress = 0x5AA747C;
+uintptr_t GameHook::thirdAccessoryAddress = 0x5AA7468;
+uintptr_t GameHook::hudDisplayAddress = 0xF2B714;
+uintptr_t GameHook::enemyLockedOnAddress = 0xF2B744;
+uintptr_t GameHook::enemySlotsAddress = 0x5A56A88;
+uintptr_t GameHook::angelSlayerFloorAddress = 0x509E87C;
+uintptr_t GameHook::difficultyAddress = 0x5A985A0;
+uintptr_t GameHook::areaJumpAddress = 0x5A978E8;
+uintptr_t GameHook::WeaponA1Address = 0x5AA741C;
+uintptr_t GameHook::WeaponA2Address = 0x5AA7420;
+uintptr_t GameHook::WeaponB1Address = 0x5AA742C;
+uintptr_t GameHook::WeaponB2Address = 0x5AA7430;
+
+bool GameHook::moveIDSwapsToggle = false;
+bool GameHook::moveIDSwap_toggles[maxMoveIDSwaps]{};
+int GameHook::moveIDSwapSourceMoves[maxMoveIDSwaps]{};
+int GameHook::moveIDSwapSwappedMoves[maxMoveIDSwaps]{};
+
+bool GameHook::stringSwapsToggle = false;
+bool GameHook::stringIDSwap_toggles[maxStringSwaps];
+int  GameHook::stringIDSwapSourceStrings[maxStringSwaps];
+int  GameHook::stringIDSwapDesiredStrings[maxStringSwaps];
+
+bool GameHook::comboMakerToggle = false;
+bool GameHook::comboMaker_toggles[maxComboMakers]{};
+int  GameHook::comboMakerMoveIDs[maxComboMakers]{};
+int  GameHook::comboMakerMoveParts[maxComboMakers]{};
+int  GameHook::comboMakerStringIDs[maxComboMakers]{};
+
+bool GameHook::customWeaveToggle = false;
+bool GameHook::customWeaves_toggles[customWeaveCount]{};
+int GameHook::customWeaveArray[customWeaveCount]{};
+int GameHook::customWeaveMoveIDArray[customWeaveCount]{};
+
+int GameHook::desiredThirdAccessory = 0;
+
 // patches
 bool GameHook::takeNoDamage_toggle = false;
 void GameHook::TakeNoDamage(bool enabled) {
@@ -473,9 +536,6 @@ int __stdcall GetSwappedMoveID(int nextMoveID) {
 
 std::unique_ptr<FunctionHook> moveIDSwapHook;
 uintptr_t moveIDSwap_jmp_ret{ NULL };
-bool GameHook::moveIDSwap_toggles[maxMoveIDSwaps]{};
-int GameHook::moveIDSwapSourceMoves[maxMoveIDSwaps]{};
-int GameHook::moveIDSwapSwappedMoves[maxMoveIDSwaps]{};
 static __declspec(naked) void MoveIDSwapDetour(void) { // player in ecx
 	_asm {
 		// cmp byte ptr [GameHook::moveIDSwap_toggle], 0
@@ -512,20 +572,21 @@ static __declspec(naked) void MoveIDSwapDetour(void) { // player in ecx
 	}
 }
 
-bool GameHook::stringIDSwap_toggle = false;
-
-int GameHook::stringIDSwapSourceString1 = -1;
-int GameHook::stringIDSwapSourceString2 = -1;
-
-int GameHook::stringIDSwapDesiredString1 = 0;
-int GameHook::stringIDSwapDesiredString2 = 0;
+int __stdcall GetSwappedStringID(int nextStringID) {
+    for (int i = 0; i < GameHook::maxMoveIDSwaps; ++i) {
+		if (GameHook::moveIDSwap_toggles[i] && GameHook::stringIDSwapSourceStrings[i] == nextStringID) {
+            return GameHook::stringIDSwapDesiredStrings[i];
+        }
+    }
+    return -1;
+}
 
 std::unique_ptr<FunctionHook> punchStringIDSwapHook;
 uintptr_t punchStringIDSwap_jmp_ret{ NULL };
 static __declspec(naked) void PunchStringIDSwapDetour(void) {
 	_asm {
-		cmp byte ptr [GameHook::stringIDSwap_toggle], 0
-		je originalcode
+		// cmp byte ptr [GameHook::stringIDSwap_toggle], 0
+		// je originalcode
 
 		push eax
 		mov eax, [GameHook::playerPointerAddress] // only edit player anim
@@ -533,22 +594,27 @@ static __declspec(naked) void PunchStringIDSwapDetour(void) {
 		pop eax
 		jne originalcode
 
-		cmp edx, [GameHook::stringIDSwapSourceString1]
-		je newString1
-		cmp edx, [GameHook::stringIDSwapSourceString2]
-		je newString2
-		jmp originalcode
+		push eax
+		push ecx
+		push edx
+		push edx // nextStringID
+		call dword ptr GetSwappedStringID
 
-		newString1:
-		mov edx, [GameHook::stringIDSwapDesiredString1]
-		jmp originalcode
+		cmp eax, -1
+		je dontReplace
+		mov [esi+0x00095C64], eax
+		pop edx
+		pop ecx
+		pop eax
+		jmp retcode
 
-		newString2:
-		mov edx, [GameHook::stringIDSwapDesiredString2]
-		jmp originalcode
-
-		originalcode:
+	dontReplace:
+		pop edx
+		pop ecx
+		pop eax
+	originalcode:
 		mov [esi+0x00095C64], edx
+	retcode:
 		jmp dword ptr [punchStringIDSwap_jmp_ret]
 	}
 }
@@ -557,8 +623,8 @@ std::unique_ptr<FunctionHook> latePunchStringIDSwapHook;
 uintptr_t latePunchStringIDSwap_jmp_ret{ NULL };
 static __declspec(naked) void LatePunchStringIDSwapDetour(void) {
 	_asm {
-		cmp byte ptr [GameHook::stringIDSwap_toggle], 0
-		je originalcode
+		// cmp byte ptr [GameHook::stringIDSwap_toggle], 0
+		// je originalcode
 
 		push eax
 		mov eax, [GameHook::playerPointerAddress] // only edit player anim
@@ -566,22 +632,26 @@ static __declspec(naked) void LatePunchStringIDSwapDetour(void) {
 		pop eax
 		jne originalcode
 
-		cmp eax, [GameHook::stringIDSwapSourceString1]
-		je newString1
-		cmp eax, [GameHook::stringIDSwapSourceString2]
-		je newString2
-		jmp originalcode
-
-		newString1:
-		mov eax, [GameHook::stringIDSwapDesiredString1]
-		jmp originalcode
-
-		newString2:
-		mov eax, [GameHook::stringIDSwapDesiredString2]
-		jmp originalcode
-
-		originalcode:
+		push eax
+		push ecx
+		push edx
+		push eax // nextStringID
+		call dword ptr GetSwappedStringID
+		cmp eax, -1
+		je dontReplace
 		mov [esi+0x00095C64], eax
+		pop edx
+		pop ecx
+		pop eax
+		jmp retcode
+
+	dontReplace:
+		pop edx
+		pop ecx
+		pop eax
+	originalcode:
+		mov [esi+0x00095C64], eax
+	retcode:
 		jmp dword ptr [latePunchStringIDSwap_jmp_ret]
 	}
 }
@@ -590,8 +660,8 @@ std::unique_ptr<FunctionHook> kickStringIDSwapHook;
 uintptr_t kickStringIDSwap_jmp_ret{ NULL };
 static __declspec(naked) void KickStringIDSwapDetour(void) {
 	_asm {
-		cmp byte ptr [GameHook::stringIDSwap_toggle], 0
-		je originalcode
+		// cmp byte ptr [GameHook::stringIDSwap_toggle], 0
+		// je originalcode
 
 		push eax
 		mov eax, [GameHook::playerPointerAddress] // only edit player anim
@@ -599,23 +669,26 @@ static __declspec(naked) void KickStringIDSwapDetour(void) {
 		pop eax
 		jne originalcode
 
-		cmp edx, [GameHook::stringIDSwapSourceString1]
-		je newString1
-		cmp edx, [GameHook::stringIDSwapSourceString2]
-		je newString2
+		push eax
+		push ecx
+		push edx
+		push edx // nextStringID
+		call dword ptr GetSwappedStringID
+		cmp eax, -1
+		je dontReplace
+		mov [esi+0x00095C64], eax
+		pop edx
+		pop ecx
+		pop eax
+		jmp retcode
 
-		jmp originalcode
-
-		newString1:
-		mov edx, [GameHook::stringIDSwapDesiredString1]
-		jmp originalcode
-
-		newString2:
-		mov edx, [GameHook::stringIDSwapDesiredString2]
-		jmp originalcode
-
-		originalcode:
+	dontReplace:
+		pop edx
+		pop ecx
+		pop eax
+	originalcode:
 		mov [esi+0x00095C64], edx
+	retcode:
 		jmp dword ptr [kickStringIDSwap_jmp_ret]
 	}
 }
@@ -624,8 +697,8 @@ std::unique_ptr<FunctionHook> lateKickStringIDSwapHook;
 uintptr_t lateKickStringIDSwap_jmp_ret{ NULL };
 static __declspec(naked) void LateKickStringIDSwapDetour(void) {
 	_asm {
-		cmp byte ptr [GameHook::stringIDSwap_toggle], 0
-		je originalcode
+		// cmp byte ptr [GameHook::stringIDSwap_toggle], 0
+		// je originalcode
 
 		push eax
 		mov eax, [GameHook::playerPointerAddress] // only edit player anim
@@ -633,23 +706,26 @@ static __declspec(naked) void LateKickStringIDSwapDetour(void) {
 		pop eax
 		jne originalcode
 
-		cmp ecx, [GameHook::stringIDSwapSourceString1]
-		je newString1
-		cmp ecx, [GameHook::stringIDSwapSourceString2]
-		je newString2
+		push eax
+		push ecx
+		push edx
+		push ecx // nextStringID
+		call dword ptr GetSwappedStringID
+		cmp eax, -1
+		je dontReplace
+		mov [esi+0x00095C64], eax
+		pop edx
+		pop ecx
+		pop eax
+		jmp retcode
 
-		jmp originalcode
-
-		newString1:
-		mov ecx, [GameHook::stringIDSwapDesiredString1]
-		jmp originalcode
-
-		newString2:
-		mov ecx, [GameHook::stringIDSwapDesiredString2]
-		jmp originalcode
-
-		originalcode:
+	dontReplace:
+		pop edx
+		pop ecx
+		pop eax
+	originalcode:
 		mov [esi+0x00095C64], ecx
+	retcode:
 		jmp dword ptr [lateKickStringIDSwap_jmp_ret]
 	}
 }
@@ -1014,10 +1090,6 @@ int __stdcall GetCustomWeave(localPlayer* player) {
 
 std::unique_ptr<FunctionHook> customWeavesHook;
 uintptr_t customWeaves_jmp_ret{ NULL };
-bool GameHook::customWeaves_toggles[customWeaveCount]{};
-int GameHook::customWeaveArray[customWeaveCount]{};
-int GameHook::customWeaveMoveIDArray[customWeaveCount]{};
-uintptr_t customWeavePlayerPtr{ NULL };
 static __declspec(naked) void CustomWeavesDetour(void) { // player in esi
 	_asm {
 		// cmp byte ptr [GameHook::customWeaves_toggle], 0
@@ -2212,6 +2284,13 @@ void GameHook::WeaponSwapCaller(void) {
 	}
 }
 
+localPlayer* GameHook::GetLocalPlayer() {
+	if (localPlayer* player = *(localPlayer**)GameHook::playerPointerAddress)
+		return player;
+	else
+		return nullptr;
+}
+
 // dev functions
 void GameHook::_patch(char* dst, char* src, int size) {
 	DWORD oldprotect;
@@ -2377,17 +2456,30 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	alwaysWitchTime_toggle = cfg.get<bool>("AlwaysWitchTimeToggle").value_or(false);
 	saveStatesHotkeys_toggle = cfg.get<bool>("SaveStatesHotkeysToggle").value_or(false);
 	tauntWithTimeBracelet_toggle = cfg.get<bool>("TauntWithTimeBraceletToggle").value_or(false);
+
+	moveIDSwapsToggle = cfg.get<bool>("moveIDSwapsToggle").value_or(false);
 	for (int i = 0; i < maxMoveIDSwaps; ++i) {
 		moveIDSwap_toggles[i] = cfg.get<bool>(std::string("MoveIDSwap_toggles[") + std::to_string(i) + "]").value_or(false);
 		moveIDSwapSourceMoves[i] = cfg.get<int>(std::string("MoveIDSwapSourceMoves[") + std::to_string(i) + "]").value_or(-1);
 		moveIDSwapSwappedMoves[i] = cfg.get<int>(std::string("MoveIDSwapSwappedMoves[") + std::to_string(i) + "]").value_or(-1);
 	}
+
+	stringSwapsToggle = cfg.get<bool>("stringSwapsToggle").value_or(false);
+	for (int i = 0; i < maxStringSwaps; ++i) {
+		stringIDSwap_toggles[i] = cfg.get<bool>(std::string("stringIDSwap_toggles[") + std::to_string(i) + "]").value_or(false);
+		stringIDSwapSourceStrings[i] = cfg.get<int>(std::string("stringIDSwapSourceStrings[") + std::to_string(i) + "]").value_or(-1);
+		stringIDSwapDesiredStrings[i] = cfg.get<int>(std::string("stringIDSwapDesiredStrings[") + std::to_string(i) + "]").value_or(-1);
+	}
+
+	comboMakerToggle = cfg.get<bool>("comboMakerToggle").value_or(false);
 	for (int i = 0; i < maxComboMakers; ++i) {
 		comboMaker_toggles[i] = cfg.get<bool>(std::string("ComboMaker_toggles[") + std::to_string(i) + "]").value_or(false);
 		comboMakerMoveIDs[i] = cfg.get<int>(std::string("ComboMakerMoveIDs[") + std::to_string(i) + "]").value_or(-1);
 		comboMakerMoveParts[i] = cfg.get<int>(std::string("ComboMakerMoveParts[") + std::to_string(i) + "]").value_or(-1);
 		comboMakerStringIDs[i] = cfg.get<int>(std::string("ComboMakerStringIDs[") + std::to_string(i) + "]").value_or(-1);
 	}
+
+	customWeaveToggle = cfg.get<bool>("customWeaveToggle").value_or(false);
 	for (int i = 0; i < customWeaveCount; ++i) {
 		customWeaves_toggles[i] = cfg.get<bool>(std::string("CustomWeaves_toggles[") + std::to_string(i) + "]").value_or(false);
 		customWeaveMoveIDArray[i] = cfg.get<int>(std::string("CustomWeaveMoveIDArray[") + std::to_string(i) + "]").value_or(-1);
@@ -2463,17 +2555,29 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("AlwaysWitchTimeToggle", alwaysWitchTime_toggle);
 	cfg.set<bool>("SaveStatesHotkeysToggle", saveStatesHotkeys_toggle);
 	cfg.set<bool>("TauntWithTimeBraceletToggle", tauntWithTimeBracelet_toggle);
+
+	cfg.set<bool>("moveIDSwapsToggle", moveIDSwapsToggle);
 	for (int i = 0; i < maxMoveIDSwaps; ++i) {
 		cfg.set<bool>(("MoveIDSwap_toggles[" + std::to_string(i) + "]").c_str(), moveIDSwap_toggles[i]);
 		cfg.set<int>(("MoveIDSwapSourceMoves[" + std::to_string(i) + "]").c_str(), moveIDSwapSourceMoves[i]);
 		cfg.set<int>(("MoveIDSwapSwappedMoves[" + std::to_string(i) + "]").c_str(), moveIDSwapSwappedMoves[i]);
 	}
+
+	cfg.set<bool>("stringSwapsToggle", stringSwapsToggle);
+	for (int i = 0; i < maxStringSwaps; ++i) {
+		cfg.set<bool>(("stringIDSwap_toggles[" + std::to_string(i) + "]").c_str(), stringIDSwap_toggles[i]);
+		cfg.set<int>(("stringIDSwapSourceStrings[" + std::to_string(i) + "]").c_str(), stringIDSwapSourceStrings[i]);
+		cfg.set<int>(("stringIDSwapDesiredStrings[" + std::to_string(i) + "]").c_str(), stringIDSwapDesiredStrings[i]);
+	}
+
+	cfg.set<bool>("comboMakerToggle", comboMakerToggle);
 	for (int i = 0; i < maxComboMakers; ++i) {
 		cfg.set<bool>(("ComboMaker_toggles[" + std::to_string(i) + "]").c_str(), comboMaker_toggles[i]);
 		cfg.set<int>(("ComboMakerMoveIDs[" + std::to_string(i) + "]").c_str(), comboMakerMoveIDs[i]);
 		cfg.set<int>(("ComboMakerMoveParts[" + std::to_string(i) + "]").c_str(), comboMakerMoveParts[i]);
 		cfg.set<int>(("ComboMakerStringIDs[" + std::to_string(i) + "]").c_str(), comboMakerStringIDs[i]);
 	}
+
 	cfg.set<bool>("CustomWeavesToggle", customWeaves_toggles);
 	for (int i = 0; i < customWeaveCount; ++i) {
 		cfg.set<bool>(("CustomWeaves_toggles[" + std::to_string(i) + "]").c_str(), customWeaves_toggles[i]);

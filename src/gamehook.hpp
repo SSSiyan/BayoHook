@@ -99,23 +99,26 @@ public:
 	static bool haloDisplay_toggle;
 	static int haloDisplayValue;
 	//
+	static bool moveIDSwapsToggle;
 	static const int maxMoveIDSwaps = 5;
 	static bool moveIDSwap_toggles[];
 	static int moveIDSwapSourceMoves[];
 	static int moveIDSwapSwappedMoves[];
 	//
-	static bool stringIDSwap_toggle;
-	static int stringIDSwapSourceString1;
-	static int stringIDSwapSourceString2;
-	static int stringIDSwapDesiredString1;
-	static int stringIDSwapDesiredString2;
+	static bool stringSwapsToggle;
+	static const int maxStringSwaps = 5;
+	static bool stringIDSwap_toggles[];
+	static int stringIDSwapSourceStrings[];
+	static int stringIDSwapDesiredStrings[];
 	//
+	static bool comboMakerToggle;
     static const int maxComboMakers = 5;
     static bool comboMaker_toggles[];
     static int comboMakerMoveIDs[];
     static int comboMakerMoveParts[];
     static int comboMakerStringIDs[];
 	//
+	static bool customWeaveToggle;
 	static const int customWeaveCount = 20;
 	static bool customWeaves_toggles[];
 	static int customWeaveArray[];
@@ -190,16 +193,18 @@ public:
 	static void ImGuiStyle(void);
 	static void help_marker(const char* desc);
 	static inline void under_line(const ImColor& col);
-	static const char* WeaponNames(int weaponID);
-	static const char* CostumeNames(int costumeID);
-	static const char* AccessoryNames(int accessoryID);
-	static const char* GetInputTypeName(int inputID);
-	static int messageTimer;
+	static const char* weaponNames[16];
+	static const char* costumeNames[32];
+	static const char* accessoryNames[13];
+	static int messageTimerFill;
 	static int showMessageTimerF1;
 	static int showMessageTimerF2;
 	static int showMessageTimerF3;
 	static int showMessageTimerF4;
 	static int showMessageTimerF5;
+	static int showMessageTimerF6;
+
+	static localPlayer* GetLocalPlayer();
 
 	// dev functions
 	static void _patch(char* dst, char* src, int size);

@@ -2,11 +2,10 @@
 #include <base.h>
 #include "gamehook.hpp"
 
-int GameHook::messageTimer = 200;
+int GameHook::messageTimerFill = 200;
 
 extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-LRESULT CALLBACK Base::Hooks::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
+LRESULT CALLBACK Base::Hooks::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 	if(uMsg == WM_KEYDOWN || uMsg == WM_KEYUP)
 		Data::WmKeys[wParam] = uMsg;
 
@@ -18,13 +17,13 @@ LRESULT CALLBACK Base::Hooks::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
 			Data::ShowMenu = !Data::ShowMenu;
 			if (Data::ShowMenu) {
 				ImGui::GetIO().MouseDrawCursor = true;
-				GameHook::disableClicking_toggle = true; // bayo
-				GameHook::DisableClicking(GameHook::disableClicking_toggle); // bayo
+				GameHook::disableClicking_toggle = true;
+				GameHook::DisableClicking(GameHook::disableClicking_toggle);
 			}
 			else {
 				ImGui::GetIO().MouseDrawCursor = false;
-				GameHook::disableClicking_toggle = false; // bayo
-				GameHook::DisableClicking(GameHook::disableClicking_toggle); // bayo
+				GameHook::disableClicking_toggle = false;
+				GameHook::DisableClicking(GameHook::disableClicking_toggle);
 			}
 			break;
 		case VK_F1:
@@ -32,12 +31,12 @@ LRESULT CALLBACK Base::Hooks::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
 			GameHook::DisableKilling(GameHook::enemyHP_no_damage_toggle);
 			if (GameHook::enemyHP_no_damage_toggle)
 				GameHook::enemyHP_one_hit_kill_toggle = false;
-			GameHook::showMessageTimerF1 = GameHook::messageTimer;
+			GameHook::showMessageTimerF1 = GameHook::messageTimerFill;
 			break;
 		case VK_F2:
 			GameHook::takeNoDamage_toggle = !GameHook::takeNoDamage_toggle;
 			GameHook::TakeNoDamage(GameHook::takeNoDamage_toggle);
-			GameHook::showMessageTimerF2 = GameHook::messageTimer;
+			GameHook::showMessageTimerF2 = GameHook::messageTimerFill;
 			break;
 		case VK_F3:
 			GameHook::enemyHP_one_hit_kill_toggle = !GameHook::enemyHP_one_hit_kill_toggle;
@@ -45,17 +44,22 @@ LRESULT CALLBACK Base::Hooks::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
 				GameHook::enemyHP_no_damage_toggle = false;
 				GameHook::DisableKilling(GameHook::enemyHP_no_damage_toggle);
 			}
-			GameHook::showMessageTimerF3 = GameHook::messageTimer;
+			GameHook::showMessageTimerF3 = GameHook::messageTimerFill;
 			break;
 		case VK_F4:
 			GameHook::infJumps_toggle = !GameHook::infJumps_toggle;
 			GameHook::InfJumps(GameHook::infJumps_toggle);
-			GameHook::showMessageTimerF4 = GameHook::messageTimer;
+			GameHook::showMessageTimerF4 = GameHook::messageTimerFill;
 			break;
 		case VK_F5:
 			GameHook::noClip_toggle = !GameHook::noClip_toggle;
 			GameHook::NoClip(GameHook::noClip_toggle);
-			GameHook::showMessageTimerF5 = GameHook::messageTimer;
+			GameHook::showMessageTimerF5 = GameHook::messageTimerFill;
+			break;
+		case VK_F6:
+			GameHook::lessClothes_toggle = !GameHook::lessClothes_toggle;
+			GameHook::LessClothes(GameHook::lessClothes_toggle);
+			GameHook::showMessageTimerF6 = GameHook::messageTimerFill;
 			break;
 		case VK_HOME:
 			GameHook::SaveStates_SaveState();
