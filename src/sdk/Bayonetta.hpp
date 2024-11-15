@@ -43,7 +43,7 @@ struct BayoLimb {
 #pragma pack(pop)
 
 #pragma pack(push, 1)
-struct localPlayer {
+struct LocalPlayer {
     uintptr_t vtable; // 0x0
     char pad_4[0xcc];
     Vec3 pos; // 0xd0
@@ -63,7 +63,7 @@ struct localPlayer {
     char pad_3e8[0x2b4];
     int aerial; // 0x69c
     char pad_6a0[0x14];
-    int hp; // 0x6b4
+    int hpDamage; // 0x6b4
     char pad_6b8[0x14];
     float speed; // 0x6cc
     char pad_6d0[0x60];
@@ -77,7 +77,9 @@ struct localPlayer {
     uintptr_t bayoSkeleton; // 0x9224c
     char pad_92250[0xeb4];
     bool noClip; // 0x93104
-    char pad_93105[0x417];
+    char pad_93105[0x403];
+    int hp; // 0x93508
+    char pad_9350c[0x10];
     float birdTimer; // 0x9351c
     char pad_93520[0x58];
     int wallJumpCount; // 0x93578

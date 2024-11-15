@@ -1078,7 +1078,7 @@ static __declspec(naked) void AlwaysWitchTimeDetour(void) {
 	}
 }
 
-int __stdcall GetCustomWeave(localPlayer* player) {
+int __stdcall GetCustomWeave(LocalPlayer* player) {
     int moveID = player->moveID;
     for (int i = 0; i < GameHook::customWeaveCount; ++i) {
         if (GameHook::customWeaves_toggles[i] && GameHook::customWeaveMoveIDArray[i] == moveID) {
@@ -2280,8 +2280,8 @@ void GameHook::WeaponSwapCaller(void) {
 	}
 }
 
-localPlayer* GameHook::GetLocalPlayer() {
-	if (localPlayer* player = *(localPlayer**)GameHook::playerPointerAddress)
+LocalPlayer* GameHook::GetLocalPlayer() {
+	if (LocalPlayer* player = *(LocalPlayer**)GameHook::playerPointerAddress)
 		return player;
 	else
 		return nullptr;

@@ -205,7 +205,7 @@ public:
 	static int showMessageTimerF5;
 	static int showMessageTimerF6;
 
-	static localPlayer* GetLocalPlayer();
+	static LocalPlayer* GetLocalPlayer();
 
 	// dev functions
 	static void _patch(char* dst, char* src, int size);

@@ -38,7 +38,7 @@ struct BayoLimb {
 	bool endOfStruct @ 0x18F
 }
 
-struct Player {
+struct LocalPlayer {
 	uintptr_t vtable @ 0x00
 	Vec3 pos @ 0xD0
 	Vec3 scale @ 0xF0
@@ -51,7 +51,7 @@ struct Player {
 	float animFrame @ 0x3E4
 	int invincibility @ 0x354
 	int aerial @ 0x69C
-	int hp @ 0x6B4
+	int hpDamage @ 0x6B4
 	float speed @ 0x6CC
 	float iFramesRemaining @ 0x730
 	Vec3 colouredHairDurationRGB @ 0xCC0
@@ -59,6 +59,7 @@ struct Player {
 	LaserSword* laserSword @ 0x5BC0
 	bool noClip @ 0x93104
 	int dodgeCount @ 0x94794
+	int hp @ 0x93508
 	int jumpCount @ 0x93578
 	int wallJumpCount @ 0x93578
 	int divekickCount @ 0x9358C

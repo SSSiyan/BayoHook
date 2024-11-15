@@ -41,8 +41,8 @@ const char* GameHook::weaveNames[37]{
     "Fire Durga forward hk punch",       // 13
     "Fire Durga RtL swipe",              // 14
     "Fire Durga LtR swipe",              // 15
-    "Fire Durga uplift hk punch",        // 16
-    "Fire Durga uplift hk punch",        // 17
+    "Fire Durga vertical hk punch",      // 16
+    "Fire Durga vertical hk punch",      // 17
     "Fire Durga forward hk punch",       // 18
     "Fire Durga forward hk punch T",     // 19
     "Fire Durga downward hk punch",      // 20
@@ -50,15 +50,15 @@ const char* GameHook::weaveNames[37]{
     "Electric Durga forward hk punch",   // 22
     "Electric Durga RtL swipe",          // 23
     "Electric Durga LtR swipe",          // 24
-    "Electric Durga upward hk punch",    // 25
-    "Electric Durga upward hk punch",    // 26
+    "Electric Durga vertical hk punch",  // 25
+    "Electric Durga vertical hk punch",  // 26
     "Electric Durga forward hk punch",   // 27
     "Electric Durga forward hk punch T", // 28
     "Electric Durga downward hk punch",  // 29
     "Electric Durga downward hk punch",  // 30
     "Electric Durga forward punch",      // 31
-    "Electric Durga upward punch",       // 32
-    "Electric Durga upward punch",       // 33
+    "Electric Durga vertical punch",     // 32
+    "Electric Durga vertical punch",     // 33
     "Electric Durga forward hk punch",   // 34
     "Electric Durga forward hk punch T", // 35
     "Electric Durga downward punch",     // 36
@@ -117,7 +117,7 @@ const char* GameHook::accessoryNames[13] {
 
 void GameHook::GameTick(void) { // also called while the menu isn't open
     static bool isFirstFrame = true;
-    localPlayer* player = GetLocalPlayer();
+    LocalPlayer* player = GetLocalPlayer();
     isFirstFrame = false;
     if (player) {
         if (comboMakerToggle) {
@@ -464,7 +464,7 @@ void GameHook::GameImGui(void) {
                 ImGui::PopItemWidth();
             }
 
-            localPlayer* player = GetLocalPlayer();
+            LocalPlayer* player = GetLocalPlayer();
             if (player) {
                 ImGui::Separator();
                 ImGui::Text("Player Position");
@@ -528,7 +528,7 @@ void GameHook::GameImGui(void) {
             
             if (ImGui::CollapsingHeader("Player Stats")) {
                 ImGui::TreePush("PlayerStatsTree");
-                localPlayer* player = GetLocalPlayer();
+                LocalPlayer* player = GetLocalPlayer();
                 if (player) {
                     float& playerMagicValue = *(float*)GameHook::playerMagicAddress; // not player offset but keeping it here anyway
 
@@ -539,7 +539,7 @@ void GameHook::GameImGui(void) {
                         player->pos = { 0.0f, 0.0f, 0.0f };
                     }
                     ImGui::PushItemWidth(inputItemWidth);
-                    ImGui::InputInt("HP##PlayerHPInputInt", &player->hp, 1, 100);
+                    ImGui::InputInt("HPDamage##PlayerHPInputInt", &player->hpDamage, 1, 100);
                     ImGui::InputFloat("MP##PlayerMPInputFloat", &playerMagicValue, 1, 100, "%.0f");
                     ImGui::InputFloat("Remaining Witch Time Duration##PlayerRemainingWitchTimeDurationInputFloat", &player->witchTimeDuration, 10, 100, "%.0f");
                     ImGui::InputFloat("Remaining Invinciblity##PlayerRemainingInvinciblityInputFloat", &player->iFramesRemaining, 10, 100, "%.0f");
@@ -587,6 +587,88 @@ void GameHook::GameImGui(void) {
                 ImGui::TreePop();
             }
 
+            if (ImGui::CollapsingHeader("PlayerTracker")) {
+                ImGui::TreePush("PlayerStatsTree");
+                LocalPlayer* player = GetLocalPlayer();
+                if (player) {
+                    ImGui::Text("Player Structure Data");
+                    ImGui::Text("+0 vtable: 0x%p", (void*)player->vtable);
+                    ImGui::InputFloat3("+D0 pos", &player->pos.x);
+                    ImGui::InputFloat3("+F0 scale", &player->scale.x);
+                    ImGui::InputFloat("+314 camHeight", &player->camHeight);
+                    ImGui::InputFloat("+324 alpha", &player->alpha);
+                    ImGui::InputInt("+34C moveID", &player->moveID);
+                    ImGui::InputInt("+350 movePart", &player->movePart);
+                    ImGui::InputInt("+354 invincibility", &player->invincibility);
+                    ImGui::InputInt("+358 summoningSomething", &player->summoningSomething);
+                    ImGui::InputFloat("+3E4 animFrame", &player->animFrame);
+                    ImGui::InputInt("+69C aerial", &player->aerial);
+                    ImGui::InputInt("+6B4 hpDamage", &player->hpDamage);
+                    ImGui::InputFloat("+6CC speed", &player->speed);
+                    ImGui::InputFloat("+730 iFramesRemaining", &player->iFramesRemaining);
+                    ImGui::InputFloat3("+CC0 colouredHairDurationRGB", &player->colouredHairDurationRGB.x);
+                    ImGui::InputFloat("+CCC colouredHairTimer", &player->colouredHairTimer);
+                    ImGui::Text("+5BC0 laserSword: 0x%p", (void*)player->laserSword);
+                    ImGui::Text("+9224C bayoSkeleton: 0x%p", (void*)player->bayoSkeleton);
+                    ImGui::Checkbox("+93104 noClip", &player->noClip);
+                    ImGui::InputInt("+93508 hp", &player->hp);
+                    ImGui::InputFloat("+9351C birdTimer", &player->birdTimer);
+                    ImGui::InputInt("+93578 wallJumpCount", &player->wallJumpCount);
+                    ImGui::InputFloat("+9358C divekickCount2", &player->divekickCount2);
+                    ImGui::InputInt("+935E4 m_JoySpinCnt", &player->m_JoySpinCnt);
+                    ImGui::Text("+93710 summoningHair: 0x%p", (void*)player->summoningHair);
+                    ImGui::Text("+93714 summoningBody: 0x%p", (void*)player->summoningBody);
+                    ImGui::Text("+937C0 handWeave: 0x%p", (void*)player->handWeave);
+                    ImGui::Text("+937C4 idkWeave1: 0x%p", (void*)player->idkWeave1);
+                    ImGui::Text("+937C8 idkWeave2: 0x%p", (void*)player->idkWeave2);
+                    ImGui::Text("+937CC idkWeave3: 0x%p", (void*)player->idkWeave3);
+                    ImGui::Text("+937D0 legWeave: 0x%p", (void*)player->legWeave);
+                    ImGui::InputFloat("+93A04 m_RhythmTimer", &player->m_RhythmTimer);
+                    ImGui::InputInt("+93A10 m_bRhythmActionSuccess", &player->m_bRhythmActionSuccess);
+                    ImGui::InputInt("+93A1C m_RapidType", &player->m_RapidType);
+                    ImGui::InputFloat("+93A20 m_RapidActRate", &player->m_RapidActRate);
+                    ImGui::InputFloat("+93A24 m_RapidActMinusTimer", &player->m_RapidActMinusTimer);
+                    ImGui::InputFloat("+93A28 m_RapidActMinusWait", &player->m_RapidActMinusWait);
+                    ImGui::InputFloat("+93A2C m_RapidActMinusTimer2", &player->m_RapidActMinusTimer2);
+                    ImGui::Text("+93AC0 rightHand: 0x%p", (void*)player->rightHand);
+                    ImGui::Text("+93C50 leftHand: 0x%p", (void*)player->leftHand);
+                    ImGui::Text("+93DE0 leftLeg: 0x%p", (void*)player->leftLeg);
+                    ImGui::InputInt("+94794 dodgeCount", &player->dodgeCount);
+                    ImGui::InputFloat("+94878 batWithinFrames", &player->batWithinFrames);
+                    ImGui::InputInt("+94A90 clothesRelated3", &player->clothesRelated3);
+                    ImGui::InputInt("+94A94 clothesRelated2", &player->clothesRelated2);
+                    ImGui::InputInt("+94B44 inputsHold", &player->inputsHold);
+                    ImGui::InputInt("+94B48 inputsDown", &player->inputsDown);
+                    ImGui::InputInt("+94B4C inputsUp", &player->inputsUp);
+                    ImGui::InputInt("+94C00 hideEverythingInCutscene", &player->hideEverythingInCutscene);
+                    ImGui::InputInt("+95C64 stringID", &player->stringID);
+                    ImGui::InputFloat("+95C80 comboTimer", &player->comboTimer);
+                    ImGui::Checkbox("+95C8C isWhipSlap", &player->isWhipSlap);
+                    for (int j = 0; j < 7; ++j) {
+                        ImGui::Combo(("+95C94 comboHit[" + std::to_string(j) + "]").c_str(), &player->comboHit[j], "None\0Punch\0Kick\0Late Punch\0Late Kick\0");
+                    }
+                    ImGui::InputInt("+95CBC attackCount", &player->attackCount);
+                    ImGui::InputFloat("+95D5C witchTimeDuration", &player->witchTimeDuration);
+                    ImGui::InputFloat("+95D60 witchTimeMaxProbably", &player->witchTimeMaxProbably);
+                    ImGui::InputInt("+95D88 qteThing", &player->qteThing);
+                    ImGui::Checkbox("+95ED4 walkOnWalls", &player->walkOnWalls);
+                    ImGui::InputInt("+95F08 clothesRelated4", &player->clothesRelated4);
+                    ImGui::InputInt("+95F18 walkOnWallsEffect", &player->walkOnWallsEffect);
+                    ImGui::InputInt("+95FC4 walkOnWallsRelated", &player->walkOnWallsRelated);
+                    ImGui::InputInt("+96330 clothesTransformation", &player->clothesTransformation);
+                    ImGui::InputFloat("+96334 clothesTransformationTimer", &player->clothesTransformationTimer);
+                    ImGui::InputInt("+96338 cutsceneToggleMaybe", &player->cutsceneToggleMaybe);
+                    ImGui::InputInt("+965D0 facePlate", &player->facePlate);
+                    ImGui::Combo("+96B24 form", (int*)&player->form, "Player\0Panther\0FirstPerson\0Bird\0");
+                    ImGui::InputInt("+96B34 enemyCount", &player->enemyCount);
+                    ImGui::InputInt("+96B38 clothesColourRGB", &player->clothesColourRGB);
+                    ImGui::InputFloat3("+96C00 colouredHairIntensityRGB", &player->colouredHairIntensityRGB.x);
+                }
+                else
+                    ImGui::Text("Load in to a stage to see these stats");
+                ImGui::TreePop();
+            }
+
             GameHook::windowHeightHack = std::clamp(ImGui::GetCursorPosY() + GameHook::windowHeightBorder, 0.0f, GameHook::maxWindowHeight);
             ImGui::EndChild();
             ImGui::EndTabItem();
@@ -599,7 +681,7 @@ void GameHook::GameImGui(void) {
             GameHook::help_marker("Do the move you want to see, pause mid anim, type your current moveID in the first box\n"
                 "Do the move you want to replace, pause mid anim, type your current moveID in the second box");
             if (GameHook::moveIDSwapsToggle) {
-                localPlayer* player = GetLocalPlayer();
+                LocalPlayer* player = GetLocalPlayer();
                 if (player) {
                     ImGui::Text("Current Move ID: %i", player->moveID);
                     for (int i = 0; i < GameHook::maxMoveIDSwaps; ++i) {
@@ -624,7 +706,7 @@ void GameHook::GameImGui(void) {
 
             ImGui::Checkbox("Combo Maker", &GameHook::comboMakerToggle);
             if (GameHook::comboMakerToggle) {
-                localPlayer* player = GetLocalPlayer();
+                LocalPlayer* player = GetLocalPlayer();
                 if (player) {
                     ImGui::Text("Current Move ID: %i", player->moveID);
                     ImGui::Text("Current Number In String: %i", player->attackCount);
@@ -655,7 +737,7 @@ void GameHook::GameImGui(void) {
 
             ImGui::Checkbox("Weave Swaps", &GameHook::customWeaveToggle);
             if (GameHook::customWeaveToggle) {
-                localPlayer* player = GetLocalPlayer();
+                LocalPlayer* player = GetLocalPlayer();
                 if (player) {
                     ImGui::Text("Current Move ID: %i", player->moveID);
                     for (int i = 0; i < customWeaveCount; ++i) {
@@ -681,7 +763,7 @@ void GameHook::GameImGui(void) {
 
             ImGui::Checkbox("String Swaps", &GameHook::stringSwapsToggle);
             if (GameHook::stringSwapsToggle) {
-                localPlayer* player = GetLocalPlayer();
+                LocalPlayer* player = GetLocalPlayer();
                 if (player) {
                     ImGui::Text("Current String ID: %i", player->stringID);
                     for (int i = 0; i < GameHook::maxStringSwaps; ++i) {
