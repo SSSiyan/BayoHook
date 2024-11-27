@@ -42,7 +42,6 @@ struct BayoLimb {
 }; // Size: 0x190
 #pragma pack(pop)
 
-
 #pragma pack(push, 1)
 struct LocalPlayer {
     uintptr_t vtable; // 0x0
