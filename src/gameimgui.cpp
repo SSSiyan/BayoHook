@@ -115,6 +115,359 @@ const char* GameHook::accessoryNames[13] {
     "Immortal Marionette",
 };
 
+const char* GameHook::moveIDNames[350] {
+"0: Handguns Idle",
+"1: Handguns Lock On Stance",
+"2: Handguns Aim",
+"3: Handguns Slightly move forward",
+"4: Handguns Slightly move forward",
+"5: Handguns Slightly move forward",
+"6: Handguns Move",
+"7: Handguns Move backward",
+"8: Handguns Short Taunt",
+"9: Eyerape landing",
+"10: Landing",
+"11: Jump",
+"12: Landing animation after jump",
+"13: Latch Landing",
+"14: Latch and Roll Over",
+"15: Beast Within Jump QTE",
+"16: Landing",
+"17: Backward Dodge",
+"18: Dodge limit jump",
+"19: Unused Umbran Spear Stiletto",
+"20: Momk (Double tap to perfect parry)",
+"21: Momk but nothing",
+"22: Falling due to the wind",
+"23: Damaged bounce",
+"24: Landing",
+"25: Jump with Screen shaking effect",
+"26: Landing",
+"27: Beast Within Activation",
+"28: Beast Within Deactivation",
+"29: Beast Within Jump",
+"30: Beast Within with slightly move forward",
+"31: Crow Within Jump",
+"32: Crow Within Landing",
+"33: Umbran Spear",
+"34: Beast Within but with a delay",
+"35: Beast Within Deactivation but Sliding forward",
+"36: Beast Within Deactivation in a frame",
+"37: Beast Within Deactivation but Sliding forward",
+"38: Beast Within Deactivation",
+"39: Bat Within",
+"40: Crow Within Activation",
+"41: Crow Within Deactivation in a frame",
+"42: Crow Within Punch Feather Summon",
+"43: Crow Within Kick Feather Summon",
+"44: Unknown",
+"45: Unknown",
+"46: Unknown",
+"47: Unknown",
+"48: Unknown",
+"49: Punch Bullet Climax",
+"50: Instant Punch Bullet Climax",
+"51: Bullet Climax Reset to Lock On Stance",
+"52: Kick Bullet Climax",
+"53: Instant Kick Bullet Climax",
+"54: Kick Bullet Climax Reset to Lock On Stance",
+"55: Punch",
+"56: Air Punch",
+"57: Uplift Punch",
+"58: Uplift Punch with Wicked Weave",
+"59: Stiletto",
+"60: Tetsuzanko",
+"61: PKP Wicked Weave",
+"62: PP'P",
+"63: PP'P Wicked Weave",
+"64: Witch Twist",
+"65: Breakdance",
+"66: Kinship counter attack while being strangled by a clamp",
+"67: PPPPP",
+"68: Air PPPPP",
+"69: Punch punish attack wicked weave",
+"70: Uplift Kick",
+"71: Uplift Kick Wicked Weave",
+"72: Afterburner Kick",
+"73: Dive Kick Bounce",
+"74: Heel Slide",
+"75: Unused Kick similar to iron maiden TA with wicked weave",
+"76: Heel Stomp",
+"77: PPKK",
+"78: Kick",
+"79: PK",
+"80: PP'K",
+"81: PPKKK",
+"82: Air Kick",
+"83: PPPPPK",
+"84: Air PPPPPK",
+"85: Umbran Portal Kick",
+"86: Unused Spin Kick similar to 66",
+"87: PPP'K/PPPPK",
+"88: Spin Kick",
+"89: PPPK (Tap more to do the full combo of PPPKKK)",
+"90: PPK",
+"91: Air PPP'K/PPPPK",
+"92: Air PPPKKK (Tap more to do the full combo of PPPKKK)",
+"93: Air PPK",
+"94: Kick Punish Attack",
+"95: Shuraba Punch",
+"96: Shuraba Air Punch",
+"97: Shuraba PP'P (Tap more to do the full combo of PP'PPP)",
+"98: Shuraba Air PP'P (Tap more to do the full combo of PP'PPP)",
+"99: Shuraba Charge",
+"100: Shuraba Unused PPPPP Charge Animation",
+"101: Shuraba Air Unused PPPPP Charge Animation",
+"102: Shuraba Uplift Punch",
+"103: Shuraba Air Uplift Punch",
+"104: Shuraba Stiletto",
+"105: Shuraba Tetsuzanko",
+"106: Shuraba PKP",
+"107: Shuraba Air Charge",
+"108: Shuraba PPP'P",
+"109: Shuraba Air PPP'P",
+"110: Shuraba Spin Punch",
+"111: Shuraba Air Spin Punch",
+"112: Shuraba Lock On Charge",
+"113: Shuraba Short Lock On Charge Attack",
+"114: Shuraba Instant Lock On Charge",
+"115: Shuraba Punch Punish Attack",
+"116: Kulshedra Punch",
+"117: Kulshedra Air Punch",
+"118: Kulshedra PP'P",
+"119: Kulshedra Uplift Punch",
+"120: Kulshedra Stiletto",
+"121: Kulshedra Tetsuzanko",
+"122: Kulshedra Tetsuzanko Wicked Weave",
+"123: Kulshedra Spin Punch",
+"124: Kulshedra Cowboy Spin",
+"125: Kulshedra Unused Launch Forward",
+"126: Kulshedra Drag Enemy to Player",
+"127: Kulshedra Drag Fail",
+"128: Kulshedra Launch Forward",
+"129: Kulshedra Slap",
+"130: Kulshedra Air Slap",
+"131: Kulshedra Punch Punish Attack",
+"132: Durga Fire Punch",
+"133: Durga Air Fire Punch",
+"134: Durga Punch Spin",
+"135: Durga Kick Spin",
+"136: Durga Electric kick",
+"137: Durga Fire Kick",
+"138: Durga Electric Punch",
+"139: Durga Electric Air Punch",
+"140: Durga Fire PPKK Wicked Weave",
+"141: Durga Fire PK",
+"142: Durga PP'K Wicked Weave",
+"143: Durga PPKKK Wicked Weave",
+"144: Durga Air Kick",
+"145: Durga PPPPPK",
+"146: Durga PPPPPK",
+"147: Durga PPPPP",
+"148: Durga PPPPP",
+"149: Durga PPPPK",
+"150: Durga PPPK (tap more to do the full combo of PPPKKK)",
+"151: Durga PPK",
+"152: Durga Air PPP'K/PPPPK",
+"153: Durga Air PPPK (tap more to do the full combo of PPPKKK)",
+"154: Durga Air PPK",
+"155: Durga Uplift Punch",
+"156: Durga Stiletto",
+"157: Durga Air Stiletto",
+"158: Durga Fire PP'P",
+"159: Durga Air Fire PP'P",
+"160: Durga PKP",
+"161: Durga Uplift Punch Wicked Weave",
+"162: Durga Heel Slide",
+"163: Durga Punch Punish Attack",
+"164: Durga PP'P/PPPP'P",
+"165: Kilgore Punch",
+"166: Kilgore Air Punch",
+"167: Kilgore Stiletto",
+"168: Kilgore Uplift Punch",
+"169: Kilgore Kick",
+"170: Kilgore Punch Spin",
+"171: Kilgore Air Punch Spin",
+"172: Kilgore Kick Spin",
+"173: Kilgore Air Kick Spin",
+"174: Kilgore PKP",
+"175: Kilgore PPK without effect",
+"176: Kilgore Air PPK without effect",
+"177: Kilgore PPKK Wicked Weave",
+"178: Kilgore PPKKK Wicked Weave",
+"179: Kilgore PPPK without effect (tap more to do the full combo of PPPKKK)",
+"180: Kilgore Air PPPK without effect (tap more to do the full combo of PPPKKK)",
+"181: Kilgore Kick Punish Attack",
+"182: Kilgore Punch Punish Attack",
+"183: Odette Kick",
+"184: Odette Spin attack with a small jump",
+"185: Odette Joystick Spin",
+"186: Odette Charge Kick",
+"187: Odette PPK",
+"188: Odette PPKK Wicked Weave",
+"189: Odette PPKKK Wicked Weave",
+"190: Odette PPPK (tap more to do the full combo of PPPKKK)",
+"191: Odette Air PPK",
+"192: Odette Air PPPK (tap more to do the full combo of PPPKKK)",
+"193: Odette PK",
+"194: Odette PP'K/PPP'K/PPPPK Wicked Weave",
+"195: Saifung Punch",
+"196: Saifung Air Punch",
+"197: Saifung PPPPP",
+"198: Saifung Air PPPPP",
+"199: Saifung Punch Bullet Climax",
+"200: Saifung Air Punch Bullet Climax",
+"201: Saifung Bullet Climax Retrieve",
+"202: Saifung Air Bullet Climax Retrieve",
+"203: Saifung PP'P",
+"204: Saifung Air PP'P",
+"205: Saifung PPPP'P",
+"206: Saifung Air PPPP'P",
+"207: Saifung PKP",
+"208: Saifung Stiletto",
+"209: Saifung Air Stiletto",
+"210: Saifung Uplift Punch",
+"211: Saifung Air Uplift Punch",
+"212: Saifung Charge",
+"213: Saifung Charge",
+"214: Saifung Punch Punish Attack",
+"215: Rodin/Angel Weapon Angel Pole Attack",
+"216: Rodin/Angel Weapon Air Angel Pole Attack",
+"217: Rodin/Angel Weapon Angel Pole Spin QTE",
+"218: Rodin/Angel Weapon Unknown",
+"219: Rodin/Angel Weapon Unknown",
+"220: Rodin/Angel Weapon Sword Dash Forward",
+"221: Rodin/Angel Weapon Air Sword Dash Forward",
+"222: Rodin/Angel Weapon Angel Bow Melee Attack",
+"223: Rodin/Angel Weapon Air Angel Bow Melee Attack",
+"224: Rodin/Angel Weapon Angel Bow Shooting",
+"225: Rodin/Angel Weapon Flail Continuous Attack",
+"226: Rodin/Angel Weapon Air Flail Continuous Attack",
+"227: Rodin/Angel Weapon Flail Hard Attack",
+"228: Rodin/Angel Weapon Air Flail Hard Attack",
+"229: Rodin/Angel Weapon Axe Spin Attack",
+"230: Rodin/Angel Weapon Air Axe Spin Attack",
+"231: Rodin/Angel Weapon Claw Attack",
+"232: Rodin/Angel Weapon Unknown",
+"233: Rodin/Angel Weapon Electric Claw Charge",
+"234: Rodin/Angel Weapon Air Electric Claw Charge",
+"235: Rodin/Angel Weapon Fire Claw Charge",
+"236: Rodin/Angel Weapon Air Fire Claw Charge",
+"237: Rodin/Angel Weapon Trumpet shooting",
+"238: Rodin/Angel Weapon Trumpet heavy shooting",
+"239: Rodin/Angel Weapon French Horn Shooting",
+"240: Rodin/Angel Weapon French Horn Spin",
+"241: Rodin/Angel Weapon Uplift Sword",
+"242: Rodin/Angel Weapon Uplift Bow",
+"243: Rodin/Angel Weapon Chainsaw",
+"244: Rodin/Angel Weapon Air Chainsaw",
+"245: Rodin/Angel Weapon Pick Up Angel Weapons",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+"Unknown",
+};
+
 void GameHook::GameTick(void) { // also called while the menu isn't open
     static bool isFirstFrame = true;
     LocalPlayer* player = GetLocalPlayer();
@@ -545,7 +898,8 @@ void GameHook::GameImGui(void) {
                     ImGui::InputFloat("Remaining Witch Time Duration##PlayerRemainingWitchTimeDurationInputFloat", &player->witchTimeDuration, 10, 100, "%.0f");
                     ImGui::InputFloat("Remaining Invinciblity##PlayerRemainingInvinciblityInputFloat", &player->iFramesRemaining, 10, 100, "%.0f");
                     ImGui::InputFloat("Animation Frame##PlayerAnimationFrameInputFloat", &player->animFrame, 1, 10, "%.0f");
-                    ImGui::InputInt("Move ID##PlayerMoveIDInputInt", &player->moveID);
+                    //ImGui::InputInt("Move ID##PlayerMoveIDInputInt", &player->moveID);
+                    ImGui::Combo("##PlayerMoveIDCombo", &player->moveID, GameHook::moveIDNames, IM_ARRAYSIZE(GameHook::moveIDNames));
                     ImGui::InputInt("Move Part##PlayerMovePartInputInt", &player->movePart);
                     ImGui::InputInt("String ID##PlayerStringIDInputInt", &player->stringID);
                     ImGui::InputInt("Attack Count##PlayerAttackCountInputInt", &player->attackCount);
@@ -598,7 +952,8 @@ void GameHook::GameImGui(void) {
                     ImGui::InputFloat3("+F0 scale", &player->scale.x);
                     ImGui::InputFloat("+314 camHeight", &player->camHeight);
                     ImGui::InputFloat("+324 alpha", &player->alpha);
-                    ImGui::InputInt("+34C moveID", &player->moveID);
+                    // ImGui::InputInt("+34C moveID", &player->moveID);
+                    ImGui::Combo("+34C moveID", &player->moveID, GameHook::moveIDNames, IM_ARRAYSIZE(GameHook::moveIDNames));
                     ImGui::InputInt("+350 movePart", &player->movePart);
                     ImGui::InputInt("+354 invincibility", &player->invincibility);
                     ImGui::InputInt("+358 summoningSomething", &player->summoningSomething);
@@ -718,17 +1073,21 @@ void GameHook::GameImGui(void) {
             if (GameHook::moveIDSwapsToggle) {
                 LocalPlayer* player = GetLocalPlayer();
                 if (player) {
-                    ImGui::Text("Current Move ID: %i", player->moveID);
+                    ImGui::Text("Current Move ID:");
+                    ImGui::Combo("##PlayerMoveIDComboInMoveIDSwaps", &player->moveID, GameHook::moveIDNames, IM_ARRAYSIZE(GameHook::moveIDNames));
                     for (int i = 0; i < GameHook::maxMoveIDSwaps; ++i) {
                         ImGui::Checkbox(("Move Swap[" + std::to_string(i + 1) + "]").c_str(), &moveIDSwap_toggles[i]);
                         if (GameHook::moveIDSwap_toggles[i]) {
                             ImGui::PushItemWidth(inputItemWidth);
                             ImGui::Text("Replace Move ID");
                             ImGui::SameLine();
-                            ImGui::InputInt(("##CurrentMoveIDInputInt" + std::to_string(i)).c_str(), &GameHook::moveIDSwapSourceMoves[i], 0, 0);
+                            //ImGui::InputInt(("##CurrentMoveIDInputInt" + std::to_string(i)).c_str(), &GameHook::moveIDSwapSourceMoves[i], 0, 0);
+                            ImGui::Combo(("##SourceMoveIDComboInMoveIDSwap" + std::to_string(i)).c_str(), &GameHook::moveIDSwapSourceMoves[i], GameHook::moveIDNames, IM_ARRAYSIZE(GameHook::moveIDNames));
                             ImGui::SameLine();
                             ImGui::Text("with");
-                            ImGui::SameLine(); ImGui::InputInt(("##DesiredMoveIDInputInt" + std::to_string(i)).c_str(), &GameHook::moveIDSwapSwappedMoves[i]);
+                            ImGui::SameLine();
+                            //ImGui::InputInt(("##DesiredMoveIDInputInt" + std::to_string(i)).c_str(), &GameHook::moveIDSwapSwappedMoves[i]);
+                            ImGui::Combo(("##DesiredMoveIDComboInMoveIDSwap" + std::to_string(i)).c_str(), &GameHook::moveIDSwapSwappedMoves[i], GameHook::moveIDNames, IM_ARRAYSIZE(GameHook::moveIDNames));
                             ImGui::PopItemWidth();
                         }
                     }
@@ -743,7 +1102,8 @@ void GameHook::GameImGui(void) {
             if (GameHook::comboMakerToggle) {
                 LocalPlayer* player = GetLocalPlayer();
                 if (player) {
-                    ImGui::Text("Current Move ID: %i", player->moveID);
+                    ImGui::Text("Current Move ID:");
+                    ImGui::Combo("##PlayerMoveIDComboInComboMaker", &player->moveID, GameHook::moveIDNames, IM_ARRAYSIZE(GameHook::moveIDNames));
                     ImGui::Text("Current Number In String: %i", player->attackCount);
                     ImGui::Text("Current String ID: %i", player->stringID);
                     for (int i = 0; i < maxComboMakers; ++i) {
@@ -752,7 +1112,8 @@ void GameHook::GameImGui(void) {
                             ImGui::PushItemWidth(inputItemWidth);
                             ImGui::Text("if Move ID ==");
                             ImGui::SameLine();
-                            ImGui::InputInt(("##ComboMakerMoveID" + std::to_string(i) + "InputInt").c_str(), &comboMakerMoveIDs[i]);
+                            //ImGui::InputInt(("##ComboMakerMoveID" + std::to_string(i) + "InputInt").c_str(), &comboMakerMoveIDs[i]);
+                            ImGui::Combo(("##MoveIDInComboMaker" + std::to_string(i)).c_str(), &GameHook::comboMakerMoveIDs[i], GameHook::moveIDNames, IM_ARRAYSIZE(GameHook::moveIDNames));
                             ImGui::Text("and current attack number in string ==");
                             ImGui::SameLine();
                             ImGui::InputInt(("##ComboMakerMovePart" + std::to_string(i) + "InputInt").c_str(), &comboMakerMoveParts[i]);
@@ -774,18 +1135,22 @@ void GameHook::GameImGui(void) {
             if (GameHook::customWeaveToggle) {
                 LocalPlayer* player = GetLocalPlayer();
                 if (player) {
-                    ImGui::Text("Current Move ID: %i", player->moveID);
+                    ImGui::Text("Current Move ID:");
+                    ImGui::Combo("##PlayerMoveIDComboInWeaveSwaps", &player->moveID, GameHook::moveIDNames, IM_ARRAYSIZE(GameHook::moveIDNames));
                     for (int i = 0; i < customWeaveCount; ++i) {
                         ImGui::Checkbox(("Custom Weave[" + std::to_string(i + 1) + "]").c_str(), &customWeaves_toggles[i]);
                         if (customWeaves_toggles[i]) {
                             ImGui::PushItemWidth(inputItemWidth);
                             ImGui::Text("If Move ID ==");
                             ImGui::SameLine();
-                            ImGui::InputInt(("##customWeaveMoveIDArray" + std::to_string(i)).c_str(), &customWeaveMoveIDArray[i]);
+                            //ImGui::InputInt(("##customWeaveMoveIDArray" + std::to_string(i)).c_str(), &customWeaveMoveIDArray[i]);
+                            ImGui::Combo(("##customWeaveMoveIDArray" + std::to_string(i)).c_str(), &GameHook::customWeaveMoveIDArray[i], GameHook::moveIDNames, IM_ARRAYSIZE(GameHook::moveIDNames));
+                            //ImGui::SameLine(); if (ImGui::Button("Clear##customWeaveMoveIDArray")) { GameHook::customWeaveMoveIDArray[i] = -1; }
                             ImGui::PopItemWidth();
                             ImGui::Text("then Weave ID ==");
                             ImGui::SameLine();
                             ImGui::Combo(("##customWeaveArray" + std::to_string(i)).c_str(), &customWeaveArray[i], weaveNames, IM_ARRAYSIZE(weaveNames));
+                            //ImGui::SameLine(); if (ImGui::Button("Clear##customWeaveArray")) { GameHook::customWeaveArray[i] = -1; }
                             ImGui::Separator();
                         }
                     }

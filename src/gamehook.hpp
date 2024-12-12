@@ -197,6 +197,7 @@ public:
 	static const char* weaveNames[37];
 	static const char* costumeNames[32];
 	static const char* accessoryNames[13];
+	static const char* moveIDNames[350];
 	static int messageTimerFill;
 	static int showMessageTimerF1;
 	static int showMessageTimerF2;
