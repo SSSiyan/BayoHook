@@ -1122,7 +1122,7 @@ static __declspec(naked) void OmnicancelTeleDetour(void) { // player in ebx
 
 	originalcode:
 		popfd
-		push 0B
+		push 0x0B
 		mov ecx, [omnicancelTele_ogcode]
 		// mov ecx, [ecx]
 		jmp dword ptr [omnicancelTele_jmp_ret]
