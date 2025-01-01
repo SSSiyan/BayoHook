@@ -1116,6 +1116,29 @@ static __declspec(naked) void CustomWeavesDetour(void) { // player in esi
 	}
 }
 
+std::unique_ptr<FunctionHook> omnicancelTeleHook;
+uintptr_t omnicancelTele_jmp_ret{ NULL };
+bool GameHook::omnicancelTele_toggle = false;
+uintptr_t omnicancelTele_call = 0x009E6FA0;
+uintptr_t omnicancelTele_ogcode = 0x05A97ED0;
+static __declspec(naked) void OmnicancelTeleDetour(void) { // player in ebx
+	_asm {
+		cmp byte ptr [GameHook::omnicancelTele_toggle], 0
+		je originalcode
+
+		push ecx
+		mov ecx, ebx // player
+		call dword ptr omnicancelTele_call
+		pop ecx
+
+	originalcode:
+		push 0B
+		mov ecx, [omnicancelTele_ogcode]
+		mov ecx, [ecx]
+		jmp dword ptr [omnicancelTele_jmp_ret]
+	}
+}
+
 std::unique_ptr<FunctionHook> getMotNameHook;
 uintptr_t getMotName_jmp_ret{ NULL };
 bool GameHook::getMotName_toggle = false;
@@ -2352,6 +2375,7 @@ void GameHook::InitializeDetours(void) {
 	install_hook_absolute(0x4CCCA0, longerPillowTalkChargeHook, &LongerPillowTalkChargeDetour, &longerPillowTalkCharge_jmp_ret, 6);
 	install_hook_absolute(0x8EF527, alwaysWitchTimeHook, &AlwaysWitchTimeDetour, &alwaysWitchTime_jmp_ret, 8);
 	install_hook_absolute(0x87F270, customWeavesHook, &CustomWeavesDetour, &customWeaves_jmp_ret, 6);
+	install_hook_absolute(0x8BE5B6, omnicancelTeleHook, &OmnicancelTeleDetour, &omnicancelTele_jmp_ret, 7);
 	int& thirdAccessoryValue = *(int*)GameHook::thirdAccessoryAddress;
 	thirdAccessoryValue = GameHook::desiredThirdAccessory;
 	install_hook_absolute(0x9F5AF0, pl0012Hook, &pl0012Detour, NULL, 0);
@@ -2452,6 +2476,7 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	alwaysWitchTime_toggle = cfg.get<bool>("AlwaysWitchTimeToggle").value_or(false);
 	saveStatesHotkeys_toggle = cfg.get<bool>("SaveStatesHotkeysToggle").value_or(false);
 	tauntWithTimeBracelet_toggle = cfg.get<bool>("TauntWithTimeBraceletToggle").value_or(false);
+	omnicancelTele_toggle = cfg.get<bool>("omnicancelTele_toggle").value_or(false);
 
 	moveIDSwapsToggle = cfg.get<bool>("moveIDSwapsToggle").value_or(false);
 	for (int i = 0; i < maxMoveIDSwaps; ++i) {
@@ -2551,6 +2576,7 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("AlwaysWitchTimeToggle", alwaysWitchTime_toggle);
 	cfg.set<bool>("SaveStatesHotkeysToggle", saveStatesHotkeys_toggle);
 	cfg.set<bool>("TauntWithTimeBraceletToggle", tauntWithTimeBracelet_toggle);
+	cfg.set<bool>("omnicancelTele_toggle", omnicancelTele_toggle);
 
 	cfg.set<bool>("moveIDSwapsToggle", moveIDSwapsToggle);
 	for (int i = 0; i < maxMoveIDSwaps; ++i) {

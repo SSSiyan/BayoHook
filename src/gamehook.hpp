@@ -142,6 +142,7 @@ public:
 	static bool loadReplace_toggle;
 	static bool longerPillowTalkCharge_toggle;
 	static bool alwaysWitchTime_toggle;
+	static bool omnicancelTele_toggle;
 	//
 	static bool getMotName_toggle;
 	static char getMotName_weaponMotString[0x128];

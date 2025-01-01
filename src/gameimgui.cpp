@@ -714,6 +714,8 @@ void GameHook::GameImGui(void) {
             ImGui::SameLine();
             help_marker("Stiletto, Heel Slide etc");
 
+            ImGui::Checkbox("Omnicancel Teleport", &GameHook::omnicancelTele_toggle);
+
             ImGui::Separator();
 
             ImGui::Checkbox("Witch Time Multiplier##WitchTimeToggle", &GameHook::witchTimeMultiplier_toggle);
