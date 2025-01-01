@@ -174,7 +174,6 @@ public:
 	static uintptr_t WeaponA2Address;
 	static uintptr_t WeaponB1Address;
 	static uintptr_t WeaponB2Address;
-	static uintptr_t CustomWeavesAddress;
 
 	// imgui
 	static float windowHeightHack;

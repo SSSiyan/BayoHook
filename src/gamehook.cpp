@@ -40,26 +40,11 @@ uintptr_t GameHook::WeaponA2Address = 0x5AA7420;
 uintptr_t GameHook::WeaponB1Address = 0x5AA742C;
 uintptr_t GameHook::WeaponB2Address = 0x5AA7430;
 
-bool GameHook::moveIDSwapsToggle = false;
-bool GameHook::moveIDSwap_toggles[maxMoveIDSwaps]{};
-int GameHook::moveIDSwapSourceMoves[maxMoveIDSwaps]{};
-int GameHook::moveIDSwapSwappedMoves[maxMoveIDSwaps]{};
-
-bool GameHook::stringSwapsToggle = false;
-bool GameHook::stringIDSwap_toggles[maxStringSwaps];
-int  GameHook::stringIDSwapSourceStrings[maxStringSwaps];
-int  GameHook::stringIDSwapDesiredStrings[maxStringSwaps];
-
 bool GameHook::comboMakerToggle = false;
 bool GameHook::comboMaker_toggles[maxComboMakers]{};
 int  GameHook::comboMakerMoveIDs[maxComboMakers]{};
 int  GameHook::comboMakerMoveParts[maxComboMakers]{};
 int  GameHook::comboMakerStringIDs[maxComboMakers]{};
-
-bool GameHook::customWeaveToggle = false;
-bool GameHook::customWeaves_toggles[customWeaveCount]{};
-int GameHook::customWeaveArray[customWeaveCount]{};
-int GameHook::customWeaveMoveIDArray[customWeaveCount]{};
 
 int GameHook::desiredThirdAccessory = 0;
 
@@ -525,6 +510,10 @@ static __declspec(naked) void HaloDisplayDetour(void) {
 	}
 }
 
+bool GameHook::moveIDSwapsToggle = false;
+bool GameHook::moveIDSwap_toggles[maxMoveIDSwaps]{};
+int GameHook::moveIDSwapSourceMoves[maxMoveIDSwaps]{};
+int GameHook::moveIDSwapSwappedMoves[maxMoveIDSwaps]{};
 int __stdcall GetSwappedMoveID(int nextMoveID) {
     for (int i = 0; i < GameHook::maxMoveIDSwaps; ++i) {
 		if (GameHook::moveIDSwap_toggles[i] && GameHook::moveIDSwapSourceMoves[i] == nextMoveID) {
@@ -546,7 +535,6 @@ static __declspec(naked) void MoveIDSwapDetour(void) { // player in ecx
 		cmp [eax], ecx
 		pop eax
 		jne originalcode
-
 
 		push eax // +4
 		push ecx // +8
@@ -572,6 +560,10 @@ static __declspec(naked) void MoveIDSwapDetour(void) { // player in ecx
 	}
 }
 
+bool GameHook::stringSwapsToggle = false;
+bool GameHook::stringIDSwap_toggles[maxStringSwaps];
+int  GameHook::stringIDSwapSourceStrings[maxStringSwaps];
+int  GameHook::stringIDSwapDesiredStrings[maxStringSwaps];
 int __stdcall GetSwappedStringID(int nextStringID) {
     for (int i = 0; i < GameHook::maxMoveIDSwaps; ++i) {
 		if (GameHook::stringIDSwap_toggles[i] && GameHook::stringIDSwapSourceStrings[i] == nextStringID) {
@@ -877,6 +869,8 @@ static __declspec(naked) void AltTeleInputDetour(void) {
 		je jmp_je
 		cmp [ebx+0x000939A0], esi
 		jle jmp_jle
+		cmp byte ptr [GameHook::omnicancelTele_toggle], 1 // don't take 4 orbs if omnicancel is active!
+		je teleport
 		mov dword ptr [ebx+0x0009399C],0x0000000A // frames mashed
 		jmp dword ptr [altTeleInput_jmp_ret] // Bayonetta.exe+4BE5A2, accept teleport
 
@@ -887,29 +881,7 @@ static __declspec(naked) void AltTeleInputDetour(void) {
 		jmp dword ptr [altTeleInput_jmp_je] // Bayonetta.exe+4BE5B6, deny teleport
 	}
 }
-/* // unused since adding TauntWithTimeBracelet
-std::unique_ptr<FunctionHook> altTauntInputHook;
-uintptr_t altTauntInput_jmp_ret{ NULL };
-static int altTauntInputTauntRemap = 4;
-static __declspec(naked) void AltTauntInputDetour(void) {
-	_asm {
-		cmp byte ptr [GameHook::altTeleInput_toggle], 0
-		je originalcode
 
-		mov eax,[ecx+eax*4+0x2C]
-		test eax, 0x400
-		jz retcode
-		mov eax, [altTauntInputTauntRemap]
-		jmp retcode
-
-		originalcode:
-		mov eax,[ecx+eax*4+0x2C]
-
-		retcode:
-		ret 0004
-	}
-}
-*/
 std::unique_ptr<FunctionHook> tauntWithTimeBracelet2Hook; // tap taunt
 uintptr_t tauntWithTimeBracelet2_jmp_ret{ NULL };
 static __declspec(naked) void TauntWithTimeBracelet2Detour(void) {
@@ -1088,6 +1060,10 @@ int __stdcall GetCustomWeave(LocalPlayer* player) {
     return -1;
 }
 
+bool GameHook::customWeaveToggle = false;
+bool GameHook::customWeaves_toggles[customWeaveCount]{};
+int GameHook::customWeaveArray[customWeaveCount]{};
+int GameHook::customWeaveMoveIDArray[customWeaveCount]{};
 std::unique_ptr<FunctionHook> customWeavesHook;
 uintptr_t customWeaves_jmp_ret{ NULL };
 static __declspec(naked) void CustomWeavesDetour(void) { // player in esi
@@ -2364,7 +2340,6 @@ void GameHook::InitializeDetours(void) {
 	install_hook_absolute(0x952142, cancellableFallingKickHook, &CancellableFallingKickDetour, &cancellableFallingKick_jmp_ret, 5);
 	install_hook_absolute(0x513FC7, turboHook, &TurboHookDetour, &turbo_jmp_ret, 5);
 	install_hook_absolute(0x8BE592, altTeleInputHook, &AltTeleInputDetour, &altTeleInput_jmp_ret, 26);
-	//install_hook_absolute(0x50137D, altTauntInputHook, &AltTauntInputDetour, &altTauntInput_jmp_ret, 7);
 	install_hook_absolute(0x9E751A, tauntWithTimeBracelet2Hook, &TauntWithTimeBracelet2Detour, &tauntWithTimeBracelet2_jmp_ret, 6);
 	install_hook_absolute(0x8BE5C2, tauntWithTimeBracelet3Hook, &TauntWithTimeBracelet3Detour, &tauntWithTimeBracelet3_jmp_ret, 6);
 	install_hook_absolute(0x513C1E, disableSlowmoHook, &DisableSlowmoDetour, &disableSlowmo_jmp_ret, 5);
