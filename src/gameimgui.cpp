@@ -4,23 +4,26 @@
 #include <array>
 #include <algorithm>
 
-const char* GameHook::weaponNames[16] {
-    "Scarborough Fair",
-    "Onyx Roses",
-    "Shuraba",
-    "Kulshedra",
-    "Durga",
-    "Lt. Col. Kilgore",
-    "Odette",
-    "Sai Fung",
-    "Handguns",
-    "Handguns",
-    "Onyx Roses Alt",
-    "Durga Alt",
-    "Lt. Col. Kilgore Alt",
-    "Pillowtalk",
-    "Bazillions",
-    "Rodin",
+const char* GameHook::weaponNames[19] {
+    "Scarborough Fair",     //  0
+    "Onyx Roses",           //  1
+    "Shuraba",              //  2
+    "Kulshedra",            //  3
+    "Unused 1",             //  4
+    "Unused 2",             //  5
+    "Durga",                //  6
+    "Lt. Col. Kilgore",     //  7
+    "Odette",               //  8
+    "Sai Fung",             //  9
+    "Handguns",             // 10
+    "Handguns",             // 11
+    "Unused 3",             // 12
+    "Onyx Roses Alt",       // 13
+    "Durga Alt",            // 14
+    "Lt. Col. Kilgore Alt", // 15
+    "Pillowtalk",           // 16
+    "Bazillions",           // 17
+    "Rodin",                // 18
 };
 
 const char* GameHook::weaveNames[37]{

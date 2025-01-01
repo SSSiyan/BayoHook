@@ -193,7 +193,7 @@ public:
 	static void ImGuiStyle(void);
 	static void help_marker(const char* desc);
 	static inline void under_line(const ImColor& col);
-	static const char* weaponNames[16];
+	static const char* weaponNames[19];
 	static const char* weaveNames[37];
 	static const char* costumeNames[32];
 	static const char* accessoryNames[13];
