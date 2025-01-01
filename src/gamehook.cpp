@@ -1099,18 +1099,32 @@ uintptr_t omnicancelTele_call = 0x009E6FA0;
 uintptr_t omnicancelTele_ogcode = 0x05A97ED0;
 static __declspec(naked) void OmnicancelTeleDetour(void) { // player in ebx
 	_asm {
+		pushfd
 		cmp byte ptr [GameHook::omnicancelTele_toggle], 0
 		je originalcode
 
+		test ebx, ebx // check player exists, probably not necessary
+		je originalcode
+		cmp dword ptr [ebx+0x0009399C], 00 // extra safety, check if teleport is queued
+		je originalcode
+
+		cmp dword ptr [ebx+0x34C], 245
+		ja originalcode
+
+		push eax
 		push ecx
+		push edx
 		mov ecx, ebx // player
 		call dword ptr omnicancelTele_call
+		pop edx
 		pop ecx
+		pop eax
 
 	originalcode:
+		popfd
 		push 0B
 		mov ecx, [omnicancelTele_ogcode]
-		mov ecx, [ecx]
+		// mov ecx, [ecx]
 		jmp dword ptr [omnicancelTele_jmp_ret]
 	}
 }
