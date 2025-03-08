@@ -463,7 +463,7 @@ static __declspec(naked) void DamageDealtMultiplierDetour(void) {
 		movss xmm0,[damageDealtMultiplierXmm0Backup] // restore xmm0
 
 		originalcode:
-		sub eax,edi
+		sub eax, edi
 		mov [GameHook::haloDisplayValue], eax // after damage subtraction
 		jmp dword ptr [damageDealtMultiplier_jmp_ret]
 	}
@@ -503,8 +503,8 @@ static __declspec(naked) void HaloDisplayDetour(void) {
 
 		originalcode:
 		push esi
-		mov esi,[haloDisplayAddress] // i still hate this
-		mov [esi],eax
+		mov esi, [haloDisplayAddress] // i still hate this
+		mov [esi], eax
 		pop esi
 		jmp dword ptr [haloDisplay_jmp_ret]
 	}
@@ -861,7 +861,7 @@ static __declspec(naked) void AltTeleInputDetour(void) {
 		jmp jmp_je
 
 		teleport:
-		mov dword ptr [ebx+0x0009399C],0x00000001
+		mov dword ptr [ebx+0x0009399C], 0x00000001
 		jmp dword ptr [altTeleInput_jmp_ret]
 
 		originalcode:
@@ -871,7 +871,7 @@ static __declspec(naked) void AltTeleInputDetour(void) {
 		jle jmp_jle
 		cmp byte ptr [GameHook::omnicancelTele_toggle], 1 // don't take 4 orbs if omnicancel is active!
 		je teleport
-		mov dword ptr [ebx+0x0009399C],0x0000000A // frames mashed
+		mov dword ptr [ebx+0x0009399C], 0x0000000A // frames mashed
 		jmp dword ptr [altTeleInput_jmp_ret] // Bayonetta.exe+4BE5A2, accept teleport
 
 		jmp_jle:
@@ -893,10 +893,10 @@ static __declspec(naked) void TauntWithTimeBracelet2Detour(void) {
 		jmp originalcode
 
 		cheatcode:
-		mov eax,4
+		mov eax, 4
 
 		originalcode:
-		test [esi+0x00094B4C],eax
+		test [esi+0x00094B4C], eax
 		jmp [tauntWithTimeBracelet2_jmp_ret]
 	}
 }
@@ -912,10 +912,10 @@ static __declspec(naked) void TauntWithTimeBracelet3Detour(void) {
 		jmp originalcode
 
 		cheatcode:
-		mov eax,4
+		mov eax, 4
 
 		originalcode:
-		test [ebx+0x00094B44],eax
+		test [ebx+0x00094B44], eax
 		jmp [tauntWithTimeBracelet3_jmp_ret]
 	}
 }
@@ -948,8 +948,8 @@ static __declspec(naked) void LowerDivekickDetour(void) {
 		je originalcode
 
 		movss xmm0, [lowerDivekickTime]
-		comiss xmm0,[esi+0x00093594]
-		xorps xmm0,xmm0 // restore xmm0
+		comiss xmm0, [esi+0x00093594]
+		xorps xmm0, xmm0 // restore xmm0
 		jmp dword ptr [lowerDivekick_jmp_ret]
 
 		originalcode:
@@ -981,7 +981,7 @@ static __declspec(naked) void DualAfterBurnerDetour(void) {
 		// movss xmm0,[Bayonetta.exe+99D79C]
 		// movss [esp],xmm0
 		push 0x03
-		mov ecx,esi
+		mov ecx, esi
 		call dword ptr [dualAfterBurnerCall]
 
 		jmpcode:
@@ -1126,6 +1126,22 @@ static __declspec(naked) void OmnicancelTeleDetour(void) { // player in ebx
 		mov ecx, [omnicancelTele_ogcode]
 		// mov ecx, [ecx]
 		jmp dword ptr [omnicancelTele_jmp_ret]
+	}
+}
+
+std::unique_ptr<FunctionHook> teleportComboActionHook;
+uintptr_t teleportComboAction_jmp_ret{ NULL };
+bool GameHook::teleportComboAction_toggle = false;
+static __declspec(naked) void TeleportComboActionDetour(void) { // player in ebx
+	_asm {
+		cmp byte ptr[GameHook::teleportComboAction_toggle], 0
+		je originalcode
+
+		mov dword ptr [esi+0x95C80], 0x41700000 // 15f
+
+		originalcode:
+		mov eax,[esi+0x00000350]
+		jmp dword ptr [teleportComboAction_jmp_ret]
 	}
 }
 
@@ -2365,6 +2381,7 @@ void GameHook::InitializeDetours(void) {
 	install_hook_absolute(0x8EF527, alwaysWitchTimeHook, &AlwaysWitchTimeDetour, &alwaysWitchTime_jmp_ret, 8);
 	install_hook_absolute(0x87F270, customWeavesHook, &CustomWeavesDetour, &customWeaves_jmp_ret, 6);
 	install_hook_absolute(0x8BE5B6, omnicancelTeleHook, &OmnicancelTeleDetour, &omnicancelTele_jmp_ret, 7);
+	install_hook_absolute(0x9A0020, teleportComboActionHook, &TeleportComboActionDetour, &teleportComboAction_jmp_ret, 6);
 	int& thirdAccessoryValue = *(int*)GameHook::thirdAccessoryAddress;
 	thirdAccessoryValue = GameHook::desiredThirdAccessory;
 	install_hook_absolute(0x9F5AF0, pl0012Hook, &pl0012Detour, NULL, 0);
@@ -2457,6 +2474,7 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	turbo_toggle = cfg.get<bool>("TurboToggle").value_or(false);
 	turboValue = cfg.get<float>("TurboValue").value_or(1.0f);
 	altTeleInput_toggle = cfg.get<bool>("AltTeleInputToggle").value_or(false);
+	teleportComboAction_toggle = cfg.get<bool>("TeleportComboAction_toggle").value_or(false);
 	disableSlowmo_toggle = cfg.get<bool>("DisableSlowmoToggle").value_or(false);
 	lowerDivekick_toggle = cfg.get<bool>("LowerDivekickToggle").value_or(false);
 	dualAfterBurner_toggle = cfg.get<bool>("DualAfterBurnerToggle").value_or(false);
@@ -2557,6 +2575,7 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("TurboToggle", turbo_toggle);
 	cfg.set<float>("TurboValue", turboValue);
 	cfg.set<bool>("AltTeleInputToggle", altTeleInput_toggle);
+	cfg.set<bool>("TeleportComboAction_toggle", teleportComboAction_toggle);
 	cfg.set<bool>("DisableSlowmoToggle", disableSlowmo_toggle);
 	cfg.set<bool>("LowerDivekickToggle", lowerDivekick_toggle);
 	cfg.set<bool>("DualAfterBurnerToggle", dualAfterBurner_toggle);

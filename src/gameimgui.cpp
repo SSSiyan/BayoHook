@@ -9,15 +9,15 @@ const char* GameHook::weaponNames[19] {
     "Onyx Roses",           //  1
     "Shuraba",              //  2
     "Kulshedra",            //  3
-    "Unused 1",             //  4
-    "Unused 2",             //  5
+    "Empty 1",              //  4
+    "Empty 2",              //  5
     "Durga",                //  6
     "Lt. Col. Kilgore",     //  7
     "Odette",               //  8
     "Sai Fung",             //  9
-    "Handguns",             // 10
+    "Handguns Unused",      // 10
     "Handguns",             // 11
-    "Unused 3",             // 12
+    "Empty 3",              // 12
     "Onyx Roses Alt",       // 13
     "Durga Alt",            // 14
     "Lt. Col. Kilgore Alt", // 15
@@ -68,54 +68,54 @@ const char* GameHook::weaveNames[37]{
 };
 
 const char* GameHook::costumeNames[32] {
-    "Bayonetta Default",
-    "Bayonetta P.E. A",
-    "Bayonetta P.E. B",
-    "Bayonetta P.E. C",
-    "Bayonetta d'Arc",
-    "Bayonetta Old",
-    "Bayonetta Umbra",
-    "Bayonetta Various A",
-    "Bayonetta Various B",
-    "Bayonetta Various C",
-    "Bayonetta Umbran Komachi A",
-    "Bayonetta Umbran Komachi B",
-    "Bayonetta Umbran Komachi C",
-    "Bayonetta Nun",
-    "Bayonetta Queen",
-    "Jeanne Default",
-    "Jeanne P.E. A",
-    "Jeanne P.E. B",
-    "Jeanne P.E. C",
-    "Jeanne Formal B",
-    "Jeanne Formal A",
-    "Jeanne Old",
-    "Jeanne Umbra",
-    "Jeanne Various A",
-    "Jeanne Various B",
-    "Jeanne Various C",
-    "Jeanne Umbran Komachi A",
-    "Jeanne Umbran Komachi B",
-    "Jeanne Umbran Komachi C",
-    "Jeanne Nun",
-    "Jeanne Queen",
-    "Little King Zero",
+    "Bayonetta Default",          //  0
+    "Bayonetta P.E. A",           //  1
+    "Bayonetta P.E. B",           //  2
+    "Bayonetta P.E. C",           //  3
+    "Bayonetta d'Arc",            //  4
+    "Bayonetta Old",              //  5
+    "Bayonetta Umbra",            //  6
+    "Bayonetta Various A",        //  7
+    "Bayonetta Various B",        //  8
+    "Bayonetta Various C",        //  9
+    "Bayonetta Umbran Komachi A", // 10
+    "Bayonetta Umbran Komachi B", // 11
+    "Bayonetta Umbran Komachi C", // 12
+    "Bayonetta Nun",              // 13
+    "Bayonetta Queen",            // 14
+    "Jeanne Default",             // 15
+    "Jeanne P.E. A",              // 16
+    "Jeanne P.E. B",              // 17
+    "Jeanne P.E. C",              // 18
+    "Jeanne Formal B",            // 19
+    "Jeanne Formal A",            // 20
+    "Jeanne Old",                 // 21
+    "Jeanne Umbra",               // 22
+    "Jeanne Various A",           // 23
+    "Jeanne Various B",           // 24
+    "Jeanne Various C",           // 25
+    "Jeanne Umbran Komachi A",    // 26
+    "Jeanne Umbran Komachi B",    // 27
+    "Jeanne Umbran Komachi C",    // 28
+    "Jeanne Nun",                 // 29
+    "Jeanne Queen",               // 30
+    "Little King Zero",           // 31
 };
 
 const char* GameHook::accessoryNames[13] {
-    "None",
-    "Sergey's Lover",
-    "Infernal Communicator",
-    "Pulley's Butterfly",
-    "Selene's Light",
-    "Star of Dinéta",
-    "Evil Harvest Rosary",
-    "Gaze of Despair",
-    "Moon of Mahaa - Kalaa",
-    "Eternal Testimony",
-    "Bracelet of Time",
-    "Climax Brace",
-    "Immortal Marionette",
+    "None",                  //  0
+    "Sergey's Lover",        //  1
+    "Infernal Communicator", //  2
+    "Pulley's Butterfly",    //  3
+    "Selene's Light",        //  4
+    "Star of Dinéta",        //  5
+    "Evil Harvest Rosary",   //  6
+    "Gaze of Despair",       //  7
+    "Moon of Mahaa - Kalaa", //  8
+    "Eternal Testimony",     //  9
+    "Bracelet of Time",      // 10
+    "Climax Brace",          // 11
+    "Immortal Marionette",   // 12
 };
 
 const char* GameHook::moveIDNames[350] {
@@ -647,8 +647,8 @@ void GameHook::GameImGui(void) {
             ImGui::SameLine(sameLineWidth);
             ImGui::Checkbox("Cancellable Falling Kick", &GameHook::cancellableFallingKick_toggle);
 
-            ImGui::Checkbox("Alt Teleport Input", &GameHook::altTeleInput_toggle);
-            help_marker("Teleport = Lockon + Taunt\nTaunt = Dpad Down");
+            ImGui::Checkbox("Alt Umbran Spear Input", &GameHook::altTeleInput_toggle);
+            help_marker("Umbran Spear = Lockon + Taunt\nTaunt = Dpad Down");
             ImGui::SameLine(sameLineWidth);
             if (ImGui::Checkbox("Taunt With Time Bracelet", &GameHook::tauntWithTimeBracelet_toggle)) {
                 TauntWithTimeBracelet(GameHook::tauntWithTimeBracelet_toggle);
@@ -717,7 +717,11 @@ void GameHook::GameImGui(void) {
             ImGui::SameLine();
             help_marker("Stiletto, Heel Slide etc");
 
-            ImGui::Checkbox("Omnicancel Teleport", &GameHook::omnicancelTele_toggle);
+            ImGui::Checkbox("Omnicancel Umbran Spear", &GameHook::omnicancelTele_toggle);
+            ImGui::SameLine(sameLineWidth);
+            ImGui::Checkbox("Umbran Spear Combo", &GameHook::teleportComboAction_toggle);
+            ImGui::SameLine();
+            help_marker("Umbran spear will refresh your combo timer");
 
             ImGui::Separator();
 

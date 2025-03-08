@@ -135,6 +135,7 @@ public:
 	static float turboValue;
 	static float turboZero;
 	static bool altTeleInput_toggle;
+	static bool teleportComboAction_toggle;
 	static bool tauntWithTimeBracelet_toggle;
 	static bool disableSlowmo_toggle;
 	static bool lowerDivekick_toggle;
