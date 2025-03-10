@@ -596,6 +596,10 @@ void GameHook::GameImGui(void) {
 
             ImGui::Text("Difficulty");
             ImGui::Combo("##DifficultyInputInt", &difficultyValue, "Very Easy\0Easy\0Normal\0Hard\0Non-Stop Infinite Climax\0");
+            if (ImGui::Checkbox("Freeze Difficulty", &freezeDifficulty_toggle)) {
+                GameHook::FreezeDifficulty(freezeDifficulty_toggle);
+            }
+            help_marker("Stop the difficulty being restored when loading a new stage");
 
             ImGui::Separator();
 

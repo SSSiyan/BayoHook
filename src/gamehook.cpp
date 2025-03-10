@@ -375,6 +375,16 @@ void GameHook::DisableDoubleTapHeelKick(bool enabled) {
 	}
 }
 
+bool GameHook::freezeDifficulty_toggle = false;
+void GameHook::FreezeDifficulty(bool enabled) {
+	if (enabled) {
+		GameHook::_nop((char*)(0x5018C4), 6);
+	}
+	else {
+		GameHook::_patch((char*)(0x5018C4), (char*)"\x89\x81\xD0\x06\x00\x00", 6); // mov [ecx+000006D0],eax
+	}
+}
+
 // detours
 std::unique_ptr<FunctionHook> enemyHPHook;
 uintptr_t enemyHP_jmp_ret{ NULL };
@@ -2446,6 +2456,8 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	RemoveVignette(removeVignette_toggle);
 	disableDoubleTapHeelKick_toggle = cfg.get<bool>("DisableDoubleTapHeelKickToggle").value_or(false);
 	DisableDoubleTapHeelKick(disableDoubleTapHeelKick_toggle);
+	freezeDifficulty_toggle = cfg.get<bool>("freezeDifficulty_toggle").value_or(false);
+	FreezeDifficulty(freezeDifficulty_toggle);
 
 	// detours
 	enemyHP_no_damage_toggle = cfg.get<bool>("DealNoDamageToggle").value_or(false);
@@ -2547,6 +2559,7 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("ParryOffsetToggle", parryOffset_toggle);
 	cfg.set<bool>("RemoveVignetteToggle", removeVignette_toggle);
 	cfg.set<bool>("DisableDoubleTapHeelKickToggle", disableDoubleTapHeelKick_toggle);
+	cfg.set<bool>("freezeDifficulty_toggle", freezeDifficulty_toggle);
 
 	//cfg.set<bool>("AreaJumpPatchToggle", areaJumpPatch_toggle);
 	// detours

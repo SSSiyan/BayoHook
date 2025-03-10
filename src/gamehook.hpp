@@ -14,70 +14,105 @@
 
 class GameHook {
 public:
-	// patch toggles
+	// patches
 	static bool takeNoDamage_toggle;
-	static bool focusPatch_toggle;
-	static bool infJumps_toggle;
-	static bool disableClicking_toggle;
-	static bool noClip_toggle;
-	static bool disableDaze_toggle;
-	static bool forceDaze_toggle;
-	static bool freezeTimer_toggle;
-	static bool disableAfterBurnerBounce_toggle;
-	static bool areaJumpPatch_toggle;
-	static bool easyCutsceneSkip_toggle;
-	static bool lessClothes_toggle;
-	static bool disableLockOnDodge_toggle;
-	static bool noHoldDodgeOffset_toggle;
-	static bool jumpOffset_toggle;
-	static bool alwaysWalkOnWalls_toggle;
-	static bool getMoreHalos_toggle;
-	static bool moreEnemyAttacks_toggle;
-	static bool lessEnemyAttacks_toggle;
-	static bool infBirdTime_toggle;
-	static bool weaponSwapOffset_toggle;
-	static bool retainPillowTalkCharge_toggle;
-	static bool swapMashToHold_toggle;
-	static bool sixtyFpsCutscenes_toggle;
-	static bool disableFpsLimiter_toggle;
-	static bool jeanneBayoWT_toggle;
-	static bool infDivekick_toggle;
-	static bool parryOffset_toggle;
-	static bool removeVignette_toggle;
-	static bool disableDoubleTapHeelKick_toggle;
-	// patch functions
 	static void TakeNoDamage(bool enabled);
+
+	// enemyHP_no_damage_toggle
 	static void DisableKilling(bool enabled);
+
+	static bool focusPatch_toggle;
 	static void FocusPatch(bool enabled);
+
+	static bool infJumps_toggle;
 	static void InfJumps(bool enabled);
+
+	static bool disableClicking_toggle;
 	static void DisableClicking(bool enabled);
+
+	static bool noClip_toggle;
 	static void NoClip(bool enabled);
+
+	static bool disableDaze_toggle;
 	static void DisableDaze(bool enabled);
+
+	static bool forceDaze_toggle;
 	static void ForceDaze(bool enabled);
+
+	static bool freezeTimer_toggle;
 	static void FreezeTimer(bool enabled);
+
+	static bool disableAfterBurnerBounce_toggle;
 	static void DisableAfterBurnerBounce(bool enabled);
+
+	static bool areaJumpPatch_toggle;
 	static void AreaJumpPatch(bool enabled);
+
+	static bool easyCutsceneSkip_toggle;
 	static void EasyCutsceneSkip(bool enabled);
+
+	static bool lessClothes_toggle;
 	static void LessClothes(bool enabled);
+
+	static bool disableLockOnDodge_toggle;
 	static void DisableLockOnDodge(bool enabled);
+
+	static bool noHoldDodgeOffset_toggle;
 	static void NoHoldDodgeOffset(bool enabled);
+
+	static bool jumpOffset_toggle;
 	static void JumpOffset(bool enabled);
+
+	static bool alwaysWalkOnWalls_toggle;
 	static void AlwaysWalkOnWalls(bool enabled);
+
+	static bool getMoreHalos_toggle;
 	static void GetMoreHalos(bool enabled);
+
+	static bool moreEnemyAttacks_toggle;
 	static void MoreEnemyAttacks(bool enabled);
+
+	static bool lessEnemyAttacks_toggle;
 	static void LessEnemyAttacks(bool enabled);
+
+	static bool infBirdTime_toggle;
 	static void InfBirdTime(bool enabled);
+
+	static bool weaponSwapOffset_toggle;
 	static void WeaponSwapOffset(bool enabled);
+
+	static bool retainPillowTalkCharge_toggle;
 	static void RetainPillowTalkCharge(bool enabled);
+
+	static bool swapMashToHold_toggle;
 	static void SwapMashToHold(bool enabled);
+
+	static bool sixtyFpsCutscenes_toggle;
 	static void SixtyFpsCutscenes(bool enabled);
+
+	static bool disableFpsLimiter_toggle;
 	static void DisableFpsLimiter(bool enabled);
+
+	static bool jeanneBayoWT_toggle;
 	static void JeanneBayoWT(bool enabled);
+
+	static bool infDivekick_toggle;
 	static void InfDivekick(bool enabled);
-	static void TauntWithTimeBracelet(bool enabled);
+
+	static bool parryOffset_toggle;
 	static void ParryOffset(bool enabled);
+
+	static bool removeVignette_toggle;
 	static void RemoveVignette(bool enabled);
+
+	static bool disableDoubleTapHeelKick_toggle;
 	static void DisableDoubleTapHeelKick(bool enabled);
+
+	static bool freezeDifficulty_toggle;
+	static void FreezeDifficulty(bool enabled);
+
+	static bool tauntWithTimeBracelet_toggle;
+	static void TauntWithTimeBracelet(bool enabled);
 
 	static void WeaponSwapCaller(void);
 	static void SaveStates_SaveState();
@@ -136,7 +171,6 @@ public:
 	static float turboZero;
 	static bool altTeleInput_toggle;
 	static bool teleportComboAction_toggle;
-	static bool tauntWithTimeBracelet_toggle;
 	static bool disableSlowmo_toggle;
 	static bool lowerDivekick_toggle;
 	static bool dualAfterBurner_toggle;
