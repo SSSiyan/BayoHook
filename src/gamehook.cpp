@@ -2418,7 +2418,7 @@ void GameHook::InitializeDetours(void) {
 	install_hook_absolute(0x513C1E, disableSlowmoHook, &DisableSlowmoDetour, &disableSlowmo_jmp_ret, 5);
 	install_hook_absolute(0x9E93B9, lowerDivekickHook, &LowerDivekickDetour, &lowerDivekick_jmp_ret, 7);
 	install_hook_absolute(0x94CAAF, dualAfterBurnerHook, &DualAfterBurnerDetour, &dualAfterBurner_jmp_ret, 5);
-	//install_hook_absolute(0xC798A7, getMotNameHook, &GetMotNameDetour, &getMotName_jmp_ret, 6);
+	// install_hook_absolute(0xC798A7, getMotNameHook, &GetMotNameDetour, &getMotName_jmp_ret, 6);
 	install_hook_absolute(0x6222D0, loadReplaceHook, &LoadReplaceDetour, &loadReplace_jmp_ret, 6);
 	install_hook_absolute(0x4CCCA0, longerPillowTalkChargeHook, &LongerPillowTalkChargeDetour, &longerPillowTalkCharge_jmp_ret, 6);
 	install_hook_absolute(0x8EF527, alwaysWitchTimeHook, &AlwaysWitchTimeDetour, &alwaysWitchTime_jmp_ret, 8);
@@ -2426,8 +2426,8 @@ void GameHook::InitializeDetours(void) {
 	install_hook_absolute(0x8BE5B6, omnicancelTeleHook, &OmnicancelTeleDetour, &omnicancelTele_jmp_ret, 7);
 	install_hook_absolute(0x9A0020, teleportComboActionHook, &TeleportComboActionDetour, &teleportComboAction_jmp_ret, 6);
 	install_hook_absolute(0x97ED07, fixThirdAccessoryHook, &FixThirdAccessoryDetour, &fixThirdAccessory_jmp_ret, 5);
-	//int& thirdAccessoryValue = *(int*)GameHook::thirdAccessoryAddress;
-	//thirdAccessoryValue = GameHook::desiredThirdAccessory;
+	// int& thirdAccessoryValue = *(int*)GameHook::thirdAccessoryAddress;
+	// thirdAccessoryValue = GameHook::desiredThirdAccessory;
 	install_hook_absolute(0x9F5AF0, pl0012Hook, &pl0012Detour, NULL, 0);
 	install_hook_absolute(0x9FC890, pl0031Hook, &pl0031Detour, NULL, 0);
 	install_hook_absolute(0xA17420, pl004cHook, &pl004cDetour, NULL, 0);
@@ -2482,8 +2482,8 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	JeanneBayoWT(jeanneBayoWT_toggle);
 	infDivekick_toggle = cfg.get<bool>("InfDivekickToggle").value_or(false);
 	InfDivekick(infDivekick_toggle);
-	//areaJumpPatch_toggle = cfg.get<bool>("AreaJumpPatchToggle").value_or(false);
-	//AreaJumpPatch(areaJumpPatch_toggle);
+	// areaJumpPatch_toggle = cfg.get<bool>("AreaJumpPatchToggle").value_or(false);
+	// AreaJumpPatch(areaJumpPatch_toggle);
 	parryOffset_toggle = cfg.get<bool>("ParryOffsetToggle").value_or(false);
 	ParryOffset(parryOffset_toggle);
 	removeVignette_toggle = cfg.get<bool>("RemoveVignetteToggle").value_or(false);
@@ -2494,6 +2494,8 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	FreezeDifficulty(freezeDifficulty_toggle);
 	hideHalos_toggle = cfg.get<bool>("hideHalos_toggle").value_or(false);
 	HideHalos(hideHalos_toggle);
+	tauntWithTimeBracelet_toggle = cfg.get<bool>("TauntWithTimeBraceletToggle").value_or(false);
+	TauntWithTimeBracelet(tauntWithTimeBracelet_toggle);
 
 	// detours
 	enemyHP_no_damage_toggle = cfg.get<bool>("DealNoDamageToggle").value_or(false);
@@ -2530,7 +2532,6 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	longerPillowTalkCharge_toggle = cfg.get<bool>("LongerPillowTalkChargeToggle").value_or(false);
 	alwaysWitchTime_toggle = cfg.get<bool>("AlwaysWitchTimeToggle").value_or(false);
 	saveStatesHotkeys_toggle = cfg.get<bool>("SaveStatesHotkeysToggle").value_or(false);
-	tauntWithTimeBracelet_toggle = cfg.get<bool>("TauntWithTimeBraceletToggle").value_or(false);
 	omnicancelTele_toggle = cfg.get<bool>("omnicancelTele_toggle").value_or(false);
 	fixThirdAccessory_toggle = cfg.get<bool>("fixThirdAccessory_toggle").value_or(false);
 
