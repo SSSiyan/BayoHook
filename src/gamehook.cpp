@@ -46,6 +46,7 @@ int  GameHook::comboMakerMoveIDs[maxComboMakers]{};
 int  GameHook::comboMakerMoveParts[maxComboMakers]{};
 int  GameHook::comboMakerStringIDs[maxComboMakers]{};
 
+int GameHook::thirdAccessoryValue = 0;
 int GameHook::desiredThirdAccessory = 0;
 
 // patches
@@ -1152,6 +1153,28 @@ static __declspec(naked) void TeleportComboActionDetour(void) { // player in ebx
 		originalcode:
 		mov eax,[esi+0x00000350]
 		jmp dword ptr [teleportComboAction_jmp_ret]
+	}
+}
+
+
+std::unique_ptr<FunctionHook> fixThirdAccessoryHook;
+uintptr_t fixThirdAccessory_jmp_ret{ NULL };
+static uintptr_t fixThirdAccessoryCall = 0x4332F0;
+bool GameHook::fixThirdAccessory_toggle = false;
+static __declspec(naked) void FixThirdAccessoryDetour(void) { // player in ebx
+	_asm {
+		//
+			cmp byte ptr[GameHook::fixThirdAccessory_toggle], 0
+			je originalcode
+		//
+			push 2
+			call dword ptr [fixThirdAccessoryCall]
+			add esp, 4 // pop
+
+		originalcode:
+			add esp, 8
+			mov ebp, eax
+			jmp dword ptr [fixThirdAccessory_jmp_ret]
 	}
 }
 
@@ -2392,8 +2415,9 @@ void GameHook::InitializeDetours(void) {
 	install_hook_absolute(0x87F270, customWeavesHook, &CustomWeavesDetour, &customWeaves_jmp_ret, 6);
 	install_hook_absolute(0x8BE5B6, omnicancelTeleHook, &OmnicancelTeleDetour, &omnicancelTele_jmp_ret, 7);
 	install_hook_absolute(0x9A0020, teleportComboActionHook, &TeleportComboActionDetour, &teleportComboAction_jmp_ret, 6);
-	int& thirdAccessoryValue = *(int*)GameHook::thirdAccessoryAddress;
-	thirdAccessoryValue = GameHook::desiredThirdAccessory;
+	install_hook_absolute(0x97ED07, fixThirdAccessoryHook, &FixThirdAccessoryDetour, &fixThirdAccessory_jmp_ret, 5);
+	//int& thirdAccessoryValue = *(int*)GameHook::thirdAccessoryAddress;
+	//thirdAccessoryValue = GameHook::desiredThirdAccessory;
 	install_hook_absolute(0x9F5AF0, pl0012Hook, &pl0012Detour, NULL, 0);
 	install_hook_absolute(0x9FC890, pl0031Hook, &pl0031Detour, NULL, 0);
 	install_hook_absolute(0xA17420, pl004cHook, &pl004cDetour, NULL, 0);
@@ -2496,6 +2520,7 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	saveStatesHotkeys_toggle = cfg.get<bool>("SaveStatesHotkeysToggle").value_or(false);
 	tauntWithTimeBracelet_toggle = cfg.get<bool>("TauntWithTimeBraceletToggle").value_or(false);
 	omnicancelTele_toggle = cfg.get<bool>("omnicancelTele_toggle").value_or(false);
+	fixThirdAccessory_toggle = cfg.get<bool>("fixThirdAccessory_toggle").value_or(false);
 
 	moveIDSwapsToggle = cfg.get<bool>("moveIDSwapsToggle").value_or(false);
 	for (int i = 0; i < maxMoveIDSwaps; ++i) {
@@ -2598,6 +2623,7 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("SaveStatesHotkeysToggle", saveStatesHotkeys_toggle);
 	cfg.set<bool>("TauntWithTimeBraceletToggle", tauntWithTimeBracelet_toggle);
 	cfg.set<bool>("omnicancelTele_toggle", omnicancelTele_toggle);
+	cfg.set<bool>("fixThirdAccessory_toggle", fixThirdAccessory_toggle);
 
 	cfg.set<bool>("moveIDSwapsToggle", moveIDSwapsToggle);
 	for (int i = 0; i < maxMoveIDSwaps; ++i) {

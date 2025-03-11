@@ -473,6 +473,8 @@ const char* GameHook::moveIDNames[350] {
 
 void GameHook::GameTick(void) { // also called while the menu isn't open
     static bool isFirstFrame = true;
+    *(int*)GameHook::thirdAccessoryAddress = GameHook::desiredThirdAccessory;
+    //GameHook::thirdAccessoryValue = 
     LocalPlayer* player = GetLocalPlayer();
     isFirstFrame = false;
     if (player) {
@@ -495,7 +497,6 @@ void GameHook::GameImGui(void) {
     float& comboMultiplierValue = *(float*)GameHook::comboMultiplierAddress;
     int& currentCharacterValue = *(int*)GameHook::currentCharacterAddress;
     int& currentCostumeValue = *(int*)GameHook::currentCostumeAddress;
-    int& thirdAccessoryValue = *(int*)GameHook::thirdAccessoryAddress;
     bool& hudDisplayValue = *(bool*)GameHook::hudDisplayAddress;
     int& angelSlayerFloorValue = *(int*)GameHook::angelSlayerFloorAddress;
     int& difficultyValue = *(int*)GameHook::difficultyAddress;
@@ -589,9 +590,8 @@ void GameHook::GameImGui(void) {
             
             ImGui::Text("Third Accessory");
             ImGui::Combo("##ThirdAccessoryCombo", &GameHook::desiredThirdAccessory, GameHook::accessoryNames, IM_ARRAYSIZE(GameHook::accessoryNames));
-
-            thirdAccessoryValue = GameHook::desiredThirdAccessory;
-
+            ImGui::Checkbox("Fix third accessory", &fixThirdAccessory_toggle);
+            help_marker("Without this fix, some accessories like Butterfly, Communicator, Sergey do not work as intended");
             ImGui::Separator();
 
             ImGui::Text("Difficulty");

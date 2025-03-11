@@ -133,6 +133,7 @@ public:
 	static int inputIconsValue;
 	static bool haloDisplay_toggle;
 	static int haloDisplayValue;
+	static bool fixThirdAccessory_toggle;
 	//
 	static bool moveIDSwapsToggle;
 	static const int maxMoveIDSwaps = 5;
@@ -159,6 +160,7 @@ public:
 	static int customWeaveArray[];
 	static int customWeaveMoveIDArray[];
 	//
+	static int thirdAccessoryValue;
 	static int desiredThirdAccessory;
 	//
 	static bool easierMash_toggle;
