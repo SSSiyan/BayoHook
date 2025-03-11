@@ -344,6 +344,16 @@ void GameHook::TauntWithTimeBracelet(bool enabled) {
 	}
 }
 
+bool GameHook::hideHalos_toggle = false;
+void GameHook::HideHalos(bool enabled) {
+	if (enabled) {
+		GameHook::_nop((char*)(0xC28AA2), 5);
+	}
+	else {
+		GameHook::_patch((char*)(0xC28AA2), (char*)"\xE8\x89\x35\x00\x00", 5); // call Bayonetta.exe+82C030
+	}
+}
+
 bool GameHook::parryOffset_toggle = false;
 void GameHook::ParryOffset(bool enabled) {
 	if (enabled) {
@@ -2482,6 +2492,8 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	DisableDoubleTapHeelKick(disableDoubleTapHeelKick_toggle);
 	freezeDifficulty_toggle = cfg.get<bool>("freezeDifficulty_toggle").value_or(false);
 	FreezeDifficulty(freezeDifficulty_toggle);
+	hideHalos_toggle = cfg.get<bool>("hideHalos_toggle").value_or(false);
+	HideHalos(hideHalos_toggle);
 
 	// detours
 	enemyHP_no_damage_toggle = cfg.get<bool>("DealNoDamageToggle").value_or(false);
@@ -2585,6 +2597,7 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("RemoveVignetteToggle", removeVignette_toggle);
 	cfg.set<bool>("DisableDoubleTapHeelKickToggle", disableDoubleTapHeelKick_toggle);
 	cfg.set<bool>("freezeDifficulty_toggle", freezeDifficulty_toggle);
+	cfg.set<bool>("hideHalos_toggle", hideHalos_toggle);
 
 	//cfg.set<bool>("AreaJumpPatchToggle", areaJumpPatch_toggle);
 	// detours

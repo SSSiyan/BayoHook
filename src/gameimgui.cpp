@@ -614,7 +614,7 @@ void GameHook::GameImGui(void) {
             ImGui::Separator();
 
             ImGui::Text("Initial Angel Slayer Floor");
-            help_marker("Set before starting Angel Slayer.");
+            help_marker("Set before starting Angel Slayer");
             ImGui::PushItemWidth(inputItemWidth);
             int displayInitialAngelSlayerFloor = GameHook::initialAngelSlayerFloor + 1;
             if (ImGui::InputInt("##InitialAngelSlayerFloorInputInt", &displayInitialAngelSlayerFloor)) {
@@ -623,7 +623,7 @@ void GameHook::GameImGui(void) {
             ImGui::PopItemWidth();
 
             ImGui::Text("Current Angel Slayer Floor");
-            help_marker("Set before entering a portal.");
+            help_marker("Set before entering a portal");
             ImGui::PushItemWidth(inputItemWidth);
             int displayAngelSlayerFloorValue = angelSlayerFloorValue + 1;
             if (ImGui::InputInt("##AngelSlayerFloorInputInt", &displayAngelSlayerFloorValue)) {
@@ -799,6 +799,10 @@ void GameHook::GameImGui(void) {
 
             if (ImGui::Checkbox("Remove Vignette", &GameHook::removeVignette_toggle)) {
                 GameHook::RemoveVignette(GameHook::removeVignette_toggle);
+            }
+            ImGui::SameLine(sameLineWidth);
+            if (ImGui::Checkbox("Hide Halos", &GameHook::hideHalos_toggle)) {
+                GameHook::HideHalos(GameHook::hideHalos_toggle);
             }
 
             ImGui::Separator();

@@ -114,6 +114,9 @@ public:
 	static bool tauntWithTimeBracelet_toggle;
 	static void TauntWithTimeBracelet(bool enabled);
 
+	static bool hideHalos_toggle;
+	static void HideHalos(bool enabled);
+
 	static void WeaponSwapCaller(void);
 	static void SaveStates_SaveState();
 	static void SaveStates_LoadState();
