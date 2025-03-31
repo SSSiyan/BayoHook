@@ -474,7 +474,6 @@ const char* GameHook::moveIDNames[350] {
 void GameHook::GameTick(void) { // also called while the menu isn't open
     static bool isFirstFrame = true;
     *(int*)GameHook::thirdAccessoryAddress = GameHook::desiredThirdAccessory;
-    //GameHook::thirdAccessoryValue = 
     LocalPlayer* player = GetLocalPlayer();
     isFirstFrame = false;
     if (player) {
@@ -726,6 +725,13 @@ void GameHook::GameImGui(void) {
             ImGui::Checkbox("Umbran Spear Combo", &GameHook::teleportComboAction_toggle);
             ImGui::SameLine();
             help_marker("Umbran spear will refresh your combo timer");
+
+            if (ImGui::Checkbox("Disable Hitstop", &GameHook::noHitstop_toggle)) {
+                GameHook::NoHitstop(noHitstop_toggle);
+            }
+            ImGui::SameLine();
+            help_marker("Warning: This is possibly quite invasive and I'm not sure what else it could affect. If you see any bugs, "
+                "assume this is the issue first! Please let me know if you find anything");
 
             ImGui::Separator();
 

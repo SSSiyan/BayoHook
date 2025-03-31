@@ -117,6 +117,9 @@ public:
 	static bool hideHalos_toggle;
 	static void HideHalos(bool enabled);
 
+	static bool noHitstop_toggle;
+	static void NoHitstop(bool enabled);
+
 	static void WeaponSwapCaller(void);
 	static void SaveStates_SaveState();
 	static void SaveStates_LoadState();
@@ -163,7 +166,6 @@ public:
 	static int customWeaveArray[];
 	static int customWeaveMoveIDArray[];
 	//
-	static int thirdAccessoryValue;
 	static int desiredThirdAccessory;
 	//
 	static bool easierMash_toggle;

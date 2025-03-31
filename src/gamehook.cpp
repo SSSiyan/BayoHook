@@ -46,7 +46,6 @@ int  GameHook::comboMakerMoveIDs[maxComboMakers]{};
 int  GameHook::comboMakerMoveParts[maxComboMakers]{};
 int  GameHook::comboMakerStringIDs[maxComboMakers]{};
 
-int GameHook::thirdAccessoryValue = 0;
 int GameHook::desiredThirdAccessory = 0;
 
 // patches
@@ -354,6 +353,17 @@ void GameHook::HideHalos(bool enabled) {
 	}
 }
 
+bool GameHook::noHitstop_toggle = false;
+void GameHook::NoHitstop(bool enabled) {
+	if (enabled) {
+		GameHook::_nop((char*)(0x5139A5), 3);
+	}
+	else {
+		GameHook::_patch((char*)(0x5139A5), (char*)"\xD8\x4A\x10", 3); // fmul dword ptr [edx+0x10]
+	}
+}
+
+
 bool GameHook::parryOffset_toggle = false;
 void GameHook::ParryOffset(bool enabled) {
 	if (enabled) {
@@ -429,7 +439,7 @@ static __declspec(naked) void EnemyHPDetour(void) {
 std::unique_ptr<FunctionHook> witchTimeHook;
 uintptr_t witchTimeMultiplier_jmp_ret{ NULL };
 bool GameHook::witchTimeMultiplier_toggle = false;
-float GameHook::witchTimeMultiplier = 1.0;
+float GameHook::witchTimeMultiplier = 1.0f;
 static __declspec(naked) void WitchTimeMultiplierDetour(void) {
 	_asm {
 		cmp byte ptr [GameHook::witchTimeMultiplier_toggle], 0
@@ -570,13 +580,13 @@ static __declspec(naked) void MoveIDSwapDetour(void) { // player in ecx
 		pop eax
 		jmp retcode
 
-	dontReplace:
+		dontReplace:
 		pop edx
 		pop ecx
 		pop eax
-	originalcode:
+		originalcode:
 		mov [ecx+0x0000034C], edx
-	retcode:
+		retcode:
 		jmp dword ptr [moveIDSwap_jmp_ret]
 	}
 }
@@ -621,13 +631,13 @@ static __declspec(naked) void PunchStringIDSwapDetour(void) {
 		pop eax
 		jmp retcode
 
-	dontReplace:
+		dontReplace:
 		pop edx
 		pop ecx
 		pop eax
-	originalcode:
+		originalcode:
 		mov [esi+0x00095C64], edx
-	retcode:
+		retcode:
 		jmp dword ptr [punchStringIDSwap_jmp_ret]
 	}
 }
@@ -658,13 +668,13 @@ static __declspec(naked) void LatePunchStringIDSwapDetour(void) {
 		pop eax
 		jmp retcode
 
-	dontReplace:
+		dontReplace:
 		pop edx
 		pop ecx
 		pop eax
-	originalcode:
+		originalcode:
 		mov [esi+0x00095C64], eax
-	retcode:
+		retcode:
 		jmp dword ptr [latePunchStringIDSwap_jmp_ret]
 	}
 }
@@ -695,13 +705,13 @@ static __declspec(naked) void KickStringIDSwapDetour(void) {
 		pop eax
 		jmp retcode
 
-	dontReplace:
+		dontReplace:
 		pop edx
 		pop ecx
 		pop eax
-	originalcode:
+		originalcode:
 		mov [esi+0x00095C64], edx
-	retcode:
+		retcode:
 		jmp dword ptr [kickStringIDSwap_jmp_ret]
 	}
 }
@@ -732,13 +742,13 @@ static __declspec(naked) void LateKickStringIDSwapDetour(void) {
 		pop eax
 		jmp retcode
 
-	dontReplace:
+		dontReplace:
 		pop edx
 		pop ecx
 		pop eax
-	originalcode:
+		originalcode:
 		mov [esi+0x00095C64], ecx
-	retcode:
+		retcode:
 		jmp dword ptr [lateKickStringIDSwap_jmp_ret]
 	}
 }
@@ -1100,7 +1110,7 @@ static __declspec(naked) void CustomWeavesDetour(void) { // player in esi
 		cmp eax, -1
 		je dontReplace
 		mov [esp+0xC+8], eax
-	dontReplace:
+		dontReplace:
 		pop edx
 		pop ecx
 		pop eax
@@ -1141,7 +1151,7 @@ static __declspec(naked) void OmnicancelTeleDetour(void) { // player in ebx
 		pop ecx
 		pop eax
 
-	originalcode:
+		originalcode:
 		popfd
 		push 0x0B
 		mov ecx, [omnicancelTele_ogcode]
@@ -2494,6 +2504,8 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	FreezeDifficulty(freezeDifficulty_toggle);
 	hideHalos_toggle = cfg.get<bool>("hideHalos_toggle").value_or(false);
 	HideHalos(hideHalos_toggle);
+	noHitstop_toggle = cfg.get<bool>("noHitstop_toggle").value_or(false);
+	NoHitstop(noHitstop_toggle);
 	tauntWithTimeBracelet_toggle = cfg.get<bool>("TauntWithTimeBraceletToggle").value_or(false);
 	TauntWithTimeBracelet(tauntWithTimeBracelet_toggle);
 
@@ -2599,6 +2611,7 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("DisableDoubleTapHeelKickToggle", disableDoubleTapHeelKick_toggle);
 	cfg.set<bool>("freezeDifficulty_toggle", freezeDifficulty_toggle);
 	cfg.set<bool>("hideHalos_toggle", hideHalos_toggle);
+	cfg.set<bool>("noHitstop_toggle", noHitstop_toggle);
 
 	//cfg.set<bool>("AreaJumpPatchToggle", areaJumpPatch_toggle);
 	// detours
