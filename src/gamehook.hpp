@@ -117,6 +117,9 @@ public:
 	static bool hideHalos_toggle;
 	static void HideHalos(bool enabled);
 
+	static bool multiplayerPatch_toggle;
+	static void MultiplayerPatch(bool enabled);
+
 	static bool noHitstop_toggle;
 	static void NoHitstop(bool enabled);
 

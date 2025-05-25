@@ -353,6 +353,16 @@ void GameHook::HideHalos(bool enabled) {
 	}
 }
 
+bool GameHook::multiplayerPatch_toggle = false;
+void GameHook::MultiplayerPatch(bool enabled) {
+	if (enabled) {
+		GameHook::_patch((char*)(0x8BD007), (char*)"\xEB", 1); // jmp Bayonetta.exe+4BD00F
+	}
+	else {
+		GameHook::_patch((char*)(0x8BD007), (char*)"\x74", 1); // je Bayonetta.exe+4BD00F
+	}
+}
+
 bool GameHook::noHitstop_toggle = false;
 void GameHook::NoHitstop(bool enabled) {
 	if (enabled) {
@@ -362,7 +372,6 @@ void GameHook::NoHitstop(bool enabled) {
 		GameHook::_patch((char*)(0x5139A5), (char*)"\xD8\x4A\x10", 3); // fmul dword ptr [edx+0x10]
 	}
 }
-
 
 bool GameHook::parryOffset_toggle = false;
 void GameHook::ParryOffset(bool enabled) {
@@ -2504,6 +2513,8 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	FreezeDifficulty(freezeDifficulty_toggle);
 	hideHalos_toggle = cfg.get<bool>("hideHalos_toggle").value_or(false);
 	HideHalos(hideHalos_toggle);
+	multiplayerPatch_toggle = cfg.get<bool>("multiplayerPatch_toggle").value_or(false);
+	MultiplayerPatch(multiplayerPatch_toggle);
 	noHitstop_toggle = cfg.get<bool>("noHitstop_toggle").value_or(false);
 	NoHitstop(noHitstop_toggle);
 	tauntWithTimeBracelet_toggle = cfg.get<bool>("TauntWithTimeBraceletToggle").value_or(false);
@@ -2611,6 +2622,7 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("DisableDoubleTapHeelKickToggle", disableDoubleTapHeelKick_toggle);
 	cfg.set<bool>("freezeDifficulty_toggle", freezeDifficulty_toggle);
 	cfg.set<bool>("hideHalos_toggle", hideHalos_toggle);
+	cfg.set<bool>("multiplayerPatch_toggle", multiplayerPatch_toggle);
 	cfg.set<bool>("noHitstop_toggle", noHitstop_toggle);
 
 	//cfg.set<bool>("AreaJumpPatchToggle", areaJumpPatch_toggle);

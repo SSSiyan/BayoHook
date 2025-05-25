@@ -811,6 +811,11 @@ void GameHook::GameImGui(void) {
                 GameHook::HideHalos(GameHook::hideHalos_toggle);
             }
 
+            if (ImGui::Checkbox("Multiplayer Patch", &GameHook::multiplayerPatch_toggle)) {
+                GameHook::MultiplayerPatch(GameHook::multiplayerPatch_toggle);
+            }
+            help_marker("This is very hacky and probably breaks a lot. This is intended to stop the camera jumping between multiple spawned characters");
+
             ImGui::Separator();
 
             ImGui::Checkbox("Force Input Type", &GameHook::inputIcons_toggle);
