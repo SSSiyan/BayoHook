@@ -373,6 +373,16 @@ void GameHook::NoHitstop(bool enabled) {
 	}
 }
 
+bool GameHook::unbanClimaxBrace_toggle = false;
+void GameHook::UnbanClimaxBrace(bool enabled) {
+	if (enabled) {
+		GameHook::_patch((char*)(0x9E2116), (char*)"\x00", 1); // mov [ecx+00096BA0],00000000
+	}
+	else {
+		GameHook::_patch((char*)(0x9E2116), (char*)"\x01", 1); // mov [ecx+00096BA0],00000001
+	}
+}
+
 bool GameHook::parryOffset_toggle = false;
 void GameHook::ParryOffset(bool enabled) {
 	if (enabled) {
@@ -2517,6 +2527,8 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	MultiplayerPatch(multiplayerPatch_toggle);
 	noHitstop_toggle = cfg.get<bool>("noHitstop_toggle").value_or(false);
 	NoHitstop(noHitstop_toggle);
+	unbanClimaxBrace_toggle = cfg.get<bool>("unbanClimaxBrace_toggle").value_or(false);
+	UnbanClimaxBrace(unbanClimaxBrace_toggle);
 	tauntWithTimeBracelet_toggle = cfg.get<bool>("TauntWithTimeBraceletToggle").value_or(false);
 	TauntWithTimeBracelet(tauntWithTimeBracelet_toggle);
 
@@ -2624,6 +2636,7 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("hideHalos_toggle", hideHalos_toggle);
 	cfg.set<bool>("multiplayerPatch_toggle", multiplayerPatch_toggle);
 	cfg.set<bool>("noHitstop_toggle", noHitstop_toggle);
+	cfg.set<bool>("unbanClimaxBrace_toggle", unbanClimaxBrace_toggle);
 
 	//cfg.set<bool>("AreaJumpPatchToggle", areaJumpPatch_toggle);
 	// detours

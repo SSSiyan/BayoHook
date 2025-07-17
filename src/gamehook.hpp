@@ -123,6 +123,9 @@ public:
 	static bool noHitstop_toggle;
 	static void NoHitstop(bool enabled);
 
+	static bool unbanClimaxBrace_toggle;
+	static void UnbanClimaxBrace(bool enabled);
+
 	static void WeaponSwapCaller(void);
 	static void SaveStates_SaveState();
 	static void SaveStates_LoadState();

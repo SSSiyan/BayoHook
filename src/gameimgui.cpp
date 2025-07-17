@@ -732,6 +732,12 @@ void GameHook::GameImGui(void) {
             ImGui::SameLine();
             help_marker("Warning: This is possibly quite invasive and I'm not sure what else it could affect. If you see any bugs, "
                 "assume this is the issue first! Please let me know if you find anything");
+            ImGui::SameLine(sameLineWidth);
+            if (ImGui::Checkbox("Unban Climax Brace", &GameHook::unbanClimaxBrace_toggle)) {
+                GameHook::UnbanClimaxBrace(unbanClimaxBrace_toggle);
+            }
+            ImGui::SameLine();
+            help_marker("Tick before entering a banned area (such as Angel Slayer)");
 
             ImGui::Separator();
 
