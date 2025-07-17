@@ -363,13 +363,23 @@ void GameHook::MultiplayerPatch(bool enabled) {
 	}
 }
 
+bool GameHook::noEnragedHitstop_toggle = false;
+void GameHook::NoEnragedHitstop(bool enabled) {
+	if (enabled) {
+		GameHook::_patch((char*)(0x62AD50), (char*)"\xEB", 1); // jmp Bayonetta.exe+22AD6B
+	}
+	else {
+		GameHook::_patch((char*)(0x62AD50), (char*)"\x74", 1); // je Bayonetta.exe+22AD6B
+	}
+}
+
 bool GameHook::noHitstop_toggle = false;
 void GameHook::NoHitstop(bool enabled) {
 	if (enabled) {
-		GameHook::_nop((char*)(0x5139A5), 3);
+		GameHook::_nop((char*)(0x452445), 2);
 	}
 	else {
-		GameHook::_patch((char*)(0x5139A5), (char*)"\xD8\x4A\x10", 3); // fmul dword ptr [edx+0x10]
+		GameHook::_patch((char*)(0x452445), (char*)"\x72\x1B", 2); // jb Bayonetta.exe+52462
 	}
 }
 
@@ -2525,6 +2535,8 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	HideHalos(hideHalos_toggle);
 	multiplayerPatch_toggle = cfg.get<bool>("multiplayerPatch_toggle").value_or(false);
 	MultiplayerPatch(multiplayerPatch_toggle);
+	noEnragedHitstop_toggle = cfg.get<bool>("noEnragedHitstop_toggle").value_or(false);
+	NoEnragedHitstop(noEnragedHitstop_toggle);
 	noHitstop_toggle = cfg.get<bool>("noHitstop_toggle").value_or(false);
 	NoHitstop(noHitstop_toggle);
 	unbanClimaxBrace_toggle = cfg.get<bool>("unbanClimaxBrace_toggle").value_or(false);
@@ -2635,6 +2647,7 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("freezeDifficulty_toggle", freezeDifficulty_toggle);
 	cfg.set<bool>("hideHalos_toggle", hideHalos_toggle);
 	cfg.set<bool>("multiplayerPatch_toggle", multiplayerPatch_toggle);
+	cfg.set<bool>("noEnragedHitstop_toggle", noEnragedHitstop_toggle);
 	cfg.set<bool>("noHitstop_toggle", noHitstop_toggle);
 	cfg.set<bool>("unbanClimaxBrace_toggle", unbanClimaxBrace_toggle);
 

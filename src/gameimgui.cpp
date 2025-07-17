@@ -646,9 +646,11 @@ void GameHook::GameImGui(void) {
                 DisableAfterBurnerBounce(GameHook::disableAfterBurnerBounce_toggle);
             }
 
+
             ImGui::Checkbox("Cancellable After Burner", &GameHook::cancellableAfterBurner_toggle);
             ImGui::SameLine(sameLineWidth);
             ImGui::Checkbox("Cancellable Falling Kick", &GameHook::cancellableFallingKick_toggle);
+
 
             ImGui::Checkbox("Alt Umbran Spear Input", &GameHook::altTeleInput_toggle);
             help_marker("Umbran Spear = Lockon + Taunt\nTaunt = Dpad Down");
@@ -658,9 +660,11 @@ void GameHook::GameImGui(void) {
             }
             help_marker("Taunt = Dpad Down");
 
+
             ImGui::Checkbox("Lower Divekick Requirement", &GameHook::lowerDivekick_toggle);
             ImGui::SameLine(sameLineWidth);
             ImGui::Checkbox("Dual Gun After Burner", &GameHook::dualAfterBurner_toggle);
+
 
             if (ImGui::Checkbox("No Hold Dodge Offset", &GameHook::noHoldDodgeOffset_toggle)) {
                 NoHoldDodgeOffset(noHoldDodgeOffset_toggle);
@@ -670,6 +674,7 @@ void GameHook::GameImGui(void) {
                 JumpOffset(jumpOffset_toggle);
             }
 
+
             if (ImGui::Checkbox("Weapon Swap Offset", &GameHook::weaponSwapOffset_toggle)) {
                 WeaponSwapOffset(weaponSwapOffset_toggle);
             }
@@ -678,12 +683,14 @@ void GameHook::GameImGui(void) {
                 ParryOffset(parryOffset_toggle);
             }
 
+
             ImGui::Checkbox("Longer Pillow Talk Charge", &longerPillowTalkCharge_toggle);
             ImGui::SameLine(sameLineWidth);
             if (ImGui::Checkbox("Retain Pillow Talk Charge", &GameHook::retainPillowTalkCharge_toggle)) {
                 RetainPillowTalkCharge(retainPillowTalkCharge_toggle);
             }
             help_marker("When swapping weaponset, remember pillow talk charge");
+
 
             if (ImGui::Checkbox("Swap Mashes To Holds", &GameHook::swapMashToHold_toggle)) {
                 SwapMashToHold(swapMashToHold_toggle);
@@ -694,6 +701,7 @@ void GameHook::GameImGui(void) {
                 AlwaysWalkOnWalls(alwaysWalkOnWalls_toggle);
             }
 
+
             ImGui::Checkbox("Always Witch Time", &GameHook::alwaysWitchTime_toggle);
             help_marker("Activate Witch Time even with a mistimed dodge");
             ImGui::SameLine(sameLineWidth);
@@ -702,6 +710,7 @@ void GameHook::GameImGui(void) {
             }
             help_marker("Give Jeanne Bayonetta's Witch Time activation leniency");
 
+
             if (ImGui::Checkbox("Infinite Divekicks", &GameHook::infDivekick_toggle)) {
                 InfDivekick(infDivekick_toggle);
             }
@@ -709,6 +718,7 @@ void GameHook::GameImGui(void) {
             if (ImGui::Checkbox("Disable Lockon Jump Dodge", &GameHook::disableLockOnDodge_toggle)) {
                 GameHook::DisableLockOnDodge(GameHook::disableLockOnDodge_toggle);
             }
+
 
             if (ImGui::Checkbox("Infinite Crow Within", &GameHook::infBirdTime_toggle)) {
                 InfBirdTime(infBirdTime_toggle);
@@ -720,19 +730,25 @@ void GameHook::GameImGui(void) {
             ImGui::SameLine();
             help_marker("Stiletto, Heel Slide etc");
 
+
             ImGui::Checkbox("Omnicancel Umbran Spear", &GameHook::omnicancelTele_toggle);
             ImGui::SameLine(sameLineWidth);
             ImGui::Checkbox("Umbran Spear Combo", &GameHook::teleportComboAction_toggle);
             ImGui::SameLine();
             help_marker("Umbran spear will refresh your combo timer");
 
-            if (ImGui::Checkbox("Disable Hitstop", &GameHook::noHitstop_toggle)) {
-                GameHook::NoHitstop(noHitstop_toggle);
+
+            if (ImGui::Checkbox("Disable Enraged Hitstop", &GameHook::noEnragedHitstop_toggle)) {
+                GameHook::NoEnragedHitstop(noEnragedHitstop_toggle);
             }
             ImGui::SameLine();
-            help_marker("Warning: This is possibly quite invasive and I'm not sure what else it could affect. If you see any bugs, "
-                "assume this is the issue first! Please let me know if you find anything");
-            ImGui::SameLine(sameLineWidth);
+            help_marker("Disable only the extra hitstop you get when attacking an enraged enemy");
+			ImGui::SameLine(sameLineWidth);
+            if (ImGui::Checkbox("Disable All Hitstop", &GameHook::noHitstop_toggle)) {
+                GameHook::NoHitstop(noHitstop_toggle);
+            }
+
+
             if (ImGui::Checkbox("Unban Climax Brace", &GameHook::unbanClimaxBrace_toggle)) {
                 GameHook::UnbanClimaxBrace(unbanClimaxBrace_toggle);
             }
@@ -765,11 +781,13 @@ void GameHook::GameImGui(void) {
             }
             help_marker("Play while tabbed out\nUse with Force Input Type to disable keyboard button prompts");
 
+
             ImGui::Checkbox("Enemy HP in Halo Display", &GameHook::haloDisplay_toggle);
             ImGui::SameLine(sameLineWidth);
             if (ImGui::Checkbox("NoClip (F5)", &GameHook::noClip_toggle)) {
                 GameHook::NoClip(GameHook::noClip_toggle);
             }
+
 
             if (ImGui::Checkbox("Freeze Timer", &GameHook::freezeTimer_toggle)) {
                 GameHook::FreezeTimer(GameHook::freezeTimer_toggle);
@@ -777,12 +795,14 @@ void GameHook::GameImGui(void) {
             ImGui::SameLine(sameLineWidth);
             ImGui::Checkbox("Easier Mashing##EasierMashToggle", &GameHook::easierMash_toggle);
 
+
             if (ImGui::Checkbox("Force Summoning Clothes (F6)##LessClothesToggle", &GameHook::lessClothes_toggle)) {
                 GameHook::LessClothes(GameHook::lessClothes_toggle);
             }
             help_marker("Only works on outfits that have this function");
             ImGui::SameLine(sameLineWidth);
             ImGui::Checkbox("Save/Load Animation Hotkeys", &GameHook::saveStatesHotkeys_toggle);
+
 
             if (ImGui::Checkbox("Easy Cutscene Skip", &GameHook::easyCutsceneSkip_toggle)) {
                 GameHook::EasyCutsceneSkip(GameHook::easyCutsceneSkip_toggle);
@@ -794,20 +814,21 @@ void GameHook::GameImGui(void) {
             }
             help_marker("Pick up Halos from further away");
 
+
             ImGui::Checkbox("Skip Angel Attack", &GameHook::loadReplace_toggle);
             help_marker("Load Mission Select instead of Angel Attack");
-
             ImGui::SameLine(sameLineWidth);
             if (ImGui::Checkbox("60 FPS Cutscenes", &GameHook::sixtyFpsCutscenes_toggle)) {
                 GameHook::SixtyFpsCutscenes(GameHook::sixtyFpsCutscenes_toggle);
             }
 
+
             if (ImGui::Checkbox("Disable FPS Limiter", &GameHook::disableFpsLimiter_toggle)) {
                 GameHook::DisableFpsLimiter(GameHook::disableFpsLimiter_toggle);
             }
-
             ImGui::SameLine(sameLineWidth);
             ImGui::Checkbox("Pause When Opening BayoHook", &GameHook::openMenuPause_toggle);
+
 
             if (ImGui::Checkbox("Remove Vignette", &GameHook::removeVignette_toggle)) {
                 GameHook::RemoveVignette(GameHook::removeVignette_toggle);
@@ -816,6 +837,7 @@ void GameHook::GameImGui(void) {
             if (ImGui::Checkbox("Hide Halos", &GameHook::hideHalos_toggle)) {
                 GameHook::HideHalos(GameHook::hideHalos_toggle);
             }
+
 
             if (ImGui::Checkbox("Multiplayer Patch", &GameHook::multiplayerPatch_toggle)) {
                 GameHook::MultiplayerPatch(GameHook::multiplayerPatch_toggle);
@@ -849,16 +871,6 @@ void GameHook::GameImGui(void) {
                 ImGui::PushItemWidth(inputItemWidth);
                 ImGui::InputFloat("##CustomCameraDistanceInputFloat", &GameHook::customCameraDistance, 0.1f, 1, "%.1f");
                 ImGui::PopItemWidth();
-            }
-
-            LocalPlayer* player = GetLocalPlayer();
-            if (player) {
-                ImGui::Separator();
-                ImGui::Text("Player Position");
-                ImGui::InputFloat3("##PlayerPositionInputFloat3", &player->pos.x);
-                if (ImGui::Button("Teleport to 0, 0, 0")) {
-                    player->pos = { 0.0f, 0.0f, 0.0f };
-                }
             }
 
             GameHook::windowHeightHack = std::clamp(ImGui::GetCursorPosY() + GameHook::windowHeightBorder, 0.0f, GameHook::maxWindowHeight);

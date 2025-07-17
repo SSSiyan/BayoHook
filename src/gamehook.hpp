@@ -120,6 +120,9 @@ public:
 	static bool multiplayerPatch_toggle;
 	static void MultiplayerPatch(bool enabled);
 
+	static bool noEnragedHitstop_toggle;
+	static void NoEnragedHitstop(bool enabled);
+
 	static bool noHitstop_toggle;
 	static void NoHitstop(bool enabled);
 
