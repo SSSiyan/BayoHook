@@ -1,4 +1,5 @@
 #include "gamehook.hpp"
+#include <thread>
 
 // system
 float GameHook::windowWidth = 0.0f;
@@ -2396,6 +2397,34 @@ LocalPlayer* GameHook::GetLocalPlayer() {
 		return player;
 	else
 		return nullptr;
+}
+
+bool GameHook::CheckCanSpawnEntity() {
+    uintptr_t testAddr = 0x5BBB9EC;
+    
+    uintptr_t ptr1 = *(uintptr_t*)testAddr;
+    if (!ptr1) return false;
+    
+    uintptr_t ptr2 = *(uintptr_t*)(ptr1 + 0x10);
+    if (!ptr2) return false;
+    
+    int value = *(int*)(ptr2 + 0x18);
+    return value == 4;
+}
+
+void GameHook::SpawnEntity(int entityID, int a2, int a3) {
+    // yeah
+    std::thread([entityID, a2, a3]() {
+        // wait
+        while (!CheckCanSpawnEntity()) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+        
+        uintptr_t spawnEntityAddr = 0x510450;
+        uintptr_t ecxAddr = 0x5ABB860;
+        SpawnEntityFunc spawnEntity = (SpawnEntityFunc)spawnEntityAddr;
+        spawnEntity((uintptr_t*)ecxAddr, entityID, a2, a3);
+    }).detach();
 }
 
 // dev functions

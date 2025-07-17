@@ -259,6 +259,10 @@ public:
 
 	static LocalPlayer* GetLocalPlayer();
 
+	static bool CheckCanSpawnEntity();
+	typedef void(__thiscall* SpawnEntityFunc)(uintptr_t* ecx, int entityID, int a2, int a3);
+	static void SpawnEntity(int entityID, int a2, int a3);
+
 	// dev functions
 	static void _patch(char* dst, char* src, int size);
 	static void _nop(char* dst, unsigned int size);

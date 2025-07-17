@@ -873,6 +873,79 @@ void GameHook::GameImGui(void) {
                 ImGui::PopItemWidth();
             }
 
+            ImGui::Separator();
+
+            // entity spawn stuff
+            {
+                struct EnemyInfo {
+                    const char* name;
+                    int id;
+                };
+
+                const EnemyInfo knownEntities[] = {
+                    {"Basic enemy dude", 0x00020000},
+                    {"Default Bayo (don't spawn if already default bayo!", 0x00010075},
+                    {"Skybox maybe?", 0x000600F4},
+                    {"0x00060017", 0x00060017},
+                    {"0x00090010", 0x00090010},
+                    {"0x00060015", 0x00060015},
+                    {"Crash", 0x00030030},
+                    {"0x00010012", 0x00010012},
+                    {"0x00030200", 0x00030200},
+                    {"Crash", 0x000A0521},
+                    {"Crash", 0x000A051F},
+                    {"0x00060000", 0x00060000},
+                    {"0x00070000", 0x00070000},
+                    {"0x00080000", 0x00080000},
+                    {"0x00090000", 0x00090000},
+                    {"T-Pose Bayo", 0x000A0000},
+                    {"0x000F0000", 0x000F0000}
+                };
+
+                const int knownEntityCount = sizeof(knownEntities) / sizeof(knownEntities[0]);
+                static std::string enemyDisplayNames[knownEntityCount];
+                static bool initialized = false;
+
+                if (!initialized) {
+                    for (int i = 0; i < knownEntityCount; i++) {
+                        char buffer[64];
+                        snprintf(buffer, sizeof(buffer), "0x%08X - %s", knownEntities[i].id, knownEntities[i].name);
+                        enemyDisplayNames[i] = buffer;
+                    }
+                    initialized = true;
+                }
+
+                const char* displayNames[knownEntityCount];
+                for (int i = 0; i < knownEntityCount; i++) {
+                    displayNames[i] = enemyDisplayNames[i].c_str();
+                }
+
+                static int arg1 = 0x0020000;
+                static int arg2 = 0;
+                static int arg3 = -1;
+                static int selectedEnemy = 0;
+
+                const char* enemyNames[knownEntityCount];
+                for (int i = 0; i < knownEntityCount; i++) {
+                    enemyNames[i] = knownEntities[i].name;
+                }
+
+                ImGui::Text("Entity Spawning");
+                if (ImGui::Combo("Known Entity IDs", &selectedEnemy, displayNames, knownEntityCount)) {
+					arg1 = knownEntities[selectedEnemy].id;
+                }
+                ImGui::SameLine();
+                help_marker("This just autofills the next field if you want to pick from a dictionary of IDs we already know");
+                ImGui::InputScalar("ID", ImGuiDataType_S32, &arg1, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+                ImGui::SameLine();
+                help_marker("This is for typing in a manual ID. You will crash if you type in an invalid ID");
+				ImGui::InputScalar("arg2 (unkn)", ImGuiDataType_S32, &arg2, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+                ImGui::InputScalar("arg3 (unkn)", ImGuiDataType_S32, &arg3, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+                if (ImGui::Button("Spawn Enemy")) {
+                    SpawnEntity(arg1, arg2, arg3);
+                }
+            }
+
             GameHook::windowHeightHack = std::clamp(ImGui::GetCursorPosY() + GameHook::windowHeightBorder, 0.0f, GameHook::maxWindowHeight);
             ImGui::EndChild();
             ImGui::EndTabItem();
