@@ -15,9 +15,6 @@
 class GameHook {
 public:
 	// patches
-	static bool takeNoDamage_toggle;
-	static void TakeNoDamage(bool enabled);
-
 	// enemyHP_no_damage_toggle
 	static void DisableKilling(bool enabled);
 
@@ -140,8 +137,14 @@ public:
 	static bool enemyHP_one_hit_kill_toggle;
 	static bool inf_magic_toggle;
 	static float inf_magic_value;
+
 	static bool damageDealtMultiplier_toggle;
 	static float damageDealtMultiplierMult;
+
+	static bool damageReceivedMultiplier_no_damage_toggle;
+	static bool damageReceivedMultiplier_toggle;
+	static float incoming_damage_mult;
+
 	static bool customCameraDistance_toggle;
 	static float customCameraDistance;
 	static bool inputIcons_toggle;

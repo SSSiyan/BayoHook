@@ -50,14 +50,6 @@ int  GameHook::comboMakerStringIDs[maxComboMakers]{};
 int GameHook::desiredThirdAccessory = 0;
 
 // patches
-bool GameHook::takeNoDamage_toggle = false;
-void GameHook::TakeNoDamage(bool enabled) {
-	if (enabled) 
-		GameHook::_nop((char*)(0x9D4329), 6);
-	else
-		GameHook::_patch((char*)(0x9D4329), (char*)"\x89\x86\x08\x35\x09\x00", 6);
-}
-
 bool GameHook::focusPatch_toggle = false;
 void GameHook::FocusPatch(bool enabled) {
 	if (enabled) {
@@ -467,7 +459,7 @@ static __declspec(naked) void EnemyHPDetour(void) {
 }
 
 std::unique_ptr<FunctionHook> witchTimeHook;
-uintptr_t witchTimeMultiplier_jmp_ret{ NULL };
+static uintptr_t witchTimeMultiplier_jmp_ret{ NULL };
 bool GameHook::witchTimeMultiplier_toggle = false;
 float GameHook::witchTimeMultiplier = 1.0f;
 static __declspec(naked) void WitchTimeMultiplierDetour(void) {
@@ -527,6 +519,42 @@ static __declspec(naked) void DamageDealtMultiplierDetour(void) {
 		sub eax, edi
 		mov [GameHook::haloDisplayValue], eax // after damage subtraction
 		jmp dword ptr [damageDealtMultiplier_jmp_ret]
+	}
+}
+
+std::unique_ptr<FunctionHook> damageReceivedMultiplierHook;
+static uintptr_t damageReceivedMultiplier_jmp_ret{ NULL };
+bool GameHook::damageReceivedMultiplier_no_damage_toggle = false;
+bool GameHook::damageReceivedMultiplier_toggle = false;
+float GameHook::incoming_damage_mult = 1.0f;
+static float damageMultXmm0Backup = 0.0f;
+static __declspec(naked) void DamageReceivedMultiplierDetour(void) {
+	_asm {
+		cmp byte ptr [GameHook::damageReceivedMultiplier_no_damage_toggle], 1
+		je no_damage
+		jmp check2
+		
+		check2:
+		cmp byte ptr [GameHook::damageReceivedMultiplier_toggle], 1
+		je damage_mult
+		jmp originalcode
+
+		no_damage:
+		jmp retcode
+
+		damage_mult:
+		movss [damageMultXmm0Backup], xmm0
+		movd xmm0, ecx
+		cvtdq2ps xmm0, xmm0
+		mulss xmm0, [GameHook::incoming_damage_mult]
+		cvttss2si ecx, xmm0
+		movss xmm0, [damageMultXmm0Backup]
+
+		originalcode:
+		sub eax, ecx
+		mov [esi+0x00093508], eax
+		retcode:
+		jmp dword ptr [damageReceivedMultiplier_jmp_ret]
 	}
 }
 
@@ -2467,6 +2495,7 @@ void GameHook::InitializeDetours(void) {
 	install_hook_absolute(0x9E1808, witchTimeHook, &WitchTimeMultiplierDetour, &witchTimeMultiplier_jmp_ret, 6);
 	install_hook_absolute(0x8BCE4C, infMagicHook, &InfMagicDetour, &infMagic_jmp_ret, 8);
 	install_hook_absolute(0x4572B2, damageDealtMultiplierHook, &DamageDealtMultiplierDetour, &damageDealtMultiplier_jmp_ret, 8);
+	install_hook_absolute(0x9D4327, damageReceivedMultiplierHook, &DamageReceivedMultiplierDetour, &damageReceivedMultiplier_jmp_ret, 8);
 	install_hook_absolute(0xA941FA, customCameraDistanceHook, &CustomCameraDistanceDetour, &customCameraDistance_jmp_ret, 6);
 	install_hook_absolute(0x4250F7, haloDisplayHook, &HaloDisplayDetour, &haloDisplay_jmp_ret, 5);
 	install_hook_absolute(0x4BD053, moveIDSwapHook, &MoveIDSwapDetour, &moveIDSwap_jmp_ret, 6);
@@ -2503,8 +2532,7 @@ void GameHook::InitializeDetours(void) {
 
 void GameHook::onConfigLoad(const utils::Config& cfg) {
 	// patches
-	takeNoDamage_toggle = cfg.get<bool>("TakeNoDamageToggle").value_or(false);
-	TakeNoDamage(takeNoDamage_toggle);
+	damageReceivedMultiplier_no_damage_toggle = cfg.get<bool>("TakeNoDamageToggle").value_or(false);
 	focusPatch_toggle = cfg.get<bool>("FocusPatchToggle").value_or(false);
 	FocusPatch(focusPatch_toggle);
 	infJumps_toggle = cfg.get<bool>("InfJumpsToggle").value_or(false);
@@ -2581,8 +2609,13 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	witchTimeMultiplier = cfg.get<float>("WitchTimeMultiplier").value_or(1.0f);
 	inf_magic_toggle = cfg.get<bool>("InfMagicToggle").value_or(false);
 	inf_magic_value = cfg.get<float>("InfMagicValue").value_or(1200.0f);
+
 	damageDealtMultiplier_toggle = cfg.get<bool>("DamageDealtMultiplierToggle").value_or(false);
 	damageDealtMultiplierMult = cfg.get<float>("DamageDealtMultiplierMult").value_or(1.0f);
+
+	damageReceivedMultiplier_toggle = cfg.get<bool>("DamageReceivedMultiplierToggle").value_or(false);
+	incoming_damage_mult = cfg.get<float>("DamageReceivedMultiplierMult").value_or(1.0f);
+
 	customCameraDistance_toggle = cfg.get<bool>("CustomCameraDistanceToggle").value_or(false);
 	customCameraDistance = cfg.get<float>("CustomCameraDistance").value_or(10.0f);
 	lessClothes_toggle = cfg.get<bool>("LessClothesToggle").value_or(false);
@@ -2646,7 +2679,7 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 
 void GameHook::onConfigSave(utils::Config& cfg) {
 	// patches
-	cfg.set<bool>("TakeNoDamageToggle", takeNoDamage_toggle);
+	cfg.set<bool>("TakeNoDamageToggle", damageReceivedMultiplier_no_damage_toggle);
 	cfg.set<bool>("FocusPatchToggle", focusPatch_toggle);
 	cfg.set<bool>("InfJumpsToggle", infJumps_toggle);
 	cfg.set<bool>("DisableDazeToggle", disableDaze_toggle);
@@ -2690,6 +2723,9 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<float>("InfMagicValue", inf_magic_value);
 	cfg.set<bool>("DamageDealtMultiplierToggle", damageDealtMultiplier_toggle);
 	cfg.set<float>("DamageDealtMultiplierMult", damageDealtMultiplierMult);
+
+	cfg.set<bool>("DamageReceivedMultiplierToggle", damageReceivedMultiplier_toggle);
+	cfg.set<float>("DamageReceivedMultiplierMult", incoming_damage_mult);
 	cfg.set<bool>("CustomCameraDistanceToggle", customCameraDistance_toggle);
 	cfg.set<float>("CustomCameraDistance", customCameraDistance);
 	cfg.set<bool>("LessClothesToggle", lessClothes_toggle);

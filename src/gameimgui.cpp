@@ -525,9 +525,31 @@ void GameHook::GameImGui(void) {
                     GameHook::enemyHP_one_hit_kill_toggle = false;
             }
             ImGui::SameLine(sameLineWidth);
-            if (ImGui::Checkbox("Take No Damage (F2)", &GameHook::takeNoDamage_toggle)) {
-                GameHook::TakeNoDamage(GameHook::takeNoDamage_toggle);
+            ImGui::Checkbox("Take No Damage (F2)", &GameHook::damageReceivedMultiplier_no_damage_toggle);
+
+            ImGui::BeginGroup();
+            ImGui::Checkbox("Damage Dealt Multiplier##DamageDealtMultiplierToggle", &GameHook::damageDealtMultiplier_toggle);
+            help_marker("Ctrl + Click to type a value higher than 5.0");
+            if (GameHook::damageDealtMultiplier_toggle) {
+                ImGui::Indent();
+                ImGui::PushItemWidth(inputItemWidth);
+                ImGui::SliderFloat("##DamageDealtMultiplierInputFloat", &GameHook::damageDealtMultiplierMult, 0.0f, 5.0f, "%.1f");
+                ImGui::PopItemWidth();
+                ImGui::Unindent();
             }
+            ImGui::EndGroup();
+            ImGui::SameLine(sameLineWidth);
+            ImGui::BeginGroup();
+            ImGui::Checkbox("Damage Received Multiplier##DamageReceivedMultiplierToggle", &GameHook::damageReceivedMultiplier_toggle);
+            help_marker("Ctrl + Click to type a value higher than 5.0");
+            if (GameHook::damageReceivedMultiplier_toggle) {
+                ImGui::Indent();
+                ImGui::PushItemWidth(inputItemWidth);
+                ImGui::SliderFloat("##DamageReceivedMultiplierInputFloat", &GameHook::incoming_damage_mult, 0.0f, 5.0f, "%.1f");
+                ImGui::PopItemWidth();
+                ImGui::Unindent();
+            }
+            ImGui::EndGroup();
 
             if (ImGui::Checkbox("One Hit Kill (F3)##OneHitKillToggle", &GameHook::enemyHP_one_hit_kill_toggle)) {
                 if (GameHook::enemyHP_one_hit_kill_toggle) {
@@ -535,8 +557,8 @@ void GameHook::GameImGui(void) {
                     GameHook::DisableKilling(GameHook::enemyHP_no_damage_toggle);
                 }
             }
-            ImGui::SameLine(sameLineWidth);
-            ImGui::Checkbox("Disable Slow Motion", &GameHook::disableSlowmo_toggle);
+
+            ImGui::Separator();
 
             if (ImGui::Checkbox("Disable Enemy Daze", &GameHook::disableDaze_toggle)) {
                 GameHook::DisableDaze(GameHook::disableDaze_toggle);
@@ -561,6 +583,8 @@ void GameHook::GameImGui(void) {
             }
             help_marker("Freeze the cooldown that starts when an enemy attacks");
 
+            ImGui::Checkbox("Disable Slow Motion", &GameHook::disableSlowmo_toggle);
+
             ImGui::Separator();
 
             ImGui::Checkbox("Freeze Magic##InfMagicToggle", &GameHook::inf_magic_toggle);
@@ -573,15 +597,6 @@ void GameHook::GameImGui(void) {
             if (GameHook::turbo_toggle) {
                 ImGui::PushItemWidth(inputItemWidth);
                 ImGui::InputFloat("##TurboInputFloat", &GameHook::turboValue, 0.1f, 1, "%.1f");
-                ImGui::PopItemWidth();
-            }
-
-            ImGui::Separator();
-
-            ImGui::Checkbox("Damage Dealt Multiplier##DamageDealtMultiplierToggle", &GameHook::damageDealtMultiplier_toggle);
-            if (GameHook::damageDealtMultiplier_toggle) {
-                ImGui::PushItemWidth(inputItemWidth);
-                ImGui::InputFloat("##DamageDealtMultiplierrInputFloat", &GameHook::damageDealtMultiplierMult, 0.1f, 1, "%.1f");
                 ImGui::PopItemWidth();
             }
 
@@ -1507,7 +1522,7 @@ void GameHook::BackgroundImGui(void) {
             GameHook::showMessageTimerF1--;
         }
         if (GameHook::showMessageTimerF2 > 0) {
-            if (GameHook::takeNoDamage_toggle)
+            if (GameHook::damageReceivedMultiplier_no_damage_toggle)
                 ImGui::TextColored(ImVec4(0,1,0,1), "Take No Damage ON");
             else
                 ImGui::TextColored(ImVec4(0,1,0,1), "Take No Damage OFF");
