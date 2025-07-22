@@ -2,13 +2,13 @@
 #include <thread>
 
 // system
+bool GameHook::enable_scroll_transitions = false;
+ImFont* GameHook::bayoHookFont = nullptr;
 float GameHook::windowWidth = 0.0f;
-float GameHook::windowHeightHack = 0.0f;
-float GameHook::windowHeightBorder = 0.0f;
 float GameHook::inputItemWidth = 0.0f;
 float GameHook::sameLineWidth = 0.0f;
 float GameHook::windowScalingFactor = 1.0f;
-float GameHook::maxWindowHeight = 0.0f;
+float GameHook::bayoHookFontSize = 16.0f;
 float GameHook::comboUI_X = 0.0f;
 float GameHook::comboUI_Y = 0.0f;
 bool GameHook::showMessages_toggle = false;
@@ -1238,11 +1238,10 @@ static __declspec(naked) void TeleportComboActionDetour(void) { // player in ebx
 std::unique_ptr<FunctionHook> fixThirdAccessoryHook;
 uintptr_t fixThirdAccessory_jmp_ret{ NULL };
 static uintptr_t fixThirdAccessoryCall = 0x4332F0;
-bool GameHook::fixThirdAccessory_toggle = false;
 static __declspec(naked) void FixThirdAccessoryDetour(void) { // player in ebx
 	_asm {
 		//
-			cmp byte ptr[GameHook::fixThirdAccessory_toggle], 0
+			cmp byte ptr [GameHook::desiredThirdAccessory], 0
 			je originalcode
 		//
 			push 2
@@ -2624,7 +2623,7 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	inputIconsValue = cfg.get<int>("InputIconsValue").value_or(0);
 	easierMash_toggle = cfg.get<bool>("EasierMashToggle").value_or(false);
 	showComboUI_toggle = cfg.get<bool>("ShowComboUIToggle").value_or(false);
-	comboUI_X = cfg.get<float>("ComboUI_X").value_or(0.875f);
+	comboUI_X = cfg.get<float>("ComboUI_X").value_or(0.877f);
 	comboUI_Y = cfg.get<float>("ComboUI_Y").value_or(0.215f);
 	initialAngelSlayerFloor = cfg.get<int>("InitialAngelSlayerFloor").value_or(0);
 	cancellableAfterBurner_toggle = cfg.get<bool>("CancellableAfterBurnerToggle").value_or(false);
@@ -2642,7 +2641,6 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	alwaysWitchTime_toggle = cfg.get<bool>("AlwaysWitchTimeToggle").value_or(false);
 	saveStatesHotkeys_toggle = cfg.get<bool>("SaveStatesHotkeysToggle").value_or(false);
 	omnicancelTele_toggle = cfg.get<bool>("omnicancelTele_toggle").value_or(false);
-	fixThirdAccessory_toggle = cfg.get<bool>("fixThirdAccessory_toggle").value_or(false);
 
 	moveIDSwapsToggle = cfg.get<bool>("moveIDSwapsToggle").value_or(false);
 	for (int i = 0; i < maxMoveIDSwaps; ++i) {
@@ -2675,6 +2673,7 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 
 	//tick
 	GameHook::desiredThirdAccessory = cfg.get<int>("DesiredThirdAccessoryValue").value_or(0);
+	GameHook::enable_scroll_transitions = cfg.get<bool>("enable_scroll_transitions").value_or(true);
 }
 
 void GameHook::onConfigSave(utils::Config& cfg) {
@@ -2753,7 +2752,6 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("SaveStatesHotkeysToggle", saveStatesHotkeys_toggle);
 	cfg.set<bool>("TauntWithTimeBraceletToggle", tauntWithTimeBracelet_toggle);
 	cfg.set<bool>("omnicancelTele_toggle", omnicancelTele_toggle);
-	cfg.set<bool>("fixThirdAccessory_toggle", fixThirdAccessory_toggle);
 
 	cfg.set<bool>("moveIDSwapsToggle", moveIDSwapsToggle);
 	for (int i = 0; i < maxMoveIDSwaps; ++i) {
@@ -2786,6 +2784,7 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 
 	// tick
 	cfg.set<int>("DesiredThirdAccessoryValue", desiredThirdAccessory);
-	cfg.set<float>("windowScalingFactor", windowScalingFactor);
+	cfg.set<float>("bayoHookFontSize", bayoHookFontSize);
+	cfg.set<bool>("enable_scroll_transitions", enable_scroll_transitions);
 	cfg.save(GameHook::cfgString);
 }

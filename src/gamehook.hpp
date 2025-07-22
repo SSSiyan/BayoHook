@@ -151,7 +151,6 @@ public:
 	static int inputIconsValue;
 	static bool haloDisplay_toggle;
 	static int haloDisplayValue;
-	static bool fixThirdAccessory_toggle;
 	//
 	static bool moveIDSwapsToggle;
 	static const int maxMoveIDSwaps = 5;
@@ -230,13 +229,13 @@ public:
 	static uintptr_t WeaponB2Address;
 
 	// imgui
-	static float windowHeightHack;
-	static float maxWindowHeight;
+	static bool enable_scroll_transitions;
+	static ImFont* bayoHookFont;
 	static float windowWidth;
-	static float windowHeightBorder;
 	static float inputItemWidth;
 	static float sameLineWidth;
 	static float windowScalingFactor;
+	static float bayoHookFontSize;
 	static void GameTick(void);
 	static void GameImGui(void);
 	static bool showMessages_toggle;
@@ -275,7 +274,7 @@ public:
 
 	static inline const char* cfgString{ "../bayo_hook.cfg" };
 	static inline utils::Config cfg{ "bayo_hook.cfg" };
-	static inline const char* dllName{"BayoHook 1.15"};
+	static inline const char* dllName{"BayoHook 1.16 PRE RELEASE"};
 	static inline const char* repoUrl{ "https://github.com/SSSiyan/BayoHook" };
 private:
 };
