@@ -1355,6 +1355,13 @@ void GameHook::GameImGui(void) {
             help_marker("if enabled in System");
             ImGui::Text("End = Load Locked On Enemy Anim");
             help_marker("if enabled in System");
+
+            ImGui::Separator();
+
+			ImGui::SetNextItemWidth(inputItemWidth);
+            ImGui::InputFloat("window scaling factor", &windowScalingFactor, 0.0f, 0.0f, "%.1f");
+            help_marker("This will be applied next boot. Don't forget to save after setting this!");
+
             ImGui::Separator();
 
             struct ImGuiURL {

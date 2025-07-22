@@ -2,6 +2,9 @@
 #include <base.h>
 #include "gamehook.hpp"
 #include <array>
+#include "misc/FontRoboto.cpp"
+
+static ImFont* fontRoboto = nullptr;
 
 HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
 {
@@ -29,6 +32,7 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
 		ImGui_ImplWin32_Init(deviceParams.hFocusWindow);
 		ImGui_ImplDX9_Init(pDevice);
 		Data::InitImGui = true;
+		GameHook::windowScalingFactor = GameHook::cfg.get<float>("windowScalingFactor").value_or(1.0f);
 		float y_factor = ((float)height/720.0f) * GameHook::windowScalingFactor;
 		float dpi = ImGui_ImplWin32_GetDpiScaleForHwnd(deviceParams.hFocusWindow);
 		
@@ -37,6 +41,7 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
 		cfg.OversampleV = 1;
 		cfg.SizePixels = std::roundf(13.0f * y_factor * dpi);
 		io.Fonts->AddFontDefault(&cfg);
+		fontRoboto = io.Fonts->AddFontFromMemoryCompressedBase85TTF(roboto_medium_compressed_data_base85);
 		ImGui::GetStyle().ScaleAllSizes(y_factor * dpi);
 
         GameHook::InitializeDetours();
@@ -48,6 +53,7 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
 	ImGui_ImplDX9_NewFrame();
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
+	ImGui::PushFont(fontRoboto);
 
 	ImGui::SetNextWindowPos(ImVec2(0, 0)), ImGuiCond_Always;
 	ImGui::SetNextWindowSize(ImVec2(400, 500)), ImGuiCond_Always;
@@ -80,6 +86,7 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
 		ImGui::End();
 	}
 
+	ImGui::PopFont();
 	ImGui::EndFrame();
 	ImGui::Render();
 	ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());

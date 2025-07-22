@@ -2786,5 +2786,6 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 
 	// tick
 	cfg.set<int>("DesiredThirdAccessoryValue", desiredThirdAccessory);
+	cfg.set<float>("windowScalingFactor", windowScalingFactor);
 	cfg.save(GameHook::cfgString);
 }
