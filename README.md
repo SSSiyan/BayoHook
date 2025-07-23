@@ -7,8 +7,13 @@ Builds are intended for use on the Steam version of the game and will crash on o
 
 Please back up your save before using this hook. Savedata can be found in `C:\Program Files (x86)\Steam\userdata\[steamid]\460790\remote`.
 
-## Download
-Releases can be found [here.](https://github.com/SSSiyan/BayoHook/releases)
+## Installation
+
+* Download the latest dll [here](https://github.com/SSSiyan/BayoHook/releases)
+
+* Place dinput8.dll in the Bayonetta root folder, next to your exe. By default this is `C:\Program Files (x86)\Steam\steamapps\common\Bayonetta\`
+
+* Run the game. Hit Delete on your keyboard to open the menu to change options.
 
 ## Instructions
 For help regarding usage of the trainer, check our [wiki.](https://github.com/SSSiyan/BayoHook/wiki)
