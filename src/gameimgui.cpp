@@ -587,11 +587,17 @@ void GameHook::GameImGui(void) {
             ImGui::EndGroup();
 
             if (ImGui::Checkbox("Disable Enemy Daze", &GameHook::disableDaze_toggle)) {
+                GameHook::forceDaze_toggle = false;
+                GameHook::ForceDaze(GameHook::forceDaze_toggle);
+
                 GameHook::DisableDaze(GameHook::disableDaze_toggle);
             }
             help_marker("Stop enemies from ever being dazed");
             ImGui::SameLine(sameLineWidth);
             if (ImGui::Checkbox("Force Enemy Daze", &GameHook::forceDaze_toggle)) {
+                GameHook::disableDaze_toggle = false;
+                GameHook::DisableDaze(GameHook::disableDaze_toggle);
+
                 GameHook::ForceDaze(GameHook::forceDaze_toggle);
             }
             help_marker("Daze all enemies");
@@ -1349,7 +1355,7 @@ void GameHook::GameImGui(void) {
 
                 const EnemyInfo knownEntities[] = {
                     {"Basic enemy dude", 0x00020000},
-                    {"Default Bayo (don't spawn if already default bayo!", 0x00010075},
+                    {"Default Bayo (don't spawn if already default bayo!)", 0x00010075},
                     {"Skybox maybe?", 0x000600F4},
                     {"0x00060017", 0x00060017},
                     {"0x00090010", 0x00090010},

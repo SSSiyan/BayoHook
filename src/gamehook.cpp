@@ -901,6 +901,26 @@ static __declspec(naked) void CancellableFallingKickDetour(void) {
 	}
 }
 
+std::unique_ptr<FunctionHook> cancellableFallingKickDurgaHook;
+uintptr_t cancellableFallingKickDurga_jmp_ret{ NULL };
+static __declspec(naked) void CancellableFallingKickDurgaDetour(void) {
+	_asm {
+		cmp byte ptr [GameHook::cancellableFallingKick_toggle], 0
+		je originalcode
+
+		cmp dword ptr [esi+0x350], 4 // only before landing
+		ja originalcode
+		push ecx
+		mov ecx, esi // put player pointer in ecx before call
+		call dword ptr [cancellableMovesCall] // "is cancellable" call
+		pop ecx // restore ecx
+
+		originalcode:
+		movss xmm0, [esi+0x000006F4]
+		jmp dword ptr [cancellableFallingKickDurga_jmp_ret]
+	}
+}
+
 std::unique_ptr<FunctionHook> turboHook;
 uintptr_t turbo_jmp_ret{ NULL };
 bool GameHook::openMenuPause_toggle = false;
@@ -2507,6 +2527,7 @@ void GameHook::InitializeDetours(void) {
 	install_hook_absolute(0x41C8B5, initialAngelSlayerFloorHook, &InitialAngelSlayerFloorDetour, &initialAngelSlayerFloor_jmp_ret, 10);
 	install_hook_absolute(0x95ABD3, cancellableAfterBurnerHook, &CancellableAfterBurnerDetour, &cancellableAfterBurner_jmp_ret, 6);
 	install_hook_absolute(0x952142, cancellableFallingKickHook, &CancellableFallingKickDetour, &cancellableFallingKick_jmp_ret, 5);
+	install_hook_absolute(0x920C44, cancellableFallingKickDurgaHook, &CancellableFallingKickDurgaDetour, &cancellableFallingKickDurga_jmp_ret, 8);
 	install_hook_absolute(0x513FC7, turboHook, &TurboHookDetour, &turbo_jmp_ret, 5);
 	install_hook_absolute(0x8BE592, altTeleInputHook, &AltTeleInputDetour, &altTeleInput_jmp_ret, 26);
 	install_hook_absolute(0x9E751A, tauntWithTimeBracelet2Hook, &TauntWithTimeBracelet2Detour, &tauntWithTimeBracelet2_jmp_ret, 6);
