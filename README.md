@@ -10,6 +10,7 @@ Please back up your save before using this hook. Savedata can be found in `C:\Pr
 ## Installation
 
 * Download the latest dll [here](https://github.com/SSSiyan/BayoHook/releases)
+  * If you have issues with your antivirus removing the file, please follow [these instructions](https://github.com/SSSiyan/BayoHook/wiki#virus-protection)
 
 * Place dinput8.dll in the Bayonetta root folder, next to your exe. By default this is `C:\Program Files (x86)\Steam\steamapps\common\Bayonetta\`
 
