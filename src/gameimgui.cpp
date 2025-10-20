@@ -632,7 +632,7 @@ void GameHook::GameImGui(void) {
             help_marker("Freeze Alfheim timers");
             ImGui::SameLine(sameLineWidth);
             ImGui::Checkbox("Easier Mashing##EasierMashToggle", &GameHook::easierMash_toggle);
-            help_marker("Make mashes more reasonable");
+            help_marker("Make mash QTEs more reasonable");
 
             if (ImGui::Checkbox("Disable Enraged Hitstop", &GameHook::noEnragedHitstop_toggle)) {
                 GameHook::NoEnragedHitstop(noEnragedHitstop_toggle);
@@ -644,6 +644,7 @@ void GameHook::GameImGui(void) {
                 GameHook::NoHitstop(noHitstop_toggle);
             }
             help_marker("Disable the game pausing for a few frames when hits connect");
+
 
             ImGui::BeginGroup();
             ImGui::Checkbox("Custom Camera Distance##CameraDistanceMultiplierToggle", &GameHook::customCameraDistance_toggle);
@@ -699,6 +700,11 @@ void GameHook::GameImGui(void) {
 			ImGui::SetNextItemWidth(inputItemWidth);
             ImGui::Combo("Third Accessory", &GameHook::desiredThirdAccessory, GameHook::accessoryNames, IM_ARRAYSIZE(GameHook::accessoryNames));
             help_marker("Select your third accessory");
+            ImGui::SameLine(sameLineWidth);
+            if (ImGui::Checkbox("Force Summoning Clothes (F6)##LessClothesToggle", &GameHook::lessClothes_toggle)) {
+                GameHook::LessClothes(GameHook::lessClothes_toggle);
+            }
+            help_marker("Only works on outfits that have this function");
 
             tabHeight += ImGui::GetCursorPosY();
             ImGui::EndChild();
@@ -710,32 +716,21 @@ void GameHook::GameImGui(void) {
 
             ImGui::SeparatorText("Abilities");
 
-            if (ImGui::Checkbox("Infinite Jumps (F4)##InfJumpsToggle", &GameHook::infJumps_toggle)) {
-                GameHook::InfJumps(GameHook::infJumps_toggle);
-            }
-            help_marker("Infinite jumps");
-            ImGui::SameLine(sameLineWidth);
             if (ImGui::Checkbox("Disable After Burner Bounce", &GameHook::disableAfterBurnerBounce_toggle)) {
                 DisableAfterBurnerBounce(GameHook::disableAfterBurnerBounce_toggle);
             }
             help_marker("Disable the bounce that happens when you divekick into a wall, or into an enemy while not holding kick");
-
-
+            ImGui::SameLine(sameLineWidth);
             ImGui::Checkbox("Cancellable After Burner", &GameHook::cancellableAfterBurner_toggle);
             help_marker("Allow actions during After Burner such as dodge or jump");
-            ImGui::SameLine(sameLineWidth);
+
             ImGui::Checkbox("Cancellable Falling Kick", &GameHook::cancellableFallingKick_toggle);
             help_marker("Allow actions during Falling Kick such as dodge or jump");
-
-
-            ImGui::Checkbox("Alt Umbran Spear Input", &GameHook::altTeleInput_toggle);
-            help_marker("Map Umbran Spear to lockon + L1. Move Taunt to dpad down");
             ImGui::SameLine(sameLineWidth);
             if (ImGui::Checkbox("Taunt With Time Bracelet", &GameHook::tauntWithTimeBracelet_toggle)) {
                 TauntWithTimeBracelet(GameHook::tauntWithTimeBracelet_toggle);
             }
             help_marker("Map Taunt to Dpad Down");
-
 
             ImGui::Checkbox("Lower Divekick Requirement", &GameHook::lowerDivekick_toggle);
             help_marker("Half the height requirement for Divekick");
@@ -754,7 +749,6 @@ void GameHook::GameImGui(void) {
             }
             help_marker("Dodge Offset through jumps");
 
-
             if (ImGui::Checkbox("Weapon Swap Offset", &GameHook::weaponSwapOffset_toggle)) {
                 WeaponSwapOffset(weaponSwapOffset_toggle);
             }
@@ -765,15 +759,13 @@ void GameHook::GameImGui(void) {
             }
             help_marker("Offset through parries");
 
-
             ImGui::Checkbox("Longer Pillow Talk Charge", &longerPillowTalkCharge_toggle);
-            help_marker("Double the charge duration on Pillow Talk");
+            help_marker("Double the charged duration on Pillow Talk");
             ImGui::SameLine(sameLineWidth);
             if (ImGui::Checkbox("Retain Pillow Talk Charge", &GameHook::retainPillowTalkCharge_toggle)) {
                 RetainPillowTalkCharge(retainPillowTalkCharge_toggle);
             }
             help_marker("Pillow Talk will retain charge through weapon swaps");
-
 
             if (ImGui::Checkbox("Swap Mashes To Holds", &GameHook::swapMashToHold_toggle)) {
                 SwapMashToHold(swapMashToHold_toggle);
@@ -785,31 +777,10 @@ void GameHook::GameImGui(void) {
             }
             help_marker("Walk on walls anywhere");
 
-
-            ImGui::Checkbox("Always Witch Time", &GameHook::alwaysWitchTime_toggle);
-            help_marker("Activate Witch Time even with a mistimed dodge");
-            ImGui::SameLine(sameLineWidth);
-            if (ImGui::Checkbox("Standardized Witch Time", &GameHook::jeanneBayoWT_toggle)) {
-                GameHook::JeanneBayoWT(GameHook::jeanneBayoWT_toggle);
-            }
-            help_marker("Give Jeanne Bayonetta's Witch Time activation leniency");
-
-
-            if (ImGui::Checkbox("Infinite Divekicks", &GameHook::infDivekick_toggle)) {
-                InfDivekick(infDivekick_toggle);
-            }
-            help_marker("Remove the limit on how many divekicks you can do before enemy stepping or touching the floor");
-            ImGui::SameLine(sameLineWidth);
             if (ImGui::Checkbox("Disable Lockon Jump Dodge", &GameHook::disableLockOnDodge_toggle)) {
                 GameHook::DisableLockOnDodge(GameHook::disableLockOnDodge_toggle);
             }
             help_marker("Disable the alternate dodge input, allowing you to jump in different directions while locked on");
-
-
-            if (ImGui::Checkbox("Infinite Crow Within", &GameHook::infBirdTime_toggle)) {
-                InfBirdTime(infBirdTime_toggle);
-            }
-            help_marker("Freeze the timer on Crow Within");
             ImGui::SameLine(sameLineWidth);
             if (ImGui::Checkbox("Disable Double Tap Inputs", &GameHook::disableDoubleTapHeelKick_toggle)) {
                 GameHook::DisableDoubleTapHeelKick(disableDoubleTapHeelKick_toggle);
@@ -817,6 +788,13 @@ void GameHook::GameImGui(void) {
             ImGui::SameLine();
             help_marker("Stiletto, Heel Slide etc");
 
+            if (ImGui::Checkbox("Standardized Witch Time", &GameHook::jeanneBayoWT_toggle)) {
+                GameHook::JeanneBayoWT(GameHook::jeanneBayoWT_toggle);
+            }
+            help_marker("Give Jeanne Bayonetta's Witch Time activation leniency");
+            ImGui::SameLine(sameLineWidth);
+            ImGui::Checkbox("Alt Umbran Spear Input", &GameHook::altTeleInput_toggle);
+            help_marker("Map Umbran Spear to lockon + L1. Move Taunt to dpad down");
 
             ImGui::Checkbox("Omnicancel Umbran Spear", &GameHook::omnicancelTele_toggle);
             help_marker("Cancel any animation with Umbral Spear");
@@ -825,16 +803,25 @@ void GameHook::GameImGui(void) {
             ImGui::SameLine();
             help_marker("Umbran spear will refresh your combo timer");
 
-            if (ImGui::Checkbox("Unban Climax Brace", &GameHook::unbanClimaxBrace_toggle)) {
-                GameHook::UnbanClimaxBrace(unbanClimaxBrace_toggle);
+            ImGui::SeparatorText("Cheats");
+
+            if (ImGui::Checkbox("Infinite Jumps (F4)##InfJumpsToggle", &GameHook::infJumps_toggle)) {
+                GameHook::InfJumps(GameHook::infJumps_toggle);
             }
-            ImGui::SameLine();
-            help_marker("Tick before entering a banned area (such as Angel Slayer)");
-			ImGui::SameLine(sameLineWidth);
-            if (ImGui::Checkbox("Force Summoning Clothes (F6)##LessClothesToggle", &GameHook::lessClothes_toggle)) {
-                GameHook::LessClothes(GameHook::lessClothes_toggle);
+            help_marker("Infinite jumps");
+            ImGui::SameLine(sameLineWidth);
+            ImGui::Checkbox("Always Witch Time", &GameHook::alwaysWitchTime_toggle);
+            help_marker("Activate Witch Time even with a mistimed dodge");
+
+            if (ImGui::Checkbox("Infinite Divekicks", &GameHook::infDivekick_toggle)) {
+                InfDivekick(infDivekick_toggle);
             }
-            help_marker("Only works on outfits that have this function");
+            help_marker("Remove the limit on how many divekicks you can do before enemy stepping or touching the floor");
+            ImGui::SameLine(sameLineWidth);
+            if (ImGui::Checkbox("Infinite Crow Within", &GameHook::infBirdTime_toggle)) {
+                InfBirdTime(infBirdTime_toggle);
+            }
+            help_marker("Freeze the timer on Crow Within");
 
             ImGui::BeginGroup();
             ImGui::Checkbox("Custom Witch Time Multiplier##WitchTimeToggle", &GameHook::witchTimeMultiplier_toggle);
@@ -844,10 +831,10 @@ void GameHook::GameImGui(void) {
                 ImGui::PushItemWidth(inputItemWidth);
                 ImGui::InputFloat("##WitchTimeMultiplier", &GameHook::witchTimeMultiplier, 0, 0, "%.1f");
                 ImGui::PopItemWidth();
-				ImGui::Unindent();
+                ImGui::Unindent();
             }
             ImGui::EndGroup();
-			ImGui::SameLine(sameLineWidth);
+            ImGui::SameLine(sameLineWidth);
             ImGui::BeginGroup();
             ImGui::Checkbox("Freeze Magic##InfMagicToggle", &GameHook::inf_magic_toggle);
             help_marker("Lock player magic to any value");
@@ -859,6 +846,11 @@ void GameHook::GameImGui(void) {
             }
             ImGui::EndGroup();
 
+            if (ImGui::Checkbox("Unban Climax Brace", &GameHook::unbanClimaxBrace_toggle)) {
+                GameHook::UnbanClimaxBrace(unbanClimaxBrace_toggle);
+            }
+            ImGui::SameLine();
+            help_marker("Tick before entering a banned area (such as Angel Slayer)");
 
             tabHeight += ImGui::GetCursorPosY();
             ImGui::EndChild();
@@ -880,7 +872,6 @@ void GameHook::GameImGui(void) {
             }
             help_marker("If Bayonetta has been open for a long time you will experience small stutters. This option disables the built in FPS limiter so you can use an external limiter instead, which circumvents the issue");
 
-
             ImGui::Checkbox("Enemy HP in Halo Display", &GameHook::haloDisplay_toggle);
             help_marker("Show the last hit enemy's HP in your Halo display. This only edits the display, your Halos are safe");
             ImGui::SameLine(sameLineWidth);
@@ -889,7 +880,6 @@ void GameHook::GameImGui(void) {
             }
             help_marker("Allow every entity to ignore walls and floors");
 
-
             ImGui::Checkbox("Save/Load Animation Hotkeys", &GameHook::saveStatesHotkeys_toggle);
             help_marker("Enable/Disable the HOME and END enemy save state hotkeys");
             ImGui::SameLine(sameLineWidth);
@@ -897,7 +887,6 @@ void GameHook::GameImGui(void) {
                 GameHook::EasyCutsceneSkip(GameHook::easyCutsceneSkip_toggle);
             }
             help_marker("Move cutscene skip (R2+Select) to X");
-
 
             ImGui::Checkbox("Skip Angel Attack", &GameHook::loadReplace_toggle);
             help_marker("Load Mission Select instead of Angel Attack");
@@ -916,7 +905,6 @@ void GameHook::GameImGui(void) {
                 GameHook::HideHalos(GameHook::hideHalos_toggle);
             }
             help_marker("Hide the Halo display");
-
 
             ImGui::BeginGroup();
             ImGui::Checkbox("Force Input Type", &GameHook::inputIcons_toggle);
@@ -943,14 +931,12 @@ void GameHook::GameImGui(void) {
             ImGui::Checkbox("Pause When Opening BayoHook", &GameHook::openMenuPause_toggle);
             help_marker("Pause the game whenever BayoHook's main UI is opened");
 
-
             ImGui::SetNextItemWidth(inputItemWidth);
 	        ImGui::InputFloat("Font Size", &GameHook::bayoHookFontSize, NULL, NULL, "%.0f");
             help_marker("Set BayoHook's font size");
 			ImGui::SameLine(sameLineWidth);
             ImGui::Checkbox("Scroll Transitions", &enable_scroll_transitions);
             help_marker("Toggle the sliding animations that play when BayoHook changes size");
-
 
             ImGui::Checkbox("Show 9.9+ Combo Multiplier UI", &GameHook::showComboUI_toggle);
             help_marker("Open a window that shows your current combo multiplier when passing 9.9x");
@@ -962,7 +948,6 @@ void GameHook::GameImGui(void) {
                 ImGui::PopItemWidth();
                 ImGui::Unindent();
             }
-
 
             tabHeight += ImGui::GetCursorPosY();
             ImGui::EndChild();
