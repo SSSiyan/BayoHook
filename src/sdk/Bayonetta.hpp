@@ -115,6 +115,21 @@ struct BayoBone {
 #pragma pack(pop)
 
 #pragma pack(push, 1)
+struct hitbox { // this is the seq files
+    char pad_0x0[0x30];
+    Vec3 pos; // 0x30
+    // 0x28 = when it starts?
+    // 0x2C = when it ends?
+    char pad_0x3C[0x4];
+    char pad_0x40[0x10];
+    float pad_0x50;
+    float pad_0x54;
+    float scale; // 0x58
+    float pad_0x5C;
+};
+#pragma pack(pop)
+
+#pragma pack(push, 1)
 struct LocalPlayer {
     uintptr_t vtable; // 0x0
     char pad_4[0xcc];

@@ -263,6 +263,7 @@ public:
 	static void Setup3dShapes();
 	static bool drawPlayerBones;
 	static bool drawHitboxes;
+	static uintptr_t hitboxAddr;
 	static void Draw3dShapes();
 	static bool drawFlyingStats;
 	static void DrawFlyingStats();

@@ -1276,6 +1276,22 @@ static __declspec(naked) void FixThirdAccessoryDetour(void) { // player in ebx
 	}
 }
 
+std::unique_ptr<FunctionHook> getHitboxHook;
+uintptr_t getHitbox_jmp_ret{ NULL };
+uintptr_t GameHook::hitboxAddr = NULL;
+static __declspec(naked) void GetHitboxDetour(void) { // player in ebx
+	_asm {
+			cmp byte ptr [GameHook::drawHitboxes], 0
+			je originalcode
+
+			mov [GameHook::hitboxAddr], eax
+
+		originalcode:
+			movss xmm1, [eax+0x30]
+			jmp dword ptr [getHitbox_jmp_ret]
+	}
+}
+
 std::unique_ptr<FunctionHook> getMotNameHook;
 uintptr_t getMotName_jmp_ret{ NULL };
 bool GameHook::getMotName_toggle = false;
@@ -2484,7 +2500,14 @@ void GameHook::Draw3dShapes() {
 			bone = bone->nextBone;
 		}
 	}
-	// if (GameHook::drawHitboxes) {} // idk where these are
+	if (GameHook::drawHitboxes) {
+		ImGui::Text("THIS IS VERY WIP, PLEASE TAKE DISPLAYED HITBOXES AS A SUGGESTION");
+		hitbox* currentHitbox = (hitbox*)GameHook::hitboxAddr;
+		if (currentHitbox) {
+			WorldVisualizer::DrawWorldSphere(currentHitbox->pos, currentHitbox->scale, IM_COL32(255, 0, 0, 255), 32, 2.0f);
+		}
+		GameHook::hitboxAddr = NULL;
+	}
 
 	ImGui::End();
 }
@@ -2619,6 +2642,7 @@ void GameHook::InitializeDetours(void) {
 	install_hook_absolute(0x8BE5B6, omnicancelTeleHook, &OmnicancelTeleDetour, &omnicancelTele_jmp_ret, 7);
 	install_hook_absolute(0x9A0020, teleportComboActionHook, &TeleportComboActionDetour, &teleportComboAction_jmp_ret, 6);
 	install_hook_absolute(0x97ED07, fixThirdAccessoryHook, &FixThirdAccessoryDetour, &fixThirdAccessory_jmp_ret, 5);
+	install_hook_absolute(0x464BF7, getHitboxHook, &GetHitboxDetour, &getHitbox_jmp_ret, 5);
 	// int& thirdAccessoryValue = *(int*)GameHook::thirdAccessoryAddress;
 	// thirdAccessoryValue = GameHook::desiredThirdAccessory;
 	install_hook_absolute(0x9F5AF0, pl0012Hook, &pl0012Detour, NULL, 0);
