@@ -1,5 +1,6 @@
 #include "gamehook.hpp"
 #include <thread>
+#include "WorldVisualizer.hpp"
 
 // system
 bool GameHook::enable_scroll_transitions = false;
@@ -2444,6 +2445,81 @@ LocalPlayer* GameHook::GetLocalPlayer() {
 		return player;
 	else
 		return nullptr;
+}
+
+Matrix4x4 viewProj;
+void GameHook::Setup3dShapes() {
+	static uintptr_t matrixAddress = 0xF2DCE0;
+	// ImGui::InputScalar("matrixAddr", ImGuiDataType_U64, &matrixAddress, NULL, NULL, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+	viewProj = *(Matrix4x4*)matrixAddress;
+}
+
+bool GameHook::drawPlayerBones = false;
+bool GameHook::drawHitboxes = false;
+void GameHook::Draw3dShapes() {
+	LocalPlayer* player = GetLocalPlayer();
+	if (!player) { return; }
+
+	ImGui::SetNextWindowPos(ImVec2(0, 0));
+	ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
+	ImGui::Begin("WorldViz", nullptr,
+		ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar |
+		ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoBringToFrontOnFocus);
+	WorldVisualizer::SetDrawList(ImGui::GetWindowDrawList());
+	WorldVisualizer::SetViewProjectionMatrix(viewProj);
+	if (GameHook::drawPlayerBones) {
+		Vec3 playerPos = player->pos;
+		Matrix3x3 playerRot = WorldVisualizer::CreateRotationMatrix(player->rot.x, player->rot.y, player->rot.z);
+		// WorldVisualizer::DrawWorldSphere(playerPos, 0.1f, IM_COL32(0, 0, 255, 255), 32, 1.0f, &playerRot);
+		// WorldVisualizer::DrawWorldCapsule(player->pos + Vec3(0.0f, 0.25f, 0.0f), player->pos + Vec3(0.0f, 1.5f, 0.0f), 0.25f, IM_COL32(255, 0, 0, 255), 32, 1.0f, &playerRot);
+
+		// WorldVisualizer::DrawWorldSphere(Vec3(-67.0f, 0.0f, -1.0f), 0.5f);
+		// WorldVisualizer::DrawWorldCapsule(Vec3(-67.0f, 0.0f, 0.0f), Vec3(-67.0f, 2.0f, 0.0f), 0.5f);
+		// WorldVisualizer::DrawWorldSphere(Vec3(-67.0f, 0.0f, 1.0f), 0.5f);
+		BayoBone* bone = player->bayoSkeleton;
+		while (bone) {
+			Vec3 bonePos = bone->pos;
+			WorldVisualizer::DrawWorldSphere(bonePos, 0.01f, IM_COL32(0, 0, 255, 255), 32, 1.0f, &playerRot);
+			// WorldVisualizer::DrawWorldPoint(bonePos, 3.0f, IM_COL32(0, 0, 255, 255));
+			bone = bone->nextBone;
+		}
+	}
+	// if (GameHook::drawHitboxes) {} // idk where these are
+
+	ImGui::End();
+}
+
+bool GameHook::drawFlyingStats = false;
+void GameHook::DrawFlyingStats() {
+	if (!GameHook::drawFlyingStats) { return; }
+	LocalPlayer* player = GameHook::GetLocalPlayer();
+
+	if (player) {
+		float fontSize = ImGui::GetFontSize();
+		static ImVec2 playerScreenPos;
+		WorldVisualizer::WorldToScreen(player->pos, playerScreenPos);
+		ImGui::Begin("FlyingPlayerStats", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar);
+		ImGui::PushItemWidth(fontSize * 3.0f);
+		ImGui::SetWindowPos(playerScreenPos);
+		ImGui::SliderFloat("iframes", &player->iFramesRemaining, 0.0f, 25.0f, "%.0f");
+		ImGui::PopItemWidth();
+		ImGui::End();
+
+		Enemy* enemy = *(Enemy**)GameHook::enemyLockedOnAddress;
+		if (enemy) {
+			static ImVec2 enemyScreenPos;
+			WorldVisualizer::WorldToScreen(enemy->pos, enemyScreenPos);
+			ImGui::Begin("FlyingEnemyStats", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar);
+			ImGui::SetWindowPos(enemyScreenPos);
+			ImGui::SetNextItemWidth(fontSize * 9.0f);
+			ImGui::InputFloat3("Pos##FlyingEnemyXYZPosInputFloat", &enemy->pos.x, "%.2f");
+			ImGui::PushItemWidth(fontSize * 3.0f);
+			ImGui::InputInt("HP##FlyingEnemyHPInputInt", &enemy->hp, 0, 0);
+			ImGui::InputInt("Move ID##FlyingEnemyMoveIDInputInt", &enemy->moveID, 0, 0);
+			ImGui::PopItemWidth();
+			ImGui::End();
+		}
+	}
 }
 
 bool GameHook::CheckCanSpawnEntity() {

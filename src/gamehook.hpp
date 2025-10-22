@@ -260,6 +260,12 @@ public:
 	static int showMessageTimerF6;
 
 	static LocalPlayer* GetLocalPlayer();
+	static void Setup3dShapes();
+	static bool drawPlayerBones;
+	static bool drawHitboxes;
+	static void Draw3dShapes();
+	static bool drawFlyingStats;
+	static void DrawFlyingStats();
 
 	static bool CheckCanSpawnEntity();
 	typedef void(__thiscall* SpawnEntityFunc)(uintptr_t* ecx, int entityID, int a2, int a3);

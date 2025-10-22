@@ -1,6 +1,72 @@
 #pragma once
 #include <cstdint> // uintptr_t
 
+struct Vec3 {
+    float x; // 0x0
+    float y; // 0x4
+    float z; // 0x8
+
+    Vec3 operator+(const Vec3& other) const {
+        return { x + other.x, y + other.y, z + other.z };
+    }
+
+    Vec3 operator-(const Vec3& other) const {
+        return { x - other.x, y - other.y, z - other.z };
+    }
+
+    Vec3 operator*(float scalar) const {
+        return { x * scalar, y * scalar, z * scalar };
+    }
+
+    Vec3 operator/(float scalar) const {
+        return { x / scalar, y / scalar, z / scalar };
+    }
+
+    Vec3& operator+=(const Vec3& other) {
+        x += other.x; y += other.y; z += other.z;
+        return *this;
+    }
+
+    Vec3& operator-=(const Vec3& other) {
+        x -= other.x; y -= other.y; z -= other.z;
+        return *this;
+    }
+
+    Vec3& operator*=(float scalar) {
+        x *= scalar; y *= scalar; z *= scalar;
+        return *this;
+    }
+
+    Vec3& operator/=(float scalar) {
+        x /= scalar; y /= scalar; z /= scalar;
+        return *this;
+    }
+};
+
+
+struct Matrix4x4 {
+    float m[4][4];
+
+    Matrix4x4() {
+        for (int i = 0; i < 4; i++)
+            for (int j = 0; j < 4; j++)
+                m[i][j] = (i == j) ? 1.0f : 0.0f;
+    }
+};
+
+struct Matrix3x3 {
+    float m[3][3];
+
+    static Matrix3x3 Identity() {
+        Matrix3x3 mat = {};
+        mat.m[0][0] = 1.0f; mat.m[0][1] = 0.0f; mat.m[0][2] = 0.0f;
+        mat.m[1][0] = 0.0f; mat.m[1][1] = 1.0f; mat.m[1][2] = 0.0f;
+        mat.m[2][0] = 0.0f; mat.m[2][1] = 0.0f; mat.m[2][2] = 1.0f;
+        return mat;
+    }
+};
+
+
 #pragma pack(push, 1)
 enum PlayerForm {
     Player = 0,
@@ -9,12 +75,6 @@ enum PlayerForm {
     Bird = 3,
 };
 #pragma pack(pop)
-
-struct Vec3 {
-    float x; // 0x0
-    float y; // 0x4
-    float z; // 0x8
-}; // Size: 0xc
 
 #pragma pack(push, 1)
 struct LaserSword {
@@ -43,11 +103,25 @@ struct BayoLimb {
 #pragma pack(pop)
 
 #pragma pack(push, 1)
+struct BayoBone {
+    char pad_0[0x30];     // 0x00
+    Vec3 pos;             // 0x30
+    char pad_3C[0xA4];    // 0x3C
+    Vec3 scale;           // 0xE0
+    char pad_EC[0x24];    // 0xEC
+    BayoBone* prevBone;   // 0x110
+    BayoBone* nextBone;   // 0x114
+}; // Size: 0x118
+#pragma pack(pop)
+
+#pragma pack(push, 1)
 struct LocalPlayer {
     uintptr_t vtable; // 0x0
     char pad_4[0xcc];
     Vec3 pos; // 0xd0
-    char pad_dc[0x14];
+    char pad_dc[0x4];
+    Vec3 rot; // 0xe
+    char pad_ec[0x4];
     Vec3 scale; // 0xf0
     char pad_fc[0x218];
     float camHeight; // 0x314
@@ -74,7 +148,7 @@ struct LocalPlayer {
     char pad_cd0[0x4ef0];
     LaserSword* laserSword; // 0x5bc0
     char pad_5bc4[0x8c688];
-    uintptr_t bayoSkeleton; // 0x9224c
+    BayoBone* bayoSkeleton; // 0x9224c
     char pad_92250[0xeb4];
     bool clip; // 0x93104
     char pad_93105[0x403];

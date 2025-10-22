@@ -486,6 +486,9 @@ void GameHook::GameTick(void) { // also called while the menu isn't open
                 }
             }
         }
+        Setup3dShapes();
+        Draw3dShapes();
+        DrawFlyingStats();
     }
 }
 
@@ -645,7 +648,9 @@ void GameHook::GameImGui(void) {
             }
             help_marker("Disable the game pausing for a few frames when hits connect");
 
-
+            ImGui::Checkbox("Skip Angel Attack", &GameHook::loadReplace_toggle);
+            help_marker("Load Mission Select instead of Angel Attack");
+            ImGui::SameLine(sameLineWidth);
             ImGui::BeginGroup();
             ImGui::Checkbox("Custom Camera Distance##CameraDistanceMultiplierToggle", &GameHook::customCameraDistance_toggle);
             help_marker("Replace the vanilla camera distance with a custom value");
@@ -657,7 +662,7 @@ void GameHook::GameImGui(void) {
                 ImGui::Unindent();
             }
 			ImGui::EndGroup();
-			ImGui::SameLine(sameLineWidth);
+			//ImGui::SameLine(sameLineWidth);
             ImGui::BeginGroup();
             ImGui::Checkbox("Turbo", &GameHook::turbo_toggle);
             help_marker("Set a custom game speed");
@@ -796,12 +801,12 @@ void GameHook::GameImGui(void) {
             ImGui::Checkbox("Alt Umbran Spear Input", &GameHook::altTeleInput_toggle);
             help_marker("Map Umbran Spear to lockon + L1. Move Taunt to dpad down");
 
-            ImGui::Checkbox("Omnicancel Umbran Spear", &GameHook::omnicancelTele_toggle);
+            ImGui::Checkbox("Umbran Spear Omnicancel", &GameHook::omnicancelTele_toggle);
             help_marker("Cancel any animation with Umbral Spear");
             ImGui::SameLine(sameLineWidth);
-            ImGui::Checkbox("Umbran Spear Combo", &GameHook::teleportComboAction_toggle);
+            ImGui::Checkbox("Umbran Spear Offset", &GameHook::teleportComboAction_toggle);
             ImGui::SameLine();
-            help_marker("Umbran spear will refresh your combo timer");
+            help_marker("Umbran spear will refresh your offset timer");
 
             ImGui::SeparatorText("Cheats");
 
@@ -888,23 +893,26 @@ void GameHook::GameImGui(void) {
             }
             help_marker("Move cutscene skip (R2+Select) to X");
 
-            ImGui::Checkbox("Skip Angel Attack", &GameHook::loadReplace_toggle);
-            help_marker("Load Mission Select instead of Angel Attack");
-            ImGui::SameLine(sameLineWidth);
             if (ImGui::Checkbox("60 FPS Cutscenes", &GameHook::sixtyFpsCutscenes_toggle)) {
                 GameHook::SixtyFpsCutscenes(GameHook::sixtyFpsCutscenes_toggle);
             }
             help_marker("Cutscenes play at 60fps instead of 30");
 
+            ImGui::SameLine(sameLineWidth);
             if (ImGui::Checkbox("Remove Vignette", &GameHook::removeVignette_toggle)) {
                 GameHook::RemoveVignette(GameHook::removeVignette_toggle);
             }
             help_marker("Disable the gradient covering the game");
-            ImGui::SameLine(sameLineWidth);
+
             if (ImGui::Checkbox("Hide Halos", &GameHook::hideHalos_toggle)) {
                 GameHook::HideHalos(GameHook::hideHalos_toggle);
             }
             help_marker("Hide the Halo display");
+            ImGui::SameLine(sameLineWidth);
+            if (ImGui::Checkbox("Multiplayer Patch", &GameHook::multiplayerPatch_toggle)) {
+                GameHook::MultiplayerPatch(GameHook::multiplayerPatch_toggle);
+            }
+            help_marker("This is very hacky and probably breaks a lot. This is intended to stop the camera jumping between multiple spawned characters");
 
             ImGui::BeginGroup();
             ImGui::Checkbox("Force Input Type", &GameHook::inputIcons_toggle);
@@ -917,11 +925,6 @@ void GameHook::GameImGui(void) {
                 ImGui::Unindent();
             }
             ImGui::EndGroup();
-			ImGui::SameLine(sameLineWidth);
-            if (ImGui::Checkbox("Multiplayer Patch", &GameHook::multiplayerPatch_toggle)) {
-                GameHook::MultiplayerPatch(GameHook::multiplayerPatch_toggle);
-            }
-            help_marker("This is very hacky and probably breaks a lot. This is intended to stop the camera jumping between multiple spawned characters");
 
 			ImGui::SeparatorText("BayoHook");
 
@@ -1189,6 +1192,11 @@ void GameHook::GameImGui(void) {
 
         if (ImGui::BeginTabItem("Extra")) {
             ImGui::BeginChild("ExtraChild");
+
+            ImGui::SeparatorText("Debug Drawing");
+
+            ImGui::Checkbox("Draw Player Bones Example", &GameHook::drawPlayerBones);
+			ImGui::Checkbox("Draw Flying Stats Example", &GameHook::drawFlyingStats);
 
             ImGui::SeparatorText("Custom Combo Routes");
 
