@@ -1276,18 +1276,33 @@ static __declspec(naked) void FixThirdAccessoryDetour(void) { // player in ebx
 	}
 }
 
+struct HitboxSnapshot {
+	Vec3 pos;
+	float radius;
+};
+static std::vector<HitboxSnapshot> hitDataList;
+
+static void AddHitDataPtr(void* ptr) {
+	auto* hitData = (hitbox*)(ptr);
+	hitDataList.push_back({ hitData->pos, hitData->scale });
+}
+
 std::unique_ptr<FunctionHook> getHitboxHook;
 uintptr_t getHitbox_jmp_ret{ NULL };
-uintptr_t GameHook::hitboxAddr = NULL;
-static __declspec(naked) void GetHitboxDetour(void) { // player in ebx
+static __declspec(naked) void GetHitboxDetour(void) {
 	_asm {
-			cmp byte ptr [GameHook::drawHitboxes], 0
+			cmp byte ptr [GameHook::drawHitboxes_toggle], 0
 			je originalcode
 
-			mov [GameHook::hitboxAddr], eax
+			pushad
+			add ebx,0xD0 // old offset was +0x30
+			push ebx
+			call AddHitDataPtr
+			add esp,4
+			popad
 
 		originalcode:
-			movss xmm1, [eax+0x30]
+			addss xmm0, [ebx+0x00000100]
 			jmp dword ptr [getHitbox_jmp_ret]
 	}
 }
@@ -2470,8 +2485,8 @@ void GameHook::Setup3dShapes() {
 	viewProj = *(Matrix4x4*)matrixAddress;
 }
 
-bool GameHook::drawPlayerBones = false;
-bool GameHook::drawHitboxes = false;
+bool GameHook::drawPlayerBones_toggle = false;
+bool GameHook::drawHitboxes_toggle = false;
 void GameHook::Draw3dShapes() {
 	LocalPlayer* player = GetLocalPlayer();
 	if (!player) { return; }
@@ -2483,7 +2498,7 @@ void GameHook::Draw3dShapes() {
 		ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoBringToFrontOnFocus);
 	WorldVisualizer::SetDrawList(ImGui::GetWindowDrawList());
 	WorldVisualizer::SetViewProjectionMatrix(viewProj);
-	if (GameHook::drawPlayerBones) {
+	if (GameHook::drawPlayerBones_toggle) {
 		Vec3 playerPos = player->pos;
 		Matrix3x3 playerRot = WorldVisualizer::CreateRotationMatrix(player->rot.x, player->rot.y, player->rot.z);
 		// WorldVisualizer::DrawWorldSphere(playerPos, 0.1f, IM_COL32(0, 0, 255, 255), 32, 1.0f, &playerRot);
@@ -2493,28 +2508,33 @@ void GameHook::Draw3dShapes() {
 		// WorldVisualizer::DrawWorldCapsule(Vec3(-67.0f, 0.0f, 0.0f), Vec3(-67.0f, 2.0f, 0.0f), 0.5f);
 		// WorldVisualizer::DrawWorldSphere(Vec3(-67.0f, 0.0f, 1.0f), 0.5f);
 		BayoBone* bone = player->bayoSkeleton;
+		// Draw forward
 		while (bone) {
-			Vec3 bonePos = bone->pos;
-			WorldVisualizer::DrawWorldSphere(bonePos, 0.01f, IM_COL32(0, 0, 255, 255), 32, 1.0f, &playerRot);
-			// WorldVisualizer::DrawWorldPoint(bonePos, 3.0f, IM_COL32(0, 0, 255, 255));
+			WorldVisualizer::DrawWorldSphere(bone->pos, 0.01f, IM_COL32(0, 0, 255, 255), 32, 1.0f, &playerRot);
 			bone = bone->nextBone;
 		}
-	}
-	if (GameHook::drawHitboxes) {
-		ImGui::Text("THIS IS VERY WIP, PLEASE TAKE DISPLAYED HITBOXES AS A SUGGESTION");
-		hitbox* currentHitbox = (hitbox*)GameHook::hitboxAddr;
-		if (currentHitbox) {
-			WorldVisualizer::DrawWorldSphere(currentHitbox->pos, currentHitbox->scale, IM_COL32(255, 0, 0, 255), 32, 2.0f);
+		// Draw backward
+		if (player->bayoSkeleton) {
+			bone = player->bayoSkeleton->prevBone;
+			while (bone) {
+				WorldVisualizer::DrawWorldSphere(bone->pos, 0.01f, IM_COL32(0, 0, 255, 255), 32, 1.0f, &playerRot);
+				bone = bone->prevBone;
+			}
 		}
-		GameHook::hitboxAddr = NULL;
+	}
+	if (GameHook::drawHitboxes_toggle) {
+		for (const HitboxSnapshot& snapshot : hitDataList) {
+			WorldVisualizer::DrawWorldSphere(snapshot.pos, snapshot.radius, IM_COL32(255, 0, 0, 255), 32, 1.0f);
+		}
+		hitDataList.clear();
 	}
 
 	ImGui::End();
 }
 
-bool GameHook::drawFlyingStats = false;
+bool GameHook::drawFlyingStats_toggle = false;
 void GameHook::DrawFlyingStats() {
-	if (!GameHook::drawFlyingStats) { return; }
+	if (!GameHook::drawFlyingStats_toggle) { return; }
 	LocalPlayer* player = GameHook::GetLocalPlayer();
 
 	if (player) {
@@ -2642,7 +2662,7 @@ void GameHook::InitializeDetours(void) {
 	install_hook_absolute(0x8BE5B6, omnicancelTeleHook, &OmnicancelTeleDetour, &omnicancelTele_jmp_ret, 7);
 	install_hook_absolute(0x9A0020, teleportComboActionHook, &TeleportComboActionDetour, &teleportComboAction_jmp_ret, 6);
 	install_hook_absolute(0x97ED07, fixThirdAccessoryHook, &FixThirdAccessoryDetour, &fixThirdAccessory_jmp_ret, 5);
-	install_hook_absolute(0x464BF7, getHitboxHook, &GetHitboxDetour, &getHitbox_jmp_ret, 5);
+	install_hook_absolute(0x41837E, getHitboxHook, &GetHitboxDetour, &getHitbox_jmp_ret, 8);
 	// int& thirdAccessoryValue = *(int*)GameHook::thirdAccessoryAddress;
 	// thirdAccessoryValue = GameHook::desiredThirdAccessory;
 	install_hook_absolute(0x9F5AF0, pl0012Hook, &pl0012Detour, NULL, 0);
@@ -2762,6 +2782,9 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	alwaysWitchTime_toggle = cfg.get<bool>("AlwaysWitchTimeToggle").value_or(false);
 	saveStatesHotkeys_toggle = cfg.get<bool>("SaveStatesHotkeysToggle").value_or(false);
 	omnicancelTele_toggle = cfg.get<bool>("omnicancelTele_toggle").value_or(false);
+	drawPlayerBones_toggle = cfg.get<bool>("drawPlayerBones_toggle").value_or(false);
+	drawHitboxes_toggle = cfg.get<bool>("drawHitboxes_toggle").value_or(false);
+	drawFlyingStats_toggle = cfg.get<bool>("drawFlyingStats_toggle").value_or(false);
 
 	moveIDSwapsToggle = cfg.get<bool>("moveIDSwapsToggle").value_or(false);
 	for (int i = 0; i < maxMoveIDSwaps; ++i) {
@@ -2873,6 +2896,9 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("SaveStatesHotkeysToggle", saveStatesHotkeys_toggle);
 	cfg.set<bool>("TauntWithTimeBraceletToggle", tauntWithTimeBracelet_toggle);
 	cfg.set<bool>("omnicancelTele_toggle", omnicancelTele_toggle);
+	cfg.set<bool>("drawPlayerBones_toggle", drawPlayerBones_toggle);
+	cfg.set<bool>("drawHitboxes_toggle", drawHitboxes_toggle);
+	cfg.set<bool>("drawFlyingStats_toggle", drawFlyingStats_toggle);
 
 	cfg.set<bool>("moveIDSwapsToggle", moveIDSwapsToggle);
 	for (int i = 0; i < maxMoveIDSwaps; ++i) {

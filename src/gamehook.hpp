@@ -261,11 +261,10 @@ public:
 
 	static LocalPlayer* GetLocalPlayer();
 	static void Setup3dShapes();
-	static bool drawPlayerBones;
-	static bool drawHitboxes;
-	static uintptr_t hitboxAddr;
+	static bool drawPlayerBones_toggle;
+	static bool drawHitboxes_toggle;
 	static void Draw3dShapes();
-	static bool drawFlyingStats;
+	static bool drawFlyingStats_toggle;
 	static void DrawFlyingStats();
 
 	static bool CheckCanSpawnEntity();

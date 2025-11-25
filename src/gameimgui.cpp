@@ -1195,9 +1195,9 @@ void GameHook::GameImGui(void) {
 
             ImGui::SeparatorText("Debug Drawing");
 
-            ImGui::Checkbox("Draw Player Bones Example", &GameHook::drawPlayerBones);
-			ImGui::Checkbox("Draw Flying Stats Example", &GameHook::drawFlyingStats);
-            ImGui::Checkbox("Draw Hitboxes Example", &GameHook::drawHitboxes);
+            ImGui::Checkbox("Draw Player Bones (WIP)", &GameHook::drawPlayerBones_toggle);
+			ImGui::Checkbox("Draw Flying Stats (WIP)", &GameHook::drawFlyingStats_toggle);
+            ImGui::Checkbox("Draw Hitboxes (WIP)", &GameHook::drawHitboxes_toggle);
 
             ImGui::SeparatorText("Custom Combo Routes");
 
