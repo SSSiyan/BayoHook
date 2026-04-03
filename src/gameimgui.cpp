@@ -1085,9 +1085,10 @@ void GameHook::GameImGui(void) {
                     ImGui::InputInt("+354 invincibility", &player->invincibility);
                     ImGui::InputInt("+358 summoningSomething", &player->summoningSomething);
                     ImGui::InputFloat("+3E4 animFrame", &player->animFrame);
+                    ImGui::InputFloat("+4C4 speed", &player->speed);
                     ImGui::InputInt("+69C aerial", &player->aerial);
                     ImGui::InputInt("+6B4 hpDamage", &player->hpDamage, 10, 100);
-                    ImGui::InputFloat("+6CC speed", &player->speed);
+                    ImGui::InputFloat("+6CC slowmo", &player->speed);
                     ImGui::InputFloat("+730 iFramesRemaining", &player->iFramesRemaining);
                     ImGui::InputFloat3("+CC0 colouredHairDurationRGB", &player->colouredHairDurationRGB.x);
                     ImGui::InputFloat("+CCC colouredHairTimer", &player->colouredHairTimer);

@@ -430,8 +430,8 @@ void GameHook::FreezeDifficulty(bool enabled) {
 }
 
 // detours
-std::unique_ptr<FunctionHook> enemyHPHook;
-uintptr_t enemyHP_jmp_ret{ NULL };
+static std::unique_ptr<FunctionHook> enemyHPHook;
+static uintptr_t enemyHP_jmp_ret{ NULL };
 bool GameHook::enemyHP_no_damage_toggle = false;
 bool GameHook::enemyHP_one_hit_kill_toggle = false;
 static __declspec(naked) void EnemyHPDetour(void) {
@@ -459,7 +459,7 @@ static __declspec(naked) void EnemyHPDetour(void) {
 	}
 }
 
-std::unique_ptr<FunctionHook> witchTimeHook;
+static std::unique_ptr<FunctionHook> witchTimeHook;
 static uintptr_t witchTimeMultiplier_jmp_ret{ NULL };
 bool GameHook::witchTimeMultiplier_toggle = false;
 float GameHook::witchTimeMultiplier = 1.0f;
@@ -499,10 +499,10 @@ static __declspec(naked) void InfMagicDetour(void) {
 	}
 }
 
-std::unique_ptr<FunctionHook> damageDealtMultiplierHook;
-uintptr_t damageDealtMultiplier_jmp_ret{ NULL };
+static std::unique_ptr<FunctionHook> damageDealtMultiplierHook;
+static uintptr_t damageDealtMultiplier_jmp_ret{ NULL };
 bool GameHook::damageDealtMultiplier_toggle = false;
-float damageDealtMultiplierXmm0Backup = 0.0f;
+static float damageDealtMultiplierXmm0Backup = 0.0f;
 float GameHook::damageDealtMultiplierMult = 1.0f;
 static __declspec(naked) void DamageDealtMultiplierDetour(void) {
 	_asm {
@@ -523,7 +523,7 @@ static __declspec(naked) void DamageDealtMultiplierDetour(void) {
 	}
 }
 
-std::unique_ptr<FunctionHook> damageReceivedMultiplierHook;
+static std::unique_ptr<FunctionHook> damageReceivedMultiplierHook;
 static uintptr_t damageReceivedMultiplier_jmp_ret{ NULL };
 bool GameHook::damageReceivedMultiplier_no_damage_toggle = false;
 bool GameHook::damageReceivedMultiplier_toggle = false;
@@ -559,8 +559,8 @@ static __declspec(naked) void DamageReceivedMultiplierDetour(void) {
 	}
 }
 
-std::unique_ptr<FunctionHook> customCameraDistanceHook;
-uintptr_t customCameraDistance_jmp_ret{ NULL };
+static std::unique_ptr<FunctionHook> customCameraDistanceHook;
+static uintptr_t customCameraDistance_jmp_ret{ NULL };
 bool GameHook::customCameraDistance_toggle = false;
 float GameHook::customCameraDistance = 10.0f;
 static __declspec(naked) void CustomCameraDistanceDetour(void) {
@@ -577,8 +577,8 @@ static __declspec(naked) void CustomCameraDistanceDetour(void) {
 	}
 }
 
-std::unique_ptr<FunctionHook> haloDisplayHook;
-uintptr_t haloDisplay_jmp_ret{ NULL };
+static std::unique_ptr<FunctionHook> haloDisplayHook;
+static uintptr_t haloDisplay_jmp_ret{ NULL };
 bool GameHook::haloDisplay_toggle = false;
 int GameHook::haloDisplayValue = 0;
 uintptr_t haloDisplayAddress = 0x5BB57B0;
@@ -613,8 +613,8 @@ int __stdcall GetSwappedMoveID(int nextMoveID) {
     return -1;
 }
 
-std::unique_ptr<FunctionHook> moveIDSwapHook;
-uintptr_t moveIDSwap_jmp_ret{ NULL };
+static std::unique_ptr<FunctionHook> moveIDSwapHook;
+static uintptr_t moveIDSwap_jmp_ret{ NULL };
 static __declspec(naked) void MoveIDSwapDetour(void) { // player in ecx
 	_asm {
 		cmp byte ptr [GameHook::moveIDSwapsToggle], 0
@@ -663,8 +663,8 @@ int __stdcall GetSwappedStringID(int nextStringID) {
     return -1;
 }
 
-std::unique_ptr<FunctionHook> punchStringIDSwapHook;
-uintptr_t punchStringIDSwap_jmp_ret{ NULL };
+static std::unique_ptr<FunctionHook> punchStringIDSwapHook;
+static uintptr_t punchStringIDSwap_jmp_ret{ NULL };
 static __declspec(naked) void PunchStringIDSwapDetour(void) {
 	_asm {
 		cmp byte ptr [GameHook::stringSwapsToggle], 0
@@ -701,8 +701,8 @@ static __declspec(naked) void PunchStringIDSwapDetour(void) {
 	}
 }
 
-std::unique_ptr<FunctionHook> latePunchStringIDSwapHook;
-uintptr_t latePunchStringIDSwap_jmp_ret{ NULL };
+static std::unique_ptr<FunctionHook> latePunchStringIDSwapHook;
+static uintptr_t latePunchStringIDSwap_jmp_ret{ NULL };
 static __declspec(naked) void LatePunchStringIDSwapDetour(void) {
 	_asm {
 		cmp byte ptr [GameHook::stringSwapsToggle], 0
@@ -738,8 +738,8 @@ static __declspec(naked) void LatePunchStringIDSwapDetour(void) {
 	}
 }
 
-std::unique_ptr<FunctionHook> kickStringIDSwapHook;
-uintptr_t kickStringIDSwap_jmp_ret{ NULL };
+static std::unique_ptr<FunctionHook> kickStringIDSwapHook;
+static uintptr_t kickStringIDSwap_jmp_ret{ NULL };
 static __declspec(naked) void KickStringIDSwapDetour(void) {
 	_asm {
 		cmp byte ptr [GameHook::stringSwapsToggle], 0
@@ -775,8 +775,8 @@ static __declspec(naked) void KickStringIDSwapDetour(void) {
 	}
 }
 
-std::unique_ptr<FunctionHook> lateKickStringIDSwapHook;
-uintptr_t lateKickStringIDSwap_jmp_ret{ NULL };
+static std::unique_ptr<FunctionHook> lateKickStringIDSwapHook;
+static uintptr_t lateKickStringIDSwap_jmp_ret{ NULL };
 static __declspec(naked) void LateKickStringIDSwapDetour(void) {
 	_asm {
 		cmp byte ptr [GameHook::stringSwapsToggle], 0
@@ -812,8 +812,8 @@ static __declspec(naked) void LateKickStringIDSwapDetour(void) {
 	}
 }
 
-std::unique_ptr<FunctionHook> inputIconsHook;
-uintptr_t inputIcons_jmp_ret{ NULL };
+static std::unique_ptr<FunctionHook> inputIconsHook;
+static uintptr_t inputIcons_jmp_ret{ NULL };
 bool GameHook::inputIcons_toggle = false;
 int GameHook::inputIconsValue = 0; // 0 keyboard, 1 gamepad
 static __declspec(naked) void InputIconsDetour(void) {
@@ -830,8 +830,8 @@ static __declspec(naked) void InputIconsDetour(void) {
 	}
 }
 
-std::unique_ptr<FunctionHook> easierMashHook;
-uintptr_t easierMash_jmp_ret{ NULL };
+static std::unique_ptr<FunctionHook> easierMashHook;
+static uintptr_t easierMash_jmp_ret{ NULL };
 bool GameHook::easierMash_toggle = false;
 static __declspec(naked) void EasierMashDetour(void) {
 	_asm {
@@ -846,8 +846,8 @@ static __declspec(naked) void EasierMashDetour(void) {
 	}
 }
 
-std::unique_ptr<FunctionHook> initialAngelSlayerFloorHook;
-uintptr_t initialAngelSlayerFloor_jmp_ret{ NULL };
+static std::unique_ptr<FunctionHook> initialAngelSlayerFloorHook;
+static uintptr_t initialAngelSlayerFloor_jmp_ret{ NULL };
 int GameHook::initialAngelSlayerFloor = 0;
 static __declspec(naked) void InitialAngelSlayerFloorDetour(void) {
 	_asm {
@@ -862,10 +862,10 @@ static __declspec(naked) void InitialAngelSlayerFloorDetour(void) {
 	}
 }
 
-std::unique_ptr<FunctionHook> cancellableAfterBurnerHook;
-uintptr_t cancellableAfterBurner_jmp_ret{ NULL };
+static std::unique_ptr<FunctionHook> cancellableAfterBurnerHook;
+static uintptr_t cancellableAfterBurner_jmp_ret{ NULL };
 bool GameHook::cancellableAfterBurner_toggle = false;
-uintptr_t cancellableMovesCall = 0x9E85E0;
+static uintptr_t cancellableMovesCall = 0x9E85E0;
 static __declspec(naked) void CancellableAfterBurnerDetour(void) {
 	_asm {
 		cmp byte ptr [GameHook::cancellableAfterBurner_toggle], 0
@@ -882,10 +882,10 @@ static __declspec(naked) void CancellableAfterBurnerDetour(void) {
 	}
 }
 
-std::unique_ptr<FunctionHook> cancellableFallingKickHook;
-uintptr_t cancellableFallingKick_jmp_ret{ NULL };
+static std::unique_ptr<FunctionHook> cancellableFallingKickHook;
+static uintptr_t cancellableFallingKick_jmp_ret{ NULL };
 bool GameHook::cancellableFallingKick_toggle = false;
-uintptr_t CancellableFallingKickDefaultCall = 0x433220;
+static uintptr_t CancellableFallingKickDefaultCall = 0x433220;
 static __declspec(naked) void CancellableFallingKickDetour(void) {
 	_asm {
 		cmp byte ptr [GameHook::cancellableFallingKick_toggle], 0
@@ -902,8 +902,8 @@ static __declspec(naked) void CancellableFallingKickDetour(void) {
 	}
 }
 
-std::unique_ptr<FunctionHook> cancellableFallingKickDurgaHook;
-uintptr_t cancellableFallingKickDurga_jmp_ret{ NULL };
+static std::unique_ptr<FunctionHook> cancellableFallingKickDurgaHook;
+static uintptr_t cancellableFallingKickDurga_jmp_ret{ NULL };
 static __declspec(naked) void CancellableFallingKickDurgaDetour(void) {
 	_asm {
 		cmp byte ptr [GameHook::cancellableFallingKick_toggle], 0
@@ -922,8 +922,8 @@ static __declspec(naked) void CancellableFallingKickDurgaDetour(void) {
 	}
 }
 
-std::unique_ptr<FunctionHook> turboHook;
-uintptr_t turbo_jmp_ret{ NULL };
+static std::unique_ptr<FunctionHook> turboHook;
+static uintptr_t turbo_jmp_ret{ NULL };
 bool GameHook::openMenuPause_toggle = false;
 bool GameHook::turbo_toggle = false;
 float GameHook::turboValue = 1.0f;
@@ -952,10 +952,10 @@ static __declspec(naked) void TurboHookDetour(void) {
 	}
 }
 
-std::unique_ptr<FunctionHook> altTeleInputHook;
-uintptr_t altTeleInput_jmp_ret{ NULL };
-uintptr_t altTeleInput_jmp_jle = 0x8BE5AC;
-uintptr_t altTeleInput_jmp_je = 0x8BE5B6;
+static std::unique_ptr<FunctionHook> altTeleInputHook;
+static uintptr_t altTeleInput_jmp_ret{ NULL };
+static uintptr_t altTeleInput_jmp_jle = 0x8BE5AC;
+static uintptr_t altTeleInput_jmp_je = 0x8BE5B6;
 bool GameHook::altTeleInput_toggle = false;
 static int altTeleInput = 0x400; // dpad down = 0x4, taunt = 0x400
 static __declspec(naked) void AltTeleInputDetour(void) {
@@ -992,8 +992,8 @@ static __declspec(naked) void AltTeleInputDetour(void) {
 	}
 }
 
-std::unique_ptr<FunctionHook> tauntWithTimeBracelet2Hook; // tap taunt
-uintptr_t tauntWithTimeBracelet2_jmp_ret{ NULL };
+static std::unique_ptr<FunctionHook> tauntWithTimeBracelet2Hook; // tap taunt
+static uintptr_t tauntWithTimeBracelet2_jmp_ret{ NULL };
 static __declspec(naked) void TauntWithTimeBracelet2Detour(void) {
 	_asm {
 		cmp byte ptr [GameHook::tauntWithTimeBracelet_toggle], 1
@@ -1011,8 +1011,8 @@ static __declspec(naked) void TauntWithTimeBracelet2Detour(void) {
 	}
 }
 
-std::unique_ptr<FunctionHook> tauntWithTimeBracelet3Hook; // hold taunt
-uintptr_t tauntWithTimeBracelet3_jmp_ret{ NULL };
+static std::unique_ptr<FunctionHook> tauntWithTimeBracelet3Hook; // hold taunt
+static uintptr_t tauntWithTimeBracelet3_jmp_ret{ NULL };
 static __declspec(naked) void TauntWithTimeBracelet3Detour(void) {
 	_asm {
 		cmp byte ptr [GameHook::tauntWithTimeBracelet_toggle], 1
@@ -1030,8 +1030,8 @@ static __declspec(naked) void TauntWithTimeBracelet3Detour(void) {
 	}
 }
 
-std::unique_ptr<FunctionHook> disableSlowmoHook;
-uintptr_t disableSlowmo_jmp_ret{ NULL };
+static std::unique_ptr<FunctionHook> disableSlowmoHook;
+static uintptr_t disableSlowmo_jmp_ret{ NULL };
 static float disableSlowmoDefaultSpeed = 1.0f;
 bool GameHook::disableSlowmo_toggle = false;
 static __declspec(naked) void DisableSlowmoDetour(void) {
@@ -1048,8 +1048,8 @@ static __declspec(naked) void DisableSlowmoDetour(void) {
 	}
 }
 
-std::unique_ptr<FunctionHook> lowerDivekickHook;
-uintptr_t lowerDivekick_jmp_ret{ NULL };
+static std::unique_ptr<FunctionHook> lowerDivekickHook;
+static uintptr_t lowerDivekick_jmp_ret{ NULL };
 static float lowerDivekickTime = 7.0f;
 bool GameHook::lowerDivekick_toggle = false;
 static __declspec(naked) void LowerDivekickDetour(void) {
@@ -1068,10 +1068,10 @@ static __declspec(naked) void LowerDivekickDetour(void) {
 	}
 }
 
-std::unique_ptr<FunctionHook> dualAfterBurnerHook;
-uintptr_t dualAfterBurner_jmp_ret{ NULL };
+static std::unique_ptr<FunctionHook> dualAfterBurnerHook;
+static uintptr_t dualAfterBurner_jmp_ret{ NULL };
 bool GameHook::dualAfterBurner_toggle = false;
-uintptr_t dualAfterBurnerCall = 0x9E33D0;
+static uintptr_t dualAfterBurnerCall = 0x9E33D0;
 static __declspec(naked) void DualAfterBurnerDetour(void) {
 	_asm {
 		call dword ptr [dualAfterBurnerCall]
@@ -1099,8 +1099,8 @@ static __declspec(naked) void DualAfterBurnerDetour(void) {
 	}
 }
 
-std::unique_ptr<FunctionHook> loadReplaceHook;
-uintptr_t loadReplace_jmp_ret{ NULL };
+static std::unique_ptr<FunctionHook> loadReplaceHook;
+static uintptr_t loadReplace_jmp_ret{ NULL };
 bool GameHook::loadReplace_toggle = false;
 static __declspec(naked) void LoadReplaceDetour(void) {
 	_asm {
@@ -1123,10 +1123,10 @@ static __declspec(naked) void LoadReplaceDetour(void) {
 	}
 }
 
-std::unique_ptr<FunctionHook> longerPillowTalkChargeHook;
-uintptr_t longerPillowTalkCharge_jmp_ret{ NULL };
+static std::unique_ptr<FunctionHook> longerPillowTalkChargeHook;
+static uintptr_t longerPillowTalkCharge_jmp_ret{ NULL };
 bool GameHook::longerPillowTalkCharge_toggle = false;
-float longerPillowTalkChargeMult = 2.0f;
+static float longerPillowTalkChargeMult = 2.0f;
 static __declspec(naked) void LongerPillowTalkChargeDetour(void) {
 	_asm {
 		cmp byte ptr [GameHook::longerPillowTalkCharge_toggle], 0
@@ -1142,8 +1142,8 @@ static __declspec(naked) void LongerPillowTalkChargeDetour(void) {
 	}
 }
 
-std::unique_ptr<FunctionHook> alwaysWitchTimeHook;
-uintptr_t alwaysWitchTime_jmp_ret{ NULL };
+static std::unique_ptr<FunctionHook> alwaysWitchTimeHook;
+static uintptr_t alwaysWitchTime_jmp_ret{ NULL };
 bool GameHook::alwaysWitchTime_toggle = false;
 float alwaysWitchTimeTimer = 120.0f;
 static __declspec(naked) void AlwaysWitchTimeDetour(void) {
@@ -1174,8 +1174,8 @@ bool GameHook::customWeaveToggle = false;
 bool GameHook::customWeaves_toggles[customWeaveCount]{};
 int GameHook::customWeaveArray[customWeaveCount]{};
 int GameHook::customWeaveMoveIDArray[customWeaveCount]{};
-std::unique_ptr<FunctionHook> customWeavesHook;
-uintptr_t customWeaves_jmp_ret{ NULL };
+static std::unique_ptr<FunctionHook> customWeavesHook;
+static uintptr_t customWeaves_jmp_ret{ NULL };
 static __declspec(naked) void CustomWeavesDetour(void) { // player in esi
 	_asm {
 		// cmp byte ptr [GameHook::customWeaves_toggle], 0
@@ -1202,11 +1202,11 @@ static __declspec(naked) void CustomWeavesDetour(void) { // player in esi
 	}
 }
 
-std::unique_ptr<FunctionHook> omnicancelTeleHook;
-uintptr_t omnicancelTele_jmp_ret{ NULL };
+static std::unique_ptr<FunctionHook> omnicancelTeleHook;
+static uintptr_t omnicancelTele_jmp_ret{ NULL };
 bool GameHook::omnicancelTele_toggle = false;
-uintptr_t omnicancelTele_call = 0x009E6FA0;
-uintptr_t omnicancelTele_ogcode = 0x05A97ED0;
+static uintptr_t omnicancelTele_call = 0x009E6FA0;
+static uintptr_t omnicancelTele_ogcode = 0x05A97ED0;
 static __declspec(naked) void OmnicancelTeleDetour(void) { // player in ebx
 	_asm {
 		pushfd
@@ -1239,8 +1239,8 @@ static __declspec(naked) void OmnicancelTeleDetour(void) { // player in ebx
 	}
 }
 
-std::unique_ptr<FunctionHook> teleportComboActionHook;
-uintptr_t teleportComboAction_jmp_ret{ NULL };
+static std::unique_ptr<FunctionHook> teleportComboActionHook;
+static uintptr_t teleportComboAction_jmp_ret{ NULL };
 bool GameHook::teleportComboAction_toggle = false;
 static __declspec(naked) void TeleportComboActionDetour(void) { // player in ebx
 	_asm {
@@ -1256,8 +1256,8 @@ static __declspec(naked) void TeleportComboActionDetour(void) { // player in ebx
 }
 
 
-std::unique_ptr<FunctionHook> fixThirdAccessoryHook;
-uintptr_t fixThirdAccessory_jmp_ret{ NULL };
+static std::unique_ptr<FunctionHook> fixThirdAccessoryHook;
+static uintptr_t fixThirdAccessory_jmp_ret{ NULL };
 static uintptr_t fixThirdAccessoryCall = 0x4332F0;
 static __declspec(naked) void FixThirdAccessoryDetour(void) { // player in ebx
 	_asm {
@@ -1287,31 +1287,33 @@ static void AddHitDataPtr(void* ptr) {
 	hitDataList.push_back({ hitData->pos, hitData->scale });
 }
 
-std::unique_ptr<FunctionHook> getHitboxHook;
-uintptr_t getHitbox_jmp_ret{ NULL };
+static std::unique_ptr<FunctionHook> getHitboxHook;
+static uintptr_t getHitbox_jmp_ret{ NULL };
+static float getHitboxXmm0Backup = 0.0f;
 static __declspec(naked) void GetHitboxDetour(void) {
 	_asm {
 			cmp byte ptr [GameHook::drawHitboxes_toggle], 0
 			je originalcode
 
+			movss [getHitboxXmm0Backup], xmm0
 			pushad
 			add ebx,0xD0 // old offset was +0x30
 			push ebx
 			call AddHitDataPtr
 			add esp,4
 			popad
-
+			movss xmm0, [getHitboxXmm0Backup]
 		originalcode:
 			addss xmm0, [ebx+0x00000100]
 			jmp dword ptr [getHitbox_jmp_ret]
 	}
 }
 
-std::unique_ptr<FunctionHook> getMotNameHook;
-uintptr_t getMotName_jmp_ret{ NULL };
+static std::unique_ptr<FunctionHook> getMotNameHook;
+static uintptr_t getMotName_jmp_ret{ NULL };
 bool GameHook::getMotName_toggle = false;
-uintptr_t getMotName_playerTestAddress = NULL;
-uintptr_t getMotName_weaponTestAddress = NULL;
+static uintptr_t getMotName_playerTestAddress = NULL;
+static uintptr_t getMotName_weaponTestAddress = NULL;
 char GameHook::getMotName_playerMotString[0x128]{};
 char GameHook::getMotName_weaponMotString[0x128]{};
 static __declspec(naked) void GetMotNameDetour(void) {
@@ -1381,7 +1383,7 @@ static __declspec(naked) void GetMotNameDetour(void) {
 	}
 }
 
-std::unique_ptr<FunctionHook> pl0012Hook;
+static std::unique_ptr<FunctionHook> pl0012Hook;
 const char* pl0012att = "pl0012.dat\\pl0012.att";
 const char* pl0012flg = "pl0012.dat\\pl0012.flg";
 static __declspec(naked) void pl0012Detour(void) {
@@ -1659,7 +1661,7 @@ static __declspec(naked) void pl0012Detour(void) {
 	}
 }
 
-std::unique_ptr<FunctionHook> pl0031Hook;
+static std::unique_ptr<FunctionHook> pl0031Hook;
 const char* pl0031att = "pl0031.dat\\pl0031.att";
 const char* pl0031flg = "pl0031.dat\\pl0031.flg";
 static __declspec(naked) void pl0031Detour(void) {
@@ -2074,7 +2076,7 @@ static __declspec(naked) void pl0031Detour(void) {
 	}
 }
 
-std::unique_ptr<FunctionHook> pl004cHook;
+static std::unique_ptr<FunctionHook> pl004cHook;
 const char* pl004catt = "pl004c.dat\\pl004c.att";
 const char* pl004cflg = "pl004c.dat\\pl004c.flg";
 static __declspec(naked) void pl004cDetour(void) {
@@ -2461,7 +2463,7 @@ void GameHook::SaveStates_LoadState() {
 }
 
 void GameHook::WeaponSwapCaller(void) {
-	uintptr_t weaponSwapCallAddress = 0xC43ED0;
+	static uintptr_t weaponSwapCallAddress = 0xC43ED0;
 	__asm {
 		pushad
 		pushfd

@@ -43,7 +43,6 @@ struct Vec3 {
     }
 };
 
-
 struct Matrix4x4 {
     float m[4][4];
 
@@ -66,7 +65,6 @@ struct Matrix3x3 {
     }
 };
 
-
 #pragma pack(push, 1)
 enum PlayerForm {
     Player = 0,
@@ -85,6 +83,7 @@ struct LaserSword {
     float length; // 0x3330
 }; // Size: 0x3334
 #pragma pack(pop)
+static_assert(sizeof(LaserSword) == 0x3334);
 
 #pragma pack(push, 1)
 struct WickedWeave {
@@ -92,6 +91,7 @@ struct WickedWeave {
     Vec3 scale; // 0xf0
 }; // Size: 0xfc
 #pragma pack(pop)
+static_assert(sizeof(WickedWeave) == 0xfc);
 
 #pragma pack(push, 1)
 struct BayoLimb {
@@ -101,6 +101,7 @@ struct BayoLimb {
     bool endOfStruct; // 0x18f
 }; // Size: 0x190
 #pragma pack(pop)
+static_assert(sizeof(BayoLimb) == 0x190);
 
 #pragma pack(push, 1)
 struct BayoBone {
@@ -113,6 +114,7 @@ struct BayoBone {
     BayoBone* nextBone;   // 0x114
 }; // Size: 0x118
 #pragma pack(pop)
+static_assert(sizeof(BayoBone) == 0x118);
 
 #pragma pack(push, 1)
 struct hitbox { // this is the seq files
@@ -126,8 +128,9 @@ struct hitbox { // this is the seq files
     float pad_0x54;
     float scale; // 0x58
     float pad_0x5C;
-};
+}; // Size: 0x60
 #pragma pack(pop)
+static_assert(sizeof(hitbox) == 0x60);
 
 #pragma pack(push, 1)
 struct LocalPlayer {
@@ -148,13 +151,15 @@ struct LocalPlayer {
     int invincibility; // 0x354
     int summoningSomething; // 0x358
     char pad_35c[0x88];
-    float animFrame; // 0x3e4
-    char pad_3e8[0x2b4];
-    int aerial; // 0x69c
+    float animFrame;        // 0x3E4
+    char pad_3e8[0xDC];    // 0x3E8
+    float speed;           // 0x4C4
+    char pad_4c8[0x1D4];   // 0x4C8
+    int aerial;            // 0x69C
     char pad_6a0[0x14];
     int hpDamage; // 0x6b4
     char pad_6b8[0x14];
-    float speed; // 0x6cc
+    float slowmo; // 0x6cc
     char pad_6d0[0x60];
     float iFramesRemaining; // 0x730
     char pad_734[0x58c];
@@ -251,6 +256,7 @@ struct LocalPlayer {
     Vec3 colouredHairIntensityRGB; // 0x96c00
 }; // Size: 0x96c0c
 #pragma pack(pop)
+static_assert(sizeof(LocalPlayer) == 0x96c0c);
 
 #pragma pack(push, 1)
 struct Enemy {
@@ -269,3 +275,4 @@ struct Enemy {
     float dazeMaxDurationProbably; // 0xca0
 }; // Size: 0xca4
 #pragma pack(pop)
+static_assert(sizeof(Enemy) == 0xca4);
