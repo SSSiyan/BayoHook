@@ -1,6 +1,5 @@
 //#include "pch.h"
 #include "base.h"
-
 HMODULE g_dinput = 0;
 
 extern "C" {
@@ -45,7 +44,9 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD dwReason, LPVOID lpReserved)
 	switch (dwReason)
 	{
 	case DLL_PROCESS_ATTACH:
-		//MessageBox(NULL, "Debug", "Bayohook", MB_ICONINFORMATION);
+#ifdef _DEBUG
+		MessageBox(NULL, "Debug", "Bayohook", MB_ICONINFORMATION);
+#endif
 		CreateThread(nullptr, 0, MainThread, hModule, 0, nullptr);
 		break;
 	case DLL_PROCESS_DETACH:

@@ -2,8 +2,6 @@
 #include <base.h>
 #include "gamehook.hpp"
 
-int GameHook::messageTimerFill = 200;
-
 extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 LRESULT CALLBACK Base::Hooks::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 	if(uMsg == WM_KEYDOWN || uMsg == WM_KEYUP)
@@ -26,16 +24,18 @@ LRESULT CALLBACK Base::Hooks::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
 				GameHook::DisableClicking(GameHook::disableClicking_toggle);
 			}
 			break;
+
+#ifndef SPEEDRUN_BUILD
 		case VK_F1:
 			GameHook::enemyHP_no_damage_toggle = !GameHook::enemyHP_no_damage_toggle;
 			GameHook::DisableKilling(GameHook::enemyHP_no_damage_toggle);
 			if (GameHook::enemyHP_no_damage_toggle)
 				GameHook::enemyHP_one_hit_kill_toggle = false;
-			GameHook::showMessageTimerF1 = GameHook::messageTimerFill;
+			GameHook::DisplayMessageText("Enemy Takes No Damage ", GameHook::enemyHP_no_damage_toggle);
 			break;
 		case VK_F2:
 			GameHook::damageReceivedMultiplier_no_damage_toggle = !GameHook::damageReceivedMultiplier_no_damage_toggle;
-			GameHook::showMessageTimerF2 = GameHook::messageTimerFill;
+			GameHook::DisplayMessageText("Player Takes No Damage ", GameHook::damageReceivedMultiplier_no_damage_toggle);
 			break;
 		case VK_F3:
 			GameHook::enemyHP_one_hit_kill_toggle = !GameHook::enemyHP_one_hit_kill_toggle;
@@ -43,22 +43,22 @@ LRESULT CALLBACK Base::Hooks::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
 				GameHook::enemyHP_no_damage_toggle = false;
 				GameHook::DisableKilling(GameHook::enemyHP_no_damage_toggle);
 			}
-			GameHook::showMessageTimerF3 = GameHook::messageTimerFill;
+			GameHook::DisplayMessageText("Enemy One Hit Kill ", GameHook::enemyHP_one_hit_kill_toggle);
 			break;
 		case VK_F4:
 			GameHook::infJumps_toggle = !GameHook::infJumps_toggle;
 			GameHook::InfJumps(GameHook::infJumps_toggle);
-			GameHook::showMessageTimerF4 = GameHook::messageTimerFill;
+			GameHook::DisplayMessageText("Infinite Jumps ", GameHook::infJumps_toggle);
 			break;
 		case VK_F5:
 			GameHook::noClip_toggle = !GameHook::noClip_toggle;
 			GameHook::NoClip(GameHook::noClip_toggle);
-			GameHook::showMessageTimerF5 = GameHook::messageTimerFill;
+			GameHook::DisplayMessageText("No Clip ", GameHook::noClip_toggle);
 			break;
 		case VK_F6:
 			GameHook::lessClothes_toggle = !GameHook::lessClothes_toggle;
 			GameHook::LessClothes(GameHook::lessClothes_toggle);
-			GameHook::showMessageTimerF6 = GameHook::messageTimerFill;
+			GameHook::DisplayMessageText("Less Clothes ", GameHook::lessClothes_toggle);
 			break;
 		case VK_HOME:
 			if (GameHook::saveStatesHotkeys_toggle) {
@@ -70,6 +70,7 @@ LRESULT CALLBACK Base::Hooks::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
 				GameHook::SaveStates_LoadState();
 			}
 			break;
+#endif
 		}
 	}
 	ImGui_ImplWin32_WndProcHandler(hWnd, uMsg, wParam, lParam);

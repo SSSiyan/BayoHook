@@ -146,7 +146,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="src\WorldVisualizer.cpp" />
-    <ClCompile Include="src\WorldVisualizer.hpp" />
+    <ClInclude Include="src\WorldVisualizer.hpp" />
     <ClCompile Include="utils\Address.cpp" />
     <ClCompile Include="utils\config.cpp" />
     <ClCompile Include="utils\FunctionHook.cpp" />

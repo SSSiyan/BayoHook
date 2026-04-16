@@ -4,6 +4,26 @@
 #include <array>
 #include "misc/FontRoboto.cpp"
 
+static void UpdateGameSpeed() {
+	static LARGE_INTEGER s_lastQPC = {};
+	float gameFpsDelta = 16.6667f;
+	LARGE_INTEGER now, freq;
+	QueryPerformanceCounter(&now);
+	QueryPerformanceFrequency(&freq);
+	if (s_lastQPC.QuadPart > 0) {
+		INT64 elapsed = now.QuadPart - s_lastQPC.QuadPart;
+		gameFpsDelta = (float)(elapsed * 1000.0 / (double)freq.QuadPart);
+	}
+	s_lastQPC = now;
+	GameHook::deltaTime = gameFpsDelta;
+	GameHook::deltaSpeed = gameFpsDelta / 16.6667f;
+}
+
+static void SetGameSpeed() {
+	float* gameSpeed = (float*)0xEF6588;
+	*gameSpeed = GameHook::deltaSpeed;
+}
+
 HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
 {
 	Data::pDxDevice9 = pDevice;
@@ -58,13 +78,19 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
 	ImGui::Begin("Background window", NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar |
 		ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus |
 		ImGuiWindowFlags_NoBackground);
+
+	UpdateGameSpeed();
+	if (GameHook::linkGameToDelta_toggle) {
+		SetGameSpeed();
+	}
+
 	GameHook::BackgroundImGui();
 	ImGui::End();
 
 	if (GameHook::showComboUI_toggle) {
 		float& comboMultiplierValue = *(float*)GameHook::comboMultiplierAddress;
 		int& comboPointsValue = *(int*)GameHook::comboPointsAddress;
-		if (comboMultiplierValue > 9.9f && comboPointsValue > 0) {
+		if ((comboMultiplierValue > 9.9f && comboPointsValue > 0) || GameHook::testComboUI_toggle && Data::ShowMenu) {
 			ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x * GameHook::comboUI_X, ImGui::GetIO().DisplaySize.y * GameHook::comboUI_Y), ImGuiCond_Always);
 			ImGui::Begin("Combo Multiplier Panel", NULL, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse);
 			auto style = ImGui::GetStyle();
@@ -74,7 +100,6 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
 			ImGui::End();
 		}
 	}
-		
 	GameHook::GameTick();
 	ImGui::SetNextWindowPos(ImVec2(0, 0)), ImGuiCond_Always;
 	// ImGui::SetNextWindowSize(ImVec2(GameHook::windowWidth, GameHook::windowHeightHack)), ImGuiCond_Always;
