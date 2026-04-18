@@ -10,11 +10,12 @@
 #include "imgui/imgui.h"
 #include "sdk/Bayonetta.hpp"
 #include <base.h> // for Data::ShowMenu
+#include <random> // for random costume
 #ifndef IM_PI
 #define IM_PI 3.14159265358979323846f
 #endif
 
-//#define SPEEDRUN_BUILD
+#define SPEEDRUN_BUILD
 
 #define BAYOHOOK_VERSION "1.16 PRE RELEASE"
 #ifndef SPEEDRUN_BUILD
@@ -27,6 +28,7 @@ class GameHook {
 public:
 	static float deltaTime;
 	static float deltaSpeed;
+	static std::mt19937 rng;
 	// patches
 	static bool focusPatch_toggle;
 	static void FocusPatch(bool enabled);
@@ -42,6 +44,9 @@ public:
 
 	static bool removeVignette_toggle;
 	static void RemoveVignette(bool enabled);
+
+	static bool disableTutorials_toggle;
+	static void DisableTutorials(bool enabled);
 
 	// static bool forceSaveFile;
 	// static int forcedFileNum;
@@ -161,6 +166,7 @@ public:
 	static bool testComboUI_toggle;
 	static float comboUI_X;
 	static float comboUI_Y;
+	static bool randomizeCostume_toggle;
 #ifndef SPEEDRUN_BUILD
 	static bool openMenuPause_toggle;
 	static bool witchTimeMultiplier_toggle;
@@ -278,9 +284,13 @@ public:
 	static void BackgroundImGui(void);
 	static bool showGameTimeMsOverlay;
 	static bool showMessages_toggle;
+#ifdef SPEEDRUN_BUILD
+	static float badgeScaleBase;
+	static float badgeThicknessBase;
 	static bool badgeDisplay_toggle;
 	static int badgeCorner;
 	static void RenderBadge();
+#endif
 	static const char* costumeNames[32];
 	static bool forceCostume;
 	static int tempCostume;

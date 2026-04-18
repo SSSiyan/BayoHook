@@ -17,8 +17,13 @@ float GameHook::sameLineWidth = 0.0f;
 bool GameHook::showComboUI_toggle = false;
 bool GameHook::testComboUI_toggle = false;
 bool GameHook::showMessages_toggle = false;
+std::mt19937 GameHook::rng;
 // bool GameHook::forceSaveFile = false;
 // int GameHook::forcedFileNum = 99;
+
+bool GameHook::forceCostume = false;
+int GameHook::tempCostume = 0;
+
 // update
 uintptr_t GameHook::playerPointerAddress = 0xEF5A60;
 uintptr_t GameHook::enemyLockedOnAddress = 0xF2B744;
@@ -27,8 +32,6 @@ uintptr_t GameHook::comboMultiplierAddress = 0x5BB51A0;
 uintptr_t GameHook::currentCostumeAddress = 0x5AA747C;
 uintptr_t GameHook::gameTimeAddress = 0x5BB9528;
 uintptr_t GameHook::areaJumpAddress = 0x5A978E8;
-bool GameHook::forceCostume = false;
-int GameHook::tempCostume = 0;
 #ifndef SPEEDRUN_BUILD
 uintptr_t GameHook::halosAddress = 0x5AA74B4;
 uintptr_t GameHook::chaptersPlayedAddress = 0x5AA736C;
@@ -115,6 +118,16 @@ void GameHook::RemoveVignette(bool enabled) {
 	}
 	else {
 		GameHook::_patch((char*)(0x43B06F), (char*)"\xF3\x0F\x58\xD3", 4); // addss xmm2,xmm3
+	}
+}
+
+bool GameHook::disableTutorials_toggle = false;
+void GameHook::DisableTutorials(bool enabled) {
+	if (enabled) {
+		GameHook::_patch((char*)(0xB47532), (char*)"\xEB", 1); // jmp Bayonetta.exe+747532
+	}
+	else {
+		GameHook::_patch((char*)(0xB47532), (char*)"\x75", 1); // jne Bayonetta.exe+747532
 	}
 }
 
@@ -565,6 +578,34 @@ static __declspec(naked) void GetHitboxDetour(void) {
 		popfd
 		addss xmm0, [ebx+0x00000100]
 		jmp dword ptr [getHitbox_jmp_ret]
+	}
+}
+
+int RandomizeCostume(int currentCostume) {
+	int minCostume = (currentCostume <= 14) ? 0 : 15;
+	int maxCostume = (currentCostume <= 14) ? 14 : 30;
+	std::uniform_int_distribution<int> dist(minCostume, maxCostume);
+	return dist(GameHook::rng);
+}
+
+static std::unique_ptr<FunctionHook> randomizeCostumeHook;
+bool GameHook::randomizeCostume_toggle = false;
+static uintptr_t randomizeCostume_jmp_ret{ NULL };
+static __declspec(naked) void RandomizeCostumeDetour(void) {
+	_asm {
+		cmp byte ptr [GameHook::randomizeCostume_toggle], 0
+		je originalcode
+
+		pushad
+		push dword ptr ds:[0x5AA747C]
+		call RandomizeCostume
+		mov ds:[0x5AA747C], eax
+		add esp, 4
+		popad
+
+		originalcode:
+		mov eax, 00000001
+		jmp dword ptr [randomizeCostume_jmp_ret]
 	}
 }
 
@@ -2787,10 +2828,12 @@ bool install_hook_absolute(uintptr_t location, std::unique_ptr<FunctionHook>& ho
 }
 
 void GameHook::InitializeDetours(void) {
-
+	std::random_device rd;
+	GameHook::rng.seed(rd() ^ (unsigned)time(NULL));
 	install_hook_absolute(0xC78100, uptimeFixHook, &UptimeFixDetour, &uptimeFix_jmp_ret, 6);
 	install_hook_absolute(0x411CD4, inputIconsHook, &InputIconsDetour, &inputIcons_jmp_ret, 13);
 	install_hook_absolute(0x41837E, getHitboxHook, &GetHitboxDetour, &getHitbox_jmp_ret, 8);
+	install_hook_absolute(0x4FC4EF, randomizeCostumeHook, &RandomizeCostumeDetour, &randomizeCostume_jmp_ret, 5);
 #ifndef SPEEDRUN_BUILD 
 	install_hook_absolute(0x4572BA, enemyHPHook, &EnemyHPDetour, &enemyHP_jmp_ret, 6);
 	install_hook_absolute(0x9E1808, witchTimeHook, &WitchTimeMultiplierDetour, &witchTimeMultiplier_jmp_ret, 6);
@@ -2844,15 +2887,21 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	removeVignette_toggle = cfg.get<bool>("RemoveVignetteToggle").value_or(false);
 	RemoveVignette(removeVignette_toggle);
 
+	disableTutorials_toggle = cfg.get<bool>("DisableTutorialsToggle").value_or(false);
+	DisableTutorials(disableTutorials_toggle);
+
 	inputIcons_toggle = cfg.get<bool>("InputIconsToggle").value_or(false);
 	inputIconsValue = cfg.get<int>("InputIconsValue").value_or(0);
 	showComboUI_toggle = cfg.get<bool>("ShowComboUIToggle").value_or(false);
 	comboUI_X = cfg.get<float>("ComboUI_X").value_or(0.880f);
 	comboUI_Y = cfg.get<float>("ComboUI_Y").value_or(0.215f);
 	enable_scroll_transitions = cfg.get<bool>("enable_scroll_transitions").value_or(true);
-	badgeCorner = cfg.get<int>("badgeCorner").value_or(0);
 	forceCostume = cfg.get<bool>("forceCostume").value_or(false);
 	tempCostume = cfg.get<int>("tempCostume").value_or(0);
+	randomizeCostume_toggle = cfg.get<bool>("RandomizeCostumeToggle").value_or(false);
+#ifdef SPEEDRUN_BUILD
+	badgeCorner = cfg.get<int>("badgeCorner").value_or(0);
+#endif
 #ifndef SPEEDRUN_BUILD 
 	// patches
 	sixtyFpsCutscenes_toggle = cfg.get<bool>("60FpsCutscenes").value_or(false);
@@ -3003,9 +3052,13 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<float>("ComboUI_X", comboUI_X);
 	cfg.set<float>("ComboUI_Y", comboUI_Y);
 	cfg.set<bool>("enable_scroll_transitions", enable_scroll_transitions);
-	cfg.set<int>("badgeCorner", badgeCorner);
 	cfg.set<bool>("forceCostume", GameHook::forceCostume);
 	cfg.set<int>("tempCostume", GameHook::tempCostume);
+	cfg.set<bool>("DisableTutorialsToggle", disableTutorials_toggle);
+	cfg.set<bool>("RandomizeCostumeToggle", randomizeCostume_toggle);
+#ifdef SPEEDRUN_BUILD
+	cfg.set<int>("badgeCorner", badgeCorner);
+#endif
 #ifndef SPEEDRUN_BUILD
 	// patches
 	cfg.set<bool>("60FpsCutscenes", sixtyFpsCutscenes_toggle);

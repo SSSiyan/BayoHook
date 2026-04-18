@@ -751,7 +751,9 @@ static void DrawFPSUnlock() {
 static void DrawGlamour() {
     ImGui::SeparatorText("Glamour");
     {
-        ImGui::Checkbox("Force Costume##Glamour", &GameHook::forceCostume);
+        if (ImGui::Checkbox("Force Costume##Glamour", &GameHook::forceCostume)) {
+            GameHook::randomizeCostume_toggle = false;
+        }
         if (GameHook::forceCostume) {
             ImGui::Indent();
             ImGui::SetNextItemWidth(GameHook::inputItemWidth);
@@ -760,6 +762,10 @@ static void DrawGlamour() {
             }
             ImGui::Unindent();
         }
+        if (ImGui::Checkbox("Randomize Costume", &GameHook::randomizeCostume_toggle)) {
+            GameHook::forceCostume = false;
+        }
+        GameHook::help_marker("Randomize the player's costume every load screen");
     }
 
     {
@@ -1216,6 +1222,12 @@ void GameHook::GameImGui(void) {
                 GameHook::RemoveVignette(GameHook::removeVignette_toggle);
             }
             help_marker("Disable the gradient covering the game");
+
+            if (ImGui::Checkbox("Disable Tutorials", &disableTutorials_toggle)) {
+                GameHook::DisableTutorials(disableTutorials_toggle);
+            }
+
+            ImGui::SameLine(sameLineWidth);
 
             ImGui::BeginGroup();
             ImGui::Checkbox("Force Input Type", &GameHook::inputIcons_toggle);
@@ -1729,6 +1741,10 @@ void GameHook::GameImGui(void) {
 
             ImGui::SeparatorText("Temp Speedrun Settings");
             DrawUptimeFix();
+
+            if (ImGui::Checkbox("Disable Tutorials", &disableTutorials_toggle)) {
+				GameHook::DisableTutorials(disableTutorials_toggle);
+            }
             
             ImGui::SeparatorText("Visuals");
 
@@ -1752,7 +1768,6 @@ void GameHook::GameImGui(void) {
                 }
                 help_marker("Disable the gradient covering the game");
             }
-
 
             DrawGlamour();
 
@@ -1793,8 +1808,13 @@ void GameHook::GameImGui(void) {
                 "This won't be a toggle eventually");
             if (GameHook::badgeDisplay_toggle) {
                 ImGui::Indent();
-                ImGui::SetNextItemWidth(GameHook::inputItemWidth);
+                ImGui::PushItemWidth(GameHook::inputItemWidth);
                 ImGui::SliderInt("Badge Corner", &GameHook::badgeCorner, 0, 3);
+                ImGui::SliderFloat("Scale", &GameHook::badgeScaleBase, 0.5f, 5.0f, "%.1f");
+                help_marker("This will not be customizable and should take up the same amount of the screen regardless of resolution");
+                ImGui::SliderFloat("Line Thickness", &GameHook::badgeThicknessBase, 0.5f, 5.0f, "%.1f");
+                help_marker("This will not be customizable and should take up the same amount of the screen regardless of resolution");
+                ImGui::PopItemWidth();
                 ImGui::Unindent();
             }
             // the first value is system time, check 60s lines up with 60s
@@ -1927,17 +1947,33 @@ ImVec2 TrailPos(float t, float cx, float cy, float radius) {
     return { cx + x, cy + y };
 }
 
-bool GameHook::badgeDisplay_toggle = false;
+#ifdef SPEEDRUN_BUILD
+bool GameHook::badgeDisplay_toggle = true;
 int GameHook::badgeCorner = 0;
+float GameHook::badgeScaleBase = 3.0f;
+float GameHook::badgeThicknessBase = 2.0f;
 void GameHook::RenderBadge() {
     ImDrawList* draw = ImGui::GetForegroundDrawList();
     ImVec2 display = ImGui::GetIO().DisplaySize;
+
     float dpiScale = display.y / 1080.0f;
-    float scale = 2.0f * dpiScale;
-    float thicknessMul = 1.0f * dpiScale;
+    float scale = badgeScaleBase * dpiScale;
+    float thicknessMul = badgeThicknessBase * dpiScale;
+    int circleResolution = 32;
+
     auto S = [&](float v) { return v * scale; };
     auto T = [&](float v) { return v * thicknessMul; };
-    float margin = S(20.0f); float cx = 0.0f, cy = 0.0f;
+
+    static constexpr float stickLength = 6.0f;
+    static constexpr float trailLength = 6.0f;
+    static constexpr float sweetSize = 2.0f;
+    static constexpr float sweetRadius = sweetSize / 2.0f;
+    static constexpr float baseRadius = stickLength + sweetRadius;
+
+    float radius = S(baseRadius);
+    float borderPadding = T(1.0f);
+    float margin = radius * 2.0f + borderPadding;
+    float cx = 0.0f, cy = 0.0f;
 
     switch (GameHook::badgeCorner) {
     case 0: cx = margin;             cy = margin;             break;
@@ -1948,13 +1984,12 @@ void GameHook::RenderBadge() {
     }
 
     float realT = (float)ImGui::GetTime();
-    int numPoints = 32;
-    float radius = S(7.0f);
+    static constexpr int numPoints = 32;
 
     ImVec2 lastTrailPoint;
     for (int i = 0; i < numPoints - 1; i++) {
-        float t0 = realT - 6.0f * (1.0f - (float)i / (float)(numPoints - 1));
-        float t1 = realT - 6.0f * (1.0f - (float)(i + 1) / (float)(numPoints - 1));
+        float t0 = realT - trailLength * (1.0f - (float)i / (float)(numPoints - 1));
+        float t1 = realT - trailLength * (1.0f - (float)(i + 1) / (float)(numPoints - 1));
         ImVec2 p0 = TrailPos(t0, cx, cy, radius);
         ImVec2 p1 = TrailPos(t1, cx, cy, radius);
         lastTrailPoint = p1;
@@ -1967,49 +2002,56 @@ void GameHook::RenderBadge() {
     static float  lastLollyPushTime = 0.0f;
 
     LocalPlayer* player = GameHook::GetLocalPlayer();
+    ImVec2 base = lastTrailPoint;
+    float a = 0.0f;
+    float cosA = 1.0f, sinA = 0.0f;
     if (player) {
-        float a = -player->rot.y;
-        float cosA = cosf(a), sinA = sinf(a);
-        ImVec2 base = lastTrailPoint;
-        auto R = [&](float lx, float ly) -> ImVec2 {
-            lx *= scale; ly *= scale;
-            return ImVec2(base.x + lx * cosA - ly * sinA, base.y + lx * sinA + ly * cosA);
-        };
+        a = -player->rot.y;
+        cosA = cosf(a);
+        sinA = sinf(a);
+    }
 
-        float pushInterval = 6.0f / 512.0f;
+    auto R = [&](float lx, float ly) -> ImVec2 {
+        lx *= scale;
+        ly *= scale;
+
+        return ImVec2(base.x + lx * cosA - ly * sinA, base.y + lx * sinA + ly * cosA);
+    };
+
+    if (player) {
+        float pushInterval = trailLength / 512.0f;
         if (realT - lastLollyPushTime >= pushInterval) {
-            lollyHistory[lollyHead] = R(0.0f, 6.0f);
+            lollyHistory[lollyHead] = R(0.0f, stickLength);
             lollyTimes[lollyHead] = realT;
+
             lollyHead = (lollyHead + 1) % 512;
             lastLollyPushTime = realT;
         }
 
-        // second trail
         for (int i = 0; i < 511; i++) {
             int ia = (lollyHead + i) % 512;
             int ib = (lollyHead + i + 1) % 512;
             if (lollyTimes[ia] == 0.0f || lollyTimes[ib] == 0.0f) continue;
-            if (realT - lollyTimes[ia] > 6.0f) continue;
+            if (realT - lollyTimes[ia] > trailLength) continue;
             draw->AddLine(lollyHistory[ia], lollyHistory[ib], IM_COL32(200, 170, 255, 255), T(1.0f));
         }
 
-        // lolly 
-        ImU32 sweetcol = IM_COL32(200, 170, 255, 255);
+        ImU32 sweetcol = IM_COL32(255, 60, 60, 255);
         ImU32 stickcol = IM_COL32(200, 200, 200, 255);
-        draw->AddLine(R(0.0f, S(0.5f)), R(0.0f, S(3.0f)), stickcol, T(2.0f));
-        draw->AddCircle(R(0.0f, 0.0f), S(2.0f), sweetcol, 32, T(1.0f));
+        draw->AddLine(R(0.0f, 0.0f), R(0.0f, stickLength), stickcol, T(2.0f));
+        draw->AddCircleFilled(R(0.0f, 0.0f), S(sweetRadius), sweetcol, circleResolution/2);
     }
 
-    // second trail
     for (int i = 0; i < 511; i++) {
         int ia = (lollyHead + i) % 512;
         int ib = (lollyHead + i + 1) % 512;
         if (lollyTimes[ia] == 0.0f || lollyTimes[ib] == 0.0f) continue;
-        if (realT - lollyTimes[ia] > 6.0f) continue;
+        if (realT - lollyTimes[ia] > trailLength) continue;
         draw->AddLine(lollyHistory[ia], lollyHistory[ib], IM_COL32(200, 170, 255, 255), T(1.0f));
     }
 
-    draw->AddCircle(ImVec2(cx, cy), S(14.f), IM_COL32(200, 170, 255, 30), 64, 1.f);
+    float outerRadius = radius + S(stickLength + sweetRadius);
+    draw->AddCircle( ImVec2(cx, cy), outerRadius, IM_COL32(200, 170, 255, 30), circleResolution, T(1.0f));
 
     // timers
     {
@@ -2064,6 +2106,7 @@ void GameHook::RenderBadge() {
         }
     }
 }
+#endif
 
 void GameHook::BackgroundImGui(void) {
 #ifdef SPEEDRUN_BUILD
