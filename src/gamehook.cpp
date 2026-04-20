@@ -2775,7 +2775,7 @@ bool GameHook::CheckCanSpawnEntity() {
     return value == 4;
 }
 
-void GameHook::SpawnEntity(int entityID, int a2, int a3) {
+void GameHook::SpawnEntity(int entityID, EntitySpawnArg2* a2, int a3) {
     // yeah
     std::thread([entityID, a2, a3]() {
         // wait
@@ -2895,6 +2895,7 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	desiredHairColourRGB.y = cfg.get<float>("desiredHairColourRGB_y").value_or(1.0f);
 	desiredHairColourRGB.z = cfg.get<float>("desiredHairColourRGB_z").value_or(1.0f);
 	desiredHairColourMult = cfg.get<float>("desiredHairColourMult").value_or(1.0f);
+	GameHook::bayoHookFontSize = GameHook::cfg.get<float>("bayoHookFontSize").value_or(16.0f);
 #ifdef SPEEDRUN_BUILD
 	uptimeFix_toggle = true;
 	badgeCorner = cfg.get<int>("badgeCorner").value_or(0);
@@ -3066,6 +3067,7 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<float>("desiredHairColourRGB_y", desiredHairColourRGB.y);
 	cfg.set<float>("desiredHairColourRGB_z", desiredHairColourRGB.z);
 	cfg.set<float>("desiredHairColourMult", desiredHairColourMult);
+	cfg.set<float>("bayoHookFontSize", bayoHookFontSize);
 #ifdef SPEEDRUN_BUILD
 	cfg.set<int>("badgeCorner", badgeCorner);
 	cfg.set<float>("badgeScaleBase", badgeScaleBase);
@@ -3174,7 +3176,6 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 
 	// tick
 	cfg.set<int>("DesiredThirdAccessoryValue", desiredThirdAccessory);
-	cfg.set<float>("bayoHookFontSize", bayoHookFontSize);
 #endif
 	cfg.save(GameHook::cfgString);
 }

@@ -1433,23 +1433,63 @@ void GameHook::GameImGui(void) {
                 };
 
                 static const EnemyInfo knownEntities[] = {
-                    {"Basic enemy dude", 0x00020000},
-                    {"Default Bayo (don't spawn if already default bayo!)", 0x00010075},
-                    {"Skybox maybe?", 0x000600F4},
-                    {"0x00060017", 0x00060017},
-                    {"0x00090010", 0x00090010},
-                    {"0x00060015", 0x00060015},
-                    {"Crash", 0x00030030},
-                    {"0x00010012", 0x00010012},
-                    {"0x00030200", 0x00030200},
-                    {"Crash", 0x000A0521},
-                    {"Crash", 0x000A051F},
-                    {"0x00060000", 0x00060000},
-                    {"0x00070000", 0x00070000},
-                    {"0x00080000", 0x00080000},
-                    {"0x00090000", 0x00090000},
-                    {"T-Pose Bayo", 0x000A0000},
-                    {"0x000F0000", 0x000F0000}
+                    {"Basic enemy dude", 0x20000},
+                    {"Default Bayo (don't spawn if already default bayo!)", 0x10075},
+                    {"Trumpet", 0x30103},
+                    {"I didn't see anything spawn", 0x60011},
+                    {"Enemy Halo", 0x30200},
+                    {"Crash", 0x20010},
+                    {"Crash", 0x20200},
+                    {"?", 0x2000e},
+                    {"Signboard", 0x4002f},
+                    {"0x50114", 0x50114},
+                    {"0x60206", 0x60206},
+                    {"?", 0x60000},
+                    {"?", 0x60001},
+                    {"Crash", 0x60007},
+                    {"Butterfly", 0x60015},
+                    {"?", 0x60017},
+                    {"Crash", 0x60069},
+                    {"Skybox maybe?", 0x600F4},
+                    {"?", 0x61000},
+                    {"Health Pickup", 0x90010},
+                    {"Crash", 0x30030},
+                    {"Crash", 0x10012},
+                    {"Crash", 0xA0521},
+                    {"?", 0xA0523},
+                    {"Crash", 0xA051F},
+                    {"Should be an enemy but nothing spawns in void", 0x70000},
+                    {"?", 0x80000},
+                    {"Halo", 0x90000},
+                    {"T-Pose Bayo", 0xA0000},
+                    {"Crash", 0xF0000},
+                    {"Crash", 0x30127},
+                    {"Crash", 0x30160},
+                    {"Crash", 0x20500},
+                    {"0x30161", 0x30161},
+                    {"0x30162", 0x30162},
+                    {"0x30163", 0x30163},
+                    {"0x30164", 0x30164},
+                    {"0x30165", 0x30165},
+                    {"0x30166", 0x30166},
+                    {"0x30101", 0x30101},
+                    {"0x30105", 0x30105},
+                    {"0x30106", 0x30106},
+                    {"0x30108", 0x30108},
+                    {"0x30150", 0x30150},
+                    {"Crash", 0x50189},
+                    {"Crash", 0x501C4},
+                    {"0x50228", 0x50228},
+                    {"0x50229", 0x50229},
+                    {"0xC0301", 0xC0301},
+                    {"0x30127", 0x30127},
+                    {"0x30161", 0x30161},
+                    {"0x30164", 0x30164},
+                    {"0x30166", 0x30166},
+                    {"Crash", 0x30160},
+                    {"0x30161", 0x30161},
+                    {"0x30162", 0x30162},
+                    {"0x30163", 0x30163},
                 };
 
                 const int knownEntityCount = sizeof(knownEntities) / sizeof(knownEntities[0]);
@@ -1471,9 +1511,8 @@ void GameHook::GameImGui(void) {
                 }
 
                 static int arg1 = 0x0020000;
-                static int arg2 = 0;
+                static EntitySpawnArg2 arg2{};
                 static int arg3 = -1;
-                static int selectedEnemy = 0;
 
                 const char* enemyNames[knownEntityCount];
                 for (int i = 0; i < knownEntityCount; i++) {
@@ -1482,6 +1521,7 @@ void GameHook::GameImGui(void) {
 
                 ImGui::SeparatorText("Entity Spawning");
 
+                static int selectedEnemy = 0;
                 if (ImGui::Combo("Known Entity IDs", &selectedEnemy, displayNames, knownEntityCount)) {
 					arg1 = knownEntities[selectedEnemy].id;
                 }
@@ -1490,10 +1530,63 @@ void GameHook::GameImGui(void) {
                 ImGui::InputScalar("ID", ImGuiDataType_S32, &arg1, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
                 ImGui::SameLine();
                 help_marker("This is for typing in a manual ID. You will crash if you type in an invalid ID");
-				ImGui::InputScalar("arg2 (unkn)", ImGuiDataType_S32, &arg2, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+                ImGui::Text("arg2 addr: %08X", &arg2);
+				if (ImGui::CollapsingHeader("arg2 (struct)")) {
+                    ImGui::InputScalar("arg.int_0", ImGuiDataType_S32, &arg2.int_0, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+                    ImGui::InputScalar("arg.int_4_Variant", ImGuiDataType_S32, &arg2.int_4_Variant, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+                    ImGui::InputScalar("arg.int_8_SpawnAnim", ImGuiDataType_S32, &arg2.int_8_SpawnAnim, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+                    ImGui::InputScalar("arg.int_C", ImGuiDataType_S32, &arg2.int_C, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+                    ImGui::InputScalar("arg.int_10", ImGuiDataType_S32, &arg2.int_10, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+                    ImGui::InputFloat("arg.float_14_RotX", &arg2.float_14_RotX);
+                    ImGui::InputFloat("arg.float_18_RotY", &arg2.float_18_RotY);
+                    ImGui::InputFloat("arg.float_1C_RotZ", &arg2.float_1C_RotZ);
+                    ImGui::InputScalar("arg.int_20", ImGuiDataType_S32, &arg2.int_20, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+                    ImGui::InputFloat("arg.float_24", &arg2.float_24);
+                    ImGui::InputFloat("arg.float_28", &arg2.float_28);
+                    ImGui::InputFloat("arg.float_2C", &arg2.float_2C);
+                    ImGui::InputFloat("arg.float_30_ScaleX", &arg2.float_30_ScaleX);
+                    ImGui::InputFloat("arg.float_34", &arg2.float_34);
+                    ImGui::InputFloat("arg.float_38", &arg2.float_38);
+                    ImGui::InputFloat("arg.float_3C", &arg2.float_3C);
+                    ImGui::InputFloat("arg.float_40", &arg2.float_40);
+                    ImGui::InputFloat("arg.float_44_ScaleY", &arg2.float_44_ScaleY);
+                    ImGui::InputFloat("arg.float_48", &arg2.float_48);
+                    ImGui::InputFloat("arg.float_4C", &arg2.float_4C);
+                    ImGui::InputFloat("arg.float_50", &arg2.float_50);
+                    ImGui::InputFloat("arg.float_54", &arg2.float_54);
+                    ImGui::InputFloat("arg.float_58_ScaleZ", &arg2.float_58_ScaleZ);
+                    ImGui::InputFloat("arg.float_5C", &arg2.float_5C);
+                    ImGui::InputFloat("arg.float_60", &arg2.float_60);
+                    ImGui::InputFloat("arg.float_64", &arg2.float_64);
+                    ImGui::InputFloat("arg.float_68", &arg2.float_68);
+                    ImGui::InputFloat("arg.float_6C", &arg2.float_6C);
+                    ImGui::InputFloat("arg.float_70_X", &arg2.float_70_X);
+                    ImGui::InputFloat("arg.float_74_Y", &arg2.float_74_Y);
+                    ImGui::InputFloat("arg.float_78_Z", &arg2.float_78_Z);
+                    ImGui::InputFloat("arg.float_7C", &arg2.float_7C);
+                    ImGui::InputInt("arg.int_80", &arg2.int_80);
+                    ImGui::InputInt("arg.int_84", &arg2.int_84);
+                    ImGui::InputInt("arg.int_88", &arg2.int_88);
+                    ImGui::InputFloat("arg.float_8C", &arg2.float_8C);
+                    ImGui::InputFloat("arg.float_90", &arg2.float_90);
+                    ImGui::InputFloat("arg.float_94", &arg2.float_94);
+                    ImGui::InputText("arg.string_98", arg2.string_98, sizeof(arg2.string_98));
+                    ImGui::InputScalar("arg.char_9f", ImGuiDataType_U8, &arg2.char_9f);
+                    ImGui::InputFloat("arg.float_A0", &arg2.float_A0);
+                }
+
                 ImGui::InputScalar("arg3 (unkn)", ImGuiDataType_S32, &arg3, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
-                if (ImGui::Button("Spawn Enemy")) {
-                    SpawnEntity(arg1, arg2, arg3);
+                if (ImGui::Button("Spawn")) {
+                    LocalPlayer* player = GetLocalPlayer();
+                    if (player) {
+                        arg2.float_70_X = player->pos.x;
+                        arg2.float_74_Y = player->pos.y;
+                        arg2.float_78_Z = player->pos.z;
+                    }
+                    SpawnEntity(arg1, &arg2, arg3);
+                }
+                if (ImGui::Button("Spawn Without Args2")) {
+                    SpawnEntity(arg1, NULL, arg3);
                 }
             }
 
@@ -1981,14 +2074,14 @@ void GameHook::RenderBadge() {
     ImDrawList* draw = ImGui::GetForegroundDrawList();
     ImVec2 display = ImGui::GetIO().DisplaySize;
 
-    float dpiScale = display.y / 1080.0f;
+    float dpiScale = display.y > 0.0f ? display.y / 1080.0f : 1.0f;
     if (badgeScaleBase < 2.5f) badgeScaleBase = 2.5f;
     float scale = badgeScaleBase * dpiScale;
     float thicknessMul = badgeThicknessBase * dpiScale;
     static constexpr int circleResolution = 32;
 
-    auto S = [&](float v) { return v * scale; };
-    auto T = [&](float v) { return v * thicknessMul; };
+    auto S = [scale](float v) { return v * scale; };
+    auto T = [thicknessMul](float v) { return v * thicknessMul; };
 
     static constexpr float stickLength = 6.0f;
     static constexpr float trailLength = 6.0f;
@@ -2104,7 +2197,8 @@ void GameHook::RenderBadge() {
         std::string lines[3] = { line1, line2, line3 };
 
         float fontSize = S(7.0f);
-        ImFont* font = nullptr;
+        if (fontSize <= 0.0f) fontSize = 1.0f;
+        //float fontSize = GameHook::bayoHookFontSize;
         float scale = fontSize / ImGui::GetFontSize();
         float lineHeight = ImGui::GetTextLineHeight() * scale;
         float totalHeight = lineHeight * 3;
@@ -2121,13 +2215,13 @@ void GameHook::RenderBadge() {
             float y = startY + i * lineHeight;
 
             // shadow
-            draw->AddText(font, fontSize,
+            draw->AddText(NULL, fontSize,
                 ImVec2(x + 1.0f, y + 1.0f),
                 shadowCol,
                 lines[i].c_str());
 
             // main
-            draw->AddText(font, fontSize,
+            draw->AddText(NULL, fontSize,
                 ImVec2(x, y),
                 textCol,
                 lines[i].c_str());

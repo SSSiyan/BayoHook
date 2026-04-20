@@ -11,6 +11,7 @@
 #include "sdk/Bayonetta.hpp"
 #include <base.h> // for Data::ShowMenu
 #include <random> // for random costume
+// #include <cstdint> // for forward declaring a struct
 #ifndef IM_PI
 #define IM_PI 3.14159265358979323846f
 #endif
@@ -322,8 +323,8 @@ public:
 #ifndef SPEEDRUN_BUILD
 	static void Setup3dShapes();
 	static bool CheckCanSpawnEntity();
-	typedef void(__thiscall* SpawnEntityFunc)(uintptr_t* ecx, int entityID, int a2, int a3);
-	static void SpawnEntity(int entityID, int a2, int a3);
+	typedef void(__thiscall* SpawnEntityFunc)(uintptr_t* ecx, int entityID, EntitySpawnArg2* a2, int a3);
+	static void SpawnEntity(int entityID, EntitySpawnArg2* a2, int a3);
 #endif
 	static void _patch(char* dst, char* src, int size);
 	static void _nop(char* dst, unsigned int size);

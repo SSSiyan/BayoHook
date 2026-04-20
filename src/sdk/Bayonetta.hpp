@@ -276,3 +276,48 @@ struct Enemy {
 }; // Size: 0xca4
 #pragma pack(pop)
 static_assert(sizeof(Enemy) == 0xca4);
+
+struct EntitySpawnArg2 {
+    int int_0 = 1;                // 0x0
+    int int_4_Variant = 0;        // 0x4
+    int int_8_SpawnAnim = 0;      // 0x8
+    int int_C = 0;                // 0xC has been 0x8000
+    int int_10 = 0x20000;         // 0x10 has been 1
+    float float_14_RotX = 0.0f;   // 0x14
+    float float_18_RotY = 0.0f;   // 0x18
+    float float_1C_RotZ = 0.0f;   // 0x1C
+    int int_20 = -1;              // 0x20
+    float float_24 = 1.0f;        // 0x24 CONFIRMED FLOAT
+    float float_28 = 1.0f;        // 0x28 CONFIRMED FLOAT
+    float float_2C = 1.0f;        // 0x2C CONFIRMED FLOAT
+    float float_30_ScaleX = 1.0f; // 0x30
+    float float_34 = 0.0f;        // 0x34
+    float float_38 = 0.0f;        // 0x38
+    float float_3C = 0.0f;        // 0x3C
+    float float_40 = 0.0f;        // 0x40
+    float float_44_ScaleY = 1.0f; // 0x44
+    float float_48 = 0.0f;        // 0x48 scale stuff
+    float float_4C = 0.0f;        // 0x4C scale stuff
+    float float_50 = 0.0f;        // 0x50 scale stuff
+    float float_54 = 0.0f;        // 0x54 some rotation stuff?
+    float float_58_ScaleZ = 1.0f; // 0x58
+    float float_5C = 0.0f;        // 0x5C some rotation stuff?
+    float float_60 = 0.0f;        // 0x60 some rotation stuff?
+    float float_64 = 0.0f;        // 0x64 some rotation stuff?
+    float float_68 = 0.0f;        // 0x68 some rotation stuff?
+    float float_6C = 1.0f;        // 0x6C CONFIRMED FLOAT
+    float float_70_X = 0.0f;      // 0x70
+    float float_74_Y = 0.0f;      // 0x74
+    float float_78_Z = 0.0f;      // 0x78
+    float float_7C = 1.0f;        // 0x7C
+    int int_80 = 0xFF0000;        // 0x80
+    int int_84 = 0x588C0000;      // 0x84
+    int int_88 = -1;              // 0x88 // confirmed int
+    float float_8C = 0.0f;        // 0x8C
+    float float_90 = 0.0f;        // 0x90
+    float float_94 = 0.0f;        // 0x94
+    char string_98[6] = "e.dat";  // 0x98 // 5 + terminator, sometimes a string. struct has probably ended by here
+    char char_9f = 0;             // 0x9F
+    float float_A0 = 1.0f;        // 0xA0
+    char pad_A4[0x20*4]{};        // 0xA4
+};
