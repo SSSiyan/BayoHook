@@ -32,8 +32,8 @@ uintptr_t GameHook::comboMultiplierAddress = 0x5BB51A0;
 uintptr_t GameHook::currentCostumeAddress = 0x5AA747C;
 uintptr_t GameHook::gameTimeAddress = 0x5BB9528;
 uintptr_t GameHook::areaJumpAddress = 0x5A978E8;
-uintptr_t GameHook::angelSlayerFloorAddress = 0x509E87C;
 #ifndef SPEEDRUN_BUILD
+uintptr_t GameHook::angelSlayerFloorAddress = 0x509E87C;
 uintptr_t GameHook::halosAddress = 0x5AA74B4;
 uintptr_t GameHook::chaptersPlayedAddress = 0x5AA736C;
 uintptr_t GameHook::playerMagicAddress = 0x5AA74AC;
@@ -573,6 +573,9 @@ static __declspec(naked) void RandomizeCostumeDetour(void) {
 	}
 }
 
+
+#ifndef SPEEDRUN_BUILD
+
 static std::unique_ptr<FunctionHook> initialAngelSlayerFloorHook;
 static uintptr_t initialAngelSlayerFloor_jmp_ret{ NULL };
 int GameHook::initialAngelSlayerFloor = 0;
@@ -588,8 +591,6 @@ static __declspec(naked) void InitialAngelSlayerFloorDetour(void) {
 		jmp dword ptr[initialAngelSlayerFloor_jmp_ret]
 	}
 }
-
-#ifndef SPEEDRUN_BUILD
 
 struct HitboxSnapshot {
 	Vec3 pos;

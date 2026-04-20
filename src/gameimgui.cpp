@@ -725,27 +725,6 @@ void DrawAreaJump() {
     }
 }
 
-static void DrawAngelSlayer() {
-    ImGui::SeparatorText("Angel Slayer");
-    ImGui::SetNextItemWidth(GameHook::inputItemWidth);
-    int displayInitialAngelSlayerFloor = GameHook::initialAngelSlayerFloor + 1;
-    if (ImGui::InputInt("Initial Floor##InputInt", &displayInitialAngelSlayerFloor, 1, 10)) {
-		if (displayInitialAngelSlayerFloor < 1) { displayInitialAngelSlayerFloor = 1; };
-        GameHook::initialAngelSlayerFloor = displayInitialAngelSlayerFloor - 1;
-    }
-    GameHook::help_marker("Set before starting Angel Slayer");
-#ifndef SPEEDRUN_BUILD
-    ImGui::SameLine(GameHook::sameLineWidth);
-#endif
-    ImGui::SetNextItemWidth(GameHook::inputItemWidth);
-    int displayAngelSlayerFloorValue = *(int*)GameHook::angelSlayerFloorAddress + 1;
-    if (ImGui::InputInt("Current Floor##InputInt", &displayAngelSlayerFloorValue, 1, 10)) {
-        if (displayAngelSlayerFloorValue < 1) { displayAngelSlayerFloorValue = 1; };
-        *(int*)GameHook::angelSlayerFloorAddress = displayAngelSlayerFloorValue - 1;
-    }
-    GameHook::help_marker("Set before entering a portal");
-}
-
 static void DrawUptimeFix() {
 #ifdef SPEEDRUN_BUILD
     ImGui::BeginDisabled();
@@ -772,6 +751,27 @@ static void DrawUptimeFix() {
     // ImGui::SliderInt("How Often To Rebase (seconds)", (int*)&GameHook::rebase_interval, 1, 60);
 // #endif
 }
+
+#ifndef SPEEDRUN_BUILD
+static void DrawAngelSlayer() {
+    ImGui::SeparatorText("Angel Slayer");
+    ImGui::SetNextItemWidth(GameHook::inputItemWidth);
+    int displayInitialAngelSlayerFloor = GameHook::initialAngelSlayerFloor + 1;
+    if (ImGui::InputInt("Initial Floor##InputInt", &displayInitialAngelSlayerFloor, 1, 10)) {
+        if (displayInitialAngelSlayerFloor < 1) { displayInitialAngelSlayerFloor = 1; };
+        GameHook::initialAngelSlayerFloor = displayInitialAngelSlayerFloor - 1;
+    }
+    GameHook::help_marker("Set before starting Angel Slayer");
+    ImGui::SameLine(GameHook::sameLineWidth);
+    ImGui::SetNextItemWidth(GameHook::inputItemWidth);
+    int displayAngelSlayerFloorValue = *(int*)GameHook::angelSlayerFloorAddress + 1;
+    if (ImGui::InputInt("Current Floor##InputInt", &displayAngelSlayerFloorValue, 1, 10)) {
+        if (displayAngelSlayerFloorValue < 1) { displayAngelSlayerFloorValue = 1; };
+        *(int*)GameHook::angelSlayerFloorAddress = displayAngelSlayerFloorValue - 1;
+    }
+    GameHook::help_marker("Set before entering a portal");
+}
+#endif
 
 static void DrawFPSUnlock() {
 #ifndef SPEEDRUN_BUILD
@@ -1813,8 +1813,6 @@ void GameHook::GameImGui(void) {
 
             DrawAreaJump();
             help_marker("I hope this goes without saying but don't use this in a run");
-
-            DrawAngelSlayer();
 
             tabHeight += ImGui::GetCursorPosY();
             ImGui::EndChild();

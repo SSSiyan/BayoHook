@@ -167,8 +167,8 @@ public:
 	static float comboUI_X;
 	static float comboUI_Y;
 	static bool randomizeCostume_toggle;
-	static int initialAngelSlayerFloor;
 #ifndef SPEEDRUN_BUILD
+	static int initialAngelSlayerFloor;
 	static bool openMenuPause_toggle;
 	static bool witchTimeMultiplier_toggle;
 	static float witchTimeMultiplier;
@@ -250,8 +250,8 @@ public:
 	static uintptr_t currentCostumeAddress;
 	static uintptr_t gameTimeAddress;
 	static uintptr_t areaJumpAddress;
-	static uintptr_t angelSlayerFloorAddress;
 #ifndef SPEEDRUN_BUILD
+	static uintptr_t angelSlayerFloorAddress;
 	static uintptr_t halosAddress;
 	static uintptr_t chaptersPlayedAddress;
 	static uintptr_t playerMagicAddress;
