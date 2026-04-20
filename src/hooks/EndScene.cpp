@@ -52,7 +52,6 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
 		ImGui_ImplWin32_Init(deviceParams.hFocusWindow);
 		ImGui_ImplDX9_Init(pDevice);
 		Data::InitImGui = true;
-		GameHook::bayoHookFontSize = GameHook::cfg.get<float>("bayoHookFontSize").value_or(16.0f);
 		float y_factor = ((float)height/720.0f) * GameHook::windowScalingFactor;
 		float dpi = ImGui_ImplWin32_GetDpiScaleForHwnd(deviceParams.hFocusWindow);
 		

@@ -2074,7 +2074,11 @@ void GameHook::RenderBadge() {
     ImDrawList* draw = ImGui::GetForegroundDrawList();
     ImVec2 display = ImGui::GetIO().DisplaySize;
 
-    float dpiScale = display.y > 0.0f ? display.y / 1080.0f : 1.0f;
+    float dpiScale;
+    if (display.y > 0.0f)
+        dpiScale = display.y / 1080.0f;
+    else
+        dpiScale = 1.0f;
     if (badgeScaleBase < 2.5f) badgeScaleBase = 2.5f;
     float scale = badgeScaleBase * dpiScale;
     float thicknessMul = badgeThicknessBase * dpiScale;
@@ -2140,9 +2144,9 @@ void GameHook::RenderBadge() {
         if (player) {
             float pushInterval = trailLength / 512.0f;
             if (realT - lastLollyPushTime >= pushInterval) {
-                lollyHistory[lollyHead] = R(0.0f, stickLength);
+                ImVec2 tipScreen = R(0.0f, stickLength);
+                lollyHistory[lollyHead] = ImVec2(tipScreen.x - cx, tipScreen.y - cy);
                 lollyTimes[lollyHead] = realT;
-
                 lollyHead = (lollyHead + 1) % 512;
                 lastLollyPushTime = realT;
             }
@@ -2152,21 +2156,15 @@ void GameHook::RenderBadge() {
                 int ib = (lollyHead + i + 1) % 512;
                 if (lollyTimes[ia] == 0.0f || lollyTimes[ib] == 0.0f) continue;
                 if (realT - lollyTimes[ia] > trailLength) continue;
-                draw->AddLine(lollyHistory[ia], lollyHistory[ib], IM_COL32(200, 170, 255, 255), T(1.0f));
+                ImVec2 pa = ImVec2(cx + lollyHistory[ia].x, cy + lollyHistory[ia].y);
+                ImVec2 pb = ImVec2(cx + lollyHistory[ib].x, cy + lollyHistory[ib].y);
+                draw->AddLine(pa, pb, IM_COL32(200, 170, 255, 255), T(1.0f));
             }
 
             ImU32 sweetcol = IM_COL32(255, 60, 60, 255);
             ImU32 stickcol = IM_COL32(200, 200, 200, 255);
             draw->AddLine(R(0.0f, 0.0f), R(0.0f, stickLength), stickcol, T(2.0f));
             draw->AddCircleFilled(R(0.0f, 0.0f), S(sweetRadius), sweetcol, circleResolution / 2);
-        }
-
-        for (int i = 0; i < 511; i++) {
-            int ia = (lollyHead + i) % 512;
-            int ib = (lollyHead + i + 1) % 512;
-            if (lollyTimes[ia] == 0.0f || lollyTimes[ib] == 0.0f) continue;
-            if (realT - lollyTimes[ia] > trailLength) continue;
-            draw->AddLine(lollyHistory[ia], lollyHistory[ib], IM_COL32(200, 170, 255, 255), T(1.0f));
         }
     }
 
@@ -2197,8 +2195,7 @@ void GameHook::RenderBadge() {
         std::string lines[3] = { line1, line2, line3 };
 
         float fontSize = S(7.0f);
-        if (fontSize <= 0.0f) fontSize = 1.0f;
-        //float fontSize = GameHook::bayoHookFontSize;
+        if (fontSize < 7.0f) fontSize = 7.0f;
         float scale = fontSize / ImGui::GetFontSize();
         float lineHeight = ImGui::GetTextLineHeight() * scale;
         float totalHeight = lineHeight * 3;
