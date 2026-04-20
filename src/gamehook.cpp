@@ -32,6 +32,7 @@ uintptr_t GameHook::comboMultiplierAddress = 0x5BB51A0;
 uintptr_t GameHook::currentCostumeAddress = 0x5AA747C;
 uintptr_t GameHook::gameTimeAddress = 0x5BB9528;
 uintptr_t GameHook::areaJumpAddress = 0x5A978E8;
+uintptr_t GameHook::angelSlayerFloorAddress = 0x509E87C;
 #ifndef SPEEDRUN_BUILD
 uintptr_t GameHook::halosAddress = 0x5AA74B4;
 uintptr_t GameHook::chaptersPlayedAddress = 0x5AA736C;
@@ -40,7 +41,6 @@ uintptr_t GameHook::currentCharacterAddress = 0x5AA7484;
 uintptr_t GameHook::thirdAccessoryAddress = 0x5AA7468;
 uintptr_t GameHook::hudDisplayAddress = 0xF2B714;
 uintptr_t GameHook::enemySlotsAddress = 0x5A56A88;
-uintptr_t GameHook::angelSlayerFloorAddress = 0x509E87C;
 uintptr_t GameHook::difficultyAddress = 0x5A985A0;
 uintptr_t GameHook::WeaponA1Address = 0x5AA741C;
 uintptr_t GameHook::WeaponA2Address = 0x5AA7420;
@@ -76,6 +76,18 @@ void GameHook::DisableClicking(bool enabled) {
 	else
 		GameHook::_patch((char*)(0xC75747), (char*)"\x89\x70\x04", 3);
 }
+
+bool GameHook::disableTutorials_toggle = false;
+void GameHook::DisableTutorials(bool enabled) {
+	if (enabled) {
+		GameHook::_patch((char*)(0xB47532), (char*)"\xEB", 1); // jmp Bayonetta.exe+747532
+	}
+	else {
+		GameHook::_patch((char*)(0xB47532), (char*)"\x75", 1); // jne Bayonetta.exe+747532
+	}
+}
+
+#ifndef SPEEDRUN_BUILD
 
 bool GameHook::disableFpsLimiter_toggle = false;
 void GameHook::DisableFpsLimiter(bool enabled) {
@@ -120,18 +132,6 @@ void GameHook::RemoveVignette(bool enabled) {
 		GameHook::_patch((char*)(0x43B06F), (char*)"\xF3\x0F\x58\xD3", 4); // addss xmm2,xmm3
 	}
 }
-
-bool GameHook::disableTutorials_toggle = false;
-void GameHook::DisableTutorials(bool enabled) {
-	if (enabled) {
-		GameHook::_patch((char*)(0xB47532), (char*)"\xEB", 1); // jmp Bayonetta.exe+747532
-	}
-	else {
-		GameHook::_patch((char*)(0xB47532), (char*)"\x75", 1); // jne Bayonetta.exe+747532
-	}
-}
-
-#ifndef SPEEDRUN_BUILD
 
 bool GameHook::sixtyFpsCutscenes_toggle = true;
 void GameHook::SixtyFpsCutscenes(bool enabled) {
@@ -474,10 +474,9 @@ void GameHook::FreezeDifficulty(bool enabled) {
 bool GameHook::uptimeFix_toggle = false;
 static std::unique_ptr<FunctionHook> uptimeFixHook;
 static uintptr_t uptimeFix_jmp_ret{ NULL };
-INT64 GameHook::rebase_interval = 60;
+// INT64 GameHook::rebase_interval = 60; // constexpr now
 static float lastTickMs = 0.0f;
 static float tickDeltaMs = 16.68f;
-bool GameHook::showGameTimeMsOverlay = false;
 
 static void __cdecl GameTimerRebase() {
 	INT64* ticksAtStartup = (INT64*)0x5BCFBF8;
@@ -533,7 +532,7 @@ int GameHook::inputIconsValue = 0; // 0 keyboard, 1 gamepad
 static __declspec(naked) void InputIconsDetour(void) {
 	_asm {
 		pushfd
-		cmp byte ptr[GameHook::inputIcons_toggle], 0
+		cmp byte ptr [GameHook::inputIcons_toggle], 0
 		je originalcode
 
 		mov eax, [GameHook::inputIconsValue]
@@ -545,6 +544,52 @@ static __declspec(naked) void InputIconsDetour(void) {
 		jmp dword ptr[inputIcons_jmp_ret]
 	}
 }
+
+int RandomizeCostume(int currentCostume) {
+	int minCostume = (currentCostume <= 14) ? 0 : 15;
+	int maxCostume = (currentCostume <= 14) ? 14 : 30;
+	std::uniform_int_distribution<int> dist(minCostume, maxCostume);
+	return dist(GameHook::rng);
+}
+
+static std::unique_ptr<FunctionHook> randomizeCostumeHook;
+bool GameHook::randomizeCostume_toggle = false;
+static uintptr_t randomizeCostume_jmp_ret{ NULL };
+static __declspec(naked) void RandomizeCostumeDetour(void) {
+	_asm {
+		cmp byte ptr [GameHook::randomizeCostume_toggle], 0
+		je originalcode
+
+		pushad
+		push dword ptr ds:[0x5AA747C]
+		call RandomizeCostume
+		mov ds:[0x5AA747C], eax
+		add esp, 4
+		popad
+
+		originalcode:
+		mov eax, 00000001
+		jmp dword ptr [randomizeCostume_jmp_ret]
+	}
+}
+
+static std::unique_ptr<FunctionHook> initialAngelSlayerFloorHook;
+static uintptr_t initialAngelSlayerFloor_jmp_ret{ NULL };
+int GameHook::initialAngelSlayerFloor = 0;
+static __declspec(naked) void InitialAngelSlayerFloorDetour(void) {
+	_asm {
+		push eax
+		push esi
+		mov eax, [GameHook::angelSlayerFloorAddress]
+		mov esi, [GameHook::initialAngelSlayerFloor]
+		mov [eax], esi
+		pop esi
+		pop eax
+		jmp dword ptr[initialAngelSlayerFloor_jmp_ret]
+	}
+}
+
+#ifndef SPEEDRUN_BUILD
 
 struct HitboxSnapshot {
 	Vec3 pos;
@@ -581,36 +626,6 @@ static __declspec(naked) void GetHitboxDetour(void) {
 	}
 }
 
-int RandomizeCostume(int currentCostume) {
-	int minCostume = (currentCostume <= 14) ? 0 : 15;
-	int maxCostume = (currentCostume <= 14) ? 14 : 30;
-	std::uniform_int_distribution<int> dist(minCostume, maxCostume);
-	return dist(GameHook::rng);
-}
-
-static std::unique_ptr<FunctionHook> randomizeCostumeHook;
-bool GameHook::randomizeCostume_toggle = false;
-static uintptr_t randomizeCostume_jmp_ret{ NULL };
-static __declspec(naked) void RandomizeCostumeDetour(void) {
-	_asm {
-		cmp byte ptr [GameHook::randomizeCostume_toggle], 0
-		je originalcode
-
-		pushad
-		push dword ptr ds:[0x5AA747C]
-		call RandomizeCostume
-		mov ds:[0x5AA747C], eax
-		add esp, 4
-		popad
-
-		originalcode:
-		mov eax, 00000001
-		jmp dword ptr [randomizeCostume_jmp_ret]
-	}
-}
-
-#ifndef SPEEDRUN_BUILD
-
 static std::unique_ptr<FunctionHook> turboHook;
 static uintptr_t turbo_jmp_ret{ NULL };
 bool GameHook::openMenuPause_toggle = false;
@@ -619,24 +634,24 @@ bool GameHook::turbo_toggle = false;
 float GameHook::turboValue = 1.0f;
 static __declspec(naked) void TurboHookDetour(void) {
 	_asm {
-		cmp byte ptr[GameHook::openMenuPause_toggle], 1
+		cmp byte ptr [GameHook::openMenuPause_toggle], 1
 		je zerospeed
 		jmp turbocheck
 
 		zerospeed :
-		cmp byte ptr[Base::Data::ShowMenu], 0
+		cmp byte ptr [Base::Data::ShowMenu], 0
 		je turbocheck
 		movss xmm0, [GameHook::turboZero]
 		jmp originalcode
 
 		turbocheck :
-		cmp byte ptr[GameHook::turbo_toggle], 0
+		cmp byte ptr [GameHook::turbo_toggle], 0
 		je originalcode
 		movss xmm0, [GameHook::turboValue]
 		jmp originalcode
 
 		originalcode :
-		movss[edi + 0x44], xmm0
+		movss [edi+0x44], xmm0
 		jmp dword ptr[turbo_jmp_ret]
 	}
 }
@@ -1039,22 +1054,6 @@ static __declspec(naked) void EasierMashDetour(void) {
 	}
 }
 
-static std::unique_ptr<FunctionHook> initialAngelSlayerFloorHook;
-static uintptr_t initialAngelSlayerFloor_jmp_ret{ NULL };
-int GameHook::initialAngelSlayerFloor = 0;
-static __declspec(naked) void InitialAngelSlayerFloorDetour(void) {
-	_asm {
-		push eax
-		push esi
-		mov eax, [GameHook::angelSlayerFloorAddress]
-		mov esi, [GameHook::initialAngelSlayerFloor]
-		mov [eax], esi
-		pop esi
-		pop eax
-		jmp dword ptr [initialAngelSlayerFloor_jmp_ret]
-	}
-}
-
 static std::unique_ptr<FunctionHook> cancellableAfterBurnerHook;
 static uintptr_t cancellableAfterBurner_jmp_ret{ NULL };
 bool GameHook::cancellableAfterBurner_toggle = false;
@@ -1407,13 +1406,13 @@ static uintptr_t teleportComboAction_jmp_ret{ NULL };
 bool GameHook::teleportComboAction_toggle = false;
 static __declspec(naked) void TeleportComboActionDetour(void) { // player in ebx
 	_asm {
-		cmp byte ptr[GameHook::teleportComboAction_toggle], 0
+		cmp byte ptr [GameHook::teleportComboAction_toggle], 0
 		je originalcode
 
 		mov dword ptr [esi+0x95C80], 0x41700000 // 15f
 
 		originalcode:
-		mov eax,[esi+0x00000350]
+		mov eax, [esi+0x00000350]
 		jmp dword ptr [teleportComboAction_jmp_ret]
 	}
 }
@@ -2612,13 +2611,6 @@ LocalPlayer* GameHook::GetLocalPlayer() {
 		return nullptr;
 }
 
-Matrix4x4 viewProj;
-void GameHook::Setup3dShapes() {
-	static uintptr_t matrixAddress = 0xF2DCE0;
-	// ImGui::InputScalar("matrixAddr", ImGuiDataType_U64, &matrixAddress, NULL, NULL, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
-	viewProj = *(Matrix4x4*)matrixAddress;
-}
-
 std::vector<GameHook::HotkeyMessage> GameHook::activeMessages;
 void GameHook::DisplayMessageText(const char* text, bool enabled, float duration) {
     // Check if a message with the same text already exists and update it
@@ -2672,6 +2664,21 @@ void GameHook::RenderMessages(float deltaTime) {
         }
     }
     ImGui::End();
+}
+
+void GameHook::AreaJump(int stage, int part, int spawn) {
+	uintptr_t ecx = 0xEF5A50;
+	uintptr_t areaJumpAddr = 0x506390;
+	AreaJumpFunc areaJump = (AreaJumpFunc)areaJumpAddr;
+	areaJump(ecx, stage, part, spawn);
+}
+
+#ifndef SPEEDRUN_BUILD
+Matrix4x4 viewProj;
+void GameHook::Setup3dShapes() {
+	static uintptr_t matrixAddress = 0xF2DCE0;
+	// ImGui::InputScalar("matrixAddr", ImGuiDataType_U64, &matrixAddress, NULL, NULL, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+	viewProj = *(Matrix4x4*)matrixAddress;
 }
 
 bool GameHook::drawPlayerBones_toggle = false;
@@ -2754,14 +2761,6 @@ void GameHook::DrawFlyingStats() {
 	}
 }
 
-void GameHook::AreaJump(int stage, int part, int spawn) {
-	uintptr_t ecx = 0xEF5A50;
-	uintptr_t areaJumpAddr = 0x506390;
-	AreaJumpFunc areaJump = (AreaJumpFunc)areaJumpAddr;
-	areaJump(ecx, stage, part, spawn);
-}
-
-#ifndef SPEEDRUN_BUILD
 bool GameHook::CheckCanSpawnEntity() {
     uintptr_t testAddr = 0x5BBB9EC;
     
@@ -2832,9 +2831,9 @@ void GameHook::InitializeDetours(void) {
 	GameHook::rng.seed(rd() ^ (unsigned)time(NULL));
 	install_hook_absolute(0xC78100, uptimeFixHook, &UptimeFixDetour, &uptimeFix_jmp_ret, 6);
 	install_hook_absolute(0x411CD4, inputIconsHook, &InputIconsDetour, &inputIcons_jmp_ret, 13);
-	install_hook_absolute(0x41837E, getHitboxHook, &GetHitboxDetour, &getHitbox_jmp_ret, 8);
 	install_hook_absolute(0x4FC4EF, randomizeCostumeHook, &RandomizeCostumeDetour, &randomizeCostume_jmp_ret, 5);
 #ifndef SPEEDRUN_BUILD 
+	install_hook_absolute(0x41837E, getHitboxHook, &GetHitboxDetour, &getHitbox_jmp_ret, 8);
 	install_hook_absolute(0x4572BA, enemyHPHook, &EnemyHPDetour, &enemyHP_jmp_ret, 6);
 	install_hook_absolute(0x9E1808, witchTimeHook, &WitchTimeMultiplierDetour, &witchTimeMultiplier_jmp_ret, 6);
 	install_hook_absolute(0x8BCE4C, infMagicHook, &InfMagicDetour, &infMagic_jmp_ret, 8);
@@ -2876,19 +2875,9 @@ void GameHook::InitializeDetours(void) {
 }
 
 void GameHook::onConfigLoad(const utils::Config& cfg) {
-	uptimeFix_toggle = cfg.get<bool>("uptimeFix_toggle").value_or(false);
-
+	// both speedrun and non speedrun
 	focusPatch_toggle = cfg.get<bool>("FocusPatchToggle").value_or(false);
 	FocusPatch(focusPatch_toggle);
-
-	disableFpsLimiter_toggle = cfg.get<bool>("DisableFpsLimiter").value_or(false);
-	DisableFpsLimiter(disableFpsLimiter_toggle);
-
-	removeVignette_toggle = cfg.get<bool>("RemoveVignetteToggle").value_or(false);
-	RemoveVignette(removeVignette_toggle);
-
-	disableTutorials_toggle = cfg.get<bool>("DisableTutorialsToggle").value_or(false);
-	DisableTutorials(disableTutorials_toggle);
 
 	inputIcons_toggle = cfg.get<bool>("InputIconsToggle").value_or(false);
 	inputIconsValue = cfg.get<int>("InputIconsValue").value_or(0);
@@ -2899,10 +2888,27 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	forceCostume = cfg.get<bool>("forceCostume").value_or(false);
 	tempCostume = cfg.get<int>("tempCostume").value_or(0);
 	randomizeCostume_toggle = cfg.get<bool>("RandomizeCostumeToggle").value_or(false);
+
+	forceHairColour_toggle = cfg.get<bool>("forceHairColour_toggle").value_or(false);
+	desiredHairColourRGB.x = cfg.get<float>("desiredHairColourRGB_x").value_or(1.0f);
+	desiredHairColourRGB.y = cfg.get<float>("desiredHairColourRGB_y").value_or(1.0f);
+	desiredHairColourRGB.z = cfg.get<float>("desiredHairColourRGB_z").value_or(1.0f);
+	desiredHairColourMult = cfg.get<float>("desiredHairColourMult").value_or(1.0f);
 #ifdef SPEEDRUN_BUILD
+	uptimeFix_toggle = true;
 	badgeCorner = cfg.get<int>("badgeCorner").value_or(0);
+	badgeScaleBase = cfg.get<float>("badgeScaleBase").value_or(2.5f);
+	disableTutorials_toggle = true;
+	DisableTutorials(disableTutorials_toggle);
 #endif
 #ifndef SPEEDRUN_BUILD 
+	removeVignette_toggle = cfg.get<bool>("RemoveVignetteToggle").value_or(false);
+	RemoveVignette(removeVignette_toggle);
+	disableFpsLimiter_toggle = cfg.get<bool>("DisableFpsLimiter").value_or(false);
+	DisableFpsLimiter(disableFpsLimiter_toggle);
+	uptimeFix_toggle = cfg.get<bool>("uptimeFix_toggle").value_or(false);
+	disableTutorials_toggle = cfg.get<bool>("DisableTutorialsToggle").value_or(false);
+	DisableTutorials(disableTutorials_toggle);
 	// patches
 	sixtyFpsCutscenes_toggle = cfg.get<bool>("60FpsCutscenes").value_or(false);
 	SixtyFpsCutscenes(sixtyFpsCutscenes_toggle);
@@ -3043,9 +3049,7 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 
 void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("uptimeFix_toggle", uptimeFix_toggle);
-	cfg.set<bool>("DisableFpsLimiter", disableFpsLimiter_toggle);
 	cfg.set<bool>("FocusPatchToggle", focusPatch_toggle);
-	cfg.set<bool>("RemoveVignetteToggle", removeVignette_toggle);
 	cfg.set<bool>("InputIconsToggle", inputIcons_toggle);
 	cfg.set<int>("InputIconsValue", inputIconsValue);
 	cfg.set<bool>("ShowComboUIToggle", showComboUI_toggle);
@@ -3056,11 +3060,19 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<int>("tempCostume", GameHook::tempCostume);
 	cfg.set<bool>("DisableTutorialsToggle", disableTutorials_toggle);
 	cfg.set<bool>("RandomizeCostumeToggle", randomizeCostume_toggle);
+	cfg.set<bool>("forceHairColour_toggle", forceHairColour_toggle);
+	cfg.set<float>("desiredHairColourRGB_x", desiredHairColourRGB.x);
+	cfg.set<float>("desiredHairColourRGB_y", desiredHairColourRGB.y);
+	cfg.set<float>("desiredHairColourRGB_z", desiredHairColourRGB.z);
+	cfg.set<float>("desiredHairColourMult", desiredHairColourMult);
 #ifdef SPEEDRUN_BUILD
 	cfg.set<int>("badgeCorner", badgeCorner);
+	cfg.set<float>("badgeScaleBase", badgeScaleBase);
 #endif
 #ifndef SPEEDRUN_BUILD
 	// patches
+	cfg.set<bool>("RemoveVignetteToggle", removeVignette_toggle);
+	cfg.set<bool>("DisableFpsLimiter", disableFpsLimiter_toggle);
 	cfg.set<bool>("60FpsCutscenes", sixtyFpsCutscenes_toggle);
 	// cfg.set<bool>("memPatch_toggle", memPatch_toggle);
 	cfg.set<bool>("TakeNoDamageToggle", damageReceivedMultiplier_no_damage_toggle);

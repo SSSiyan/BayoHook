@@ -36,6 +36,13 @@ public:
 	static bool disableClicking_toggle;
 	static void DisableClicking(bool enabled);
 
+	static bool disableTutorials_toggle;
+	static void DisableTutorials(bool enabled);
+
+	// static bool forceSaveFile;
+	// static int forcedFileNum;
+
+#ifndef SPEEDRUN_BUILD
 	static bool disableFpsLimiter_toggle;
 	static void DisableFpsLimiter(bool enabled);
 
@@ -45,13 +52,6 @@ public:
 	static bool removeVignette_toggle;
 	static void RemoveVignette(bool enabled);
 
-	static bool disableTutorials_toggle;
-	static void DisableTutorials(bool enabled);
-
-	// static bool forceSaveFile;
-	// static int forcedFileNum;
-
-#ifndef SPEEDRUN_BUILD
 	static bool sixtyFpsCutscenes_toggle;
 	static void SixtyFpsCutscenes(bool enabled);
 
@@ -156,7 +156,7 @@ public:
 #endif
 	// detour values
 	static bool uptimeFix_toggle;
-	static INT64 rebase_interval;
+	static constexpr INT64 rebase_interval = 60;
 	static bool inputIcons_toggle;
 	static int inputIconsValue;
 	static bool enable_scroll_transitions;
@@ -167,6 +167,7 @@ public:
 	static float comboUI_X;
 	static float comboUI_Y;
 	static bool randomizeCostume_toggle;
+	static int initialAngelSlayerFloor;
 #ifndef SPEEDRUN_BUILD
 	static bool openMenuPause_toggle;
 	static bool witchTimeMultiplier_toggle;
@@ -216,7 +217,6 @@ public:
 	static int desiredThirdAccessory;
 	//
 	static bool easierMash_toggle;
-	static int initialAngelSlayerFloor;
 	static bool cancellableAfterBurner_toggle;
 	static bool cancellableFallingKick_toggle;
 	static bool turbo_toggle;
@@ -250,6 +250,7 @@ public:
 	static uintptr_t currentCostumeAddress;
 	static uintptr_t gameTimeAddress;
 	static uintptr_t areaJumpAddress;
+	static uintptr_t angelSlayerFloorAddress;
 #ifndef SPEEDRUN_BUILD
 	static uintptr_t halosAddress;
 	static uintptr_t chaptersPlayedAddress;
@@ -258,7 +259,6 @@ public:
 	static uintptr_t thirdAccessoryAddress;
 	static uintptr_t hudDisplayAddress;
 	static uintptr_t enemySlotsAddress;
-	static uintptr_t angelSlayerFloorAddress;
 	static uintptr_t difficultyAddress;
 	static uintptr_t WeaponA1Address;
 	static uintptr_t WeaponA2Address;
@@ -275,19 +275,16 @@ public:
 	static float windowWidth;
 	static float inputItemWidth;
 	static float sameLineWidth;
-	static bool drawHitboxes_toggle;
-	static bool drawPlayerBones_toggle;
-	static void Draw3dShapes();
-	static bool drawFlyingStats_toggle;
-	static void DrawFlyingStats();
 	static bool forceHairColour_toggle;
+	static Vec3 desiredHairColourRGB;
+	static float desiredHairColourMult;
 	static void BackgroundImGui(void);
-	static bool showGameTimeMsOverlay;
 	static bool showMessages_toggle;
 #ifdef SPEEDRUN_BUILD
 	static float badgeScaleBase;
-	static float badgeThicknessBase;
+	static constexpr float badgeThicknessBase = 2.0f;
 	static bool badgeDisplay_toggle;
+	static bool badgeLines_toggle;
 	static int badgeCorner;
 	static void RenderBadge();
 #endif
@@ -295,6 +292,11 @@ public:
 	static bool forceCostume;
 	static int tempCostume;
 #ifndef SPEEDRUN_BUILD
+	static bool drawHitboxes_toggle;
+	static bool drawPlayerBones_toggle;
+	static void Draw3dShapes();
+	static bool drawFlyingStats_toggle;
+	static void DrawFlyingStats();
 	static const char* weaponNames[19];
 	static const char* weaveNames[37];
 	static const char* accessoryNames[13];
@@ -302,14 +304,14 @@ public:
 #endif
 
 	// dev functions
-	static LocalPlayer* GetLocalPlayer();
-	static void Setup3dShapes();
+	static LocalPlayer* GetLocalPlayer();;
 
 	struct HotkeyMessage {
 		std::string text;
 		bool enabled;
 		float timeRemaining;
 	};
+
 	static void DisplayMessageText(const char* text, bool enabled, float duration = 2.0f);
 	static void RenderMessages(float deltaTime);
 	static std::vector<GameHook::HotkeyMessage> activeMessages;
@@ -318,6 +320,7 @@ public:
 	static void AreaJump(int stage, int part, int spawn);
 
 #ifndef SPEEDRUN_BUILD
+	static void Setup3dShapes();
 	static bool CheckCanSpawnEntity();
 	typedef void(__thiscall* SpawnEntityFunc)(uintptr_t* ecx, int entityID, int a2, int a3);
 	static void SpawnEntity(int entityID, int a2, int a3);

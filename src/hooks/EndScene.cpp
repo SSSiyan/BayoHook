@@ -4,6 +4,7 @@
 #include <array>
 #include "misc/FontRoboto.cpp"
 
+#ifndef SPEEDRUN_BUILD
 static void UpdateGameSpeed() {
 	static LARGE_INTEGER s_lastQPC = {};
 	float gameFpsDelta = 16.6667f;
@@ -23,6 +24,7 @@ static void SetGameSpeed() {
 	float* gameSpeed = (float*)0xEF6588;
 	*gameSpeed = GameHook::deltaSpeed;
 }
+#endif
 
 HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
 {
@@ -79,10 +81,12 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
 		ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus |
 		ImGuiWindowFlags_NoBackground);
 
+#ifndef SPEEDRUN_BUILD
 	UpdateGameSpeed();
 	if (GameHook::linkGameToDelta_toggle) {
 		SetGameSpeed();
 	}
+#endif
 
 	GameHook::BackgroundImGui();
 	ImGui::End();

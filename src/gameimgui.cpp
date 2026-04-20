@@ -472,14 +472,18 @@ const char* GameHook::moveIDNames[350] {
 "348: Unknown",
 "349: Unknown",
 };
-
 #endif
+
 bool GameHook::forceHairColour_toggle = false;
-static Vec3 desiredHairColourRGB = { 1.0f, 1.0f, 1.0f };
-static float desiredHairColourMult = 1.0f;
+Vec3 GameHook::desiredHairColourRGB = { 1.0f, 1.0f, 1.0f };
+float GameHook::desiredHairColourMult = 1.0f;
 static void ApplyHairColour(LocalPlayer* player) {
     if (!player) { return; }
-    player->colouredHairIntensityRGB = { desiredHairColourRGB.x * desiredHairColourMult, desiredHairColourRGB.y * desiredHairColourMult, desiredHairColourRGB.z * desiredHairColourMult };
+    player->colouredHairIntensityRGB = {
+        GameHook::desiredHairColourRGB.x * GameHook::desiredHairColourMult,
+        GameHook::desiredHairColourRGB.y * GameHook::desiredHairColourMult,
+        GameHook::desiredHairColourRGB.z * GameHook::desiredHairColourMult
+    };
 }
 
 void GameHook::GameTick(void) { // also called while the menu isn't open
@@ -503,10 +507,10 @@ void GameHook::GameTick(void) { // also called while the menu isn't open
                 }
             }
         }
-#endif
         Setup3dShapes();
         Draw3dShapes();
         DrawFlyingStats();
+#endif
         if (forceHairColour_toggle) { ApplyHairColour(player); }
     }
 #if 0
@@ -661,7 +665,7 @@ static AreaIDName areaIDNames[] = {
     { 0x301, "VIII - Route 666" },
     { 0x311, "IX - Paradiso-A Remembrance of Time" },
     { 0x321, "X - Paradiso-A Sea of Stars" },
-    { 0x320, "XI - The Cardinal Virtue of Justice (Set Part to 14)" },
+    { 0x320, "XI - The Cardinal Virtue of Justice (Set Part to 15)" },
     { 0x402, "XII - The Broken Sky" },
     { 0x421, "XIII - The Cardinal Virtue of Prudence" },
     { 0x501, "XIV - Isla Del Sol" },
@@ -676,11 +680,11 @@ void DrawAreaJump() {
     static int stageID = 0x0;
     static int stagePart = 0x0;
     static int spawn = -1;
-    static int step = 1;
+    static constexpr int step = 1;
     ImGui::SeparatorText("Area Jump");
     ImGui::PushItemWidth(GameHook::inputItemWidth);
-    ImGui::InputScalar("Current Stage ID", ImGuiDataType_S32, (int*)GameHook::areaJumpAddress, NULL, NULL, "%8X", ImGuiInputTextFlags_ReadOnly);
-    ImGui::InputScalar("stageID", ImGuiDataType_S32, &stageID, &step, NULL, "%8X");
+    ImGui::InputScalar("Current Stage ID", ImGuiDataType_S32, (int*)GameHook::areaJumpAddress, NULL, NULL, "%-8X", ImGuiInputTextFlags_ReadOnly);
+    ImGui::InputScalar("stageID", ImGuiDataType_S32, &stageID, &step, NULL, "%-8X");
     ImGui::PopItemWidth();
     ImGui::SameLine();
     static int selectedIndex = 0;
@@ -706,7 +710,13 @@ void DrawAreaJump() {
     }
     GameHook::help_marker("There are missing entries here - some chapters have multiple stages and I only quickly loaded into each. For that reason I've left the manual input box for now.");
     ImGui::PushItemWidth(GameHook::inputItemWidth);
-    ImGui::InputInt("Part", &stagePart, step);
+
+    int displayStagePart = stagePart + 1;
+    if (ImGui::InputInt("Part", &displayStagePart, step)) {
+        if (displayStagePart < 1) { displayStagePart = 1; };
+        stagePart = displayStagePart - 1;
+    }
+
     ImGui::InputInt("Spawn", &spawn, step);
     GameHook::help_marker("Not sure what this does other than change which Alfheim you get in B00");
     ImGui::PopItemWidth();
@@ -715,28 +725,56 @@ void DrawAreaJump() {
     }
 }
 
+static void DrawAngelSlayer() {
+    ImGui::SeparatorText("Angel Slayer");
+    ImGui::SetNextItemWidth(GameHook::inputItemWidth);
+    int displayInitialAngelSlayerFloor = GameHook::initialAngelSlayerFloor + 1;
+    if (ImGui::InputInt("Initial Floor##InputInt", &displayInitialAngelSlayerFloor, 1, 10)) {
+		if (displayInitialAngelSlayerFloor < 1) { displayInitialAngelSlayerFloor = 1; };
+        GameHook::initialAngelSlayerFloor = displayInitialAngelSlayerFloor - 1;
+    }
+    GameHook::help_marker("Set before starting Angel Slayer");
+#ifndef SPEEDRUN_BUILD
+    ImGui::SameLine(GameHook::sameLineWidth);
+#endif
+    ImGui::SetNextItemWidth(GameHook::inputItemWidth);
+    int displayAngelSlayerFloorValue = *(int*)GameHook::angelSlayerFloorAddress + 1;
+    if (ImGui::InputInt("Current Floor##InputInt", &displayAngelSlayerFloorValue, 1, 10)) {
+        if (displayAngelSlayerFloorValue < 1) { displayAngelSlayerFloorValue = 1; };
+        *(int*)GameHook::angelSlayerFloorAddress = displayAngelSlayerFloorValue - 1;
+    }
+    GameHook::help_marker("Set before entering a portal");
+}
+
 static void DrawUptimeFix() {
+#ifdef SPEEDRUN_BUILD
+    ImGui::BeginDisabled();
+#endif
     ImGui::Checkbox("Uptime Fix", &GameHook::uptimeFix_toggle);
+#ifdef SPEEDRUN_BUILD
+    ImGui::EndDisabled();
+#endif
     GameHook::help_marker("Bayonetta's internal timer continuously increases from launch, and over time this causes float precision loss. "
         "This results in unstable frame timing and stutter during long play sessions. "
         "This option rebases the game timer every 60 seconds, keeping values small and precise without affecting gameplay. "
-        "For the sake of seeing if these rebases are causing lag spikes, I've exposed the timer here too so you can see if spikes coincide with the reset.\n"
 #ifdef SPEEDRUN_BUILD
-        "This option will be forced in the eventual build but is left here to test being left enabled / disabled.");
-#else
         );
 #endif
+#ifndef SPEEDRUN_BUILD
+        "For the sake of seeing if these rebases are causing lag spikes, I've exposed the timer here too so you can see if spikes coincide with the reset.");
     float* gameTimerMs = (float*)GameHook::gameTimeAddress;
     ImGui::SameLine();
     ImGui::Text("%f", *gameTimerMs);
-#ifdef SPEEDRUN_BUILD
-    ImGui::Checkbox("showGameTimeOverlay", &GameHook::showGameTimeMsOverlay);
-    ImGui::SetNextItemWidth(GameHook::inputItemWidth);
-    ImGui::SliderInt("How Often To Rebase (seconds)", (int*)&GameHook::rebase_interval, 1, 60);
 #endif
+
+// #ifdef SPEEDRUN_BUILD
+    // ImGui::SetNextItemWidth(GameHook::inputItemWidth);
+    // ImGui::SliderInt("How Often To Rebase (seconds)", (int*)&GameHook::rebase_interval, 1, 60);
+// #endif
 }
 
 static void DrawFPSUnlock() {
+#ifndef SPEEDRUN_BUILD
     if (ImGui::Checkbox("Unlock FPS", &GameHook::disableFpsLimiter_toggle)) {
         GameHook::DisableFpsLimiter(GameHook::disableFpsLimiter_toggle);
     }
@@ -746,6 +784,7 @@ static void DrawFPSUnlock() {
         GameHook::LinkGameToDelta(GameHook::linkGameToDelta_toggle);
     }
     GameHook::help_marker("This is broken atm but when I figure this out we'll all be playing Bayo at 244hz without breaking everything, surely");
+#endif
 }
 
 static void DrawGlamour() {
@@ -781,12 +820,12 @@ static void DrawGlamour() {
         if (GameHook::forceHairColour_toggle) {
             ImGui::Indent();
             ImGui::SetNextItemWidth(GameHook::inputItemWidth);
-            ImGui::ColorEdit3("Hair Colour##PlayerHairColourEdit3", &desiredHairColourRGB.x);
+            ImGui::ColorEdit3("Hair Colour##PlayerHairColourEdit3", &GameHook::desiredHairColourRGB.x);
             ImGui::SetNextItemWidth(GameHook::inputItemWidth);
-            ImGui::SliderFloat("Hair Colour Intensity##desiredHairColourIntensitySliderFloat", &desiredHairColourMult, 1.0f, 10.0f);
+            ImGui::SliderFloat("Hair Colour Intensity##desiredHairColourIntensitySliderFloat", &GameHook::desiredHairColourMult, 1.0f, 10.0f);
             if (ImGui::Button("Reset##ResetHairColourButton")) {
-                desiredHairColourMult = 1.0f;
-                desiredHairColourRGB = { 1.0f, 1.0f, 1.0f };
+                GameHook::desiredHairColourMult = 1.0f;
+                GameHook::desiredHairColourRGB = { 1.0f, 1.0f, 1.0f };
             }
             ImGui::Unindent();
         }
@@ -800,7 +839,6 @@ void GameHook::GameImGui(void) {
     float& comboMultiplierValue = *(float*)GameHook::comboMultiplierAddress;
     int& currentCharacterValue = *(int*)GameHook::currentCharacterAddress;
     bool& hudDisplayValue = *(bool*)GameHook::hudDisplayAddress;
-    int& angelSlayerFloorValue = *(int*)GameHook::angelSlayerFloorAddress;
     int& difficultyValue = *(int*)GameHook::difficultyAddress;
     int& areaJumpValue = *(int*)GameHook::areaJumpAddress;
     int& weaponA1Value = *(int*)GameHook::WeaponA1Address;
@@ -1010,21 +1048,7 @@ void GameHook::GameImGui(void) {
 
             DrawAreaJump();
 
-            ImGui::SeparatorText("Angel Slayer");
-
-            ImGui::SetNextItemWidth(inputItemWidth);
-            int displayInitialAngelSlayerFloor = GameHook::initialAngelSlayerFloor + 1;
-            if (ImGui::InputInt("Initial Floor##InputInt", &displayInitialAngelSlayerFloor)) {
-                GameHook::initialAngelSlayerFloor = displayInitialAngelSlayerFloor - 1;
-            }
-            help_marker("Set before starting Angel Slayer");
-			ImGui::SameLine(sameLineWidth);
-            ImGui::SetNextItemWidth(inputItemWidth);
-            int displayAngelSlayerFloorValue = angelSlayerFloorValue + 1;
-            if (ImGui::InputInt("Current Floor##InputInt", &displayAngelSlayerFloorValue)) {
-                angelSlayerFloorValue = displayAngelSlayerFloorValue - 1;
-            }
-            help_marker("Set before entering a portal");
+            DrawAngelSlayer();
 
             tabHeight += ImGui::GetCursorPosY();
             ImGui::EndChild();
@@ -1739,14 +1763,32 @@ void GameHook::GameImGui(void) {
         if (ImGui::BeginTabItem("Game Settings")) {
             ImGui::BeginChild("SpeedrunChild");
 
-            ImGui::SeparatorText("Temp Speedrun Settings");
+            ImGui::SeparatorText("Speedrun Settings");
             DrawUptimeFix();
 
+            ImGui::BeginDisabled();
             if (ImGui::Checkbox("Disable Tutorials", &disableTutorials_toggle)) {
 				GameHook::DisableTutorials(disableTutorials_toggle);
             }
-            
-            ImGui::SeparatorText("Visuals");
+            ImGui::EndDisabled();
+
+            DrawGlamour();
+
+            /*ImGui::Checkbox("Force Save File", &forceSaveFile);
+            if (forceSaveFile) {
+                if (ImGui::InputInt("File Number", &GameHook::forcedFileNum)) {
+                    forcedFileNum = std::clamp(forcedFileNum, 0, 99);
+                }
+            }*/
+
+            ImGui::SeparatorText("Other");
+
+            // DrawFPSUnlock();
+
+            if (ImGui::Checkbox("Focus Patch", &GameHook::focusPatch_toggle)) {
+                GameHook::FocusPatch(GameHook::focusPatch_toggle);
+            }
+            help_marker("Play while tabbed out\nUse with Force Input Type to disable keyboard button prompts");
 
             {
                 ImGui::BeginGroup();
@@ -1761,59 +1803,43 @@ void GameHook::GameImGui(void) {
                 }
                 ImGui::EndGroup();
             }
-            
-            {
-                if (ImGui::Checkbox("Remove Vignette", &GameHook::removeVignette_toggle)) {
-                    GameHook::RemoveVignette(GameHook::removeVignette_toggle);
-                }
-                help_marker("Disable the gradient covering the game");
-            }
-
-            DrawGlamour();
-
-            /*ImGui::Checkbox("Force Save File", &forceSaveFile);
-            if (forceSaveFile) {
-                if (ImGui::InputInt("File Number", &GameHook::forcedFileNum)) {
-                    forcedFileNum = std::clamp(forcedFileNum, 0, 99);
-                }
-            }*/
-
-            DrawAreaJump();
-
-            ImGui::SeparatorText("Other");
-
-            DrawFPSUnlock();
-
-            if (ImGui::Checkbox("Focus Patch", &GameHook::focusPatch_toggle)) {
-                GameHook::FocusPatch(GameHook::focusPatch_toggle);
-            }
-            help_marker("Play while tabbed out\nUse with Force Input Type to disable keyboard button prompts");
 
             tabHeight += ImGui::GetCursorPosY();
             ImGui::EndChild();
             ImGui::EndTabItem();
         }
+        if (ImGui::BeginTabItem("Practice")) {
+            ImGui::BeginChild("PracticeChild");
 
-        if (ImGui::BeginTabItem("BayoHook Overlay Settings")) {
-            ImGui::BeginChild("BayoHookSettingsChild");
+            DrawAreaJump();
+            help_marker("I hope this goes without saying but don't use this in a run");
+
+            DrawAngelSlayer();
+
+            tabHeight += ImGui::GetCursorPosY();
+            ImGui::EndChild();
+			ImGui::EndTabItem();
+        }
+
+        if (ImGui::BeginTabItem("Overlay Settings")) {
+            ImGui::BeginChild("OverlayettingsChild");
 
             DrawBayoHookSettings();
 
-            ImGui::Checkbox("Draw Hitboxes (WIP)", &GameHook::drawHitboxes_toggle);
-            help_marker("Take these with a grain of salt, they are not verified, do not support projectiles and assume only spheres are used");
-
+            ImGui::BeginDisabled();
             ImGui::Checkbox("Badge Display", &GameHook::badgeDisplay_toggle);
+            ImGui::EndDisabled();
             help_marker("A badge of honesty, proving you're running the speedrun edition of BayoHook.\n"
-                "The badge confirms game speed is tied to your run by displaying system time, game time, frame time and player interaction.\n"
-                "This won't be a toggle eventually");
+                "The badge confirms game speed is tied to your run by displaying system time, game time, frame time and player interaction.");
             if (GameHook::badgeDisplay_toggle) {
                 ImGui::Indent();
+				// ImGui::Checkbox("Show Badge Lines", &GameHook::badgeLines_toggle);
                 ImGui::PushItemWidth(GameHook::inputItemWidth);
-                ImGui::SliderInt("Badge Corner", &GameHook::badgeCorner, 0, 3);
-                ImGui::SliderFloat("Scale", &GameHook::badgeScaleBase, 0.5f, 5.0f, "%.1f");
-                help_marker("This will not be customizable and should take up the same amount of the screen regardless of resolution");
-                ImGui::SliderFloat("Line Thickness", &GameHook::badgeThicknessBase, 0.5f, 5.0f, "%.1f");
-                help_marker("This will not be customizable and should take up the same amount of the screen regardless of resolution");
+                ImGui::SliderInt("Badge Corner", &GameHook::badgeCorner, 0, 3, NULL, ImGuiSliderFlags_NoInput);
+                ImGui::SliderFloat("Scale", &GameHook::badgeScaleBase, 2.5f, 5.0f, "%.1f", ImGuiSliderFlags_NoInput);
+                help_marker("If your stream/vod quality isn't great, please consider increasing the size of the badge for better visibility");
+                // ImGui::SliderFloat("Line Thickness", &GameHook::badgeThicknessBase, 0.5f, 5.0f, "%.1f");
+                // help_marker("This will not be customizable and should take up the same amount of the screen regardless of resolution");
                 ImGui::PopItemWidth();
                 ImGui::Unindent();
             }
@@ -1949,17 +1975,19 @@ ImVec2 TrailPos(float t, float cx, float cy, float radius) {
 
 #ifdef SPEEDRUN_BUILD
 bool GameHook::badgeDisplay_toggle = true;
+bool GameHook::badgeLines_toggle = true;
 int GameHook::badgeCorner = 0;
 float GameHook::badgeScaleBase = 3.0f;
-float GameHook::badgeThicknessBase = 2.0f;
+//float GameHook::badgeThicknessBase = 2.0f; // constexpr now
 void GameHook::RenderBadge() {
     ImDrawList* draw = ImGui::GetForegroundDrawList();
     ImVec2 display = ImGui::GetIO().DisplaySize;
 
     float dpiScale = display.y / 1080.0f;
+    if (badgeScaleBase < 2.5f) badgeScaleBase = 2.5f;
     float scale = badgeScaleBase * dpiScale;
     float thicknessMul = badgeThicknessBase * dpiScale;
-    int circleResolution = 32;
+    static constexpr int circleResolution = 32;
 
     auto S = [&](float v) { return v * scale; };
     auto T = [&](float v) { return v * thicknessMul; };
@@ -1976,56 +2004,70 @@ void GameHook::RenderBadge() {
     float cx = 0.0f, cy = 0.0f;
 
     switch (GameHook::badgeCorner) {
-    case 0: cx = margin;             cy = margin;             break;
-    case 1: cx = display.x - margin; cy = margin;             break;
-    case 2: cx = margin;             cy = display.y - margin; break;
-    case 3: cx = display.x - margin; cy = display.y - margin; break;
-    default: cx = margin;            cy = display.y - margin; break;
+        case 0: cx = margin;             cy = margin;             break;
+        case 1: cx = display.x - margin; cy = margin;             break;
+        case 2: cx = margin;             cy = display.y - margin; break;
+        case 3: cx = display.x - margin; cy = display.y - margin; break;
+        default: cx = margin;            cy = display.y - margin; break;
     }
 
-    float realT = (float)ImGui::GetTime();
-    static constexpr int numPoints = 32;
+    if (badgeLines_toggle) {
+        float realT = (float)ImGui::GetTime();
+        static constexpr int numPoints = 32;
 
-    ImVec2 lastTrailPoint;
-    for (int i = 0; i < numPoints - 1; i++) {
-        float t0 = realT - trailLength * (1.0f - (float)i / (float)(numPoints - 1));
-        float t1 = realT - trailLength * (1.0f - (float)(i + 1) / (float)(numPoints - 1));
-        ImVec2 p0 = TrailPos(t0, cx, cy, radius);
-        ImVec2 p1 = TrailPos(t1, cx, cy, radius);
-        lastTrailPoint = p1;
-        draw->AddLine(p0, p1, IM_COL32(255, 60, 60, 255), T(1.0f));
-    }
+        ImVec2 lastTrailPoint;
+        for (int i = 0; i < numPoints - 1; i++) {
+            float t0 = realT - trailLength * (1.0f - (float)i / (float)(numPoints - 1));
+            float t1 = realT - trailLength * (1.0f - (float)(i + 1) / (float)(numPoints - 1));
+            ImVec2 p0 = TrailPos(t0, cx, cy, radius);
+            ImVec2 p1 = TrailPos(t1, cx, cy, radius);
+            lastTrailPoint = p1;
+            draw->AddLine(p0, p1, IM_COL32(255, 60, 60, 255), T(1.0f));
+        }
 
-    static ImVec2 lollyHistory[512] = {};
-    static float  lollyTimes[512] = {};
-    static int    lollyHead = 0;
-    static float  lastLollyPushTime = 0.0f;
+        static ImVec2 lollyHistory[512] = {};
+        static float  lollyTimes[512] = {};
+        static int    lollyHead = 0;
+        static float  lastLollyPushTime = 0.0f;
 
-    LocalPlayer* player = GameHook::GetLocalPlayer();
-    ImVec2 base = lastTrailPoint;
-    float a = 0.0f;
-    float cosA = 1.0f, sinA = 0.0f;
-    if (player) {
-        a = -player->rot.y;
-        cosA = cosf(a);
-        sinA = sinf(a);
-    }
+        LocalPlayer* player = GameHook::GetLocalPlayer();
+        ImVec2 base = lastTrailPoint;
+        float a = 0.0f;
+        float cosA = 1.0f, sinA = 0.0f;
+        if (player) {
+            a = -player->rot.y;
+            cosA = cosf(a);
+            sinA = sinf(a);
+        }
 
-    auto R = [&](float lx, float ly) -> ImVec2 {
-        lx *= scale;
-        ly *= scale;
+        auto R = [&](float lx, float ly) -> ImVec2 {
+            lx *= scale;
+            ly *= scale;
+            return ImVec2(base.x + lx * cosA - ly * sinA, base.y + lx * sinA + ly * cosA);
+        };
 
-        return ImVec2(base.x + lx * cosA - ly * sinA, base.y + lx * sinA + ly * cosA);
-    };
+        if (player) {
+            float pushInterval = trailLength / 512.0f;
+            if (realT - lastLollyPushTime >= pushInterval) {
+                lollyHistory[lollyHead] = R(0.0f, stickLength);
+                lollyTimes[lollyHead] = realT;
 
-    if (player) {
-        float pushInterval = trailLength / 512.0f;
-        if (realT - lastLollyPushTime >= pushInterval) {
-            lollyHistory[lollyHead] = R(0.0f, stickLength);
-            lollyTimes[lollyHead] = realT;
+                lollyHead = (lollyHead + 1) % 512;
+                lastLollyPushTime = realT;
+            }
 
-            lollyHead = (lollyHead + 1) % 512;
-            lastLollyPushTime = realT;
+            for (int i = 0; i < 511; i++) {
+                int ia = (lollyHead + i) % 512;
+                int ib = (lollyHead + i + 1) % 512;
+                if (lollyTimes[ia] == 0.0f || lollyTimes[ib] == 0.0f) continue;
+                if (realT - lollyTimes[ia] > trailLength) continue;
+                draw->AddLine(lollyHistory[ia], lollyHistory[ib], IM_COL32(200, 170, 255, 255), T(1.0f));
+            }
+
+            ImU32 sweetcol = IM_COL32(255, 60, 60, 255);
+            ImU32 stickcol = IM_COL32(200, 200, 200, 255);
+            draw->AddLine(R(0.0f, 0.0f), R(0.0f, stickLength), stickcol, T(2.0f));
+            draw->AddCircleFilled(R(0.0f, 0.0f), S(sweetRadius), sweetcol, circleResolution / 2);
         }
 
         for (int i = 0; i < 511; i++) {
@@ -2035,22 +2077,10 @@ void GameHook::RenderBadge() {
             if (realT - lollyTimes[ia] > trailLength) continue;
             draw->AddLine(lollyHistory[ia], lollyHistory[ib], IM_COL32(200, 170, 255, 255), T(1.0f));
         }
-
-        ImU32 sweetcol = IM_COL32(255, 60, 60, 255);
-        ImU32 stickcol = IM_COL32(200, 200, 200, 255);
-        draw->AddLine(R(0.0f, 0.0f), R(0.0f, stickLength), stickcol, T(2.0f));
-        draw->AddCircleFilled(R(0.0f, 0.0f), S(sweetRadius), sweetcol, circleResolution/2);
-    }
-
-    for (int i = 0; i < 511; i++) {
-        int ia = (lollyHead + i) % 512;
-        int ib = (lollyHead + i + 1) % 512;
-        if (lollyTimes[ia] == 0.0f || lollyTimes[ib] == 0.0f) continue;
-        if (realT - lollyTimes[ia] > trailLength) continue;
-        draw->AddLine(lollyHistory[ia], lollyHistory[ib], IM_COL32(200, 170, 255, 255), T(1.0f));
     }
 
     float outerRadius = radius + S(stickLength + sweetRadius);
+    draw->AddCircleFilled( ImVec2(cx, cy), outerRadius, IM_COL32(0, 0, 0, 50), circleResolution);
     draw->AddCircle( ImVec2(cx, cy), outerRadius, IM_COL32(200, 170, 255, 30), circleResolution, T(1.0f));
 
     // timers
@@ -2114,10 +2144,5 @@ void GameHook::BackgroundImGui(void) {
 #endif
     if (showMessages_toggle) {
         GameHook::RenderMessages(ImGui::GetIO().DeltaTime);
-    }
-    if (showGameTimeMsOverlay) {
-        float* gameTimerMs = (float*)gameTimeAddress;
-        ImGui::SameLine();
-        ImGui::Text("%f", *gameTimerMs);
     }
 }
