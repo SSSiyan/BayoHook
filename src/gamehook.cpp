@@ -705,12 +705,34 @@ static __declspec(naked) void WitchTimeMultiplierDetour(void) {
 	}
 }
 
+int GameHook::arg1 = 0x0020000;
+EntitySpawnArg2 GameHook::arg2{};
+int GameHook::arg3 = -1;
+bool GameHook::spawnEnemy = false;
+bool GameHook::spawnWithoutArgs2 = false;
+
+void GameHook::SpawnStuff() {
+	if (GameHook::spawnEnemy) {
+		GameHook::spawnEnemy = false;
+		if (spawnWithoutArgs2) {
+			GameHook::SpawnEntity(GameHook::arg1, NULL, GameHook::arg3);
+		}
+		else {
+			GameHook::SpawnEntity(GameHook::arg1, &GameHook::arg2, GameHook::arg3);
+		}
+	}
+}
+
 std::unique_ptr<FunctionHook> infMagicHook;
 uintptr_t infMagic_jmp_ret{ NULL };
 bool GameHook::inf_magic_toggle = false;
 float GameHook::inf_magic_value = 1200.0f;
 static __declspec(naked) void InfMagicDetour(void) {
 	_asm {
+		pushad
+		call GameHook::SpawnStuff
+		popad
+
 		push eax
 		mov eax, [GameHook::playerMagicAddress]
 		cmp byte ptr [GameHook::inf_magic_toggle], 0
@@ -2762,32 +2784,12 @@ void GameHook::DrawFlyingStats() {
 	}
 }
 
-bool GameHook::CheckCanSpawnEntity() {
-    uintptr_t testAddr = 0x5BBB9EC;
-    
-    uintptr_t ptr1 = *(uintptr_t*)testAddr;
-    if (!ptr1) return false;
-    
-    uintptr_t ptr2 = *(uintptr_t*)(ptr1 + 0x10);
-    if (!ptr2) return false;
-    
-    int value = *(int*)(ptr2 + 0x18);
-    return value == 4;
-}
-
 void GameHook::SpawnEntity(int entityID, EntitySpawnArg2* a2, int a3) {
-    // yeah
-    std::thread([entityID, a2, a3]() {
-        // wait
-        while (!CheckCanSpawnEntity()) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        }
-        
-        uintptr_t spawnEntityAddr = 0x510450;
-        uintptr_t ecxAddr = 0x5ABB860;
-        SpawnEntityFunc spawnEntity = (SpawnEntityFunc)spawnEntityAddr;
-        spawnEntity((uintptr_t*)ecxAddr, entityID, a2, a3);
-    }).detach();
+    uintptr_t spawnEntityAddr = 0x510450;
+    uintptr_t ecxAddr = 0x5ABB860;
+	typedef uintptr_t(__thiscall* SpawnEntityFunc)(uintptr_t* ecx, int entityID, EntitySpawnArg2* a2, int a3);
+    SpawnEntityFunc spawnEntity = (SpawnEntityFunc)spawnEntityAddr;
+    spawnEntity((uintptr_t*)ecxAddr, entityID, a2, a3);
 }
 
 #endif

@@ -1433,63 +1433,157 @@ void GameHook::GameImGui(void) {
                 };
 
                 static const EnemyInfo knownEntities[] = {
+                    {"", 0x0},
+                    {"", 0x4},
+                    {"", 0x6},
+                    {"", 0x12C},
+                    {"Bayonetta", 0x10000},
+                    {"", 0x10001},
+                    {"", 0x10002},
+                    {"", 0x10005},
+                    {"", 0x10008},
+                    {"", 0x10010},
+                    {"Chain VFX", 0x10012},
+                    {"Summoning Hair", 0x10013},
+                    {"Hood Hair", 0x1001A},
+                    {"", 0x10021},
+                    {"Nude Bayonetta", 0x10022},
+                    {"Hood Hair", 0x10031},
+                    {"", 0x10033},
+                    {"Babynetta T-pose", 0x10035},
+                    {"Babyjeanne T-pose", 0x10036},
+                    {"Teddy", 0x10037},
+                    {"", 0x10043},
+                    {"Babynetta", 0x10045},
+                    {"Dead Bayonetta", 0x10046},
+                    {"Reclaimer Reference", 0x10048},
+                    {"Jeanne Arm Hair", 0x1004C},
+                    {"Nude Jeanne", 0x1004E},
+                    {"", 0x10100},
+                    {"Invisible dude", 0x10101},
                     {"Basic enemy dude", 0x20000},
-                    {"Default Bayo (don't spawn if already default bayo!)", 0x10075},
+                    {"?", 0x2000E},
+                    {"?", 0x20010},
+                    {"", 0x20011},
+                    {"", 0x20013},
+                    {"Snake Enemy", 0x20020},
+                    {"Flying Snake Enemy", 0x20022},
+                    {"", 0x2002F},
+                    {"", 0x2004F},
+                    {"", 0x2005F},
+                    {"Ray Enemy", 0x20060},
+                    {"", 0x20070},
+                    {"", 0x20071},
+                    {"Big Boss Enemy", 0x20078},
+                    {"", 0x2007C},
+                    {"", 0x2007D},
+                    {"", 0x2007E},
+                    {"Joy Enemy", 0x20080},
+                    {"", 0x2008F},
+                    {"Cube Dragon Prop Vertical", 0x20091},
+                    {"Cube Dragon Prop Horizontal", 0x20092},
+                    {"", 0x20093},
+                    {"Cube Dragon Prop", 0x20094},
+                    {"Cube Prop Small", 0x20095},
+                    {"Boat Enemy", 0x200A0},
+                    {"Boat Grabber Prop", 0x200A1},
+                    {"Boat Missile", 0x200A2},
+                    {"Boat Grabber", 0x200A3},
+                    {"Dragon heads boss", 0x200B0},
+                    {"Boss Face prop", 0x200B1},
+                    {"Detached Dragon head", 0x200B2},
+                    {"Detached Dragon head 2", 0x200B3},
+                    {"Detached Wings", 0x200B4},
+                    {"Detached Spot", 0x200B7},
+                    {"Another Big Boss Enemy", 0x200C0},
+                    {"Detached Swinging Something", 0x200C1},
+                    {"Detached Swinging Something 2", 0x200C2},
+                    {"Detached Boss Head", 0x200C4},
+                    {"", 0x200C5},
+                    {"Plant", 0x200D1},
+                    {"Tentacle grower thing", 0x200D2},
+                    {"Tentacle thing", 0x200D3},
+                    {"Boss head with halo", 0x200D5},
+                    {"Huge flying boss enemy", 0x20100},
+                    {"its a head", 0x20101},
+                    {"its a dragon head", 0x20102},
+                    {"its a different dragon head", 0x20103},
+                    {"its a wings", 0x20104},
+                    {"", 0x20105},
+                    {"single hit from underground", 0x20106},
+                    {"its a mine", 0x20107},
+                    {"BigBoss", 0x20200},
+                    {"its them swinging things again", 0x20201},
+                    {"there are so many swinging things", 0x20202},
+                    {"and look another head didn't see that coming", 0x20204},
+                    {"huge body of a boss", 0x20205},
+                    {"", 0x20206},
+                    {"", 0x20208},
+                    {"Wind that hurts", 0x20209},
+                    {"", 0x2020A},
+                    {"Single electric stabby attack", 0x2020B},
+                    {"Orb that spawns electric stabby attacks that cant be killed", 0x2020C},
+                    {"Big huge tentacly boss enemy", 0x2020D},
+                    {"Feather man", 0x20500},
+                    {"Bayo Pistol", 0x30000},
+                    {"Bayo Shotty", 0x30001},
+                    {"Bayo Claw", 0x30002},
+                    {"", 0x30003},
+                    {"Bayo Rocket Launcher", 0x30004},
+                    {"Bayo Skates", 0x30005},
+                    {"Bayo Sword", 0x30009},
+                    {"Bayo Sheath", 0x3000A},
+                    {"Bayo Whip", 0x3000B},
+                    {"", 0x3000C},
+                    {"Bayo Skirt", 0x3000D},
+                    {"Bayo Witch Attire", 0x3000E},
+                    {"Bayo Devil Cat", 0x3000F},
+                    {"Bayo Sunglasses Hat", 0x30010},
+                    {"Bayo Sports", 0x30011},
+                    {"Jeanne Pistol", 0x30020},
+                    {"Jeanne Sword probably", 0x30022},
+                    {"Pistol", 0x30030},
+                    {"Spear", 0x30101},
                     {"Trumpet", 0x30103},
-                    {"I didn't see anything spawn", 0x60011},
+                    {"Leafy/feathered greatsword", 0x30105},
+                    {"Sword whip bow", 0x30106},
+                    {"Sword whip", 0x30108},
+                    {"Boomerang Scythe", 0x30150},
+                    {"Blue Claws", 0x30127},
+                    {"Red Claws", 0x30160},
+                    {"Red Claws", 0x30161},
+                    {"?", 0x30162},
+                    {"White Claws", 0x30163},
+                    {"White Claw", 0x30164},
+                    {"Black Claws", 0x30165},
+                    {"Black Claw", 0x30166},
                     {"Enemy Halo", 0x30200},
-                    {"Crash", 0x20010},
-                    {"Crash", 0x20200},
-                    {"?", 0x2000e},
-                    {"Signboard", 0x4002f},
-                    {"0x50114", 0x50114},
-                    {"0x60206", 0x60206},
+                    {"Signboard", 0x4002F},
+                    {"?", 0x50114},
+                    {"Lamppost weapon", 0x50189},
+                    {"low poly dude hitting the floor", 0x501C4},
+                    {"?", 0x50228},
+                    {"?", 0x50229},
                     {"?", 0x60000},
                     {"?", 0x60001},
-                    {"Crash", 0x60007},
+                    {"Summon Hair Claw", 0x60007},
+                    {"I didn't see anything spawn", 0x60011},
                     {"Butterfly", 0x60015},
                     {"?", 0x60017},
-                    {"Crash", 0x60069},
+                    {"Floor Claw plant thing", 0x60069},
                     {"Skybox maybe?", 0x600F4},
+                    {"Big collision", 0x60206},
                     {"?", 0x61000},
-                    {"Health Pickup", 0x90010},
-                    {"Crash", 0x30030},
-                    {"Crash", 0x10012},
-                    {"Crash", 0xA0521},
-                    {"?", 0xA0523},
-                    {"Crash", 0xA051F},
                     {"Should be an enemy but nothing spawns in void", 0x70000},
                     {"?", 0x80000},
                     {"Halo", 0x90000},
+                    {"Health Pickup", 0x90010},
+                    {"Still Crash", 0xA051F},
+                    {"Crash still", 0xA0521},
+                    {"?", 0xA0523},
                     {"T-Pose Bayo", 0xA0000},
-                    {"Crash", 0xF0000},
-                    {"Crash", 0x30127},
-                    {"Crash", 0x30160},
-                    {"Crash", 0x20500},
-                    {"0x30161", 0x30161},
-                    {"0x30162", 0x30162},
-                    {"0x30163", 0x30163},
-                    {"0x30164", 0x30164},
-                    {"0x30165", 0x30165},
-                    {"0x30166", 0x30166},
-                    {"0x30101", 0x30101},
-                    {"0x30105", 0x30105},
-                    {"0x30106", 0x30106},
-                    {"0x30108", 0x30108},
-                    {"0x30150", 0x30150},
-                    {"Crash", 0x50189},
-                    {"Crash", 0x501C4},
-                    {"0x50228", 0x50228},
-                    {"0x50229", 0x50229},
-                    {"0xC0301", 0xC0301},
-                    {"0x30127", 0x30127},
-                    {"0x30161", 0x30161},
-                    {"0x30164", 0x30164},
-                    {"0x30166", 0x30166},
-                    {"Crash", 0x30160},
-                    {"0x30161", 0x30161},
-                    {"0x30162", 0x30162},
-                    {"0x30163", 0x30163},
+                    {"Barrel", 0xC0301},
+                    {"?", 0xF0000},
                 };
 
                 const int knownEntityCount = sizeof(knownEntities) / sizeof(knownEntities[0]);
@@ -1510,10 +1604,6 @@ void GameHook::GameImGui(void) {
                     displayNames[i] = enemyDisplayNames[i].c_str();
                 }
 
-                static int arg1 = 0x0020000;
-                static EntitySpawnArg2 arg2{};
-                static int arg3 = -1;
-
                 const char* enemyNames[knownEntityCount];
                 for (int i = 0; i < knownEntityCount; i++) {
                     enemyNames[i] = knownEntities[i].name;
@@ -1523,7 +1613,7 @@ void GameHook::GameImGui(void) {
 
                 static int selectedEnemy = 0;
                 if (ImGui::Combo("Known Entity IDs", &selectedEnemy, displayNames, knownEntityCount)) {
-					arg1 = knownEntities[selectedEnemy].id;
+					GameHook::arg1 = knownEntities[selectedEnemy].id;
                 }
                 ImGui::SameLine();
                 help_marker("This just autofills the next field if you want to pick from a dictionary of IDs we already know");
@@ -1565,8 +1655,8 @@ void GameHook::GameImGui(void) {
                     ImGui::InputFloat("arg.float_78_Z", &arg2.float_78_Z);
                     ImGui::InputFloat("arg.float_7C", &arg2.float_7C);
                     ImGui::InputInt("arg.int_80", &arg2.int_80);
-                    ImGui::InputInt("arg.int_84", &arg2.int_84);
-                    ImGui::InputInt("arg.int_88", &arg2.int_88);
+                    ImGui::InputScalar("arg.int_84", ImGuiDataType_S32, &arg2.int_84, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+                    ImGui::InputScalar("arg.int_88", ImGuiDataType_S32, &arg2.int_88, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
                     ImGui::InputFloat("arg.float_8C", &arg2.float_8C);
                     ImGui::InputFloat("arg.float_90", &arg2.float_90);
                     ImGui::InputFloat("arg.float_94", &arg2.float_94);
@@ -1580,14 +1670,12 @@ void GameHook::GameImGui(void) {
                     LocalPlayer* player = GetLocalPlayer();
                     if (player) {
                         arg2.float_70_X = player->pos.x;
-                        arg2.float_74_Y = player->pos.y;
+                        arg2.float_74_Y = player->pos.y + 1.0f;
                         arg2.float_78_Z = player->pos.z;
                     }
-                    SpawnEntity(arg1, &arg2, arg3);
+                    GameHook::spawnEnemy = true;
                 }
-                if (ImGui::Button("Spawn Without Args2")) {
-                    SpawnEntity(arg1, NULL, arg3);
-                }
+                ImGui::Checkbox("Spawn Without Args2", &GameHook::spawnWithoutArgs2);
             }
 
             tabHeight += ImGui::GetCursorPosY();

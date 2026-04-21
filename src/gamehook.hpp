@@ -16,7 +16,7 @@
 #define IM_PI 3.14159265358979323846f
 #endif
 
-#define SPEEDRUN_BUILD
+//#define SPEEDRUN_BUILD
 
 #define BAYOHOOK_VERSION "1.16 PRE RELEASE"
 #ifndef SPEEDRUN_BUILD
@@ -150,6 +150,13 @@ public:
 
 	static bool unbanClimaxBrace_toggle;
 	static void UnbanClimaxBrace(bool enabled);
+	
+	static void SpawnStuff();
+	static bool spawnEnemy;
+	static bool spawnWithoutArgs2;
+	static int arg1;
+	static EntitySpawnArg2 arg2;
+	static int arg3;
 
 	static void WeaponSwapCaller(void);
 	static void SaveStates_SaveState();
@@ -322,8 +329,6 @@ public:
 
 #ifndef SPEEDRUN_BUILD
 	static void Setup3dShapes();
-	static bool CheckCanSpawnEntity();
-	typedef void(__thiscall* SpawnEntityFunc)(uintptr_t* ecx, int entityID, EntitySpawnArg2* a2, int a3);
 	static void SpawnEntity(int entityID, EntitySpawnArg2* a2, int a3);
 #endif
 	static void _patch(char* dst, char* src, int size);
