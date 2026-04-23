@@ -1252,8 +1252,8 @@ void GameHook::GameImGui(void) {
             help_marker("Cutscenes play at 60fps instead of 30");
 
             ImGui::SameLine(sameLineWidth);
-            if (ImGui::Checkbox("Remove Vignette", &GameHook::removeVignette_toggle)) {
-                GameHook::RemoveVignette(GameHook::removeVignette_toggle);
+            if (ImGui::Checkbox("Disable Gradient", &GameHook::disableGradient_toggle)) {
+                GameHook::DisableGradient(GameHook::disableGradient_toggle);
             }
             help_marker("Disable the gradient covering the game");
 

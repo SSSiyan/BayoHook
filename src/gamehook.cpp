@@ -126,32 +126,32 @@ void GameHook::LinkGameToDelta(bool enabled) {
 bool GameHook::autoQTE_toggle = false;
 void GameHook::AutoQTE(bool enabled) {
 	if (enabled) {
-		GameHook::_patch((char*)(0x41644E), (char*)"\xE9\xCA\x02\x00\x00", 5); // ch1 bridge, ch14-1, ch14-2 (up+A)
-		GameHook::_patch((char*)(0x4A8AAD), (char*)"\x90\x90", 2); // ch2-1, ch3 (X)
-		GameHook::_patch((char*)(0x4A8D75), (char*)"\xEB\x61", 2); // ch2-2 (spin stick)
-		GameHook::_patch((char*)(0x41652C), (char*)"\xE9\xEC\x01\x00\x00", 5); // ch8 1 (A)
-		GameHook::_patch((char*)(0x41641A), (char*)"\xE9\xFE\x02\x00\x00\x90", 6); // ch8 2 (Up+A)
-		GameHook::_patch((char*)(0x416492), (char*)"\xE9\x84\x02\x00\x00\x90", 6); // ch15 elevator (side+jump)
-		// GameHook::_patch((char*)(0x416585), (char*)"\xE9\x93\x01\x00\x00", 5); // Y+B
+		GameHook::_patch((char*)(0x41644E), (char*)"\xE9\xCA\x02\x00\x00", 5);		// ch1 bridge, ch14-1, ch14-2 (up+A)
+		GameHook::_patch((char*)(0x4A8AAD), (char*)"\x90\x90", 2);					// ch2-1, ch3 (X)
+		GameHook::_patch((char*)(0x4A8D75), (char*)"\xEB\x61", 2);					// ch2-2 (spin stick), ch3-2 (mash x)
+		GameHook::_patch((char*)(0x41652C), (char*)"\xE9\xEC\x01\x00\x00", 5);		// ch8 1 (A)
+		GameHook::_patch((char*)(0x41641A), (char*)"\xE9\xFE\x02\x00\x00\x90", 6);	// ch8 2 (Up+A)
+		GameHook::_patch((char*)(0x416492), (char*)"\xE9\x84\x02\x00\x00\x90", 6);	// ch15 elevator (side+jump)
+		// GameHook::_patch((char*)(0x416585), (char*)"\xE9\x93\x01\x00\x00", 5);	// Y+B but will torture attack every single dude
 	}
 	else {
-		GameHook::_patch((char*)(0x41644E), (char*)"\xE9\xC8\x02\x00\x00", 5); // ch1 bridge, ch14-1, ch14-2 (up+A)
-		GameHook::_patch((char*)(0x4A8AAD), (char*)"\x74\x38", 2); // ch2-1, ch3 (X)
-		GameHook::_patch((char*)(0x4A8D75), (char*)"\x75\x61", 2); // ch2-2 (spin stick)
-		GameHook::_patch((char*)(0x41652C), (char*)"\xE9\xEA\x01\x00\x00", 5); // ch8 1 (A)
-		GameHook::_patch((char*)(0x41641A), (char*)"\x0F\x86\x68\x03\x00\x00", 6); // ch8 2 (Up+A)
-		GameHook::_patch((char*)(0x416492), (char*)"\x0F\x86\xF0\x02\x00\x00", 6); // ch15 elevator (side+jump)
-		// GameHook::_patch((char*)(0x416585), (char*)"\xE9\x91\x01\x00\x00", 5); // Y+B
+		GameHook::_patch((char*)(0x41644E), (char*)"\xE9\xC8\x02\x00\x00", 5);		// ch1 bridge, ch14-1, ch14-2 (up+A)
+		GameHook::_patch((char*)(0x4A8AAD), (char*)"\x74\x38", 2);					// ch2-1, ch3 (X)
+		GameHook::_patch((char*)(0x4A8D75), (char*)"\x75\x61", 2);					// ch2-2 (spin stick), ch3-2 (mash x)
+		GameHook::_patch((char*)(0x41652C), (char*)"\xE9\xEA\x01\x00\x00", 5);		// ch8 1 (A)
+		GameHook::_patch((char*)(0x41641A), (char*)"\x0F\x86\x68\x03\x00\x00", 6);	// ch8 2 (Up+A)
+		GameHook::_patch((char*)(0x416492), (char*)"\x0F\x86\xF0\x02\x00\x00", 6);	// ch15 elevator (side+jump)
+		// GameHook::_patch((char*)(0x416585), (char*)"\xE9\x91\x01\x00\x00", 5);   // Y+B but will torture attack every single dude
 	}
 }
 
-bool GameHook::removeVignette_toggle = false;
-void GameHook::RemoveVignette(bool enabled) {
+bool GameHook::disableGradient_toggle = false;
+void GameHook::DisableGradient(bool enabled) {
 	if (enabled) {
-		GameHook::_patch((char*)(0x43B06F), (char*)"\x90\x90\x90\x90", 4); // nop 4 
+		GameHook::_patch((char*)(0x43B06F), (char*)"\xC7\x41\x70\x00\x00\x00\x00\x90\x90", 9); // mov [ecx+70],00000000 nop nop
 	}
 	else {
-		GameHook::_patch((char*)(0x43B06F), (char*)"\xF3\x0F\x58\xD3", 4); // addss xmm2,xmm3
+		GameHook::_patch((char*)(0x43B06F), (char*)"\xF3\x0F\x58\xD3\xF3\x0F\x11\x51\x70", 9); // addss xmm2,xmm3 movss [ecx+70],xmm2
 	}
 }
 
@@ -2930,8 +2930,8 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 #ifndef SPEEDRUN_BUILD 
 	autoQTE_toggle = cfg.get<bool>("autoQTE_toggle").value_or(false);
 	AutoQTE(autoQTE_toggle);
-	removeVignette_toggle = cfg.get<bool>("removeVignette_toggle").value_or(false);
-	RemoveVignette(removeVignette_toggle);
+	disableGradient_toggle = cfg.get<bool>("disableGradient_toggle").value_or(false);
+	DisableGradient(disableGradient_toggle);
 	disableFpsLimiter_toggle = cfg.get<bool>("disableFpsLimiter_toggle").value_or(false);
 	DisableFpsLimiter(disableFpsLimiter_toggle);
 	uptimeFix_toggle = cfg.get<bool>("uptimeFix_toggle").value_or(false);
@@ -3101,7 +3101,7 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 #ifndef SPEEDRUN_BUILD
 	// patches
 	cfg.set<bool>("autoQTE_toggle", autoQTE_toggle);
-	cfg.set<bool>("removeVignette_toggle", removeVignette_toggle);
+	cfg.set<bool>("disableGradient_toggle", disableGradient_toggle);
 	cfg.set<bool>("disableFpsLimiter_toggle", disableFpsLimiter_toggle);
 	cfg.set<bool>("sixtyFpsCutscenes_toggle", sixtyFpsCutscenes_toggle);
 	// cfg.set<bool>("memPatch_toggle", memPatch_toggle);

@@ -53,8 +53,8 @@ public:
 	static bool autoQTE_toggle;
 	static void AutoQTE(bool enabled);
 
-	static bool removeVignette_toggle;
-	static void RemoveVignette(bool enabled);
+	static bool disableGradient_toggle;
+	static void DisableGradient(bool enabled);
 
 	static bool sixtyFpsCutscenes_toggle;
 	static void SixtyFpsCutscenes(bool enabled);
