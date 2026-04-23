@@ -27,23 +27,23 @@ LRESULT CALLBACK Base::Hooks::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
 
 #ifndef SPEEDRUN_BUILD
 		case VK_F1:
-			GameHook::enemyHP_no_damage_toggle = !GameHook::enemyHP_no_damage_toggle;
-			GameHook::DisableKilling(GameHook::enemyHP_no_damage_toggle);
-			if (GameHook::enemyHP_no_damage_toggle)
-				GameHook::enemyHP_one_hit_kill_toggle = false;
-			GameHook::DisplayMessageText("Enemy Takes No Damage ", GameHook::enemyHP_no_damage_toggle);
+			GameHook::enemyHPNoDamage_toggle = !GameHook::enemyHPNoDamage_toggle;
+			GameHook::DisableKilling(GameHook::enemyHPNoDamage_toggle);
+			if (GameHook::enemyHPNoDamage_toggle)
+				GameHook::enemyHPOneHitKill_toggle = false;
+			GameHook::DisplayMessageText("Enemy Takes No Damage ", GameHook::enemyHPNoDamage_toggle);
 			break;
 		case VK_F2:
-			GameHook::damageReceivedMultiplier_no_damage_toggle = !GameHook::damageReceivedMultiplier_no_damage_toggle;
-			GameHook::DisplayMessageText("Player Takes No Damage ", GameHook::damageReceivedMultiplier_no_damage_toggle);
+			GameHook::damageReceivedMultiplierNoDamage_toggle = !GameHook::damageReceivedMultiplierNoDamage_toggle;
+			GameHook::DisplayMessageText("Player Takes No Damage ", GameHook::damageReceivedMultiplierNoDamage_toggle);
 			break;
 		case VK_F3:
-			GameHook::enemyHP_one_hit_kill_toggle = !GameHook::enemyHP_one_hit_kill_toggle;
-			if (GameHook::enemyHP_one_hit_kill_toggle) {
-				GameHook::enemyHP_no_damage_toggle = false;
-				GameHook::DisableKilling(GameHook::enemyHP_no_damage_toggle);
+			GameHook::enemyHPOneHitKill_toggle = !GameHook::enemyHPOneHitKill_toggle;
+			if (GameHook::enemyHPOneHitKill_toggle) {
+				GameHook::enemyHPNoDamage_toggle = false;
+				GameHook::DisableKilling(GameHook::enemyHPNoDamage_toggle);
 			}
-			GameHook::DisplayMessageText("Enemy One Hit Kill ", GameHook::enemyHP_one_hit_kill_toggle);
+			GameHook::DisplayMessageText("Enemy One Hit Kill ", GameHook::enemyHPOneHitKill_toggle);
 			break;
 		case VK_F4:
 			GameHook::infJumps_toggle = !GameHook::infJumps_toggle;

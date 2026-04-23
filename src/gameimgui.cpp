@@ -498,7 +498,7 @@ void GameHook::GameTick(void) { // also called while the menu isn't open
             *(int*)GameHook::currentCostumeAddress = tempCostume;
         }
 #ifndef SPEEDRUN_BUILD
-        if (comboMakerToggle) {
+        if (comboMaker_toggle) {
             for (int i = 0; i < maxComboMakers; ++i) {
                 if (comboMaker_toggles[i]) {
                     if (player->moveID == comboMakerMoveIDs[i] && player->attackCount == comboMakerMoveParts[i]) {
@@ -884,15 +884,15 @@ void GameHook::GameImGui(void) {
 
             ImGui::SeparatorText("Damage");
 
-            if (ImGui::Checkbox("Deal No Damage (F1)##DealNoDamageToggle", &GameHook::enemyHP_no_damage_toggle)) {
-                GameHook::DisableKilling(GameHook::enemyHP_no_damage_toggle);
-                if (GameHook::enemyHP_no_damage_toggle) {
-                    GameHook::enemyHP_one_hit_kill_toggle = false;
+            if (ImGui::Checkbox("Deal No Damage (F1)##DealNoDamageToggle", &GameHook::enemyHPNoDamage_toggle)) {
+                GameHook::DisableKilling(GameHook::enemyHPNoDamage_toggle);
+                if (GameHook::enemyHPNoDamage_toggle) {
+                    GameHook::enemyHPOneHitKill_toggle = false;
                 }
             }
             help_marker("Deal no damage to enemies");
             ImGui::SameLine(sameLineWidth);
-            ImGui::Checkbox("Take No Damage (F2)", &GameHook::damageReceivedMultiplier_no_damage_toggle);
+            ImGui::Checkbox("Take No Damage (F2)", &GameHook::damageReceivedMultiplierNoDamage_toggle);
             help_marker("Take no damage from enemies");
 
             ImGui::BeginGroup();
@@ -919,10 +919,10 @@ void GameHook::GameImGui(void) {
             }
             ImGui::EndGroup();
 
-            if (ImGui::Checkbox("One Hit Kill (F3)##OneHitKillToggle", &GameHook::enemyHP_one_hit_kill_toggle)) {
-                if (GameHook::enemyHP_one_hit_kill_toggle) {
-                    GameHook::enemyHP_no_damage_toggle = false;
-                    GameHook::DisableKilling(GameHook::enemyHP_no_damage_toggle);
+            if (ImGui::Checkbox("One Hit Kill (F3)##OneHitKillToggle", &GameHook::enemyHPOneHitKill_toggle)) {
+                if (GameHook::enemyHPOneHitKill_toggle) {
+                    GameHook::enemyHPNoDamage_toggle = false;
+                    GameHook::DisableKilling(GameHook::enemyHPNoDamage_toggle);
                 }
             }
             help_marker("Kill enemies in one hit");
@@ -1001,18 +1001,14 @@ void GameHook::GameImGui(void) {
 
             ImGui::Checkbox("Skip Angel Attack", &GameHook::loadReplace_toggle);
             help_marker("Load Mission Select instead of Angel Attack");
+
             ImGui::SameLine(sameLineWidth);
-            ImGui::BeginGroup();
-            ImGui::Checkbox("Custom Camera Distance##CameraDistanceMultiplierToggle", &GameHook::customCameraDistance_toggle);
-            help_marker("Replace the vanilla camera distance with a custom value");
-            if (GameHook::customCameraDistance_toggle) {
-				ImGui::Indent();
-                ImGui::PushItemWidth(inputItemWidth);
-                ImGui::InputFloat("##CustomCameraDistanceInputFloat", &GameHook::customCameraDistance, 0.1f, 1, "%.1f");
-                ImGui::PopItemWidth();
-                ImGui::Unindent();
+
+            if (ImGui::Checkbox("Auto Complete QTEs", &GameHook::autoQTE_toggle)) {
+                GameHook::AutoQTE(GameHook::autoQTE_toggle);
             }
-			ImGui::EndGroup();
+            help_marker("Does not auto complete torture attacks (because then you'd do it on every enemy you stand next to)");
+
 			//ImGui::SameLine(sameLineWidth);
             ImGui::BeginGroup();
             ImGui::Checkbox("Turbo", &GameHook::turbo_toggle);
@@ -1026,6 +1022,20 @@ void GameHook::GameImGui(void) {
             }
             ImGui::EndGroup();
 
+			ImGui::SameLine(sameLineWidth);
+
+            ImGui::BeginGroup();
+            ImGui::Checkbox("Custom Camera Distance##CameraDistanceMultiplierToggle", &GameHook::customCameraDistance_toggle);
+            help_marker("Replace the vanilla camera distance with a custom value");
+            if (GameHook::customCameraDistance_toggle) {
+                ImGui::Indent();
+                ImGui::PushItemWidth(inputItemWidth);
+                ImGui::InputFloat("##CustomCameraDistanceInputFloat", &GameHook::customCameraDistance, 0.1f, 1, "%.1f");
+                ImGui::PopItemWidth();
+                ImGui::Unindent();
+            }
+            ImGui::EndGroup();
+            
             ImGui::SeparatorText("Character");
 
             ImGui::SetNextItemWidth(inputItemWidth);
@@ -1180,12 +1190,12 @@ void GameHook::GameImGui(void) {
             ImGui::EndGroup();
             ImGui::SameLine(sameLineWidth);
             ImGui::BeginGroup();
-            ImGui::Checkbox("Freeze Magic##InfMagicToggle", &GameHook::inf_magic_toggle);
+            ImGui::Checkbox("Freeze Magic##InfMagicToggle", &GameHook::infMagic_toggle);
             help_marker("Lock player magic to any value");
-            if (GameHook::inf_magic_toggle) {
+            if (GameHook::infMagic_toggle) {
                 ImGui::Indent();
                 ImGui::SetNextItemWidth(inputItemWidth);
-                ImGui::SliderFloat("##InfiniteMagicValue", &GameHook::inf_magic_value, 0, 1200);
+                ImGui::SliderFloat("##InfiniteMagicValue", &GameHook::infMagic_value, 0, 1200);
                 ImGui::Unindent();
             }
             ImGui::EndGroup();
@@ -1294,12 +1304,12 @@ void GameHook::GameImGui(void) {
 
             ImGui::SeparatorText("Custom Combo Routes");
 
-            ImGui::Checkbox("Move ID Swaps", &moveIDSwapsToggle);
+            ImGui::Checkbox("Move ID Swaps", &moveIDSwaps_toggle);
             help_marker("Replace one move with another\n"
                 "Do the move you want to replace, pause mid anim, type your current moveID in the first box\n"
                 "Do the move you want to see, pause mid anim, type your current moveID in the second box\n"
                 "Don't forget to save once you're done for next boot!");
-            if (GameHook::moveIDSwapsToggle) {
+            if (GameHook::moveIDSwaps_toggle) {
                 LocalPlayer* player = GetLocalPlayer();
                 if (player) {
                     ImGui::Text("Current Move ID:");
@@ -1327,9 +1337,9 @@ void GameHook::GameImGui(void) {
 
             ImGui::Separator();
 
-            ImGui::Checkbox("Combo Maker", &GameHook::comboMakerToggle);
+            ImGui::Checkbox("Combo Maker", &GameHook::comboMaker_toggle);
             help_marker("Compare your moveid and distance into current string to set a new string ID");
-            if (GameHook::comboMakerToggle) {
+            if (GameHook::comboMaker_toggle) {
                 LocalPlayer* player = GetLocalPlayer();
                 if (player) {
                     ImGui::Text("Current Move ID:");
@@ -1361,9 +1371,9 @@ void GameHook::GameImGui(void) {
 
             ImGui::Separator();
 
-            ImGui::Checkbox("Weave Swaps", &GameHook::customWeaveToggle);
+            ImGui::Checkbox("Weave Swaps", &GameHook::customWeave_toggle);
             help_marker("Replace one weave with another");
-            if (GameHook::customWeaveToggle) {
+            if (GameHook::customWeave_toggle) {
                 LocalPlayer* player = GetLocalPlayer();
                 if (player) {
                     ImGui::Text("Current Move ID:");
@@ -1392,9 +1402,9 @@ void GameHook::GameImGui(void) {
 
             ImGui::Separator();
 
-            ImGui::Checkbox("String Swaps", &GameHook::stringSwapsToggle);
+            ImGui::Checkbox("String Swaps", &GameHook::stringSwaps_toggle);
             help_marker("Replace one string with another");
-            if (GameHook::stringSwapsToggle) {
+            if (GameHook::stringSwaps_toggle) {
                 LocalPlayer* player = GetLocalPlayer();
                 if (player) {
                     ImGui::Text("Current String ID: %i", player->stringID);

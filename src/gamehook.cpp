@@ -47,7 +47,7 @@ uintptr_t GameHook::WeaponA2Address = 0x5AA7420;
 uintptr_t GameHook::WeaponB1Address = 0x5AA742C;
 uintptr_t GameHook::WeaponB2Address = 0x5AA7430;
 
-bool GameHook::comboMakerToggle = false;
+bool GameHook::comboMaker_toggle = false;
 bool GameHook::comboMaker_toggles[maxComboMakers]{};
 int  GameHook::comboMakerMoveIDs[maxComboMakers]{};
 int  GameHook::comboMakerMoveParts[maxComboMakers]{};
@@ -120,6 +120,28 @@ void GameHook::LinkGameToDelta(bool enabled) {
 		//GameHook::_patch((char*)(0x513E73), (char*)"\xB8\x00\x00\x80\x3F", 5); // mov eax, (float)1
 		float* gameSpeed = (float*)0xEF6588;
 		*gameSpeed = 1.0f;
+	}
+}
+
+bool GameHook::autoQTE_toggle = false;
+void GameHook::AutoQTE(bool enabled) {
+	if (enabled) {
+		GameHook::_patch((char*)(0x41644E), (char*)"\xE9\xCA\x02\x00\x00", 5); // ch1 bridge, ch14-1, ch14-2 (up+A)
+		GameHook::_patch((char*)(0x4A8AAD), (char*)"\x90\x90", 2); // ch2-1, ch3 (X)
+		GameHook::_patch((char*)(0x4A8D75), (char*)"\xEB\x61", 2); // ch2-2 (spin stick)
+		GameHook::_patch((char*)(0x41652C), (char*)"\xE9\xEC\x01\x00\x00", 5); // ch8 1 (A)
+		GameHook::_patch((char*)(0x41641A), (char*)"\xE9\xFE\x02\x00\x00\x90", 6); // ch8 2 (Up+A)
+		GameHook::_patch((char*)(0x416492), (char*)"\xE9\x84\x02\x00\x00\x90", 6); // ch15 elevator (side+jump)
+		// GameHook::_patch((char*)(0x416585), (char*)"\xE9\x93\x01\x00\x00", 5); // Y+B
+	}
+	else {
+		GameHook::_patch((char*)(0x41644E), (char*)"\xE9\xC8\x02\x00\x00", 5); // ch1 bridge, ch14-1, ch14-2 (up+A)
+		GameHook::_patch((char*)(0x4A8AAD), (char*)"\x74\x38", 2); // ch2-1, ch3 (X)
+		GameHook::_patch((char*)(0x4A8D75), (char*)"\x75\x61", 2); // ch2-2 (spin stick)
+		GameHook::_patch((char*)(0x41652C), (char*)"\xE9\xEA\x01\x00\x00", 5); // ch8 1 (A)
+		GameHook::_patch((char*)(0x41641A), (char*)"\x0F\x86\x68\x03\x00\x00", 6); // ch8 2 (Up+A)
+		GameHook::_patch((char*)(0x416492), (char*)"\x0F\x86\xF0\x02\x00\x00", 6); // ch15 elevator (side+jump)
+		// GameHook::_patch((char*)(0x416585), (char*)"\xE9\x91\x01\x00\x00", 5); // Y+B
 	}
 }
 
@@ -201,7 +223,7 @@ void GameHook::FreezeTimer(bool enabled) {
 		GameHook::_patch((char*)(0x620C1D), (char*)"\xF3\x0F\x5C\x05\xF8\xD6\xD9\x00", 8);
 }
 
-// uses GameHook::enemyHP_no_damage_toggle
+// uses GameHook::enemyHPNoDamage_toggle
 void GameHook::DisableKilling(bool enabled) {
 	if (enabled)
 		GameHook::_patch((char*)(0x4572D2), (char*) "\xEB\x0C", 2);
@@ -659,16 +681,16 @@ static __declspec(naked) void TurboHookDetour(void) {
 
 static std::unique_ptr<FunctionHook> enemyHPHook;
 static uintptr_t enemyHP_jmp_ret{ NULL };
-bool GameHook::enemyHP_no_damage_toggle = false;
-bool GameHook::enemyHP_one_hit_kill_toggle = false;
+bool GameHook::enemyHPNoDamage_toggle = false;
+bool GameHook::enemyHPOneHitKill_toggle = false;
 static __declspec(naked) void EnemyHPDetour(void) {
 	_asm {
-		cmp byte ptr [GameHook::enemyHP_one_hit_kill_toggle], 1
+		cmp byte ptr [GameHook::enemyHPOneHitKill_toggle], 1
 		je one_hit_kill
 		jmp check2
 		
 		check2:
-		cmp byte ptr [GameHook::enemyHP_no_damage_toggle], 1
+		cmp byte ptr [GameHook::enemyHPNoDamage_toggle], 1
 		je no_damage
 		jmp originalcode
 
@@ -725,8 +747,8 @@ void GameHook::SpawnStuff() {
 
 std::unique_ptr<FunctionHook> infMagicHook;
 uintptr_t infMagic_jmp_ret{ NULL };
-bool GameHook::inf_magic_toggle = false;
-float GameHook::inf_magic_value = 1200.0f;
+bool GameHook::infMagic_toggle = false;
+float GameHook::infMagic_value = 1200.0f;
 static __declspec(naked) void InfMagicDetour(void) {
 	_asm {
 		pushad
@@ -735,10 +757,10 @@ static __declspec(naked) void InfMagicDetour(void) {
 
 		push eax
 		mov eax, [GameHook::playerMagicAddress]
-		cmp byte ptr [GameHook::inf_magic_toggle], 0
+		cmp byte ptr [GameHook::infMagic_toggle], 0
 		je originalcode
 
-		movss xmm0, [GameHook::inf_magic_value]
+		movss xmm0, [GameHook::infMagic_value]
 		movss [eax], xmm0
 
 		originalcode:
@@ -774,13 +796,13 @@ static __declspec(naked) void DamageDealtMultiplierDetour(void) {
 
 static std::unique_ptr<FunctionHook> damageReceivedMultiplierHook;
 static uintptr_t damageReceivedMultiplier_jmp_ret{ NULL };
-bool GameHook::damageReceivedMultiplier_no_damage_toggle = false;
+bool GameHook::damageReceivedMultiplierNoDamage_toggle = false;
 bool GameHook::damageReceivedMultiplier_toggle = false;
 float GameHook::incoming_damage_mult = 1.0f;
 static float damageMultXmm0Backup = 0.0f;
 static __declspec(naked) void DamageReceivedMultiplierDetour(void) {
 	_asm {
-		cmp byte ptr [GameHook::damageReceivedMultiplier_no_damage_toggle], 1
+		cmp byte ptr [GameHook::damageReceivedMultiplierNoDamage_toggle], 1
 		je no_damage
 		jmp check2
 		
@@ -849,7 +871,7 @@ static __declspec(naked) void HaloDisplayDetour(void) {
 	}
 }
 
-bool GameHook::moveIDSwapsToggle = false;
+bool GameHook::moveIDSwaps_toggle = false;
 bool GameHook::moveIDSwap_toggles[maxMoveIDSwaps]{};
 int GameHook::moveIDSwapSourceMoves[maxMoveIDSwaps]{};
 int GameHook::moveIDSwapSwappedMoves[maxMoveIDSwaps]{};
@@ -866,7 +888,7 @@ static std::unique_ptr<FunctionHook> moveIDSwapHook;
 static uintptr_t moveIDSwap_jmp_ret{ NULL };
 static __declspec(naked) void MoveIDSwapDetour(void) { // player in ecx
 	_asm {
-		cmp byte ptr [GameHook::moveIDSwapsToggle], 0
+		cmp byte ptr [GameHook::moveIDSwaps_toggle], 0
 		je originalcode
 
 		push eax
@@ -899,7 +921,7 @@ static __declspec(naked) void MoveIDSwapDetour(void) { // player in ecx
 	}
 }
 
-bool GameHook::stringSwapsToggle = false;
+bool GameHook::stringSwaps_toggle = false;
 bool GameHook::stringIDSwap_toggles[maxStringSwaps];
 int  GameHook::stringIDSwapSourceStrings[maxStringSwaps];
 int  GameHook::stringIDSwapDesiredStrings[maxStringSwaps];
@@ -916,7 +938,7 @@ static std::unique_ptr<FunctionHook> punchStringIDSwapHook;
 static uintptr_t punchStringIDSwap_jmp_ret{ NULL };
 static __declspec(naked) void PunchStringIDSwapDetour(void) {
 	_asm {
-		cmp byte ptr [GameHook::stringSwapsToggle], 0
+		cmp byte ptr [GameHook::stringSwaps_toggle], 0
 		je originalcode
 
 		push eax
@@ -954,7 +976,7 @@ static std::unique_ptr<FunctionHook> latePunchStringIDSwapHook;
 static uintptr_t latePunchStringIDSwap_jmp_ret{ NULL };
 static __declspec(naked) void LatePunchStringIDSwapDetour(void) {
 	_asm {
-		cmp byte ptr [GameHook::stringSwapsToggle], 0
+		cmp byte ptr [GameHook::stringSwaps_toggle], 0
 		je originalcode
 
 		push eax
@@ -991,7 +1013,7 @@ static std::unique_ptr<FunctionHook> kickStringIDSwapHook;
 static uintptr_t kickStringIDSwap_jmp_ret{ NULL };
 static __declspec(naked) void KickStringIDSwapDetour(void) {
 	_asm {
-		cmp byte ptr [GameHook::stringSwapsToggle], 0
+		cmp byte ptr [GameHook::stringSwaps_toggle], 0
 		je originalcode
 
 		push eax
@@ -1028,7 +1050,7 @@ static std::unique_ptr<FunctionHook> lateKickStringIDSwapHook;
 static uintptr_t lateKickStringIDSwap_jmp_ret{ NULL };
 static __declspec(naked) void LateKickStringIDSwapDetour(void) {
 	_asm {
-		cmp byte ptr [GameHook::stringSwapsToggle], 0
+		cmp byte ptr [GameHook::stringSwaps_toggle], 0
 		je originalcode
 
 		push eax
@@ -1355,7 +1377,7 @@ int __stdcall GetCustomWeave(LocalPlayer* player) {
     return -1;
 }
 
-bool GameHook::customWeaveToggle = false;
+bool GameHook::customWeave_toggle = false;
 bool GameHook::customWeaves_toggles[customWeaveCount]{};
 int GameHook::customWeaveArray[customWeaveCount]{};
 int GameHook::customWeaveMoveIDArray[customWeaveCount]{};
@@ -2879,18 +2901,18 @@ void GameHook::InitializeDetours(void) {
 
 void GameHook::onConfigLoad(const utils::Config& cfg) {
 	// both speedrun and non speedrun
-	focusPatch_toggle = cfg.get<bool>("FocusPatchToggle").value_or(false);
+	focusPatch_toggle = cfg.get<bool>("focusPatch_toggle").value_or(false);
 	FocusPatch(focusPatch_toggle);
 
-	inputIcons_toggle = cfg.get<bool>("InputIconsToggle").value_or(false);
-	inputIconsValue = cfg.get<int>("InputIconsValue").value_or(0);
-	showComboUI_toggle = cfg.get<bool>("ShowComboUIToggle").value_or(false);
-	comboUI_X = cfg.get<float>("ComboUI_X").value_or(0.880f);
-	comboUI_Y = cfg.get<float>("ComboUI_Y").value_or(0.215f);
+	inputIcons_toggle = cfg.get<bool>("inputIcons_toggle").value_or(false);
+	inputIconsValue = cfg.get<int>("inputIconsValue").value_or(0);
+	showComboUI_toggle = cfg.get<bool>("showComboUI_toggle").value_or(false);
+	comboUI_X = cfg.get<float>("comboUI_X").value_or(0.880f);
+	comboUI_Y = cfg.get<float>("comboUI_Y").value_or(0.215f);
 	enable_scroll_transitions = cfg.get<bool>("enable_scroll_transitions").value_or(true);
 	forceCostume = cfg.get<bool>("forceCostume").value_or(false);
 	tempCostume = cfg.get<int>("tempCostume").value_or(0);
-	randomizeCostume_toggle = cfg.get<bool>("RandomizeCostumeToggle").value_or(false);
+	randomizeCostume_toggle = cfg.get<bool>("randomizeCostume_toggle").value_or(false);
 
 	forceHairColour_toggle = cfg.get<bool>("forceHairColour_toggle").value_or(false);
 	desiredHairColourRGB.x = cfg.get<float>("desiredHairColourRGB_x").value_or(1.0f);
@@ -2906,62 +2928,64 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	DisableTutorials(disableTutorials_toggle);
 #endif
 #ifndef SPEEDRUN_BUILD 
-	removeVignette_toggle = cfg.get<bool>("RemoveVignetteToggle").value_or(false);
+	autoQTE_toggle = cfg.get<bool>("autoQTE_toggle").value_or(false);
+	AutoQTE(autoQTE_toggle);
+	removeVignette_toggle = cfg.get<bool>("removeVignette_toggle").value_or(false);
 	RemoveVignette(removeVignette_toggle);
-	disableFpsLimiter_toggle = cfg.get<bool>("DisableFpsLimiter").value_or(false);
+	disableFpsLimiter_toggle = cfg.get<bool>("disableFpsLimiter_toggle").value_or(false);
 	DisableFpsLimiter(disableFpsLimiter_toggle);
 	uptimeFix_toggle = cfg.get<bool>("uptimeFix_toggle").value_or(false);
-	disableTutorials_toggle = cfg.get<bool>("DisableTutorialsToggle").value_or(false);
+	disableTutorials_toggle = cfg.get<bool>("disableTutorials_toggle").value_or(false);
 	DisableTutorials(disableTutorials_toggle);
 	// patches
-	sixtyFpsCutscenes_toggle = cfg.get<bool>("60FpsCutscenes").value_or(false);
+	sixtyFpsCutscenes_toggle = cfg.get<bool>("sixtyFpsCutscenes_toggle").value_or(false);
 	SixtyFpsCutscenes(sixtyFpsCutscenes_toggle);
 	/*memPatch_toggle = cfg.get<bool>("memPatch_toggle").value_or(false);
 	MemPatch(memPatch_toggle);*/
 	drawFlyingStats_toggle = cfg.get<bool>("drawFlyingStats_toggle").value_or(false);
-	showMessages_toggle = cfg.get<bool>("ShowMessagesToggle").value_or(true);
-	damageReceivedMultiplier_no_damage_toggle = cfg.get<bool>("TakeNoDamageToggle").value_or(false);
-	infJumps_toggle = cfg.get<bool>("InfJumpsToggle").value_or(false);
+	showMessages_toggle = cfg.get<bool>("showMessages_toggle").value_or(true);
+	damageReceivedMultiplierNoDamage_toggle = cfg.get<bool>("damageReceivedMultiplierNoDamage_toggle").value_or(false);
+	infJumps_toggle = cfg.get<bool>("infJumps_toggle").value_or(false);
 	InfJumps(infJumps_toggle);
-	disableDaze_toggle = cfg.get<bool>("DisableDazeToggle").value_or(false);
+	disableDaze_toggle = cfg.get<bool>("disableDaze_toggle").value_or(false);
 	DisableDaze(disableDaze_toggle);
-	forceDaze_toggle = cfg.get<bool>("ForceDazeToggle").value_or(false);
+	forceDaze_toggle = cfg.get<bool>("forceDaze_toggle").value_or(false);
 	ForceDaze(forceDaze_toggle);
-	freezeTimer_toggle = cfg.get<bool>("FreezeTimerToggle").value_or(false);
+	freezeTimer_toggle = cfg.get<bool>("freezeTimer_toggle").value_or(false);
 	FreezeTimer(freezeTimer_toggle);
-	disableAfterBurnerBounce_toggle = cfg.get<bool>("DisableAfterBurnerBounceToggle").value_or(false);
+	disableAfterBurnerBounce_toggle = cfg.get<bool>("disableAfterBurnerBounce_toggle").value_or(false);
 	DisableAfterBurnerBounce(disableAfterBurnerBounce_toggle);
-	easyCutsceneSkip_toggle = cfg.get<bool>("EasyCutsceneSkipToggle").value_or(false);
+	easyCutsceneSkip_toggle = cfg.get<bool>("easyCutsceneSkip_toggle").value_or(false);
 	EasyCutsceneSkip(easyCutsceneSkip_toggle);
-	disableLockOnDodge_toggle = cfg.get<bool>("DisableLockOnDodgeToggle").value_or(false);
+	disableLockOnDodge_toggle = cfg.get<bool>("disableLockOnDodge_toggle").value_or(false);
 	DisableLockOnDodge(disableLockOnDodge_toggle);
-	noHoldDodgeOffset_toggle = cfg.get<bool>("NoHoldDodgeOffsetToggle").value_or(false);
+	noHoldDodgeOffset_toggle = cfg.get<bool>("noHoldDodgeOffset_toggle").value_or(false);
 	NoHoldDodgeOffset(noHoldDodgeOffset_toggle);
-	jumpOffset_toggle = cfg.get<bool>("JumpOffsetToggle").value_or(false);
+	jumpOffset_toggle = cfg.get<bool>("jumpOffset_toggle").value_or(false);
 	JumpOffset(jumpOffset_toggle);
-	alwaysWalkOnWalls_toggle = cfg.get<bool>("AlwaysWalkOnWallsToggle").value_or(false);
+	alwaysWalkOnWalls_toggle = cfg.get<bool>("alwaysWalkOnWalls_toggle").value_or(false);
 	AlwaysWalkOnWalls(alwaysWalkOnWalls_toggle);
-	getMoreHalos_toggle = cfg.get<bool>("GetMoreHalosToggle").value_or(false);
+	getMoreHalos_toggle = cfg.get<bool>("getMoreHalos_toggle").value_or(false);
 	GetMoreHalos(getMoreHalos_toggle);
-	moreEnemyAttacks_toggle = cfg.get<bool>("MoreEnemyAttacksToggle").value_or(false);
+	moreEnemyAttacks_toggle = cfg.get<bool>("moreEnemyAttacks_toggle").value_or(false);
 	MoreEnemyAttacks(moreEnemyAttacks_toggle);
-	lessEnemyAttacks_toggle = cfg.get<bool>("LessEnemyAttacksToggle").value_or(false);
+	lessEnemyAttacks_toggle = cfg.get<bool>("lessEnemyAttacks_toggle").value_or(false);
 	LessEnemyAttacks(lessEnemyAttacks_toggle);
-	infBirdTime_toggle = cfg.get<bool>("InfBirdTimeToggle").value_or(false);
+	infBirdTime_toggle = cfg.get<bool>("infBirdTime_toggle").value_or(false);
 	InfBirdTime(infBirdTime_toggle);
-	weaponSwapOffset_toggle = cfg.get<bool>("WeaponSwapOffsetToggle").value_or(false);
+	weaponSwapOffset_toggle = cfg.get<bool>("weaponSwapOffset_toggle").value_or(false);
 	WeaponSwapOffset(weaponSwapOffset_toggle);
-	retainPillowTalkCharge_toggle = cfg.get<bool>("RetainPillowTalkChargeToggle").value_or(false);
+	retainPillowTalkCharge_toggle = cfg.get<bool>("retainPillowTalkCharge_toggle").value_or(false);
 	RetainPillowTalkCharge(retainPillowTalkCharge_toggle);
-	swapMashToHold_toggle = cfg.get<bool>("SwapMashToHoldToggle").value_or(false);
+	swapMashToHold_toggle = cfg.get<bool>("swapMashToHold_toggle").value_or(false);
 	SwapMashToHold(swapMashToHold_toggle);
-	jeanneBayoWT_toggle = cfg.get<bool>("JeanneBayoWTToggle").value_or(false);
+	jeanneBayoWT_toggle = cfg.get<bool>("jeanneBayoWT_toggle").value_or(false);
 	JeanneBayoWT(jeanneBayoWT_toggle);
-	infDivekick_toggle = cfg.get<bool>("InfDivekickToggle").value_or(false);
+	infDivekick_toggle = cfg.get<bool>("infDivekick_toggle").value_or(false);
 	InfDivekick(infDivekick_toggle);
-	parryOffset_toggle = cfg.get<bool>("ParryOffsetToggle").value_or(false);
+	parryOffset_toggle = cfg.get<bool>("parryOffset_toggle").value_or(false);
 	ParryOffset(parryOffset_toggle);
-	disableDoubleTapHeelKick_toggle = cfg.get<bool>("DisableDoubleTapHeelKickToggle").value_or(false);
+	disableDoubleTapHeelKick_toggle = cfg.get<bool>("disableDoubleTapHeelKick_toggle").value_or(false);
 	DisableDoubleTapHeelKick(disableDoubleTapHeelKick_toggle);
 	freezeDifficulty_toggle = cfg.get<bool>("freezeDifficulty_toggle").value_or(false);
 	FreezeDifficulty(freezeDifficulty_toggle);
@@ -2975,63 +2999,63 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	NoHitstop(noHitstop_toggle);
 	unbanClimaxBrace_toggle = cfg.get<bool>("unbanClimaxBrace_toggle").value_or(false);
 	UnbanClimaxBrace(unbanClimaxBrace_toggle);
-	tauntWithTimeBracelet_toggle = cfg.get<bool>("TauntWithTimeBraceletToggle").value_or(false);
+	tauntWithTimeBracelet_toggle = cfg.get<bool>("tauntWithTimeBracelet_toggle").value_or(false);
 	TauntWithTimeBracelet(tauntWithTimeBracelet_toggle);
 
 	// detours
 	drawHitboxes_toggle = cfg.get<bool>("drawHitboxes_toggle").value_or(false);
-	openMenuPause_toggle = cfg.get<bool>("OpenMenuPauseToggle").value_or(false);
-	enemyHP_no_damage_toggle = cfg.get<bool>("DealNoDamageToggle").value_or(false);
-	DisableKilling(enemyHP_no_damage_toggle);
-	enemyHP_one_hit_kill_toggle = cfg.get<bool>("OneHitKillToggle").value_or(false);
-	witchTimeMultiplier_toggle = cfg.get<bool>("WitchTimeMultiplierToggle").value_or(false);
-	witchTimeMultiplier = cfg.get<float>("WitchTimeMultiplier").value_or(1.0f);
-	inf_magic_toggle = cfg.get<bool>("InfMagicToggle").value_or(false);
-	inf_magic_value = cfg.get<float>("InfMagicValue").value_or(1200.0f);
+	openMenuPause_toggle = cfg.get<bool>("openMenuPause_toggle").value_or(false);
+	enemyHPNoDamage_toggle = cfg.get<bool>("enemyHPNoDamage_toggle").value_or(false);
+	DisableKilling(enemyHPNoDamage_toggle);
+	enemyHPOneHitKill_toggle = cfg.get<bool>("enemyHPOneHitKill_toggle").value_or(false);
+	witchTimeMultiplier_toggle = cfg.get<bool>("witchTimeMultiplier_toggle").value_or(false);
+	witchTimeMultiplier = cfg.get<float>("witchTimeMultiplier").value_or(1.0f);
+	infMagic_toggle = cfg.get<bool>("infMagic_toggle").value_or(false);
+	infMagic_value = cfg.get<float>("infMagic_value").value_or(1200.0f);
 
-	damageDealtMultiplier_toggle = cfg.get<bool>("DamageDealtMultiplierToggle").value_or(false);
-	damageDealtMultiplierMult = cfg.get<float>("DamageDealtMultiplierMult").value_or(1.0f);
+	damageDealtMultiplier_toggle = cfg.get<bool>("damageDealtMultiplier_toggle").value_or(false);
+	damageDealtMultiplierMult = cfg.get<float>("damageDealtMultiplierMult").value_or(1.0f);
 
-	damageReceivedMultiplier_toggle = cfg.get<bool>("DamageReceivedMultiplierToggle").value_or(false);
-	incoming_damage_mult = cfg.get<float>("DamageReceivedMultiplierMult").value_or(1.0f);
+	damageReceivedMultiplier_toggle = cfg.get<bool>("damageReceivedMultiplier_toggle").value_or(false);
+	incoming_damage_mult = cfg.get<float>("damageReceivedMultiplierMult").value_or(1.0f);
 
-	customCameraDistance_toggle = cfg.get<bool>("CustomCameraDistanceToggle").value_or(false);
-	customCameraDistance = cfg.get<float>("CustomCameraDistance").value_or(10.0f);
-	lessClothes_toggle = cfg.get<bool>("LessClothesToggle").value_or(false);
-	haloDisplay_toggle = cfg.get<bool>("HaloDisplayToggle").value_or(false);
-	easierMash_toggle = cfg.get<bool>("EasierMashToggle").value_or(false);
-	initialAngelSlayerFloor = cfg.get<int>("InitialAngelSlayerFloor").value_or(0);
-	cancellableAfterBurner_toggle = cfg.get<bool>("CancellableAfterBurnerToggle").value_or(false);
-	cancellableFallingKick_toggle = cfg.get<bool>("CancellableFallingKickToggle").value_or(false);
-	turbo_toggle = cfg.get<bool>("TurboToggle").value_or(false);
-	turboValue = cfg.get<float>("TurboValue").value_or(1.0f);
-	altTeleInput_toggle = cfg.get<bool>("AltTeleInputToggle").value_or(false);
-	teleportComboAction_toggle = cfg.get<bool>("TeleportComboAction_toggle").value_or(false);
-	disableSlowmo_toggle = cfg.get<bool>("DisableSlowmoToggle").value_or(false);
-	lowerDivekick_toggle = cfg.get<bool>("LowerDivekickToggle").value_or(false);
-	dualAfterBurner_toggle = cfg.get<bool>("DualAfterBurnerToggle").value_or(false);
-	loadReplace_toggle = cfg.get<bool>("LoadReplaceToggle").value_or(false);
-	longerPillowTalkCharge_toggle = cfg.get<bool>("LongerPillowTalkChargeToggle").value_or(false);
-	alwaysWitchTime_toggle = cfg.get<bool>("AlwaysWitchTimeToggle").value_or(false);
-	saveStatesHotkeys_toggle = cfg.get<bool>("SaveStatesHotkeysToggle").value_or(false);
+	customCameraDistance_toggle = cfg.get<bool>("customCameraDistance_toggle").value_or(false);
+	customCameraDistance = cfg.get<float>("customCameraDistance").value_or(10.0f);
+	lessClothes_toggle = cfg.get<bool>("lessClothes_toggle").value_or(false);
+	haloDisplay_toggle = cfg.get<bool>("haloDisplay_toggle").value_or(false);
+	easierMash_toggle = cfg.get<bool>("easierMash_toggle").value_or(false);
+	initialAngelSlayerFloor = cfg.get<int>("initialAngelSlayerFloor").value_or(0);
+	cancellableAfterBurner_toggle = cfg.get<bool>("cancellableAfterBurner_toggle").value_or(false);
+	cancellableFallingKick_toggle = cfg.get<bool>("cancellableFallingKick_toggle").value_or(false);
+	turbo_toggle = cfg.get<bool>("turbo_toggle").value_or(false);
+	turboValue = cfg.get<float>("turboValue").value_or(1.0f);
+	altTeleInput_toggle = cfg.get<bool>("altTeleInput_toggle").value_or(false);
+	teleportComboAction_toggle = cfg.get<bool>("teleportComboAction_toggle").value_or(false);
+	disableSlowmo_toggle = cfg.get<bool>("disableSlowmo_toggle").value_or(false);
+	lowerDivekick_toggle = cfg.get<bool>("lowerDivekick_toggle").value_or(false);
+	dualAfterBurner_toggle = cfg.get<bool>("dualAfterBurner_toggle").value_or(false);
+	loadReplace_toggle = cfg.get<bool>("loadReplace_toggle").value_or(false);
+	longerPillowTalkCharge_toggle = cfg.get<bool>("longerPillowTalkCharge_toggle").value_or(false);
+	alwaysWitchTime_toggle = cfg.get<bool>("alwaysWitchTime_toggle").value_or(false);
+	saveStatesHotkeys_toggle = cfg.get<bool>("saveStatesHotkeys_toggle").value_or(false);
 	omnicancelTele_toggle = cfg.get<bool>("omnicancelTele_toggle").value_or(false);
 	drawPlayerBones_toggle = cfg.get<bool>("drawPlayerBones_toggle").value_or(false);
 
-	moveIDSwapsToggle = cfg.get<bool>("moveIDSwapsToggle").value_or(false);
+	moveIDSwaps_toggle = cfg.get<bool>("moveIDSwaps_toggle").value_or(false);
 	for (int i = 0; i < maxMoveIDSwaps; ++i) {
-		moveIDSwap_toggles[i] = cfg.get<bool>(std::string("MoveIDSwap_toggles[") + std::to_string(i) + "]").value_or(false);
-		moveIDSwapSourceMoves[i] = cfg.get<int>(std::string("MoveIDSwapSourceMoves[") + std::to_string(i) + "]").value_or(-1);
-		moveIDSwapSwappedMoves[i] = cfg.get<int>(std::string("MoveIDSwapSwappedMoves[") + std::to_string(i) + "]").value_or(-1);
+		moveIDSwap_toggles[i] = cfg.get<bool>(std::string("moveIDSwap_toggles[") + std::to_string(i) + "]").value_or(false);
+		moveIDSwapSourceMoves[i] = cfg.get<int>(std::string("moveIDSwapSourceMoves[") + std::to_string(i) + "]").value_or(-1);
+		moveIDSwapSwappedMoves[i] = cfg.get<int>(std::string("moveIDSwapSwappedMoves[") + std::to_string(i) + "]").value_or(-1);
 	}
 
-	stringSwapsToggle = cfg.get<bool>("stringSwapsToggle").value_or(false);
+	stringSwaps_toggle = cfg.get<bool>("stringSwaps_toggle").value_or(false);
 	for (int i = 0; i < maxStringSwaps; ++i) {
 		stringIDSwap_toggles[i] = cfg.get<bool>(std::string("stringIDSwap_toggles[") + std::to_string(i) + "]").value_or(false);
 		stringIDSwapSourceStrings[i] = cfg.get<int>(std::string("stringIDSwapSourceStrings[") + std::to_string(i) + "]").value_or(-1);
 		stringIDSwapDesiredStrings[i] = cfg.get<int>(std::string("stringIDSwapDesiredStrings[") + std::to_string(i) + "]").value_or(-1);
 	}
 
-	comboMakerToggle = cfg.get<bool>("comboMakerToggle").value_or(false);
+	comboMaker_toggle = cfg.get<bool>("comboMaker_toggle").value_or(false);
 	for (int i = 0; i < maxComboMakers; ++i) {
 		comboMaker_toggles[i] = cfg.get<bool>(std::string("ComboMaker_toggles[") + std::to_string(i) + "]").value_or(false);
 		comboMakerMoveIDs[i] = cfg.get<int>(std::string("ComboMakerMoveIDs[") + std::to_string(i) + "]").value_or(-1);
@@ -3039,7 +3063,7 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 		comboMakerStringIDs[i] = cfg.get<int>(std::string("ComboMakerStringIDs[") + std::to_string(i) + "]").value_or(-1);
 	}
 
-	customWeaveToggle = cfg.get<bool>("customWeaveToggle").value_or(false);
+	customWeave_toggle = cfg.get<bool>("customWeave_toggle").value_or(false);
 	for (int i = 0; i < customWeaveCount; ++i) {
 		customWeaves_toggles[i] = cfg.get<bool>(std::string("CustomWeaves_toggles[") + std::to_string(i) + "]").value_or(false);
 		customWeaveMoveIDArray[i] = cfg.get<int>(std::string("CustomWeaveMoveIDArray[") + std::to_string(i) + "]").value_or(-1);
@@ -3053,17 +3077,17 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 
 void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("uptimeFix_toggle", uptimeFix_toggle);
-	cfg.set<bool>("FocusPatchToggle", focusPatch_toggle);
-	cfg.set<bool>("InputIconsToggle", inputIcons_toggle);
-	cfg.set<int>("InputIconsValue", inputIconsValue);
-	cfg.set<bool>("ShowComboUIToggle", showComboUI_toggle);
-	cfg.set<float>("ComboUI_X", comboUI_X);
-	cfg.set<float>("ComboUI_Y", comboUI_Y);
+	cfg.set<bool>("focusPatch_toggle", focusPatch_toggle);
+	cfg.set<bool>("inputIcons_toggle", inputIcons_toggle);
+	cfg.set<int>("inputIconsValue", inputIconsValue);
+	cfg.set<bool>("showComboUI_toggle", showComboUI_toggle);
+	cfg.set<float>("comboUI_X", comboUI_X);
+	cfg.set<float>("comboUI_Y", comboUI_Y);
 	cfg.set<bool>("enable_scroll_transitions", enable_scroll_transitions);
 	cfg.set<bool>("forceCostume", GameHook::forceCostume);
 	cfg.set<int>("tempCostume", GameHook::tempCostume);
-	cfg.set<bool>("DisableTutorialsToggle", disableTutorials_toggle);
-	cfg.set<bool>("RandomizeCostumeToggle", randomizeCostume_toggle);
+	cfg.set<bool>("disableTutorials_toggle", disableTutorials_toggle);
+	cfg.set<bool>("randomizeCostume_toggle", randomizeCostume_toggle);
 	cfg.set<bool>("forceHairColour_toggle", forceHairColour_toggle);
 	cfg.set<float>("desiredHairColourRGB_x", desiredHairColourRGB.x);
 	cfg.set<float>("desiredHairColourRGB_y", desiredHairColourRGB.y);
@@ -3076,33 +3100,34 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 #endif
 #ifndef SPEEDRUN_BUILD
 	// patches
-	cfg.set<bool>("RemoveVignetteToggle", removeVignette_toggle);
-	cfg.set<bool>("DisableFpsLimiter", disableFpsLimiter_toggle);
-	cfg.set<bool>("60FpsCutscenes", sixtyFpsCutscenes_toggle);
+	cfg.set<bool>("autoQTE_toggle", autoQTE_toggle);
+	cfg.set<bool>("removeVignette_toggle", removeVignette_toggle);
+	cfg.set<bool>("disableFpsLimiter_toggle", disableFpsLimiter_toggle);
+	cfg.set<bool>("sixtyFpsCutscenes_toggle", sixtyFpsCutscenes_toggle);
 	// cfg.set<bool>("memPatch_toggle", memPatch_toggle);
-	cfg.set<bool>("TakeNoDamageToggle", damageReceivedMultiplier_no_damage_toggle);
-	cfg.set<bool>("InfJumpsToggle", infJumps_toggle);
-	cfg.set<bool>("DisableDazeToggle", disableDaze_toggle);
-	cfg.set<bool>("ForceDazeToggle", forceDaze_toggle);
-	cfg.set<bool>("FreezeTimerToggle", freezeTimer_toggle);
-	cfg.set<bool>("ShowMessagesToggle", showMessages_toggle);
-	cfg.set<bool>("DisableAfterBurnerBounceToggle", disableAfterBurnerBounce_toggle);
-	cfg.set<bool>("EasyCutsceneSkipToggle", easyCutsceneSkip_toggle);
-	cfg.set<bool>("DisableLockOnDodgeToggle", disableLockOnDodge_toggle);
-	cfg.set<bool>("NoHoldDodgeOffsetToggle", noHoldDodgeOffset_toggle);
-	cfg.set<bool>("JumpOffsetToggle", jumpOffset_toggle);
-	cfg.set<bool>("AlwaysWalkOnWallsToggle", alwaysWalkOnWalls_toggle);
-	cfg.set<bool>("GetMoreHalosToggle", getMoreHalos_toggle);
-	cfg.set<bool>("MoreEnemyAttacksToggle", moreEnemyAttacks_toggle);
-	cfg.set<bool>("LessEnemyAttacksToggle", lessEnemyAttacks_toggle);
-	cfg.set<bool>("InfBirdTimeToggle", infBirdTime_toggle);
-	cfg.set<bool>("WeaponSwapOffsetToggle", weaponSwapOffset_toggle);
-	cfg.set<bool>("RetainPillowTalkChargeToggle", retainPillowTalkCharge_toggle);
-	cfg.set<bool>("SwapMashToHoldToggle", swapMashToHold_toggle);
-	cfg.set<bool>("JeanneBayoWTToggle", jeanneBayoWT_toggle);
-	cfg.set<bool>("InfDivekickToggle", infDivekick_toggle);
-	cfg.set<bool>("ParryOffsetToggle", parryOffset_toggle);
-	cfg.set<bool>("DisableDoubleTapHeelKickToggle", disableDoubleTapHeelKick_toggle);
+	cfg.set<bool>("damageReceivedMultiplierNoDamage_toggle", damageReceivedMultiplierNoDamage_toggle);
+	cfg.set<bool>("infJumps_toggle", infJumps_toggle);
+	cfg.set<bool>("disableDaze_toggle", disableDaze_toggle);
+	cfg.set<bool>("forceDaze_toggle", forceDaze_toggle);
+	cfg.set<bool>("freezeTimer_toggle", freezeTimer_toggle);
+	cfg.set<bool>("showMessages_toggle", showMessages_toggle);
+	cfg.set<bool>("disableAfterBurnerBounce_toggle", disableAfterBurnerBounce_toggle);
+	cfg.set<bool>("easyCutsceneSkip_toggle", easyCutsceneSkip_toggle);
+	cfg.set<bool>("disableLockOnDodge_toggle", disableLockOnDodge_toggle);
+	cfg.set<bool>("noHoldDodgeOffset_toggle", noHoldDodgeOffset_toggle);
+	cfg.set<bool>("jumpOffset_toggle", jumpOffset_toggle);
+	cfg.set<bool>("alwaysWalkOnWalls_toggle", alwaysWalkOnWalls_toggle);
+	cfg.set<bool>("getMoreHalos_toggle", getMoreHalos_toggle);
+	cfg.set<bool>("moreEnemyAttacks_toggle", moreEnemyAttacks_toggle);
+	cfg.set<bool>("lessEnemyAttacks_toggle", lessEnemyAttacks_toggle);
+	cfg.set<bool>("infBirdTime_toggle", infBirdTime_toggle);
+	cfg.set<bool>("weaponSwapOffset_toggle", weaponSwapOffset_toggle);
+	cfg.set<bool>("retainPillowTalkCharge_toggle", retainPillowTalkCharge_toggle);
+	cfg.set<bool>("swapMashToHold_toggle", swapMashToHold_toggle);
+	cfg.set<bool>("jeanneBayoWT_toggle", jeanneBayoWT_toggle);
+	cfg.set<bool>("infDivekick_toggle", infDivekick_toggle);
+	cfg.set<bool>("parryOffset_toggle", parryOffset_toggle);
+	cfg.set<bool>("disableDoubleTapHeelKick_toggle", disableDoubleTapHeelKick_toggle);
 	cfg.set<bool>("freezeDifficulty_toggle", freezeDifficulty_toggle);
 	cfg.set<bool>("hideHalos_toggle", hideHalos_toggle);
 	cfg.set<bool>("multiplayerPatch_toggle", multiplayerPatch_toggle);
@@ -3112,72 +3137,72 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 
 	// detours
 	cfg.set<bool>("drawHitboxes_toggle", drawHitboxes_toggle);
-	cfg.set<bool>("OpenMenuPauseToggle", openMenuPause_toggle);
-	cfg.set<bool>("DealNoDamageToggle", enemyHP_no_damage_toggle);
-	cfg.set<bool>("OneHitKillToggle", enemyHP_one_hit_kill_toggle);
-	cfg.set<bool>("WitchTimeMultiplierToggle", witchTimeMultiplier_toggle);
-	cfg.set<float>("WitchTimeMultiplier", witchTimeMultiplier);
-	cfg.set<bool>("InfMagicToggle", inf_magic_toggle);
-	cfg.set<float>("InfMagicValue", inf_magic_value);
-	cfg.set<bool>("DamageDealtMultiplierToggle", damageDealtMultiplier_toggle);
-	cfg.set<float>("DamageDealtMultiplierMult", damageDealtMultiplierMult);
-	cfg.set<bool>("DamageReceivedMultiplierToggle", damageReceivedMultiplier_toggle);
-	cfg.set<float>("DamageReceivedMultiplierMult", incoming_damage_mult);
-	cfg.set<bool>("CustomCameraDistanceToggle", customCameraDistance_toggle);
-	cfg.set<float>("CustomCameraDistance", customCameraDistance);
-	cfg.set<bool>("LessClothesToggle", lessClothes_toggle);
-	cfg.set<bool>("HaloDisplayToggle", haloDisplay_toggle);
-	cfg.set<bool>("EasierMashToggle", easierMash_toggle);
-	cfg.set<int>("InitialAngelSlayerFloor", initialAngelSlayerFloor);
-	cfg.set<bool>("CancellableAfterBurnerToggle", cancellableAfterBurner_toggle);
-	cfg.set<bool>("CancellableFallingKickToggle", cancellableFallingKick_toggle);
-	cfg.set<bool>("TurboToggle", turbo_toggle);
-	cfg.set<float>("TurboValue", turboValue);
-	cfg.set<bool>("AltTeleInputToggle", altTeleInput_toggle);
-	cfg.set<bool>("TeleportComboAction_toggle", teleportComboAction_toggle);
-	cfg.set<bool>("DisableSlowmoToggle", disableSlowmo_toggle);
-	cfg.set<bool>("LowerDivekickToggle", lowerDivekick_toggle);
-	cfg.set<bool>("DualAfterBurnerToggle", dualAfterBurner_toggle);
-	cfg.set<bool>("LoadReplaceToggle", loadReplace_toggle);
-	cfg.set<bool>("LongerPillowTalkChargeToggle", longerPillowTalkCharge_toggle);
-	cfg.set<bool>("AlwaysWitchTimeToggle", alwaysWitchTime_toggle);
-	cfg.set<bool>("SaveStatesHotkeysToggle", saveStatesHotkeys_toggle);
-	cfg.set<bool>("TauntWithTimeBraceletToggle", tauntWithTimeBracelet_toggle);
+	cfg.set<bool>("openMenuPause_toggle", openMenuPause_toggle);
+	cfg.set<bool>("enemyHPNoDamage_toggle", enemyHPNoDamage_toggle);
+	cfg.set<bool>("enemyHPOneHitKill_toggle", enemyHPOneHitKill_toggle);
+	cfg.set<bool>("witchTimeMultiplier_toggle", witchTimeMultiplier_toggle);
+	cfg.set<float>("witchTimeMultiplier", witchTimeMultiplier);
+	cfg.set<bool>("infMagic_toggle", infMagic_toggle);
+	cfg.set<float>("infMagic_value", infMagic_value);
+	cfg.set<bool>("damageDealtMultiplier_toggle", damageDealtMultiplier_toggle);
+	cfg.set<float>("damageDealtMultiplierMult", damageDealtMultiplierMult);
+	cfg.set<bool>("damageReceivedMultiplier_toggle", damageReceivedMultiplier_toggle);
+	cfg.set<float>("incoming_damage_mult", incoming_damage_mult);
+	cfg.set<bool>("customCameraDistance_toggle", customCameraDistance_toggle);
+	cfg.set<float>("customCameraDistance", customCameraDistance);
+	cfg.set<bool>("lessClothes_toggle", lessClothes_toggle);
+	cfg.set<bool>("haloDisplay_toggle", haloDisplay_toggle);
+	cfg.set<bool>("easierMash_toggle", easierMash_toggle);
+	cfg.set<int>("initialAngelSlayerFloor", initialAngelSlayerFloor);
+	cfg.set<bool>("cancellableAfterBurner_toggle", cancellableAfterBurner_toggle);
+	cfg.set<bool>("cancellableFallingKick_toggle", cancellableFallingKick_toggle);
+	cfg.set<bool>("turbo_toggle", turbo_toggle);
+	cfg.set<float>("turboValue", turboValue);
+	cfg.set<bool>("altTeleInput_toggle", altTeleInput_toggle);
+	cfg.set<bool>("teleportComboAction_toggle", teleportComboAction_toggle);
+	cfg.set<bool>("disableSlowmo_toggle", disableSlowmo_toggle);
+	cfg.set<bool>("lowerDivekick_toggle", lowerDivekick_toggle);
+	cfg.set<bool>("dualAfterBurner_toggle", dualAfterBurner_toggle);
+	cfg.set<bool>("loadReplace_toggle", loadReplace_toggle);
+	cfg.set<bool>("longerPillowTalkCharge_toggle", longerPillowTalkCharge_toggle);
+	cfg.set<bool>("alwaysWitchTime_toggle", alwaysWitchTime_toggle);
+	cfg.set<bool>("saveStatesHotkeys_toggle", saveStatesHotkeys_toggle);
+	cfg.set<bool>("tauntWithTimeBracelet_toggle", tauntWithTimeBracelet_toggle);
 	cfg.set<bool>("omnicancelTele_toggle", omnicancelTele_toggle);
 	cfg.set<bool>("drawPlayerBones_toggle", drawPlayerBones_toggle);
 	cfg.set<bool>("drawFlyingStats_toggle", drawFlyingStats_toggle);
 
-	cfg.set<bool>("moveIDSwapsToggle", moveIDSwapsToggle);
+	cfg.set<bool>("moveIDSwaps_toggle", moveIDSwaps_toggle);
 	for (int i = 0; i < maxMoveIDSwaps; ++i) {
-		cfg.set<bool>(("MoveIDSwap_toggles[" + std::to_string(i) + "]").c_str(), moveIDSwap_toggles[i]);
-		cfg.set<int>(("MoveIDSwapSourceMoves[" + std::to_string(i) + "]").c_str(), moveIDSwapSourceMoves[i]);
-		cfg.set<int>(("MoveIDSwapSwappedMoves[" + std::to_string(i) + "]").c_str(), moveIDSwapSwappedMoves[i]);
+		cfg.set<bool>(("moveIDSwap_toggles[" + std::to_string(i) + "]").c_str(), moveIDSwap_toggles[i]);
+		cfg.set<int>(("moveIDSwapSourceMoves[" + std::to_string(i) + "]").c_str(), moveIDSwapSourceMoves[i]);
+		cfg.set<int>(("moveIDSwapSwappedMoves[" + std::to_string(i) + "]").c_str(), moveIDSwapSwappedMoves[i]);
 	}
 
-	cfg.set<bool>("stringSwapsToggle", stringSwapsToggle);
+	cfg.set<bool>("stringSwaps_toggle", stringSwaps_toggle);
 	for (int i = 0; i < maxStringSwaps; ++i) {
 		cfg.set<bool>(("stringIDSwap_toggles[" + std::to_string(i) + "]").c_str(), stringIDSwap_toggles[i]);
 		cfg.set<int>(("stringIDSwapSourceStrings[" + std::to_string(i) + "]").c_str(), stringIDSwapSourceStrings[i]);
 		cfg.set<int>(("stringIDSwapDesiredStrings[" + std::to_string(i) + "]").c_str(), stringIDSwapDesiredStrings[i]);
 	}
 
-	cfg.set<bool>("comboMakerToggle", comboMakerToggle);
+	cfg.set<bool>("comboMaker_toggle", comboMaker_toggle);
 	for (int i = 0; i < maxComboMakers; ++i) {
-		cfg.set<bool>(("ComboMaker_toggles[" + std::to_string(i) + "]").c_str(), comboMaker_toggles[i]);
-		cfg.set<int>(("ComboMakerMoveIDs[" + std::to_string(i) + "]").c_str(), comboMakerMoveIDs[i]);
-		cfg.set<int>(("ComboMakerMoveParts[" + std::to_string(i) + "]").c_str(), comboMakerMoveParts[i]);
-		cfg.set<int>(("ComboMakerStringIDs[" + std::to_string(i) + "]").c_str(), comboMakerStringIDs[i]);
+		cfg.set<bool>(("comboMaker_toggles[" + std::to_string(i) + "]").c_str(), comboMaker_toggles[i]);
+		cfg.set<int>(("comboMakerMoveIDs[" + std::to_string(i) + "]").c_str(), comboMakerMoveIDs[i]);
+		cfg.set<int>(("comboMakerMoveParts[" + std::to_string(i) + "]").c_str(), comboMakerMoveParts[i]);
+		cfg.set<int>(("comboMakerStringIDs[" + std::to_string(i) + "]").c_str(), comboMakerStringIDs[i]);
 	}
 
-	cfg.set<bool>("CustomWeavesToggle", customWeaves_toggles);
+	cfg.set<bool>("customWeaves_toggles", customWeaves_toggles);
 	for (int i = 0; i < customWeaveCount; ++i) {
-		cfg.set<bool>(("CustomWeaves_toggles[" + std::to_string(i) + "]").c_str(), customWeaves_toggles[i]);
-		cfg.set<int>(("CustomWeaveMoveIDArray[" + std::to_string(i) + "]").c_str(), customWeaveMoveIDArray[i]);
-		cfg.set<int>(("CustomWeaveArray[" + std::to_string(i) + "]").c_str(), customWeaveArray[i]);
+		cfg.set<bool>(("customWeaves_toggles[" + std::to_string(i) + "]").c_str(), customWeaves_toggles[i]);
+		cfg.set<int>(("customWeaveMoveIDArray[" + std::to_string(i) + "]").c_str(), customWeaveMoveIDArray[i]);
+		cfg.set<int>(("customWeaveArray[" + std::to_string(i) + "]").c_str(), customWeaveArray[i]);
 	}
 
 	// tick
-	cfg.set<int>("DesiredThirdAccessoryValue", desiredThirdAccessory);
+	cfg.set<int>("desiredThirdAccessory", desiredThirdAccessory);
 #endif
 	cfg.save(GameHook::cfgString);
 }

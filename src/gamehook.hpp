@@ -50,6 +50,9 @@ public:
 	static bool linkGameToDelta_toggle;
 	static void LinkGameToDelta(bool enabled);
 
+	static bool autoQTE_toggle;
+	static void AutoQTE(bool enabled);
+
 	static bool removeVignette_toggle;
 	static void RemoveVignette(bool enabled);
 
@@ -180,15 +183,15 @@ public:
 	static bool openMenuPause_toggle;
 	static bool witchTimeMultiplier_toggle;
 	static float witchTimeMultiplier;
-	static bool enemyHP_no_damage_toggle;
-	static bool enemyHP_one_hit_kill_toggle;
-	static bool inf_magic_toggle;
-	static float inf_magic_value;
+	static bool enemyHPNoDamage_toggle;
+	static bool enemyHPOneHitKill_toggle;
+	static bool infMagic_toggle;
+	static float infMagic_value;
 
 	static bool damageDealtMultiplier_toggle;
 	static float damageDealtMultiplierMult;
 
-	static bool damageReceivedMultiplier_no_damage_toggle;
+	static bool damageReceivedMultiplierNoDamage_toggle;
 	static bool damageReceivedMultiplier_toggle;
 	static float incoming_damage_mult;
 
@@ -197,26 +200,26 @@ public:
 	static bool haloDisplay_toggle;
 	static int haloDisplayValue;
 	//
-	static bool moveIDSwapsToggle;
+	static bool moveIDSwaps_toggle;
 	static const int maxMoveIDSwaps = 5;
 	static bool moveIDSwap_toggles[];
 	static int moveIDSwapSourceMoves[];
 	static int moveIDSwapSwappedMoves[];
 	//
-	static bool stringSwapsToggle;
+	static bool stringSwaps_toggle;
 	static const int maxStringSwaps = 5;
 	static bool stringIDSwap_toggles[];
 	static int stringIDSwapSourceStrings[];
 	static int stringIDSwapDesiredStrings[];
 	//
-	static bool comboMakerToggle;
+	static bool comboMaker_toggle;
     static const int maxComboMakers = 5;
     static bool comboMaker_toggles[];
     static int comboMakerMoveIDs[];
     static int comboMakerMoveParts[];
     static int comboMakerStringIDs[];
 	//
-	static bool customWeaveToggle;
+	static bool customWeave_toggle;
 	static const int customWeaveCount = 20;
 	static bool customWeaves_toggles[];
 	static int customWeaveArray[];
