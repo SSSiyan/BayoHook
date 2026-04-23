@@ -268,7 +268,8 @@ struct Enemy {
     float animFrame; // 0x3e4
     char pad_3e8[0x2cc];
     int hp; // 0x6b4
-    char pad_6b8[0x5dc];
+    int hpMax; // 0x6b8
+    char pad_6bc[0x5d8];
     float daze; // 0xc94
     float dazeMax; // 0xc98
     float dazeCurrentDuration; // 0xc9c
@@ -320,4 +321,10 @@ struct EntitySpawnArg2 {
     char char_9f = 0;             // 0x9F
     float float_A0 = 1.0f;        // 0xA0
     char pad_A4[0x20*4]{};        // 0xA4
+};
+
+struct EntitySpawn {
+    int entityID = 0x20000;
+    EntitySpawnArg2 settings{};
+    int unkn = -1;
 };

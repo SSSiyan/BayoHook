@@ -18,7 +18,7 @@
 
 //#define SPEEDRUN_BUILD
 
-#define BAYOHOOK_VERSION "1.16 PRE RELEASE"
+#define BAYOHOOK_VERSION "2.0.0 PRE RELEASE"
 #ifndef SPEEDRUN_BUILD
 #define BAYOHOOK_EDITION ""
 #else
@@ -153,17 +153,6 @@ public:
 
 	static bool unbanClimaxBrace_toggle;
 	static void UnbanClimaxBrace(bool enabled);
-	
-	static void SpawnStuff();
-	static bool spawnEnemy;
-	static bool spawnWithoutArgs2;
-	static int arg1;
-	static EntitySpawnArg2 arg2;
-	static int arg3;
-
-	static void WeaponSwapCaller(void);
-	static void SaveStates_SaveState();
-	static void SaveStates_LoadState();
 #endif
 	// detour values
 	static bool uptimeFix_toggle;
@@ -187,46 +176,7 @@ public:
 	static bool enemyHPOneHitKill_toggle;
 	static bool infMagic_toggle;
 	static float infMagic_value;
-
-	static bool damageDealtMultiplier_toggle;
-	static float damageDealtMultiplierMult;
-
-	static bool damageReceivedMultiplierNoDamage_toggle;
-	static bool damageReceivedMultiplier_toggle;
-	static float incoming_damage_mult;
-
-	static bool customCameraDistance_toggle;
-	static float customCameraDistance;
-	static bool haloDisplay_toggle;
-	static int haloDisplayValue;
-	//
-	static bool moveIDSwaps_toggle;
-	static const int maxMoveIDSwaps = 5;
-	static bool moveIDSwap_toggles[];
-	static int moveIDSwapSourceMoves[];
-	static int moveIDSwapSwappedMoves[];
-	//
-	static bool stringSwaps_toggle;
-	static const int maxStringSwaps = 5;
-	static bool stringIDSwap_toggles[];
-	static int stringIDSwapSourceStrings[];
-	static int stringIDSwapDesiredStrings[];
-	//
-	static bool comboMaker_toggle;
-    static const int maxComboMakers = 5;
-    static bool comboMaker_toggles[];
-    static int comboMakerMoveIDs[];
-    static int comboMakerMoveParts[];
-    static int comboMakerStringIDs[];
-	//
-	static bool customWeave_toggle;
-	static const int customWeaveCount = 20;
-	static bool customWeaves_toggles[];
-	static int customWeaveArray[];
-	static int customWeaveMoveIDArray[];
-	//
 	static int desiredThirdAccessory;
-	//
 	static bool easierMash_toggle;
 	static bool cancellableAfterBurner_toggle;
 	static bool cancellableFallingKick_toggle;
@@ -242,11 +192,48 @@ public:
 	static bool longerPillowTalkCharge_toggle;
 	static bool alwaysWitchTime_toggle;
 	static bool omnicancelTele_toggle;
-	//
+
+	static bool damageDealtMultiplier_toggle;
+	static float damageDealtMultiplierMult;
+
+	static bool damageReceivedMultiplierNoDamage_toggle;
+	static bool damageReceivedMultiplier_toggle;
+	static float incoming_damage_mult;
+
+	static bool customCameraDistance_toggle;
+	static float customCameraDistance;
+	static bool haloDisplay_toggle;
+	static int haloDisplayValue;
+
+	static bool moveIDSwaps_toggle;
+	static const int maxMoveIDSwaps = 5;
+	static bool moveIDSwap_toggles[];
+	static int moveIDSwapSourceMoves[];
+	static int moveIDSwapSwappedMoves[];
+
+	static bool stringSwaps_toggle;
+	static const int maxStringSwaps = 5;
+	static bool stringIDSwap_toggles[];
+	static int stringIDSwapSourceStrings[];
+	static int stringIDSwapDesiredStrings[];
+
+	static bool comboMaker_toggle;
+    static const int maxComboMakers = 5;
+    static bool comboMaker_toggles[];
+    static int comboMakerMoveIDs[];
+    static int comboMakerMoveParts[];
+    static int comboMakerStringIDs[];
+
+	static bool customWeave_toggle;
+	static const int customWeaveCount = 20;
+	static bool customWeaves_toggles[];
+	static int customWeaveArray[];
+	static int customWeaveMoveIDArray[];
+
 	static bool getMotName_toggle;
 	static char getMotName_weaponMotString[0x128];
 	static char getMotName_playerMotString[0x128];
-	//
+
 	static bool saveStatesHotkeys_toggle;
 	static int saveStates_SavedEnemyMoveID;
 	static float saveStates_SavedEnemyXYZPos[3];
@@ -303,15 +290,32 @@ public:
 	static bool forceCostume;
 	static int tempCostume;
 #ifndef SPEEDRUN_BUILD
-	static bool drawHitboxes_toggle;
-	static bool drawPlayerBones_toggle;
-	static void Draw3dShapes();
-	static bool drawFlyingStats_toggle;
-	static void DrawFlyingStats();
 	static const char* weaponNames[19];
 	static const char* weaveNames[37];
 	static const char* accessoryNames[13];
 	static const char* moveIDNames[350];
+
+	static bool drawHitboxes_toggle;
+	static bool drawPlayerBones_toggle;
+	static void Draw3dShapes();
+
+	static bool drawFlyingStats_toggle;
+	static void DrawFlyingStats();
+
+	static void Setup3dShapes();
+	static void SpawnEntity(EntitySpawn&);
+	static void EasySpawnEntityFromHotkey(int enemyID, int variant, int spawnAnim);
+	static void EasySpawnEntityFromGui(int enemyID, int variant, int spawnAnim);
+	static void SpawnStuff(); // Do not call from outside of game thread. Set spawnEntityFromGui / spawnEntityFromHotkey true instead.
+	static bool spawnEntityFromGui;
+	static bool spawnEntityFromHotkey;
+	static EntitySpawn guiEntitySpawn;
+	static EntitySpawn hotkeyEntitySpawn;
+
+	static void WeaponSwapCaller(void);
+	static void SaveStates_SaveState();
+	static void SaveStates_LoadState();
+
 #endif
 
 	// dev functions
@@ -319,21 +323,17 @@ public:
 
 	struct HotkeyMessage {
 		std::string text;
-		bool enabled;
+		std::optional<bool> enabled;
 		float timeRemaining;
 	};
 
-	static void DisplayMessageText(const char* text, bool enabled, float duration = 2.0f);
+	static void DisplayMessageText(const char* text, std::optional<bool> enabled = std::nullopt);
 	static void RenderMessages(float deltaTime);
 	static std::vector<GameHook::HotkeyMessage> activeMessages;
 
 	typedef void(__thiscall* AreaJumpFunc)(uintptr_t ecx, int stage, int part, int spawn);
 	static void AreaJump(int stage, int part, int spawn);
 
-#ifndef SPEEDRUN_BUILD
-	static void Setup3dShapes();
-	static void SpawnEntity(int entityID, EntitySpawnArg2* a2, int a3);
-#endif
 	static void _patch(char* dst, char* src, int size);
 	static void _nop(char* dst, unsigned int size);
 	static void InitializeDetours();

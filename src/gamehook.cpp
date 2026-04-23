@@ -2,6 +2,11 @@
 #include <thread>
 #include "WorldVisualizer.hpp"
 
+bool GameHook::spawnEntityFromGui = false;
+bool GameHook::spawnEntityFromHotkey = false;
+EntitySpawn GameHook::guiEntitySpawn;
+EntitySpawn GameHook::hotkeyEntitySpawn;
+
 // system
 float GameHook::deltaTime = 0.0f;
 float GameHook::deltaSpeed = 0.0f;
@@ -727,21 +732,14 @@ static __declspec(naked) void WitchTimeMultiplierDetour(void) {
 	}
 }
 
-int GameHook::arg1 = 0x0020000;
-EntitySpawnArg2 GameHook::arg2{};
-int GameHook::arg3 = -1;
-bool GameHook::spawnEnemy = false;
-bool GameHook::spawnWithoutArgs2 = false;
-
 void GameHook::SpawnStuff() {
-	if (GameHook::spawnEnemy) {
-		GameHook::spawnEnemy = false;
-		if (spawnWithoutArgs2) {
-			GameHook::SpawnEntity(GameHook::arg1, NULL, GameHook::arg3);
-		}
-		else {
-			GameHook::SpawnEntity(GameHook::arg1, &GameHook::arg2, GameHook::arg3);
-		}
+	if (GameHook::spawnEntityFromGui) {
+		GameHook::spawnEntityFromGui = false;
+		GameHook::SpawnEntity(guiEntitySpawn);
+	}
+	if (GameHook::spawnEntityFromHotkey) {
+		GameHook::spawnEntityFromHotkey = false;
+		GameHook::SpawnEntity(hotkeyEntitySpawn);
 	}
 }
 
@@ -2657,16 +2655,16 @@ LocalPlayer* GameHook::GetLocalPlayer() {
 }
 
 std::vector<GameHook::HotkeyMessage> GameHook::activeMessages;
-void GameHook::DisplayMessageText(const char* text, bool enabled, float duration) {
-    // Check if a message with the same text already exists and update it
-    for (auto& msg : activeMessages) {
-        if (msg.text == text) {
-            msg.enabled = enabled;
-            msg.timeRemaining = duration;
-            return;
-        }
-    }
-    activeMessages.push_back({ text, enabled, duration });
+void GameHook::DisplayMessageText(const char* text, std::optional<bool> enabled) {
+	static float duration = 2.0f;
+	for (auto& msg : activeMessages) {
+		if (msg.text == text) {
+			msg.enabled = enabled;
+			msg.timeRemaining = duration;
+			return;
+		}
+	}
+	activeMessages.push_back({ text, enabled, duration });
 }
 
 void GameHook::RenderMessages(float deltaTime) {
@@ -2684,7 +2682,7 @@ void GameHook::RenderMessages(float deltaTime) {
     ImGui::SetNextWindowBgAlpha(0.6f);
     ImGui::SetNextWindowSize(ImVec2(0, 0));
 
-    ImGuiWindowFlags flags =
+    static ImGuiWindowFlags flags =
         ImGuiWindowFlags_NoDecoration |
         ImGuiWindowFlags_NoInputs |
         ImGuiWindowFlags_NoNav |
@@ -2694,19 +2692,28 @@ void GameHook::RenderMessages(float deltaTime) {
         ImGuiWindowFlags_AlwaysAutoResize;
 
     if (ImGui::Begin("##hotkey_overlay", nullptr, flags)) {
-        for (auto& msg : activeMessages) {
-            // Fade out
-            float alpha = (std::min)(1.0f, msg.timeRemaining / 0.5f);
-            ImGui::PushStyleColor(ImGuiCol_Text,
-                msg.enabled
-                    ? ImVec4(0.4f, 1.0f, 0.4f, alpha)   // green = on
-                    : ImVec4(1.0f, 0.4f, 0.4f, alpha));  // red = off
+		for (auto& msg : activeMessages) {
+			float alpha = (std::min)(1.0f, msg.timeRemaining / 0.5f);
 
-            ImGui::Text("%s %s", msg.text.c_str(), msg.enabled ? "[ON]" : "[OFF]");
-            ImGui::PopStyleColor();
+			static ImVec4 color;
+			if (!msg.enabled.has_value())
+				color = ImVec4(1.0f, 1.0f, 1.0f, alpha); // n/a
+			else if (msg.enabled.value())
+				color = ImVec4(0.4f, 1.0f, 0.4f, alpha); // green = on
+			else
+				color = ImVec4(1.0f, 0.4f, 0.4f, alpha); // red = off
 
-            msg.timeRemaining -= deltaTime;
-        }
+			ImGui::PushStyleColor(ImGuiCol_Text, color);
+
+			if (msg.enabled.has_value())
+				ImGui::Text("%s %s", msg.text.c_str(), msg.enabled.value() ? " [ON]" : " [OFF]");
+			else
+				ImGui::Text("%s", msg.text.c_str());
+
+			ImGui::PopStyleColor();
+
+			msg.timeRemaining -= deltaTime;
+		}
     }
     ImGui::End();
 }
@@ -2783,9 +2790,13 @@ void GameHook::DrawFlyingStats() {
 		static ImVec2 playerScreenPos;
 		WorldVisualizer::WorldToScreen(player->pos, playerScreenPos);
 		ImGui::Begin("FlyingPlayerStats", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar);
-		ImGui::PushItemWidth(fontSize * 3.0f);
 		ImGui::SetWindowPos(playerScreenPos);
-		ImGui::SliderFloat("iframes", &player->iFramesRemaining, 0.0f, 25.0f, "%.0f");
+		ImGui::SetNextItemWidth(fontSize * 9.0f);
+		ImGui::InputFloat3("Pos##FlyingPlayerXYZPosInputFloat", &player->pos.x, "%.1f");
+		ImGui::PushItemWidth(fontSize * 3.0f);
+		ImGui::InputInt("Move ID##FlyingPlayerMoveIDInputInt", &player->moveID, NULL, NULL);
+		ImGui::InputInt("String ID##FlyingPlayerStringIDInputInt", &player->stringID, NULL, NULL);
+		// ImGui::InputFloat("iframes##FlyingPlayerIframesInputFloat", &player->iFramesRemaining, NULL, NULL, "%.0f");
 		ImGui::PopItemWidth();
 		ImGui::End();
 
@@ -2796,9 +2807,9 @@ void GameHook::DrawFlyingStats() {
 			ImGui::Begin("FlyingEnemyStats", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar);
 			ImGui::SetWindowPos(enemyScreenPos);
 			ImGui::SetNextItemWidth(fontSize * 9.0f);
-			ImGui::InputFloat3("Pos##FlyingEnemyXYZPosInputFloat", &enemy->pos.x, "%.2f");
+			ImGui::InputFloat3("Pos##FlyingEnemyXYZPosInputFloat", &enemy->pos.x, "%.1f");
 			ImGui::PushItemWidth(fontSize * 3.0f);
-			ImGui::InputInt("HP##FlyingEnemyHPInputInt", &enemy->hp, 0, 0);
+			ImGui::SliderInt("HP##FlyingEnemyHPInputInt", &enemy->hp, 0, enemy->hpMax);
 			ImGui::InputInt("Move ID##FlyingEnemyMoveIDInputInt", &enemy->moveID, 0, 0);
 			ImGui::PopItemWidth();
 			ImGui::End();
@@ -2806,12 +2817,37 @@ void GameHook::DrawFlyingStats() {
 	}
 }
 
-void GameHook::SpawnEntity(int entityID, EntitySpawnArg2* a2, int a3) {
+void GameHook::EasySpawnEntityFromHotkey(int enemyID, int variant, int spawnAnim) {
+	LocalPlayer* player = GameHook::GetLocalPlayer();
+	if (!player) { return; }
+	GameHook::hotkeyEntitySpawn.entityID = enemyID;
+	GameHook::hotkeyEntitySpawn.settings.int_4_Variant = variant;
+	GameHook::guiEntitySpawn.settings.int_8_SpawnAnim = spawnAnim;
+	GameHook::hotkeyEntitySpawn.settings.float_70_X = player->pos.x;
+	GameHook::hotkeyEntitySpawn.settings.float_74_Y = player->pos.y + 1.0f;
+	GameHook::hotkeyEntitySpawn.settings.float_78_Z = player->pos.z;
+	GameHook::spawnEntityFromHotkey = true;
+	GameHook::DisplayMessageText("Entity Spawned");
+}
+
+void GameHook::EasySpawnEntityFromGui(int enemyID, int variant, int spawnAnim) {
+	LocalPlayer* player = GameHook::GetLocalPlayer();
+	if (!player) { return; }
+	GameHook::guiEntitySpawn.entityID = enemyID;
+	GameHook::guiEntitySpawn.settings.int_4_Variant = variant;
+	GameHook::guiEntitySpawn.settings.int_8_SpawnAnim = spawnAnim;
+	GameHook::guiEntitySpawn.settings.float_70_X = player->pos.x;
+	GameHook::guiEntitySpawn.settings.float_74_Y = player->pos.y + 1.0f;
+	GameHook::guiEntitySpawn.settings.float_78_Z = player->pos.z;
+	GameHook::spawnEntityFromGui = true;
+}
+
+void GameHook::SpawnEntity(EntitySpawn& entitySpawn) {
     uintptr_t spawnEntityAddr = 0x510450;
     uintptr_t ecxAddr = 0x5ABB860;
 	typedef uintptr_t(__thiscall* SpawnEntityFunc)(uintptr_t* ecx, int entityID, EntitySpawnArg2* a2, int a3);
     SpawnEntityFunc spawnEntity = (SpawnEntityFunc)spawnEntityAddr;
-    spawnEntity((uintptr_t*)ecxAddr, entityID, a2, a3);
+    spawnEntity((uintptr_t*)ecxAddr, entitySpawn.entityID, &entitySpawn.settings, entitySpawn.unkn);
 }
 
 #endif

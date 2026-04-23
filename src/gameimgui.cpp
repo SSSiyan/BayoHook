@@ -572,7 +572,7 @@ static void DrawCredits() {
 
     ImGui::SeparatorText("Made By");
 
-    static std::array<ImGuiURL, 8> links1{
+    static std::array<ImGuiURL, 12> links1{
         ImGuiURL { "SSSiyan", "https://twitter.com/sssiyan" },
         ImGuiURL { "GarudaKK", "https://www.youtube.com/@GarudaPSN" },
         ImGuiURL { "Kerilk", "https://github.com/Kerilk" },
@@ -581,6 +581,10 @@ static void DrawCredits() {
         ImGuiURL { "deepdarkkapustka", "https://www.youtube.com/@mstislavcapusta7573" },
         ImGuiURL { "TheDarkness", "https://steamcommunity.com/id/TheDarkness704/" },
         ImGuiURL { "Jan Schatter", "https://www.flickr.com/people/116494253@N05/" },
+        ImGuiURL { "Reclaimer", "https://www.speedrun.com/users/Reclaimer" },
+        ImGuiURL { "Joy Laguna", "https://www.youtube.com/channel/UCAM-7bYxvPbfhOU7TEw4idQ" },
+        ImGuiURL { "Fool Arcana", "https://gamebanana.com/members/2795442" },
+        ImGuiURL { "DniweTamp", "https://github.com/DniweTamp" },
     };
     for (auto& link : links1) {
         link.draw();
@@ -1433,7 +1437,7 @@ void GameHook::GameImGui(void) {
             if (ImGui::Checkbox("Multiplayer Patch", &GameHook::multiplayerPatch_toggle)) {
                 GameHook::MultiplayerPatch(GameHook::multiplayerPatch_toggle);
             }
-            help_marker("This is very hacky and probably breaks a lot. This is intended to stop the camera jumping between multiple spawned characters");
+            help_marker("This is very hacky and probably breaks a lot. This is intended to stop the camera jumping between multiple spawned player characters");
 
             // entity spawn stuff
             {
@@ -1620,72 +1624,87 @@ void GameHook::GameImGui(void) {
                 }
 
                 ImGui::SeparatorText("Entity Spawning");
+                {
+                    static int selectedEnemy = 28;
 
-                static int selectedEnemy = 0;
-                if (ImGui::Combo("Known Entity IDs", &selectedEnemy, displayNames, knownEntityCount)) {
-					GameHook::arg1 = knownEntities[selectedEnemy].id;
-                }
-                ImGui::SameLine();
-                help_marker("This just autofills the next field if you want to pick from a dictionary of IDs we already know");
-                ImGui::InputScalar("ID", ImGuiDataType_S32, &arg1, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
-                ImGui::SameLine();
-                help_marker("This is for typing in a manual ID. You will crash if you type in an invalid ID");
-                ImGui::Text("arg2 addr: %08X", &arg2);
-				if (ImGui::CollapsingHeader("arg2 (struct)")) {
-                    ImGui::InputScalar("arg.int_0", ImGuiDataType_S32, &arg2.int_0, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
-                    ImGui::InputScalar("arg.int_4_Variant", ImGuiDataType_S32, &arg2.int_4_Variant, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
-                    ImGui::InputScalar("arg.int_8_SpawnAnim", ImGuiDataType_S32, &arg2.int_8_SpawnAnim, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
-                    ImGui::InputScalar("arg.int_C", ImGuiDataType_S32, &arg2.int_C, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
-                    ImGui::InputScalar("arg.int_10", ImGuiDataType_S32, &arg2.int_10, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
-                    ImGui::InputFloat("arg.float_14_RotX", &arg2.float_14_RotX);
-                    ImGui::InputFloat("arg.float_18_RotY", &arg2.float_18_RotY);
-                    ImGui::InputFloat("arg.float_1C_RotZ", &arg2.float_1C_RotZ);
-                    ImGui::InputScalar("arg.int_20", ImGuiDataType_S32, &arg2.int_20, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
-                    ImGui::InputFloat("arg.float_24", &arg2.float_24);
-                    ImGui::InputFloat("arg.float_28", &arg2.float_28);
-                    ImGui::InputFloat("arg.float_2C", &arg2.float_2C);
-                    ImGui::InputFloat("arg.float_30_ScaleX", &arg2.float_30_ScaleX);
-                    ImGui::InputFloat("arg.float_34", &arg2.float_34);
-                    ImGui::InputFloat("arg.float_38", &arg2.float_38);
-                    ImGui::InputFloat("arg.float_3C", &arg2.float_3C);
-                    ImGui::InputFloat("arg.float_40", &arg2.float_40);
-                    ImGui::InputFloat("arg.float_44_ScaleY", &arg2.float_44_ScaleY);
-                    ImGui::InputFloat("arg.float_48", &arg2.float_48);
-                    ImGui::InputFloat("arg.float_4C", &arg2.float_4C);
-                    ImGui::InputFloat("arg.float_50", &arg2.float_50);
-                    ImGui::InputFloat("arg.float_54", &arg2.float_54);
-                    ImGui::InputFloat("arg.float_58_ScaleZ", &arg2.float_58_ScaleZ);
-                    ImGui::InputFloat("arg.float_5C", &arg2.float_5C);
-                    ImGui::InputFloat("arg.float_60", &arg2.float_60);
-                    ImGui::InputFloat("arg.float_64", &arg2.float_64);
-                    ImGui::InputFloat("arg.float_68", &arg2.float_68);
-                    ImGui::InputFloat("arg.float_6C", &arg2.float_6C);
-                    ImGui::InputFloat("arg.float_70_X", &arg2.float_70_X);
-                    ImGui::InputFloat("arg.float_74_Y", &arg2.float_74_Y);
-                    ImGui::InputFloat("arg.float_78_Z", &arg2.float_78_Z);
-                    ImGui::InputFloat("arg.float_7C", &arg2.float_7C);
-                    ImGui::InputInt("arg.int_80", &arg2.int_80);
-                    ImGui::InputScalar("arg.int_84", ImGuiDataType_S32, &arg2.int_84, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
-                    ImGui::InputScalar("arg.int_88", ImGuiDataType_S32, &arg2.int_88, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
-                    ImGui::InputFloat("arg.float_8C", &arg2.float_8C);
-                    ImGui::InputFloat("arg.float_90", &arg2.float_90);
-                    ImGui::InputFloat("arg.float_94", &arg2.float_94);
-                    ImGui::InputText("arg.string_98", arg2.string_98, sizeof(arg2.string_98));
-                    ImGui::InputScalar("arg.char_9f", ImGuiDataType_U8, &arg2.char_9f);
-                    ImGui::InputFloat("arg.float_A0", &arg2.float_A0);
-                }
+                    if (ImGui::CollapsingHeader("Manual Spawn Settings")) {
 
-                ImGui::InputScalar("arg3 (unkn)", ImGuiDataType_S32, &arg3, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
-                if (ImGui::Button("Spawn")) {
-                    LocalPlayer* player = GetLocalPlayer();
-                    if (player) {
-                        arg2.float_70_X = player->pos.x;
-                        arg2.float_74_Y = player->pos.y + 1.0f;
-                        arg2.float_78_Z = player->pos.z;
+                        if (ImGui::Combo("Known Entity IDs", &selectedEnemy, displayNames, knownEntityCount)) {
+                            GameHook::guiEntitySpawn.entityID = knownEntities[selectedEnemy].id;
+                        }
+                        ImGui::SameLine();
+                        help_marker("This just autofills the next field if you want to pick from a dictionary of IDs we already know");
+                        ImGui::PushItemWidth(inputItemWidth);
+                        ImGui::InputScalar("ID", ImGuiDataType_S32, &guiEntitySpawn.entityID, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+                        ImGui::SameLine();
+                        help_marker("This is for typing in a manual ID. You will crash if you type in an invalid ID");
+                        ImGui::InputScalar("arg2.int_0", ImGuiDataType_S32, &guiEntitySpawn.settings.int_0, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+                        ImGui::InputScalar("arg2.int_4_Variant", ImGuiDataType_S32, &guiEntitySpawn.settings.int_4_Variant, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+                        ImGui::InputScalar("arg2.int_8_SpawnAnim", ImGuiDataType_S32, &guiEntitySpawn.settings.int_8_SpawnAnim, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+                        ImGui::InputScalar("arg2.int_C", ImGuiDataType_S32, &guiEntitySpawn.settings.int_C, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+                        ImGui::InputScalar("arg2.int_10", ImGuiDataType_S32, &guiEntitySpawn.settings.int_10, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+                        ImGui::InputFloat("arg2.float_14_RotX", &guiEntitySpawn.settings.float_14_RotX);
+                        ImGui::InputFloat("arg2.float_18_RotY", &guiEntitySpawn.settings.float_18_RotY);
+                        ImGui::InputFloat("arg2.float_1C_RotZ", &guiEntitySpawn.settings.float_1C_RotZ);
+                        ImGui::InputScalar("arg2.int_20", ImGuiDataType_S32, &guiEntitySpawn.settings.int_20, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+                        ImGui::InputFloat("arg2.float_24", &guiEntitySpawn.settings.float_24);
+                        ImGui::InputFloat("arg2.float_28", &guiEntitySpawn.settings.float_28);
+                        ImGui::InputFloat("arg2.float_2C", &guiEntitySpawn.settings.float_2C);
+                        ImGui::InputFloat("arg2.float_30_ScaleX", &guiEntitySpawn.settings.float_30_ScaleX);
+                        ImGui::InputFloat("arg2.float_34", &guiEntitySpawn.settings.float_34);
+                        ImGui::InputFloat("arg2.float_38", &guiEntitySpawn.settings.float_38);
+                        ImGui::InputFloat("arg2.float_3C", &guiEntitySpawn.settings.float_3C);
+                        ImGui::InputFloat("arg2.float_40", &guiEntitySpawn.settings.float_40);
+                        ImGui::InputFloat("arg2.float_44_ScaleY", &guiEntitySpawn.settings.float_44_ScaleY);
+                        ImGui::InputFloat("arg2.float_48", &guiEntitySpawn.settings.float_48);
+                        ImGui::InputFloat("arg2.float_4C", &guiEntitySpawn.settings.float_4C);
+                        ImGui::InputFloat("arg2.float_50", &guiEntitySpawn.settings.float_50);
+                        ImGui::InputFloat("arg2.float_54", &guiEntitySpawn.settings.float_54);
+                        ImGui::InputFloat("arg2.float_58_ScaleZ", &guiEntitySpawn.settings.float_58_ScaleZ);
+                        ImGui::InputFloat("arg2.float_5C", &guiEntitySpawn.settings.float_5C);
+                        ImGui::InputFloat("arg2.float_60", &guiEntitySpawn.settings.float_60);
+                        ImGui::InputFloat("arg2.float_64", &guiEntitySpawn.settings.float_64);
+                        ImGui::InputFloat("arg2.float_68", &guiEntitySpawn.settings.float_68);
+                        ImGui::InputFloat("arg2.float_6C", &guiEntitySpawn.settings.float_6C);
+                        ImGui::InputFloat("arg2.float_70_X", &guiEntitySpawn.settings.float_70_X);
+                        ImGui::InputFloat("arg2.float_74_Y", &guiEntitySpawn.settings.float_74_Y);
+                        ImGui::InputFloat("arg2.float_78_Z", &guiEntitySpawn.settings.float_78_Z);
+                        ImGui::InputFloat("arg2.float_7C", &guiEntitySpawn.settings.float_7C);
+                        ImGui::InputInt("arg2.int_80", &guiEntitySpawn.settings.int_80);
+                        ImGui::InputScalar("arg2.int_84", ImGuiDataType_S32, &guiEntitySpawn.settings.int_84, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+                        ImGui::InputScalar("arg2.int_88", ImGuiDataType_S32, &guiEntitySpawn.settings.int_88, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+                        ImGui::InputFloat("arg2.float_8C", &guiEntitySpawn.settings.float_8C);
+                        ImGui::InputFloat("arg2.float_90", &guiEntitySpawn.settings.float_90);
+                        ImGui::InputFloat("arg2.float_94", &guiEntitySpawn.settings.float_94);
+                        ImGui::InputText("arg2.string_98", guiEntitySpawn.settings.string_98, sizeof(guiEntitySpawn.settings.string_98));
+                        ImGui::InputScalar("arg2.char_9f", ImGuiDataType_U8, &guiEntitySpawn.settings.char_9f);
+                        ImGui::InputFloat("arg2.float_A0", &guiEntitySpawn.settings.float_A0);
+                        ImGui::PopItemWidth();
+
+                        if (ImGui::Button("Spawn")) {
+                            LocalPlayer* player = GetLocalPlayer();
+                            if (player) {
+                                guiEntitySpawn.settings.float_70_X = player->pos.x;
+                                guiEntitySpawn.settings.float_74_Y = player->pos.y + 1.0f;
+                                guiEntitySpawn.settings.float_78_Z = player->pos.z;
+                            }
+                            GameHook::spawnEntityFromGui = true;
+                        }
                     }
-                    GameHook::spawnEnemy = true;
+                    else {
+                        if (ImGui::Combo("ID##Easy", &selectedEnemy, displayNames, knownEntityCount)) {
+                            GameHook::guiEntitySpawn.entityID = knownEntities[selectedEnemy].id;
+                        }
+                        static int step = 1;
+                        ImGui::PushItemWidth(inputItemWidth);
+                        ImGui::InputScalar("Variant##Easy", ImGuiDataType_S32, &guiEntitySpawn.settings.int_4_Variant, &step, &step, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+                        ImGui::InputScalar("Spawn Anim##Easy", ImGuiDataType_S32, &guiEntitySpawn.settings.int_8_SpawnAnim, &step, &step, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+                        ImGui::PopItemWidth();
+                        if (ImGui::Button("Easy Spawn##Easy")) {
+                            GameHook::EasySpawnEntityFromGui(guiEntitySpawn.entityID, guiEntitySpawn.settings.int_4_Variant, guiEntitySpawn.settings.int_8_SpawnAnim);
+                        }
+                    }
                 }
-                ImGui::Checkbox("Spawn Without Args2", &GameHook::spawnWithoutArgs2);
             }
 
             tabHeight += ImGui::GetCursorPosY();
@@ -1942,6 +1961,19 @@ void GameHook::GameImGui(void) {
             help_marker("if enabled in System");
             ImGui::Text("End = Load Locked On Enemy Anim");
             help_marker("if enabled in System");
+
+            ImGui::Text("LCtrl+ F1 = Spawn 1");
+            ImGui::Text("LCtrl+ F2 = Spawn 2");
+            ImGui::Text("LCtrl+ F3 = Spawn 3");
+            ImGui::Text("LCtrl+ F4 = Spawn 4");
+            ImGui::Text("LCtrl+ F5 = Spawn 5");
+            ImGui::Text("LCtrl+ F6 = Spawn 6");
+            ImGui::Text("LCtrl+ F7 = Spawn 7");
+            ImGui::Text("LCtrl+ F8 = Spawn 8");
+            ImGui::Text("LCtrl+ F9 = Spawn 9");
+            ImGui::Text("LCtrl+ F10 = Spawn 10");
+            ImGui::Text("LCtrl+ F11 = Spawn 11");
+            ImGui::Text("LCtrl+ F12 = Spawn 12");
 
             DrawCredits();
 
