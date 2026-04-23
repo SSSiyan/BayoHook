@@ -2,11 +2,6 @@
 #include <thread>
 #include "WorldVisualizer.hpp"
 
-bool GameHook::spawnEntityFromGui = false;
-bool GameHook::spawnEntityFromHotkey = false;
-EntitySpawn GameHook::guiEntitySpawn;
-EntitySpawn GameHook::hotkeyEntitySpawn;
-
 // system
 float GameHook::deltaTime = 0.0f;
 float GameHook::deltaSpeed = 0.0f;
@@ -51,6 +46,11 @@ uintptr_t GameHook::WeaponA1Address = 0x5AA741C;
 uintptr_t GameHook::WeaponA2Address = 0x5AA7420;
 uintptr_t GameHook::WeaponB1Address = 0x5AA742C;
 uintptr_t GameHook::WeaponB2Address = 0x5AA7430;
+
+bool GameHook::spawnEntityFromGui = false;
+bool GameHook::spawnEntityFromHotkey = false;
+EntitySpawn GameHook::guiEntitySpawn;
+EntitySpawn GameHook::hotkeyEntitySpawn;
 
 bool GameHook::comboMaker_toggle = false;
 bool GameHook::comboMaker_toggles[maxComboMakers]{};
@@ -1441,6 +1441,112 @@ static __declspec(naked) void OmnicancelTeleDetour(void) { // player in ebx
 		mov ecx, [omnicancelTele_ogcode]
 		// mov ecx, [ecx]
 		jmp dword ptr [omnicancelTele_jmp_ret]
+	}
+}
+
+struct SpawnSnapshot {
+	int ID;
+	int unkn;
+	bool optionalStructUsed;
+	int structUnkn;
+	int structVariant;
+	int structSpawnAnim;
+};
+
+static std::vector<SpawnSnapshot> recentlySpawnedList;
+static const size_t MAX_SNAPSHOTS = 500;
+
+static void LogEntitySpawn(int ID, int unkn, bool optionalStructUsed, int structUnkn, int structVariant, int structSpawnAnim) {
+	if (recentlySpawnedList.size() >= MAX_SNAPSHOTS)
+		recentlySpawnedList.erase(recentlySpawnedList.begin());
+
+	recentlySpawnedList.push_back({
+		ID,
+		unkn,
+		optionalStructUsed,
+		structUnkn,
+		structVariant,
+		structSpawnAnim
+	});
+}
+
+
+void GameHook::DisplayRecentlySpawnedEntitiesInImGui() {
+	if (ImGui::Button("Clear"))
+		recentlySpawnedList.clear();
+	ImGui::Text("Count: %d", (int)recentlySpawnedList.size());
+	ImGui::Separator();
+
+	for (size_t i = 0; i < recentlySpawnedList.size(); i++) {
+		auto& s = recentlySpawnedList[i];
+
+		ImGui::PushID((int)i);
+
+		ImGui::Checkbox("Has Optional Struct", &s.optionalStructUsed);
+		ImGui::InputScalar("ID", ImGuiDataType_S32, &s.ID, NULL, NULL, "%-8X");
+		const char* name = GetEntityName(s.ID);
+		if (name) {
+			ImGui::SameLine();
+			ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "%s", name);
+		}
+
+		ImGui::InputScalar("Unkn", ImGuiDataType_S32, &s.unkn, NULL, NULL, "%-8X");
+
+		if (s.optionalStructUsed) {
+			ImGui::InputScalar("Struct.int_0_Unkn", ImGuiDataType_S32, &s.structUnkn, NULL, NULL, "%-8X");
+			ImGui::InputScalar("Struct.int_4_Variant", ImGuiDataType_S32, &s.structVariant,  NULL, NULL, "%-8X");
+			ImGui::InputScalar("Struct.int_8_SpawnAnim", ImGuiDataType_S32, &s.structSpawnAnim, NULL, NULL, "%-8X");
+		}
+
+		ImGui::Separator();
+		ImGui::PopID();
+	}
+}
+
+static std::unique_ptr<FunctionHook> viewEntitySpawnsHook;
+static uintptr_t viewEntitySpawns_jmp_ret{ NULL };
+bool GameHook::viewEntitySpawns_toggle = false;
+static __declspec(naked) void ViewEntitySpawnsDetour(void) {
+	__asm {
+		pushfd
+		cmp byte ptr [GameHook::viewEntitySpawns_toggle], 0
+		je originalcode
+
+		pushad
+		mov edx, [esp + 0x28] // entityID
+		mov eax, [esp + 0x2C] // optionalSettings
+		mov ecx, [esp + 0x30] // unkn
+
+		test eax, eax
+		je dontLogEax
+
+		push [eax+0x8] // struct.SpawnAnim
+		push [eax+0x4] // struct.Variant
+		push [eax+0x0] // struct.Unkn
+		push 1 // struct Used
+		push ecx
+		push edx
+		call LogEntitySpawn
+		add esp, 24
+		jmp popcode
+
+	dontLogEax:
+		push 0 // struct.SpawnAnim
+		push 0 // struct.Variant
+		push 0 // struct.Unkn
+		push 0 // struct Used
+		push ecx
+		push edx
+		call LogEntitySpawn
+		add esp, 24
+
+	popcode:
+		popad
+	originalcode:
+		popfd
+		mov eax, [esp+0x0C]
+		mov edx, [esp+0x08]
+		jmp dword ptr [viewEntitySpawns_jmp_ret]
 	}
 }
 
@@ -2925,6 +3031,7 @@ void GameHook::InitializeDetours(void) {
 	install_hook_absolute(0x8EF527, alwaysWitchTimeHook, &AlwaysWitchTimeDetour, &alwaysWitchTime_jmp_ret, 8);
 	install_hook_absolute(0x87F270, customWeavesHook, &CustomWeavesDetour, &customWeaves_jmp_ret, 6);
 	install_hook_absolute(0x8BE5B6, omnicancelTeleHook, &OmnicancelTeleDetour, &omnicancelTele_jmp_ret, 7);
+	install_hook_absolute(0x510450, viewEntitySpawnsHook, &ViewEntitySpawnsDetour, &viewEntitySpawns_jmp_ret, 8);
 	install_hook_absolute(0x9A0020, teleportComboActionHook, &TeleportComboActionDetour, &teleportComboAction_jmp_ret, 6);
 	install_hook_absolute(0x97ED07, fixThirdAccessoryHook, &FixThirdAccessoryDetour, &fixThirdAccessory_jmp_ret, 5);
 	// int& thirdAccessoryValue = *(int*)GameHook::thirdAccessoryAddress;

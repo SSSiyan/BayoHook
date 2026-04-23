@@ -192,6 +192,8 @@ public:
 	static bool longerPillowTalkCharge_toggle;
 	static bool alwaysWitchTime_toggle;
 	static bool omnicancelTele_toggle;
+	static bool viewEntitySpawns_toggle;
+	static void DisplayRecentlySpawnedEntitiesInImGui();
 
 	static bool damageDealtMultiplier_toggle;
 	static float damageDealtMultiplierMult;
@@ -286,15 +288,9 @@ public:
 	static int badgeCorner;
 	static void RenderBadge();
 #endif
-	static const char* costumeNames[32];
 	static bool forceCostume;
 	static int tempCostume;
 #ifndef SPEEDRUN_BUILD
-	static const char* weaponNames[19];
-	static const char* weaveNames[37];
-	static const char* accessoryNames[13];
-	static const char* moveIDNames[350];
-
 	static bool drawHitboxes_toggle;
 	static bool drawPlayerBones_toggle;
 	static void Draw3dShapes();
