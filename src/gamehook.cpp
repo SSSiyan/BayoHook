@@ -1,5 +1,4 @@
 #include "gamehook.hpp"
-#include <thread>
 #include "WorldVisualizer.hpp"
 
 // system
@@ -196,7 +195,7 @@ void GameHook::InfJumps(bool enabled) {
 	}
 }
 
-bool GameHook::noClip_toggle= false;
+bool GameHook::noClip_toggle = false;
 void GameHook::NoClip(bool enabled) {
 	if (enabled)
 		GameHook::_nop((char*)(0xC13250), 7);
@@ -1447,16 +1446,16 @@ static __declspec(naked) void OmnicancelTeleDetour(void) { // player in ebx
 struct SpawnSnapshot {
 	int ID;
 	int unkn;
-	bool optionalStructUsed;
+	int optionalStructUsed;
 	int structUnkn;
 	int structVariant;
 	int structSpawnAnim;
 };
 
 static std::vector<SpawnSnapshot> recentlySpawnedList;
-static const size_t MAX_SNAPSHOTS = 500;
+static const size_t MAX_SNAPSHOTS = 10000;
 
-static void LogEntitySpawn(int ID, int unkn, bool optionalStructUsed, int structUnkn, int structVariant, int structSpawnAnim) {
+static void LogEntitySpawn(int ID, int unkn, int optionalStructUsed, int structUnkn, int structVariant, int structSpawnAnim) {
 	if (recentlySpawnedList.size() >= MAX_SNAPSHOTS)
 		recentlySpawnedList.erase(recentlySpawnedList.begin());
 
@@ -1481,23 +1480,22 @@ void GameHook::DisplayRecentlySpawnedEntitiesInImGui() {
 		auto& s = recentlySpawnedList[i];
 
 		ImGui::PushID((int)i);
-
-		ImGui::Checkbox("Has Optional Struct", &s.optionalStructUsed);
-		ImGui::InputScalar("ID", ImGuiDataType_S32, &s.ID, NULL, NULL, "%-8X");
+		ImGui::PushItemWidth(inputItemWidth);
+		ImGui::InputInt("Has Optional Struct", &s.optionalStructUsed);
+		ImGui::InputScalar("ID", ImGuiDataType_S32, &s.ID, NULL, NULL, "%8X");
 		const char* name = GetEntityName(s.ID);
 		if (name) {
 			ImGui::SameLine();
 			ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "%s", name);
 		}
 
-		ImGui::InputScalar("Unkn", ImGuiDataType_S32, &s.unkn, NULL, NULL, "%-8X");
-
-		if (s.optionalStructUsed) {
-			ImGui::InputScalar("Struct.int_0_Unkn", ImGuiDataType_S32, &s.structUnkn, NULL, NULL, "%-8X");
-			ImGui::InputScalar("Struct.int_4_Variant", ImGuiDataType_S32, &s.structVariant,  NULL, NULL, "%-8X");
-			ImGui::InputScalar("Struct.int_8_SpawnAnim", ImGuiDataType_S32, &s.structSpawnAnim, NULL, NULL, "%-8X");
+		ImGui::InputScalar("Unkn", ImGuiDataType_S32, &s.unkn, NULL, NULL, "%8X");
+		if (s.optionalStructUsed == 1) {
+			ImGui::InputScalar("Struct.int_0_Unkn", ImGuiDataType_S32, &s.structUnkn, NULL, NULL, "%8X");
+			ImGui::InputScalar("Struct.int_4_Variant", ImGuiDataType_S32, &s.structVariant,  NULL, NULL, "%8X");
+			ImGui::InputScalar("Struct.int_8_SpawnAnim", ImGuiDataType_S32, &s.structSpawnAnim, NULL, NULL, "%8X");
 		}
-
+		ImGui::PopItemWidth();
 		ImGui::Separator();
 		ImGui::PopID();
 	}
@@ -1513,12 +1511,14 @@ static __declspec(naked) void ViewEntitySpawnsDetour(void) {
 		je originalcode
 
 		pushad
-		mov edx, [esp + 0x28] // entityID
-		mov eax, [esp + 0x2C] // optionalSettings
-		mov ecx, [esp + 0x30] // unkn
+		mov edx, [esp+0x28] // entityID
+		mov eax, [esp+0x2C] // optionalSettings
+		mov ecx, [esp+0x30] // unkn
 
 		test eax, eax
 		je dontLogEax
+		cmp eax, 0x10000
+		jb dontLogEax
 
 		push [eax+0x8] // struct.SpawnAnim
 		push [eax+0x4] // struct.Variant
@@ -2928,9 +2928,9 @@ void GameHook::EasySpawnEntityFromHotkey(int enemyID, int variant, int spawnAnim
 	if (!player) { return; }
 	GameHook::hotkeyEntitySpawn.entityID = enemyID;
 	GameHook::hotkeyEntitySpawn.settings.int_4_Variant = variant;
-	GameHook::guiEntitySpawn.settings.int_8_SpawnAnim = spawnAnim;
+	GameHook::hotkeyEntitySpawn.settings.int_8_SpawnAnim = spawnAnim;
 	GameHook::hotkeyEntitySpawn.settings.float_70_X = player->pos.x;
-	GameHook::hotkeyEntitySpawn.settings.float_74_Y = player->pos.y + 1.0f;
+	GameHook::hotkeyEntitySpawn.settings.float_74_Y = player->pos.y;
 	GameHook::hotkeyEntitySpawn.settings.float_78_Z = player->pos.z;
 	GameHook::spawnEntityFromHotkey = true;
 	GameHook::DisplayMessageText("Entity Spawned");
@@ -2943,7 +2943,7 @@ void GameHook::EasySpawnEntityFromGui(int enemyID, int variant, int spawnAnim) {
 	GameHook::guiEntitySpawn.settings.int_4_Variant = variant;
 	GameHook::guiEntitySpawn.settings.int_8_SpawnAnim = spawnAnim;
 	GameHook::guiEntitySpawn.settings.float_70_X = player->pos.x;
-	GameHook::guiEntitySpawn.settings.float_74_Y = player->pos.y + 1.0f;
+	GameHook::guiEntitySpawn.settings.float_74_Y = player->pos.y;
 	GameHook::guiEntitySpawn.settings.float_78_Z = player->pos.z;
 	GameHook::spawnEntityFromGui = true;
 }

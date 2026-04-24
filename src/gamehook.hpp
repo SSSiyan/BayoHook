@@ -16,7 +16,7 @@
 #define IM_PI 3.14159265358979323846f
 #endif
 
-//#define SPEEDRUN_BUILD
+#define SPEEDRUN_BUILD
 
 #define BAYOHOOK_VERSION "2.0.0 PRE RELEASE"
 #ifndef SPEEDRUN_BUILD
@@ -275,11 +275,14 @@ public:
 	static float windowWidth;
 	static float inputItemWidth;
 	static float sameLineWidth;
+	static void BackgroundImGui(void);
+	// tick
+	static bool showMessages_toggle;
 	static bool forceHairColour_toggle;
 	static Vec3 desiredHairColourRGB;
 	static float desiredHairColourMult;
-	static void BackgroundImGui(void);
-	static bool showMessages_toggle;
+	static bool forceCostume;
+	static int tempCostume;
 #ifdef SPEEDRUN_BUILD
 	static float badgeScaleBase;
 	static constexpr float badgeThicknessBase = 2.0f;
@@ -288,8 +291,6 @@ public:
 	static int badgeCorner;
 	static void RenderBadge();
 #endif
-	static bool forceCostume;
-	static int tempCostume;
 #ifndef SPEEDRUN_BUILD
 	static bool drawHitboxes_toggle;
 	static bool drawPlayerBones_toggle;

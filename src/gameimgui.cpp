@@ -2,7 +2,6 @@
 #include "gamehook.hpp"
 #include "LicenseStrings.hpp"
 #include <array>
-#include <algorithm> // Ensure this header is included for std::min
 #include <chrono>
 
 bool GameHook::forceHairColour_toggle = false;
@@ -79,7 +78,6 @@ void GameHook::help_marker(const char* desc) {
 
 static void DrawCredits() {
     ImGui::SeparatorText("Updates");
-
     struct ImGuiURL {
         std::string text;
         std::string url;
@@ -180,18 +178,15 @@ static void DrawBayoHookSettings() {
     }
 }
 
-void DrawAreaJump() {
-    static int stageID = 0x0;
-    static int stagePart = 0x0;
+static void DrawAreaJump() {
+    static int stageID = 114;
+    static int stagePart = 0;
     static int spawn = -1;
     static constexpr int step = 1;
     ImGui::SeparatorText("Area Jump");
-    ImGui::PushItemWidth(GameHook::inputItemWidth);
-    ImGui::InputScalar("Current Stage ID", ImGuiDataType_S32, (int*)GameHook::areaJumpAddress, NULL, NULL, "%-8X", ImGuiInputTextFlags_ReadOnly);
-    ImGui::InputScalar("stageID", ImGuiDataType_S32, &stageID, &step, NULL, "%-8X");
-    ImGui::PopItemWidth();
-    ImGui::SameLine();
-    static int selectedIndex = 0;
+    ImGui::SetNextItemWidth(GameHook::inputItemWidth);
+    ImGui::InputScalar("Current Stage ID ##CurrentStageIDAreaJumpInputScalar", ImGuiDataType_S32, (int*)GameHook::areaJumpAddress, NULL, NULL, "%8X", ImGuiInputTextFlags_ReadOnly);
+    static int selectedIndex = 4;
     for (int i = 0; i < IM_ARRAYSIZE(areaIDNames); i++) {
         if (areaIDNames[i].ID == stageID) {
             selectedIndex = i;
@@ -212,18 +207,19 @@ void DrawAreaJump() {
         }
         ImGui::EndCombo();
     }
-    GameHook::help_marker("There are missing entries here - some chapters have multiple stages and I only quickly loaded into each. For that reason I've left the manual input box for now.");
+    ImGui::SameLine();
     ImGui::PushItemWidth(GameHook::inputItemWidth);
+    ImGui::InputScalar("stage ID##ManualStageIDInputScalar", ImGuiDataType_S32, &stageID, &step, NULL, "%8X");
+    GameHook::help_marker("There are likely missing entries here - some chapters have multiple stages and I only quickly loaded into each. For that reason I've left this manual input box for now.");
 
     int displayStagePart = stagePart + 1;
     if (ImGui::InputInt("Part", &displayStagePart, step)) {
         if (displayStagePart < 1) { displayStagePart = 1; };
         stagePart = displayStagePart - 1;
     }
-
     ImGui::InputInt("Spawn", &spawn, step);
-    GameHook::help_marker("Not sure what this does other than change which Alfheim you get in B00");
     ImGui::PopItemWidth();
+    GameHook::help_marker("Mostly unused, will change which Alfheim you get in B00 and whether to fight Rodin");
     if (ImGui::Button("Teleport")) {
         GameHook::AreaJump(stageID, stagePart, spawn);
     }
@@ -294,47 +290,54 @@ static void DrawFPSUnlock() {
 
 static void DrawGlamour() {
     ImGui::SeparatorText("Glamour");
-    {
-        if (ImGui::Checkbox("Force Costume##Glamour", &GameHook::forceCostume)) {
-            GameHook::randomizeCostume_toggle = false;
-        }
-        if (GameHook::forceCostume) {
-            ImGui::Indent();
-            ImGui::SetNextItemWidth(GameHook::inputItemWidth);
-            if (ImGui::Combo("Costume##GlamourCombo", &GameHook::tempCostume, costumeNames, IM_ARRAYSIZE(costumeNames))) {
-                *(int*)GameHook::currentCostumeAddress = GameHook::tempCostume;
-            }
-            ImGui::Unindent();
-        }
-        if (ImGui::Checkbox("Randomize Costume", &GameHook::randomizeCostume_toggle)) {
-            GameHook::forceCostume = false;
-        }
-        GameHook::help_marker("Randomize the player's costume every load screen");
+    ImGui::BeginGroup();
+    if (ImGui::Checkbox("Force Costume##Glamour", &GameHook::forceCostume)) {
+        GameHook::randomizeCostume_toggle = false;
     }
-
-    {
-        if (ImGui::Checkbox("Force Hair Colour", &GameHook::forceHairColour_toggle)) {
-            if (!GameHook::forceHairColour_toggle) {
-                LocalPlayer* player = GameHook::GetLocalPlayer();
-                if (player) {
-                    player->colouredHairIntensityRGB = { 1.0f, 1.0f, 1.0f };
-                }
-            }
+    if (GameHook::forceCostume) {
+        ImGui::Indent();
+        ImGui::SetNextItemWidth(GameHook::inputItemWidth);
+        if (ImGui::Combo("Costume##GlamourCombo", &GameHook::tempCostume, costumeNames, IM_ARRAYSIZE(costumeNames))) {
+            *(int*)GameHook::currentCostumeAddress = GameHook::tempCostume;
         }
+        ImGui::Unindent();
+    }
+    ImGui::EndGroup();
+    ImGui::SameLine(GameHook::sameLineWidth);
+    if (ImGui::Checkbox("Randomize Costume", &GameHook::randomizeCostume_toggle)) {
+        GameHook::forceCostume = false;
+    }
+    GameHook::help_marker("Randomize the player's costume every load screen");
 
-        if (GameHook::forceHairColour_toggle) {
-            ImGui::Indent();
-            ImGui::SetNextItemWidth(GameHook::inputItemWidth);
-            ImGui::ColorEdit3("Hair Colour##PlayerHairColourEdit3", &GameHook::desiredHairColourRGB.x);
-            ImGui::SetNextItemWidth(GameHook::inputItemWidth);
-            ImGui::SliderFloat("Hair Colour Intensity##desiredHairColourIntensitySliderFloat", &GameHook::desiredHairColourMult, 1.0f, 10.0f);
-            if (ImGui::Button("Reset##ResetHairColourButton")) {
-                GameHook::desiredHairColourMult = 1.0f;
-                GameHook::desiredHairColourRGB = { 1.0f, 1.0f, 1.0f };
+    ImGui::BeginGroup();
+    if (ImGui::Checkbox("Force Hair Colour", &GameHook::forceHairColour_toggle)) {
+        if (!GameHook::forceHairColour_toggle) {
+            LocalPlayer* player = GameHook::GetLocalPlayer();
+            if (player) {
+                player->colouredHairIntensityRGB = { 1.0f, 1.0f, 1.0f };
             }
-            ImGui::Unindent();
         }
     }
+    if (GameHook::forceHairColour_toggle) {
+        ImGui::Indent();
+        ImGui::SetNextItemWidth(GameHook::inputItemWidth);
+        ImGui::ColorEdit3("Hair Colour##PlayerHairColourEdit3", &GameHook::desiredHairColourRGB.x);
+        ImGui::SetNextItemWidth(GameHook::inputItemWidth);
+        ImGui::SliderFloat("Hair Colour Intensity##desiredHairColourIntensitySliderFloat", &GameHook::desiredHairColourMult, 1.0f, 10.0f);
+        if (ImGui::Button("Reset##ResetHairColourButton")) {
+            GameHook::desiredHairColourMult = 1.0f;
+            GameHook::desiredHairColourRGB = { 1.0f, 1.0f, 1.0f };
+        }
+        ImGui::Unindent();
+    }
+    ImGui::EndGroup();
+#ifndef SPEEDRUN_BUILD
+    ImGui::SameLine(GameHook::sameLineWidth);
+    if (ImGui::Checkbox("Force Summoning Clothes (F6)##LessClothesToggle", &GameHook::lessClothes_toggle)) {
+        GameHook::LessClothes(GameHook::lessClothes_toggle);
+    }
+    GameHook::help_marker("Only works on outfits that have this function");
+#endif
 }
 
 void GameHook::GameImGui(void) {
@@ -540,30 +543,6 @@ void GameHook::GameImGui(void) {
                 ImGui::Unindent();
             }
             ImGui::EndGroup();
-            
-            ImGui::SeparatorText("Character");
-
-            ImGui::SetNextItemWidth(inputItemWidth);
-            ImGui::Combo("Character##Combo", &currentCharacterValue, "Bayonetta\0Jeanne\0Little King Zero\0");
-            help_marker("Set while in costume select\nSets character specific mechanics, e.g. if you have a dodge cap\n"
-                "If your game freezes at the end of a fight, flick the value back to default");
-            ImGui::SameLine(sameLineWidth);
-            ImGui::SetNextItemWidth(inputItemWidth);
-            ImGui::Combo("Costume##Combo", (int*)GameHook::currentCostumeAddress, costumeNames, IM_ARRAYSIZE(costumeNames));
-            help_marker("Set while in mission select\n");
-
-            ImGui::SetNextItemWidth(inputItemWidth);
-            ImGui::Combo("Third Accessory", &GameHook::desiredThirdAccessory, accessoryNames, IM_ARRAYSIZE(accessoryNames));
-            help_marker("Select your third accessory");
-            ImGui::SameLine(sameLineWidth);
-            if (ImGui::Checkbox("Force Summoning Clothes (F6)##LessClothesToggle", &GameHook::lessClothes_toggle)) {
-                GameHook::LessClothes(GameHook::lessClothes_toggle);
-            }
-            help_marker("Only works on outfits that have this function");
-
-            DrawAreaJump();
-
-            DrawAngelSlayer();
 
             tabHeight += ImGui::GetCursorPosY();
             ImGui::EndChild();
@@ -713,6 +692,48 @@ void GameHook::GameImGui(void) {
 
             DrawGlamour();
 
+            ImGui::SetNextItemWidth(inputItemWidth);
+            ImGui::Combo("Current Character##Combo", &currentCharacterValue, "Bayonetta\0Jeanne\0Little King Zero\0");
+            help_marker("Set while in costume select\nSets character specific mechanics, e.g. if you have a dodge cap\n"
+                "If your game freezes at the end of a fight, flick the value back to default");
+            ImGui::SameLine(sameLineWidth);
+            ImGui::SetNextItemWidth(inputItemWidth);
+            ImGui::Combo("Current Costume##Combo", (int*)GameHook::currentCostumeAddress, costumeNames, IM_ARRAYSIZE(costumeNames));
+            help_marker("Set while in mission select or before an area change\n");
+
+            ImGui::SetNextItemWidth(inputItemWidth);
+            ImGui::Combo("Third Accessory", &GameHook::desiredThirdAccessory, accessoryNames, IM_ARRAYSIZE(accessoryNames));
+            help_marker("Select your third accessory");
+
+            tabHeight += ImGui::GetCursorPosY();
+            ImGui::EndChild();
+            ImGui::EndTabItem();
+        }
+
+        if (ImGui::BeginTabItem("Environment")) {
+            ImGui::BeginChild("EnvironmentChild");
+
+            DrawAreaJump();
+
+            DrawAngelSlayer();
+
+            ImGui::SeparatorText("Common Enemy Spawns");
+
+            static int selectedEnemyListbox = 0;
+            if (ImGui::BeginListBox("##Enemy Spawn Listbox", ImVec2(-FLT_MIN, 20 * ImGui::GetTextLineHeightWithSpacing()))) {
+                for (int i = 0; i < IM_ARRAYSIZE(spawnList); i++) {
+                    const bool isSelected = (selectedEnemyListbox == i);
+                    if (ImGui::Selectable(spawnList[i].name, isSelected)) {
+                        selectedEnemyListbox = i;
+                        const SpawnFromListbox& selected = spawnList[i];
+                        GameHook::EasySpawnEntityFromHotkey(selected.id, selected.variant, selected.spawnAnim); // we use hotkey call to avoid custom settings
+                    }
+                    if (isSelected)
+                        ImGui::SetItemDefaultFocus();
+                }
+                ImGui::EndListBox();
+            }
+
             tabHeight += ImGui::GetCursorPosY();
             ImGui::EndChild();
             ImGui::EndTabItem();
@@ -762,12 +783,6 @@ void GameHook::GameImGui(void) {
             }
             help_marker("Disable the gradient covering the game");
 
-            if (ImGui::Checkbox("Disable Tutorials", &disableTutorials_toggle)) {
-                GameHook::DisableTutorials(disableTutorials_toggle);
-            }
-
-            ImGui::SameLine(sameLineWidth);
-
             ImGui::BeginGroup();
             ImGui::Checkbox("Force Input Type", &GameHook::inputIcons_toggle);
             help_marker("Force the game to display either keyboard/mouse or gamepad input icons. Disallows certain inputs (such as mouse movement) when forcing gamepad");
@@ -779,6 +794,12 @@ void GameHook::GameImGui(void) {
                 ImGui::Unindent();
             }
             ImGui::EndGroup();
+
+            ImGui::SameLine(sameLineWidth);
+
+            if (ImGui::Checkbox("Disable Tutorials", &disableTutorials_toggle)) {
+                GameHook::DisableTutorials(disableTutorials_toggle);
+            }
 
 			ImGui::SeparatorText("BayoHook");
 
@@ -966,85 +987,86 @@ void GameHook::GameImGui(void) {
                 }
 
                 ImGui::SeparatorText("Entity Spawning");
-                {
-                    static int selectedEnemy = 28;
+                static int selectedEnemy = 0;
 
-                    if (ImGui::CollapsingHeader("Manual Spawn Settings")) {
-
-                        if (ImGui::Combo("Known Entity IDs", &selectedEnemy, displayNames, knownEntityCount)) {
-                            GameHook::guiEntitySpawn.entityID = knownEntities[selectedEnemy].id;
-                        }
-                        ImGui::SameLine();
-                        help_marker("This just autofills the next field if you want to pick from a dictionary of IDs we already know");
-                        ImGui::PushItemWidth(inputItemWidth);
-                        ImGui::InputScalar("ID", ImGuiDataType_S32, &guiEntitySpawn.entityID, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
-                        ImGui::SameLine();
-                        help_marker("This is for typing in a manual ID. You will crash if you type in an invalid ID");
-                        ImGui::InputScalar("arg2.int_0", ImGuiDataType_S32, &guiEntitySpawn.settings.int_0, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
-                        ImGui::InputScalar("arg2.int_4_Variant", ImGuiDataType_S32, &guiEntitySpawn.settings.int_4_Variant, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
-                        ImGui::InputScalar("arg2.int_8_SpawnAnim", ImGuiDataType_S32, &guiEntitySpawn.settings.int_8_SpawnAnim, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
-                        ImGui::InputScalar("arg2.int_C", ImGuiDataType_S32, &guiEntitySpawn.settings.int_C, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
-                        ImGui::InputScalar("arg2.int_10", ImGuiDataType_S32, &guiEntitySpawn.settings.int_10, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
-                        ImGui::InputFloat("arg2.float_14_RotX", &guiEntitySpawn.settings.float_14_RotX);
-                        ImGui::InputFloat("arg2.float_18_RotY", &guiEntitySpawn.settings.float_18_RotY);
-                        ImGui::InputFloat("arg2.float_1C_RotZ", &guiEntitySpawn.settings.float_1C_RotZ);
-                        ImGui::InputScalar("arg2.int_20", ImGuiDataType_S32, &guiEntitySpawn.settings.int_20, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
-                        ImGui::InputFloat("arg2.float_24", &guiEntitySpawn.settings.float_24);
-                        ImGui::InputFloat("arg2.float_28", &guiEntitySpawn.settings.float_28);
-                        ImGui::InputFloat("arg2.float_2C", &guiEntitySpawn.settings.float_2C);
-                        ImGui::InputFloat("arg2.float_30_ScaleX", &guiEntitySpawn.settings.float_30_ScaleX);
-                        ImGui::InputFloat("arg2.float_34", &guiEntitySpawn.settings.float_34);
-                        ImGui::InputFloat("arg2.float_38", &guiEntitySpawn.settings.float_38);
-                        ImGui::InputFloat("arg2.float_3C", &guiEntitySpawn.settings.float_3C);
-                        ImGui::InputFloat("arg2.float_40", &guiEntitySpawn.settings.float_40);
-                        ImGui::InputFloat("arg2.float_44_ScaleY", &guiEntitySpawn.settings.float_44_ScaleY);
-                        ImGui::InputFloat("arg2.float_48", &guiEntitySpawn.settings.float_48);
-                        ImGui::InputFloat("arg2.float_4C", &guiEntitySpawn.settings.float_4C);
-                        ImGui::InputFloat("arg2.float_50", &guiEntitySpawn.settings.float_50);
-                        ImGui::InputFloat("arg2.float_54", &guiEntitySpawn.settings.float_54);
-                        ImGui::InputFloat("arg2.float_58_ScaleZ", &guiEntitySpawn.settings.float_58_ScaleZ);
-                        ImGui::InputFloat("arg2.float_5C", &guiEntitySpawn.settings.float_5C);
-                        ImGui::InputFloat("arg2.float_60", &guiEntitySpawn.settings.float_60);
-                        ImGui::InputFloat("arg2.float_64", &guiEntitySpawn.settings.float_64);
-                        ImGui::InputFloat("arg2.float_68", &guiEntitySpawn.settings.float_68);
-                        ImGui::InputFloat("arg2.float_6C", &guiEntitySpawn.settings.float_6C);
-                        ImGui::InputFloat("arg2.float_70_X", &guiEntitySpawn.settings.float_70_X);
-                        ImGui::InputFloat("arg2.float_74_Y", &guiEntitySpawn.settings.float_74_Y);
-                        ImGui::InputFloat("arg2.float_78_Z", &guiEntitySpawn.settings.float_78_Z);
-                        ImGui::InputFloat("arg2.float_7C", &guiEntitySpawn.settings.float_7C);
-                        ImGui::InputInt("arg2.int_80", &guiEntitySpawn.settings.int_80);
-                        ImGui::InputScalar("arg2.int_84", ImGuiDataType_S32, &guiEntitySpawn.settings.int_84, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
-                        ImGui::InputScalar("arg2.int_88", ImGuiDataType_S32, &guiEntitySpawn.settings.int_88, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
-                        ImGui::InputFloat("arg2.float_8C", &guiEntitySpawn.settings.float_8C);
-                        ImGui::InputFloat("arg2.float_90", &guiEntitySpawn.settings.float_90);
-                        ImGui::InputFloat("arg2.float_94", &guiEntitySpawn.settings.float_94);
-                        ImGui::InputText("arg2.string_98", guiEntitySpawn.settings.string_98, sizeof(guiEntitySpawn.settings.string_98));
-                        ImGui::InputScalar("arg2.char_9f", ImGuiDataType_U8, &guiEntitySpawn.settings.char_9f);
-                        ImGui::InputFloat("arg2.float_A0", &guiEntitySpawn.settings.float_A0);
-                        ImGui::PopItemWidth();
-
-                        if (ImGui::Button("Spawn")) {
-                            LocalPlayer* player = GetLocalPlayer();
-                            if (player) {
-                                guiEntitySpawn.settings.float_70_X = player->pos.x;
-                                guiEntitySpawn.settings.float_74_Y = player->pos.y + 1.0f;
-                                guiEntitySpawn.settings.float_78_Z = player->pos.z;
-                            }
-                            GameHook::spawnEntityFromGui = true;
-                        }
+                if (ImGui::CollapsingHeader("Detailed Custom Spawn Settings")) {
+                    if (ImGui::Combo("Known Entity IDs", &selectedEnemy, displayNames, knownEntityCount)) {
+                        GameHook::guiEntitySpawn.entityID = knownEntities[selectedEnemy].id;
                     }
-                    else {
-                        if (ImGui::Combo("ID##Easy", &selectedEnemy, displayNames, knownEntityCount)) {
-                            GameHook::guiEntitySpawn.entityID = knownEntities[selectedEnemy].id;
+                    ImGui::SameLine();
+                    help_marker("This just autofills the next field if you want to pick from a dictionary of IDs we already know");
+                    ImGui::PushItemWidth(inputItemWidth);
+                    ImGui::InputScalar("ID", ImGuiDataType_S32, &guiEntitySpawn.entityID, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+                    ImGui::SameLine();
+                    help_marker("This is for typing in a manual ID. You will crash if you type in an invalid ID");
+                    ImGui::InputScalar("arg2.int_0", ImGuiDataType_S32, &guiEntitySpawn.settings.int_0, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+                    ImGui::InputScalar("arg2.int_4_Variant", ImGuiDataType_S32, &guiEntitySpawn.settings.int_4_Variant, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+                    ImGui::InputScalar("arg2.int_8_SpawnAnim", ImGuiDataType_S32, &guiEntitySpawn.settings.int_8_SpawnAnim, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+                    ImGui::InputScalar("arg2.int_C", ImGuiDataType_S32, &guiEntitySpawn.settings.int_C, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+                    ImGui::InputScalar("arg2.int_10", ImGuiDataType_S32, &guiEntitySpawn.settings.int_10, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+                    ImGui::InputFloat("arg2.float_14_RotX", &guiEntitySpawn.settings.float_14_RotX);
+                    ImGui::InputFloat("arg2.float_18_RotY", &guiEntitySpawn.settings.float_18_RotY);
+                    ImGui::InputFloat("arg2.float_1C_RotZ", &guiEntitySpawn.settings.float_1C_RotZ);
+                    ImGui::InputScalar("arg2.int_20", ImGuiDataType_S32, &guiEntitySpawn.settings.int_20, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+                    ImGui::InputFloat("arg2.float_24", &guiEntitySpawn.settings.float_24);
+                    ImGui::InputFloat("arg2.float_28", &guiEntitySpawn.settings.float_28);
+                    ImGui::InputFloat("arg2.float_2C", &guiEntitySpawn.settings.float_2C);
+                    ImGui::InputFloat("arg2.float_30_ScaleX", &guiEntitySpawn.settings.float_30_ScaleX);
+                    ImGui::InputFloat("arg2.float_34", &guiEntitySpawn.settings.float_34);
+                    ImGui::InputFloat("arg2.float_38", &guiEntitySpawn.settings.float_38);
+                    ImGui::InputFloat("arg2.float_3C", &guiEntitySpawn.settings.float_3C);
+                    ImGui::InputFloat("arg2.float_40", &guiEntitySpawn.settings.float_40);
+                    ImGui::InputFloat("arg2.float_44_ScaleY", &guiEntitySpawn.settings.float_44_ScaleY);
+                    ImGui::InputFloat("arg2.float_48", &guiEntitySpawn.settings.float_48);
+                    ImGui::InputFloat("arg2.float_4C", &guiEntitySpawn.settings.float_4C);
+                    ImGui::InputFloat("arg2.float_50", &guiEntitySpawn.settings.float_50);
+                    ImGui::InputFloat("arg2.float_54", &guiEntitySpawn.settings.float_54);
+                    ImGui::InputFloat("arg2.float_58_ScaleZ", &guiEntitySpawn.settings.float_58_ScaleZ);
+                    ImGui::InputFloat("arg2.float_5C", &guiEntitySpawn.settings.float_5C);
+                    ImGui::InputFloat("arg2.float_60", &guiEntitySpawn.settings.float_60);
+                    ImGui::InputFloat("arg2.float_64", &guiEntitySpawn.settings.float_64);
+                    ImGui::InputFloat("arg2.float_68", &guiEntitySpawn.settings.float_68);
+                    ImGui::InputFloat("arg2.float_6C", &guiEntitySpawn.settings.float_6C);
+                    ImGui::InputFloat3("arg2.float_70_X", &guiEntitySpawn.settings.float_70_X);
+                    GameHook::help_marker("These fields will always autofill with character pos +1 y upon pressing spawn");
+                    ImGui::InputFloat("arg2.float_7C", &guiEntitySpawn.settings.float_7C);
+                    ImGui::InputScalar("arg2.int_80", ImGuiDataType_S32, &guiEntitySpawn.settings.int_80, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+                    ImGui::InputScalar("arg2.int_84", ImGuiDataType_S32, &guiEntitySpawn.settings.int_84, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+                    ImGui::InputScalar("arg2.int_88", ImGuiDataType_S32, &guiEntitySpawn.settings.int_88, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+                    ImGui::InputFloat("arg2.float_8C", &guiEntitySpawn.settings.float_8C);
+                    ImGui::InputFloat("arg2.float_90", &guiEntitySpawn.settings.float_90);
+                    ImGui::InputFloat("arg2.float_94", &guiEntitySpawn.settings.float_94);
+                    ImGui::InputText("arg2.string_98", guiEntitySpawn.settings.string_98, sizeof(guiEntitySpawn.settings.string_98));
+                    ImGui::InputScalar("arg2.char_9f", ImGuiDataType_U8, &guiEntitySpawn.settings.char_9f);
+                    ImGui::InputFloat("arg2.float_A0", &guiEntitySpawn.settings.float_A0);
+                    ImGui::PopItemWidth();
+
+                    if (ImGui::Button("Spawn")) {
+                        LocalPlayer* player = GetLocalPlayer();
+                        if (player) {
+                            guiEntitySpawn.settings.float_70_X = player->pos.x;
+                            guiEntitySpawn.settings.float_74_Y = player->pos.y + 1.0f;
+                            guiEntitySpawn.settings.float_78_Z = player->pos.z;
                         }
-                        static int step = 1;
-                        ImGui::PushItemWidth(inputItemWidth);
-                        ImGui::InputScalar("Variant##Easy", ImGuiDataType_S32, &guiEntitySpawn.settings.int_4_Variant, &step, &step, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
-                        ImGui::InputScalar("Spawn Anim##Easy", ImGuiDataType_S32, &guiEntitySpawn.settings.int_8_SpawnAnim, &step, &step, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
-                        ImGui::PopItemWidth();
-                        if (ImGui::Button("Easy Spawn##Easy")) {
-                            GameHook::EasySpawnEntityFromGui(guiEntitySpawn.entityID, guiEntitySpawn.settings.int_4_Variant, guiEntitySpawn.settings.int_8_SpawnAnim);
-                        }
+                        GameHook::spawnEntityFromGui = true;
+                    }
+                }
+
+                if (ImGui::CollapsingHeader("Simplified Custom Spawn Settings")) {
+                    static int step = 1;
+                    ImGui::SetNextItemWidth(inputItemWidth);
+                    ImGui::InputScalar("ID", ImGuiDataType_S32, &guiEntitySpawn.entityID, &step, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+                    ImGui::SameLine();
+                    if (ImGui::Combo("ID##Easy", &selectedEnemy, displayNames, knownEntityCount)) {
+                        GameHook::guiEntitySpawn.entityID = knownEntities[selectedEnemy].id;
+                    }
+
+                    ImGui::PushItemWidth(inputItemWidth);
+                    ImGui::InputScalar("Variant##Easy", ImGuiDataType_S32, &guiEntitySpawn.settings.int_4_Variant, &step, &step, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+                    ImGui::InputScalar("Spawn Anim##Easy", ImGuiDataType_S32, &guiEntitySpawn.settings.int_8_SpawnAnim, &step, &step, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+                    ImGui::PopItemWidth();
+                    if (ImGui::Button("Spawn Entity##Easy")) {
+                        GameHook::EasySpawnEntityFromGui(guiEntitySpawn.entityID, guiEntitySpawn.settings.int_4_Variant, guiEntitySpawn.settings.int_8_SpawnAnim);
                     }
                 }
             }
@@ -1285,7 +1307,8 @@ void GameHook::GameImGui(void) {
 
             if (ImGui::CollapsingHeader("Recent Spawns")) {
                 ImGui::Checkbox("Log Spawns", &GameHook::viewEntitySpawns_toggle);
-                GameHook::help_marker("View the ID/arg combos used by the game to spawn entities to aid learning for our own spawner");
+                GameHook::help_marker("View the ID/arg combos used by the game to spawn entities to aid learning for our own spawner.\n"
+                    "This is pretty crashy so be sure to enable/disable it around spawns you wish to observe");
                 GameHook::DisplayRecentlySpawnedEntitiesInImGui();
             }
 
@@ -1303,25 +1326,36 @@ void GameHook::GameImGui(void) {
             ImGui::Text("F2 = Take No Damage");
             ImGui::Text("F3 = One Hit Kill");
             ImGui::Text("F4 = Infinite Jumps");
-            ImGui::Text("F5 = NoClip");
-            ImGui::Text("F6 = Summoning Outfit");
             ImGui::Text("Home = Save Locked On Enemy Anim");
             help_marker("if enabled in System");
             ImGui::Text("End = Load Locked On Enemy Anim");
             help_marker("if enabled in System");
 
-            ImGui::Text("LCtrl+ F1 = Spawn 1");
-            ImGui::Text("LCtrl+ F2 = Spawn 2");
-            ImGui::Text("LCtrl+ F3 = Spawn 3");
-            ImGui::Text("LCtrl+ F4 = Spawn 4");
-            ImGui::Text("LCtrl+ F5 = Spawn 5");
-            ImGui::Text("LCtrl+ F6 = Spawn 6");
-            ImGui::Text("LCtrl+ F7 = Spawn 7");
-            ImGui::Text("LCtrl+ F8 = Spawn 8");
-            ImGui::Text("LCtrl+ F9 = Spawn 9");
-            ImGui::Text("LCtrl+ F10 = Spawn 10");
-            ImGui::Text("LCtrl+ F11 = Spawn 11");
-            ImGui::Text("LCtrl+ F12 = Spawn 12");
+            ImGui::Text("LCtrl + F1 = Spawn Affinity (Spear)");
+            ImGui::Text("LCtrl + F2 = Spawn Affinity (Trumpet)");
+            ImGui::Text("LCtrl + F3 = Spawn Applaud (Spear)");
+            ImGui::Text("LCtrl + F4 = Spawn Applaud (Greatsword)");
+            ImGui::Text("LCtrl + F5 = Spawn Enchant"); // top prio
+            ImGui::Text("LCtrl + F6 = Spawn Ardor (Greatsword)");
+            ImGui::Text("LCtrl + F7 = Spawn Ardor (Axe)");
+            ImGui::Text("LCtrl + F8 = Spawn Affinity (Laser)");
+            ImGui::Text("LCtrl + F9 = Spawn Fearless");
+            ImGui::Text("LCtrl + F10 = Spawn Fairness");
+            ImGui::Text("LCtrl + F11 = Spawn Harmony");
+            ImGui::Text("LCtrl + F12 = Spawn Brave");
+            ImGui::Spacing();
+            ImGui::Text("LShift + F1 = Spawn Joy");
+            ImGui::Text("LShift + F2 = Spawn Grace");
+            ImGui::Text("LShift + F3 = Spawn Glory");
+            ImGui::Text("LShift + F4 = Spawn Gracious");
+            ImGui::Text("LShift + F5 = Spawn Glorious");
+            ImGui::Text("LShift + F6 = Spawn Kinship");
+            ImGui::Text("LShift + F7 = Spawn Beloved (Silver)");
+            ImGui::Text("LShift + F8 = Spawn Golem");
+            ImGui::Text("LShift + F9 = Spawn Fortitudo (Green)");
+            ImGui::Text("LShift + F10 = Spawn Balder");
+            ImGui::Text("LShift + F11 = Spawn Jeanne Formal A");
+            ImGui::Text("LShift + F12 = Spawn Bayonetta");
 
             DrawCredits();
 
