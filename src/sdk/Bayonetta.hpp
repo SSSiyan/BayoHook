@@ -472,7 +472,6 @@ static const char* accessoryNames[13]{
 };
 
 static const char* moveIDNames[350]{
-"134: Durga Punch Spin",
     "0: Handguns Idle",
     "1: Handguns Lock On Stance",
     "2: Handguns Aim",
