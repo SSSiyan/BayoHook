@@ -990,27 +990,28 @@ void GameHook::GameImGui(void) {
                 static int selectedEnemy = 50;
 
                 if (ImGui::CollapsingHeader("Detailed Custom Spawn Settings")) {
+                    static constexpr int step = 1;
                     if (ImGui::Combo("Known Entity IDs", &selectedEnemy, displayNames, knownEntityCount)) {
                         GameHook::guiEntitySpawn.entityID = knownEntities[selectedEnemy].id;
                     }
                     ImGui::SameLine();
-                    help_marker("This just autofills the next field if you want to pick from a dictionary of IDs we already know");
+                    help_marker("This just autofills the previous field if you want to pick from a dictionary of IDs we already know");
                     ImGui::PushItemWidth(inputItemWidth);
-                    ImGui::InputScalar("ID##EntityIDDetailed", ImGuiDataType_S32, &guiEntitySpawn.entityID, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+                    ImGui::InputScalar("ID##EntityIDDetailed", ImGuiDataType_S32, &guiEntitySpawn.entityID, &step, &step, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
                     ImGui::SameLine();
                     help_marker("This is for typing in a manual ID. You will crash if you type in an invalid ID");
-                    ImGui::InputScalar("arg2.int_0", ImGuiDataType_S32, &guiEntitySpawn.settings.int_0, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+                    ImGui::InputScalar("arg2.int_0", ImGuiDataType_S32, &guiEntitySpawn.settings.int_0, &step, &step, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
                     help_marker("Unknown. 1 can break spawns. The game seems to set these properly per enemy");
-                    ImGui::InputScalar("arg2.int_4_Variant", ImGuiDataType_S32, &guiEntitySpawn.settings.int_4_Variant, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+                    ImGui::InputScalar("arg2.int_4_Variant", ImGuiDataType_S32, &guiEntitySpawn.settings.int_4_Variant, &step, &step, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
                     help_marker("Some enemies use the same ID but a different variant");
-                    ImGui::InputScalar("arg2.int_8_SpawnModifier", ImGuiDataType_S32, &guiEntitySpawn.settings.int_8_SpawnModifier, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+                    ImGui::InputScalar("arg2.int_8_SpawnModifier", ImGuiDataType_S32, &guiEntitySpawn.settings.int_8_SpawnModifier, &step, &step, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
                     help_marker("Can affect enemy HP and how an enemy acts");
-                    ImGui::InputScalar("arg2.int_C", ImGuiDataType_S32, &guiEntitySpawn.settings.int_C, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
-                    ImGui::InputScalar("arg2.int_10", ImGuiDataType_S32, &guiEntitySpawn.settings.int_10, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+                    ImGui::InputScalar("arg2.int_C", ImGuiDataType_S32, &guiEntitySpawn.settings.int_C, &step, &step, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+                    ImGui::InputScalar("arg2.int_10", ImGuiDataType_S32, &guiEntitySpawn.settings.int_10, &step, &step, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
                     ImGui::InputFloat("arg2.float_14_RotX", &guiEntitySpawn.settings.float_14_RotX);
                     ImGui::InputFloat("arg2.float_18_RotY", &guiEntitySpawn.settings.float_18_RotY);
                     ImGui::InputFloat("arg2.float_1C_RotZ", &guiEntitySpawn.settings.float_1C_RotZ);
-                    ImGui::InputScalar("arg2.int_20", ImGuiDataType_S32, &guiEntitySpawn.settings.int_20, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+                    ImGui::InputScalar("arg2.int_20", ImGuiDataType_S32, &guiEntitySpawn.settings.int_20, &step, &step, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
                     ImGui::InputFloat("arg2.float_24", &guiEntitySpawn.settings.float_24);
                     ImGui::InputFloat("arg2.float_28", &guiEntitySpawn.settings.float_28);
                     ImGui::InputFloat("arg2.float_2C", &guiEntitySpawn.settings.float_2C);
@@ -1031,16 +1032,15 @@ void GameHook::GameImGui(void) {
                     ImGui::InputFloat("arg2.float_68", &guiEntitySpawn.settings.float_68);
                     ImGui::InputFloat("arg2.float_6C", &guiEntitySpawn.settings.float_6C);
                     ImGui::InputFloat3("arg2.float_70_X", &guiEntitySpawn.settings.float_70_X);
-                    help_marker("These fields will always autofill with character pos +1 y upon pressing spawn");
+                    help_marker("These fields will always autofill with character pos upon pressing spawn");
                     ImGui::InputFloat("arg2.float_7C", &guiEntitySpawn.settings.float_7C);
-                    ImGui::InputScalar("arg2.int_80", ImGuiDataType_S32, &guiEntitySpawn.settings.int_80, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
-                    ImGui::InputScalar("arg2.int_84", ImGuiDataType_S32, &guiEntitySpawn.settings.int_84, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
-                    ImGui::InputScalar("arg2.int_88", ImGuiDataType_S32, &guiEntitySpawn.settings.int_88, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+                    ImGui::InputScalar("arg2.int_80", ImGuiDataType_S32, &guiEntitySpawn.settings.int_80, &step, &step, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+                    ImGui::InputScalar("arg2.int_84", ImGuiDataType_S32, &guiEntitySpawn.settings.int_84, &step, &step, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+                    ImGui::InputScalar("arg2.int_88", ImGuiDataType_S32, &guiEntitySpawn.settings.int_88, &step, &step, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
                     ImGui::InputFloat("arg2.float_8C", &guiEntitySpawn.settings.float_8C);
                     ImGui::InputFloat("arg2.float_90", &guiEntitySpawn.settings.float_90);
                     ImGui::InputFloat("arg2.float_94", &guiEntitySpawn.settings.float_94);
                     ImGui::InputText("arg2.string_98", guiEntitySpawn.settings.string_98, sizeof(guiEntitySpawn.settings.string_98));
-                    ImGui::InputScalar("arg2.char_9f", ImGuiDataType_U8, &guiEntitySpawn.settings.char_9f);
                     ImGui::InputFloat("arg2.float_A0", &guiEntitySpawn.settings.float_A0);
                     ImGui::PopItemWidth();
 
@@ -1056,7 +1056,7 @@ void GameHook::GameImGui(void) {
                 }
 
                 if (ImGui::CollapsingHeader("Simplified Custom Spawn Settings")) {
-                    static int step = 1;
+                    static constexpr int step = 1;
                     ImGui::SetNextItemWidth(inputItemWidth);
                     ImGui::InputScalar("ID##EntityIDSimplified", ImGuiDataType_S32, &guiEntitySpawn.entityID, &step, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
                     ImGui::SameLine();
