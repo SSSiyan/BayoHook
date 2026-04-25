@@ -36,7 +36,7 @@ LRESULT CALLBACK Base::Hooks::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
 			else {
 				GameHook::enemyHPNoDamage_toggle = !GameHook::enemyHPNoDamage_toggle;
 				GameHook::DisableKilling(GameHook::enemyHPNoDamage_toggle);
-				if (GameHook::enemyHPNoDamage_toggle) {
+				if (GameHook::enemyHPNoDamage_toggle && GameHook::enemyHPOneHitKill_toggle) {
 					GameHook::enemyHPOneHitKill_toggle = false;
 					GameHook::DisplayMessageText("Enemy One Hit Kill", GameHook::enemyHPOneHitKill_toggle);
 				}
@@ -64,9 +64,10 @@ LRESULT CALLBACK Base::Hooks::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
 			}
 			else {
 				GameHook::enemyHPOneHitKill_toggle = !GameHook::enemyHPOneHitKill_toggle;
-				if (GameHook::enemyHPOneHitKill_toggle) {
+				if (GameHook::enemyHPOneHitKill_toggle && GameHook::enemyHPNoDamage_toggle) {
 					GameHook::enemyHPNoDamage_toggle = false;
 					GameHook::DisableKilling(GameHook::enemyHPNoDamage_toggle);
+					GameHook::DisplayMessageText("Enemy Takes No Damage", GameHook::enemyHPNoDamage_toggle);
 				}
 				GameHook::DisplayMessageText("Enemy One Hit Kill", GameHook::enemyHPOneHitKill_toggle);
 			}

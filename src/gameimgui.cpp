@@ -172,14 +172,14 @@ static void DrawBayoHookSettings() {
         ImGui::SameLine();
         if (ImGui::Button("Reset##ResetComboUIPositionButton")) {
             GameHook::comboUI_X = 0.880f;
-            GameHook::comboUI_Y = 0.215f;
+            GameHook::comboUI_Y = 0.190f;
         }
         ImGui::Unindent();
     }
 }
 
 static void DrawAreaJump() {
-    static int stageID = 114;
+    static int stageID = 0x114;
     static int stagePart = 0;
     static int spawn = -1;
     static constexpr int step = 1;
@@ -726,7 +726,7 @@ void GameHook::GameImGui(void) {
                     if (ImGui::Selectable(spawnList[i].name, isSelected)) {
                         selectedEnemyListbox = i;
                         const SpawnFromListbox& selected = spawnList[i];
-                        GameHook::EasySpawnEntityFromHotkey(selected.id, selected.variant, selected.spawnAnim); // we use hotkey call to avoid custom settings
+                        GameHook::EasySpawnEntityFromHotkey(selected.id, selected.variant, selected.spawnModifier); // we use hotkey call to avoid custom settings
                     }
                     if (isSelected)
                         ImGui::SetItemDefaultFocus();
@@ -987,7 +987,7 @@ void GameHook::GameImGui(void) {
                 }
 
                 ImGui::SeparatorText("Entity Spawning");
-                static int selectedEnemy = 0;
+                static int selectedEnemy = 50;
 
                 if (ImGui::CollapsingHeader("Detailed Custom Spawn Settings")) {
                     if (ImGui::Combo("Known Entity IDs", &selectedEnemy, displayNames, knownEntityCount)) {
@@ -996,12 +996,15 @@ void GameHook::GameImGui(void) {
                     ImGui::SameLine();
                     help_marker("This just autofills the next field if you want to pick from a dictionary of IDs we already know");
                     ImGui::PushItemWidth(inputItemWidth);
-                    ImGui::InputScalar("ID", ImGuiDataType_S32, &guiEntitySpawn.entityID, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+                    ImGui::InputScalar("ID##EntityIDDetailed", ImGuiDataType_S32, &guiEntitySpawn.entityID, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
                     ImGui::SameLine();
                     help_marker("This is for typing in a manual ID. You will crash if you type in an invalid ID");
                     ImGui::InputScalar("arg2.int_0", ImGuiDataType_S32, &guiEntitySpawn.settings.int_0, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+                    help_marker("Unknown. 1 can break spawns. The game seems to set these properly per enemy");
                     ImGui::InputScalar("arg2.int_4_Variant", ImGuiDataType_S32, &guiEntitySpawn.settings.int_4_Variant, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
-                    ImGui::InputScalar("arg2.int_8_SpawnAnim", ImGuiDataType_S32, &guiEntitySpawn.settings.int_8_SpawnAnim, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+                    help_marker("Some enemies use the same ID but a different variant");
+                    ImGui::InputScalar("arg2.int_8_SpawnModifier", ImGuiDataType_S32, &guiEntitySpawn.settings.int_8_SpawnModifier, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+                    help_marker("Can affect enemy HP and how an enemy acts");
                     ImGui::InputScalar("arg2.int_C", ImGuiDataType_S32, &guiEntitySpawn.settings.int_C, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
                     ImGui::InputScalar("arg2.int_10", ImGuiDataType_S32, &guiEntitySpawn.settings.int_10, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
                     ImGui::InputFloat("arg2.float_14_RotX", &guiEntitySpawn.settings.float_14_RotX);
@@ -1028,7 +1031,7 @@ void GameHook::GameImGui(void) {
                     ImGui::InputFloat("arg2.float_68", &guiEntitySpawn.settings.float_68);
                     ImGui::InputFloat("arg2.float_6C", &guiEntitySpawn.settings.float_6C);
                     ImGui::InputFloat3("arg2.float_70_X", &guiEntitySpawn.settings.float_70_X);
-                    GameHook::help_marker("These fields will always autofill with character pos +1 y upon pressing spawn");
+                    help_marker("These fields will always autofill with character pos +1 y upon pressing spawn");
                     ImGui::InputFloat("arg2.float_7C", &guiEntitySpawn.settings.float_7C);
                     ImGui::InputScalar("arg2.int_80", ImGuiDataType_S32, &guiEntitySpawn.settings.int_80, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
                     ImGui::InputScalar("arg2.int_84", ImGuiDataType_S32, &guiEntitySpawn.settings.int_84, 0, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
@@ -1055,7 +1058,7 @@ void GameHook::GameImGui(void) {
                 if (ImGui::CollapsingHeader("Simplified Custom Spawn Settings")) {
                     static int step = 1;
                     ImGui::SetNextItemWidth(inputItemWidth);
-                    ImGui::InputScalar("ID", ImGuiDataType_S32, &guiEntitySpawn.entityID, &step, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+                    ImGui::InputScalar("ID##EntityIDSimplified", ImGuiDataType_S32, &guiEntitySpawn.entityID, &step, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
                     ImGui::SameLine();
                     if (ImGui::Combo("ID##Easy", &selectedEnemy, displayNames, knownEntityCount)) {
                         GameHook::guiEntitySpawn.entityID = knownEntities[selectedEnemy].id;
@@ -1063,10 +1066,12 @@ void GameHook::GameImGui(void) {
 
                     ImGui::PushItemWidth(inputItemWidth);
                     ImGui::InputScalar("Variant##Easy", ImGuiDataType_S32, &guiEntitySpawn.settings.int_4_Variant, &step, &step, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
-                    ImGui::InputScalar("Spawn Anim##Easy", ImGuiDataType_S32, &guiEntitySpawn.settings.int_8_SpawnAnim, &step, &step, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+                    help_marker("Some enemies use the same ID but a different variant");
+                    ImGui::InputScalar("Spawn Modifier##Easy", ImGuiDataType_S32, &guiEntitySpawn.settings.int_8_SpawnModifier, &step, &step, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+                    help_marker("Can affect enemy HP and how an enemy acts");
                     ImGui::PopItemWidth();
                     if (ImGui::Button("Spawn Entity##Easy")) {
-                        GameHook::EasySpawnEntityFromGui(guiEntitySpawn.entityID, guiEntitySpawn.settings.int_4_Variant, guiEntitySpawn.settings.int_8_SpawnAnim);
+                        GameHook::EasySpawnEntityFromGui(guiEntitySpawn.entityID, guiEntitySpawn.settings.int_4_Variant, guiEntitySpawn.settings.int_8_SpawnModifier);
                     }
                 }
             }
@@ -1306,10 +1311,12 @@ void GameHook::GameImGui(void) {
             }
 
             if (ImGui::CollapsingHeader("Recent Spawns")) {
+                ImGui::Indent();
                 ImGui::Checkbox("Log Spawns", &GameHook::viewEntitySpawns_toggle);
                 GameHook::help_marker("View the ID/arg combos used by the game to spawn entities to aid learning for our own spawner.\n"
                     "This is pretty crashy so be sure to enable/disable it around spawns you wish to observe");
                 GameHook::DisplayRecentlySpawnedEntitiesInImGui();
+                ImGui::Unindent();
             }
 
             tabHeight += ImGui::GetCursorPosY();

@@ -281,7 +281,7 @@ static_assert(sizeof(Enemy) == 0xca4);
 struct EntitySpawnArg2 {
     int int_0 = 0;                // 0x0
     int int_4_Variant = 0;        // 0x4
-    int int_8_SpawnAnim = 0;      // 0x8
+    int int_8_SpawnModifier = 0;  // 0x8
     int int_C = 0;                // 0xC has been 0x8000
     int int_10 = 0x20000;         // 0x10 has been 1
     float float_14_RotX = 0.0f;   // 0x14
@@ -906,7 +906,7 @@ static const EntityInfo knownEntities[] = {
     {"Fairness", 0x20051},
     {"Fearless & Fairness Dummy Dat (w/Animations)", 0x2005F},
     {"Harmony", 0x20060},
-    {"Beloved (w/Climax Finisher)", 0x20070},
+    {"Beloved", 0x20070},
     {"Beloved (Larger)", 0x20071},
     {"Beloved (Invisible)", 0x20072},
     {"Brave", 0x20073},
@@ -963,7 +963,7 @@ static const EntityInfo knownEntities[] = {
     {"Orb that Spawns Blue Electric Strikes", 0x2020C},
     {"Temperantia 3", 0x2020D},
     {"Sapentia", 0x20400},
-    {"Balder (w/Climax Finishers)", 0x20500},
+    {"Balder", 0x20500},
     {"Father Rodin (Unkillable)", 0x20510},
     {"Jeanne Enemy Default", 0x21000},
     {"Jeanne Enemy Old", 0x21001},
@@ -1063,7 +1063,7 @@ struct SpawnFromListbox {
     const char* name;
     int id;
     int variant;
-    int spawnAnim;
+    int spawnModifier;
 };
 
 static const SpawnFromListbox spawnList[] = {
@@ -1116,7 +1116,7 @@ static const SpawnFromListbox spawnList[] = {
     {"Fearless", 0x20050, 0, 0},
     {"Fairness", 0x20051, 0, 0},
     {"Harmony", 0x20060, 0, 0},
-    {"Beloved (w/Climax Finisher)", 0x20070, 0, 0},
+    {"Beloved", 0x20070, 0, 0},
     {"Beloved (Larger)", 0x20071, 0, 0},
     {"Brave", 0x20073, 0, 0},
     {"Beloved (Silver)", 0x20074, 0, 0},
@@ -1130,7 +1130,7 @@ static const SpawnFromListbox spawnList[] = {
     // {"Temperantia 2", 0x20200, 0, 0},
     // {"Temperantia 3", 0x2020D, 0, 0},
     // {"Sapentia", 0x20400, 0, 0},
-    {"Balder (w/Climax Finishers)", 0x20500, 0, 0},
+    {"Balder", 0x20500, 0, 0},
     // {"Father Rodin (Unkillable)", 0x20510, 0, 0},
     {"Jeanne Enemy Default", 0x21000, 0, 0},
     {"Jeanne Enemy Old", 0x21001, 0, 0},

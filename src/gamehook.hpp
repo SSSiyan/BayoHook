@@ -301,8 +301,8 @@ public:
 
 	static void Setup3dShapes();
 	static void SpawnEntity(EntitySpawn&);
-	static void EasySpawnEntityFromHotkey(int enemyID, int variant, int spawnAnim);
-	static void EasySpawnEntityFromGui(int enemyID, int variant, int spawnAnim);
+	static void EasySpawnEntityFromHotkey(int enemyID, int variant, int spawnModifier);
+	static void EasySpawnEntityFromGui(int enemyID, int variant, int spawnModifier);
 	static void SpawnStuff(); // Do not call from outside of game thread. Set spawnEntityFromGui / spawnEntityFromHotkey true instead.
 	static bool spawnEntityFromGui;
 	static bool spawnEntityFromHotkey;

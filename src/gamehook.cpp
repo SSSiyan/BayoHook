@@ -136,6 +136,7 @@ void GameHook::AutoQTE(bool enabled) {
 		GameHook::_patch((char*)(0x41652C), (char*)"\xE9\xEC\x01\x00\x00", 5);		// ch8 1 (A)
 		GameHook::_patch((char*)(0x41641A), (char*)"\xE9\xFE\x02\x00\x00\x90", 6);	// ch8 2 (Up+A)
 		GameHook::_patch((char*)(0x416492), (char*)"\xE9\x84\x02\x00\x00\x90", 6);	// ch15 elevator (side+jump)
+		GameHook::_patch((char*)(0x9CD0AC), (char*)"\x90\x90", 2);					// spin stick torture attack
 		// GameHook::_patch((char*)(0x416585), (char*)"\xE9\x93\x01\x00\x00", 5);	// Y+B but will torture attack every single dude
 	}
 	else {
@@ -145,6 +146,7 @@ void GameHook::AutoQTE(bool enabled) {
 		GameHook::_patch((char*)(0x41652C), (char*)"\xE9\xEA\x01\x00\x00", 5);		// ch8 1 (A)
 		GameHook::_patch((char*)(0x41641A), (char*)"\x0F\x86\x68\x03\x00\x00", 6);	// ch8 2 (Up+A)
 		GameHook::_patch((char*)(0x416492), (char*)"\x0F\x86\xF0\x02\x00\x00", 6);	// ch15 elevator (side+jump)
+		GameHook::_patch((char*)(0x9CD0AC), (char*)"\x74\x24", 2);					// spin stick torture attack
 		// GameHook::_patch((char*)(0x416585), (char*)"\xE9\x91\x01\x00\x00", 5);   // Y+B but will torture attack every single dude
 	}
 }
@@ -1449,13 +1451,13 @@ struct SpawnSnapshot {
 	int optionalStructUsed;
 	int structUnkn;
 	int structVariant;
-	int structSpawnAnim;
+	int structSpawnModifier;
 };
 
 static std::vector<SpawnSnapshot> recentlySpawnedList;
 static const size_t MAX_SNAPSHOTS = 10000;
 
-static void LogEntitySpawn(int ID, int unkn, int optionalStructUsed, int structUnkn, int structVariant, int structSpawnAnim) {
+static void LogEntitySpawn(int ID, int unkn, int optionalStructUsed, int structUnkn, int structVariant, int structSpawnModifier) {
 	if (recentlySpawnedList.size() >= MAX_SNAPSHOTS)
 		recentlySpawnedList.erase(recentlySpawnedList.begin());
 
@@ -1465,7 +1467,7 @@ static void LogEntitySpawn(int ID, int unkn, int optionalStructUsed, int structU
 		optionalStructUsed,
 		structUnkn,
 		structVariant,
-		structSpawnAnim
+		structSpawnModifier
 	});
 }
 
@@ -1493,7 +1495,7 @@ void GameHook::DisplayRecentlySpawnedEntitiesInImGui() {
 		if (s.optionalStructUsed == 1) {
 			ImGui::InputScalar("Struct.int_0_Unkn", ImGuiDataType_S32, &s.structUnkn, NULL, NULL, "%8X");
 			ImGui::InputScalar("Struct.int_4_Variant", ImGuiDataType_S32, &s.structVariant,  NULL, NULL, "%8X");
-			ImGui::InputScalar("Struct.int_8_SpawnAnim", ImGuiDataType_S32, &s.structSpawnAnim, NULL, NULL, "%8X");
+			ImGui::InputScalar("Struct.int_8_SpawnModifier", ImGuiDataType_S32, &s.structSpawnModifier, NULL, NULL, "%8X");
 		}
 		ImGui::PopItemWidth();
 		ImGui::Separator();
@@ -1520,7 +1522,7 @@ static __declspec(naked) void ViewEntitySpawnsDetour(void) {
 		cmp eax, 0x10000
 		jb dontLogEax
 
-		push [eax+0x8] // struct.SpawnAnim
+		push [eax+0x8] // struct.SpawnModifier
 		push [eax+0x4] // struct.Variant
 		push [eax+0x0] // struct.Unkn
 		push 1 // struct Used
@@ -1531,7 +1533,7 @@ static __declspec(naked) void ViewEntitySpawnsDetour(void) {
 		jmp popcode
 
 	dontLogEax:
-		push 0 // struct.SpawnAnim
+		push 0 // struct.SpawnModifier
 		push 0 // struct.Variant
 		push 0 // struct.Unkn
 		push 0 // struct Used
@@ -2923,12 +2925,12 @@ void GameHook::DrawFlyingStats() {
 	}
 }
 
-void GameHook::EasySpawnEntityFromHotkey(int enemyID, int variant, int spawnAnim) {
+void GameHook::EasySpawnEntityFromHotkey(int enemyID, int variant, int spawnModifier) {
 	LocalPlayer* player = GameHook::GetLocalPlayer();
 	if (!player) { return; }
 	GameHook::hotkeyEntitySpawn.entityID = enemyID;
 	GameHook::hotkeyEntitySpawn.settings.int_4_Variant = variant;
-	GameHook::hotkeyEntitySpawn.settings.int_8_SpawnAnim = spawnAnim;
+	GameHook::hotkeyEntitySpawn.settings.int_8_SpawnModifier = spawnModifier;
 	GameHook::hotkeyEntitySpawn.settings.float_70_X = player->pos.x;
 	GameHook::hotkeyEntitySpawn.settings.float_74_Y = player->pos.y;
 	GameHook::hotkeyEntitySpawn.settings.float_78_Z = player->pos.z;
@@ -2936,12 +2938,12 @@ void GameHook::EasySpawnEntityFromHotkey(int enemyID, int variant, int spawnAnim
 	GameHook::DisplayMessageText("Entity Spawned");
 }
 
-void GameHook::EasySpawnEntityFromGui(int enemyID, int variant, int spawnAnim) {
+void GameHook::EasySpawnEntityFromGui(int enemyID, int variant, int spawnModifier) {
 	LocalPlayer* player = GameHook::GetLocalPlayer();
 	if (!player) { return; }
 	GameHook::guiEntitySpawn.entityID = enemyID;
 	GameHook::guiEntitySpawn.settings.int_4_Variant = variant;
-	GameHook::guiEntitySpawn.settings.int_8_SpawnAnim = spawnAnim;
+	GameHook::guiEntitySpawn.settings.int_8_SpawnModifier = spawnModifier;
 	GameHook::guiEntitySpawn.settings.float_70_X = player->pos.x;
 	GameHook::guiEntitySpawn.settings.float_74_Y = player->pos.y;
 	GameHook::guiEntitySpawn.settings.float_78_Z = player->pos.z;
@@ -3051,7 +3053,7 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	inputIconsValue = cfg.get<int>("inputIconsValue").value_or(0);
 	showComboUI_toggle = cfg.get<bool>("showComboUI_toggle").value_or(false);
 	comboUI_X = cfg.get<float>("comboUI_X").value_or(0.880f);
-	comboUI_Y = cfg.get<float>("comboUI_Y").value_or(0.215f);
+	comboUI_Y = cfg.get<float>("comboUI_Y").value_or(0.190f);
 	enable_scroll_transitions = cfg.get<bool>("enable_scroll_transitions").value_or(true);
 	forceCostume = cfg.get<bool>("forceCostume").value_or(false);
 	tempCostume = cfg.get<int>("tempCostume").value_or(0);

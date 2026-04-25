@@ -118,7 +118,7 @@ Vec3 WorldVisualizer::RotatePoint(const Vec3& point, const Vec3& center, const M
 void WorldVisualizer::DrawWorldSphere(const Vec3& center, float radius, ImU32 color, int segments, float thickness, const Matrix3x3* rot) {
     Matrix3x3 rotation = rot ? *rot : Matrix3x3::Identity();
 
-    const float angleStep = 2.0f * M_PI / segments;
+    const float angleStep = 2.0f * (float)M_PI / segments;
 
     // XY plane circle
     for (int i = 0; i < segments; ++i) {
@@ -185,8 +185,8 @@ void WorldVisualizer::DrawWorldCapsule( const Vec3& start, const Vec3& end, floa
 
     // Generate a circle perpendicular to axis
     for (int i = 0; i < segments; ++i) {
-        float angle1 = (float)i / segments * 2.0f * M_PI;
-        float angle2 = (float)(i + 1) / segments * 2.0f * M_PI;
+        float angle1 = (float)i / segments * 2.0f * (float)M_PI;
+        float angle2 = (float)(i + 1) / segments * 2.0f * (float)M_PI;
 
         // Circle in local XZ plane
         Vec3 offset1 = { radius * cosf(angle1), 0.0f, radius * sinf(angle1) };
