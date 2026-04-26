@@ -352,6 +352,7 @@ static AreaIDName areaIDNames[] = {
     { 0x532, "XVI - The Lumen Sage" },
     { 0x5a1, "E - Requiem" },
     { 0xB00, "LC - Angel Slayer (Spawn changes Alfheim)" },
+    { 0xC00, "Angel Attack" },
     { 0xF01, "The Gates of Hell (Set Spawn to 1/2 for Rodin)" },
 };
 
@@ -886,8 +887,8 @@ static const EntityInfo knownEntities[] = {
     {"Ardor", 0x20004}, // 0 = sword, 1 = axe, 2 = key
     {"Affinity/Applaud Invisible Base", 0x20006},
     {"Affinity (Axe) (Fire)", 0x20007},
-    {"Flying Affinity (Fake)", 0x20008},
-    {"Flying Affinity (T-Pose)", 0x20009},
+    {"Affinity (Angel Attack)", 0x20008},
+    {"Affinity (T-Pose)", 0x20009},
     {"Affinity Dummy Dat (w/Animations)", 0x2000E},
     {"Decoration", 0x20010},
     {"Dear", 0x20011},

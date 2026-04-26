@@ -158,8 +158,6 @@ static void DrawBayoHookSettings() {
     ImGui::Checkbox("Scroll Transitions", &GameHook::enable_scroll_transitions);
     GameHook::help_marker("Toggle the sliding animations that play when BayoHook changes size");
 
-    ImGui::Separator();
-
     ImGui::Checkbox("Show 9.9+ Combo Multiplier UI", &GameHook::showComboUI_toggle);
     GameHook::help_marker("Open a window that shows your current combo multiplier when passing 9.9x");
     if (GameHook::showComboUI_toggle) {
@@ -399,7 +397,9 @@ void GameHook::GameImGui(void) {
                 }
             }
             help_marker("Deal no damage to enemies");
+
             ImGui::SameLine(sameLineWidth);
+
             ImGui::Checkbox("Take No Damage (F2)", &GameHook::damageReceivedMultiplierNoDamage_toggle);
             help_marker("Take no damage from enemies");
 
@@ -414,7 +414,9 @@ void GameHook::GameImGui(void) {
                 ImGui::Unindent();
             }
             ImGui::EndGroup();
+
             ImGui::SameLine(sameLineWidth);
+
             ImGui::BeginGroup();
             ImGui::Checkbox("Damage Received Multiplier##DamageReceivedMultiplierToggle", &GameHook::damageReceivedMultiplier_toggle);
             help_marker("Ctrl + Click to type a value higher than 5.0");
@@ -441,7 +443,9 @@ void GameHook::GameImGui(void) {
             ImGui::SetNextItemWidth(inputItemWidth);
             ImGui::Combo("Difficulty", &difficultyValue, "Very Easy\0Easy\0Normal\0Hard\0Non-Stop Infinite Climax\0");
             help_marker("Override the difficulty set ingame");
+
 			ImGui::SameLine(sameLineWidth);
+
             if (ImGui::Checkbox("Freeze Difficulty", &freezeDifficulty_toggle)) {
                 GameHook::FreezeDifficulty(freezeDifficulty_toggle);
             }
@@ -455,7 +459,9 @@ void GameHook::GameImGui(void) {
                 GameHook::DisableDaze(GameHook::disableDaze_toggle);
             }
             help_marker("Stop enemies from ever being dazed");
+
             ImGui::SameLine(sameLineWidth);
+
             if (ImGui::Checkbox("Force Enemy Daze", &GameHook::forceDaze_toggle)) {
                 GameHook::disableDaze_toggle = false;
                 GameHook::DisableDaze(GameHook::disableDaze_toggle);
@@ -470,7 +476,9 @@ void GameHook::GameImGui(void) {
                 GameHook::MoreEnemyAttacks(GameHook::moreEnemyAttacks_toggle);
             }
             help_marker("Remove the timer that starts when an enemy attacks, allowing any enemy to attack at any time");
+
             ImGui::SameLine(sameLineWidth);
+
             if (ImGui::Checkbox("Less Enemy Attacks", &GameHook::lessEnemyAttacks_toggle)) {
                 GameHook::moreEnemyAttacks_toggle = false;
                 GameHook::MoreEnemyAttacks(GameHook::moreEnemyAttacks_toggle);
@@ -482,42 +490,27 @@ void GameHook::GameImGui(void) {
 
             ImGui::Checkbox("Disable Slow Motion", &GameHook::disableSlowmo_toggle);
             help_marker("Disable slow motion when dodging etc");
-			ImGui::SameLine(sameLineWidth);
-            if (ImGui::Checkbox("Get More Halos", &GameHook::getMoreHalos_toggle)) {
-                GameHook::GetMoreHalos(GameHook::getMoreHalos_toggle);
-            }
-            help_marker("Pick up Halos from further away");
 
-            if (ImGui::Checkbox("Freeze Timers", &GameHook::freezeTimer_toggle)) {
-                GameHook::FreezeTimer(GameHook::freezeTimer_toggle);
-            }
-            help_marker("Freeze Alfheim timers");
             ImGui::SameLine(sameLineWidth);
-            ImGui::Checkbox("Easier Mashing##EasierMashToggle", &GameHook::easierMash_toggle);
-            help_marker("Make mash QTEs more reasonable");
+
+            if (ImGui::Checkbox("NoClip", &GameHook::noClip_toggle)) {
+                GameHook::NoClip(GameHook::noClip_toggle);
+            }
+            help_marker("Allow every entity to ignore walls and floors");
 
             if (ImGui::Checkbox("Disable Enraged Hitstop", &GameHook::noEnragedHitstop_toggle)) {
                 GameHook::NoEnragedHitstop(noEnragedHitstop_toggle);
             }
             ImGui::SameLine();
             help_marker("Disable only the extra hitstop you get when attacking an enraged enemy");
+
 			ImGui::SameLine(sameLineWidth);
+
             if (ImGui::Checkbox("Disable All Hitstop", &GameHook::noHitstop_toggle)) {
                 GameHook::NoHitstop(noHitstop_toggle);
             }
             help_marker("Disable the game pausing for a few frames when hits connect");
 
-            ImGui::Checkbox("Skip Angel Attack", &GameHook::loadReplace_toggle);
-            help_marker("Load Mission Select instead of Angel Attack");
-
-            ImGui::SameLine(sameLineWidth);
-
-            if (ImGui::Checkbox("Auto Complete QTEs", &GameHook::autoQTE_toggle)) {
-                GameHook::AutoQTE(GameHook::autoQTE_toggle);
-            }
-            help_marker("Does not auto complete torture attacks (because then you'd do it on every enemy you stand next to)");
-
-			//ImGui::SameLine(sameLineWidth);
             ImGui::BeginGroup();
             ImGui::Checkbox("Turbo", &GameHook::turbo_toggle);
             help_marker("Set a custom game speed");
@@ -557,14 +550,18 @@ void GameHook::GameImGui(void) {
             if (ImGui::Checkbox("Disable After Burner Bounce", &GameHook::disableAfterBurnerBounce_toggle)) {
                 DisableAfterBurnerBounce(GameHook::disableAfterBurnerBounce_toggle);
             }
-            help_marker("Disable the bounce that happens when you divekick into a wall, or into an enemy while not holding kick");
+            help_marker("Disable the bounce that happens when you divekick into a wall or enemy while not holding kick");
+
             ImGui::SameLine(sameLineWidth);
+
             ImGui::Checkbox("Cancellable After Burner", &GameHook::cancellableAfterBurner_toggle);
             help_marker("Allow actions during After Burner such as dodge or jump");
 
             ImGui::Checkbox("Cancellable Falling Kick", &GameHook::cancellableFallingKick_toggle);
             help_marker("Allow actions during Falling Kick such as dodge or jump");
+
             ImGui::SameLine(sameLineWidth);
+
             if (ImGui::Checkbox("Taunt With Time Bracelet", &GameHook::tauntWithTimeBracelet_toggle)) {
                 TauntWithTimeBracelet(GameHook::tauntWithTimeBracelet_toggle);
             }
@@ -572,7 +569,9 @@ void GameHook::GameImGui(void) {
 
             ImGui::Checkbox("Lower Divekick Requirement", &GameHook::lowerDivekick_toggle);
             help_marker("Half the height requirement for Divekick");
+
             ImGui::SameLine(sameLineWidth);
+
             ImGui::Checkbox("Dual Gun After Burner", &GameHook::dualAfterBurner_toggle);
             help_marker("Shoot with both legs during After Burner, like in Bayonetta 2");
 
@@ -581,7 +580,9 @@ void GameHook::GameImGui(void) {
                 NoHoldDodgeOffset(noHoldDodgeOffset_toggle);
             }
             help_marker("Dodge Offset without holding attack buttons");
+
             ImGui::SameLine(sameLineWidth);
+
             if (ImGui::Checkbox("Jump Offset", &GameHook::jumpOffset_toggle)) {
                 JumpOffset(jumpOffset_toggle);
             }
@@ -591,7 +592,9 @@ void GameHook::GameImGui(void) {
                 WeaponSwapOffset(weaponSwapOffset_toggle);
             }
             help_marker("Offset through weapon swaps");
+
             ImGui::SameLine(sameLineWidth);
+
             if (ImGui::Checkbox("Parry Offset", &GameHook::parryOffset_toggle)) {
                 ParryOffset(parryOffset_toggle);
             }
@@ -599,7 +602,9 @@ void GameHook::GameImGui(void) {
 
             ImGui::Checkbox("Longer Pillow Talk Charge", &longerPillowTalkCharge_toggle);
             help_marker("Double the charged duration on Pillow Talk");
+
             ImGui::SameLine(sameLineWidth);
+
             if (ImGui::Checkbox("Retain Pillow Talk Charge", &GameHook::retainPillowTalkCharge_toggle)) {
                 RetainPillowTalkCharge(retainPillowTalkCharge_toggle);
             }
@@ -609,7 +614,9 @@ void GameHook::GameImGui(void) {
                 SwapMashToHold(swapMashToHold_toggle);
             }
             help_marker("Swap mash inputs such as those used on Odette to hold inputs");
+
             ImGui::SameLine(sameLineWidth);
+
             if (ImGui::Checkbox("Always Walk On Walls", &GameHook::alwaysWalkOnWalls_toggle)) {
                 AlwaysWalkOnWalls(alwaysWalkOnWalls_toggle);
             }
@@ -619,7 +626,9 @@ void GameHook::GameImGui(void) {
                 GameHook::DisableLockOnDodge(GameHook::disableLockOnDodge_toggle);
             }
             help_marker("Disable the alternate dodge input, allowing you to jump in different directions while locked on");
+
             ImGui::SameLine(sameLineWidth);
+
             if (ImGui::Checkbox("Disable Double Tap Inputs", &GameHook::disableDoubleTapHeelKick_toggle)) {
                 GameHook::DisableDoubleTapHeelKick(disableDoubleTapHeelKick_toggle);
             }
@@ -630,13 +639,17 @@ void GameHook::GameImGui(void) {
                 GameHook::JeanneBayoWT(GameHook::jeanneBayoWT_toggle);
             }
             help_marker("Give Jeanne Bayonetta's Witch Time activation leniency");
+
             ImGui::SameLine(sameLineWidth);
+
             ImGui::Checkbox("Alt Umbran Spear Input", &GameHook::altTeleInput_toggle);
             help_marker("Map Umbran Spear to lockon + L1. Move Taunt to dpad down");
 
             ImGui::Checkbox("Umbran Spear Omnicancel", &GameHook::omnicancelTele_toggle);
             help_marker("Cancel any animation with Umbral Spear");
+
             ImGui::SameLine(sameLineWidth);
+
             ImGui::Checkbox("Umbran Spear Offset", &GameHook::teleportComboAction_toggle);
             ImGui::SameLine();
             help_marker("Umbran spear will refresh your offset timer");
@@ -647,7 +660,9 @@ void GameHook::GameImGui(void) {
                 GameHook::InfJumps(GameHook::infJumps_toggle);
             }
             help_marker("Infinite jumps");
+
             ImGui::SameLine(sameLineWidth);
+
             ImGui::Checkbox("Always Witch Time", &GameHook::alwaysWitchTime_toggle);
             help_marker("Activate Witch Time even with a mistimed dodge");
 
@@ -655,7 +670,9 @@ void GameHook::GameImGui(void) {
                 InfDivekick(infDivekick_toggle);
             }
             help_marker("Remove the limit on how many divekicks you can do before enemy stepping or touching the floor");
+
             ImGui::SameLine(sameLineWidth);
+
             if (ImGui::Checkbox("Infinite Crow Within", &GameHook::infBirdTime_toggle)) {
                 InfBirdTime(infBirdTime_toggle);
             }
@@ -672,7 +689,9 @@ void GameHook::GameImGui(void) {
                 ImGui::Unindent();
             }
             ImGui::EndGroup();
+
             ImGui::SameLine(sameLineWidth);
+
             ImGui::BeginGroup();
             ImGui::Checkbox("Freeze Magic##InfMagicToggle", &GameHook::infMagic_toggle);
             help_marker("Lock player magic to any value");
@@ -696,7 +715,9 @@ void GameHook::GameImGui(void) {
             ImGui::Combo("Current Character##Combo", &currentCharacterValue, "Bayonetta\0Jeanne\0Little King Zero\0");
             help_marker("Set while in costume select\nSets character specific mechanics, e.g. if you have a dodge cap\n"
                 "If your game freezes at the end of a fight, flick the value back to default");
+
             ImGui::SameLine(sameLineWidth);
+
             ImGui::SetNextItemWidth(inputItemWidth);
             ImGui::Combo("Current Costume##Combo", (int*)GameHook::currentCostumeAddress, costumeNames, IM_ARRAYSIZE(costumeNames));
             help_marker("Set while in mission select or before an area change\n");
@@ -758,19 +779,25 @@ void GameHook::GameImGui(void) {
 
             ImGui::Checkbox("Enemy HP in Halo Display", &GameHook::haloDisplay_toggle);
             help_marker("Show the last hit enemy's HP in your Halo display. This only edits the display, your Halos are safe");
-            ImGui::SameLine(sameLineWidth);
-            if (ImGui::Checkbox("NoClip (F5)", &GameHook::noClip_toggle)) {
-                GameHook::NoClip(GameHook::noClip_toggle);
-            }
-            help_marker("Allow every entity to ignore walls and floors");
 
-            ImGui::Checkbox("Save/Load Animation Hotkeys", &GameHook::saveStatesHotkeys_toggle);
-            help_marker("Enable/Disable the HOME and END enemy save state hotkeys");
             ImGui::SameLine(sameLineWidth);
-            if (ImGui::Checkbox("Easy Cutscene Skip", &GameHook::easyCutsceneSkip_toggle)) {
-                GameHook::EasyCutsceneSkip(GameHook::easyCutsceneSkip_toggle);
+
+            if (ImGui::Checkbox("Disable Gradient", &GameHook::disableGradient_toggle)) {
+                GameHook::DisableGradient(GameHook::disableGradient_toggle);
             }
-            help_marker("Move cutscene skip (R2+Select) to X");
+            help_marker("Disable the gradient covering the game");
+
+            if (ImGui::Checkbox("Skip Angel Attack", &GameHook::skipAngelAttack_toggle)) {
+                GameHook::SkipAngelAttack(skipAngelAttack_toggle);
+            }
+
+            ImGui::SameLine(sameLineWidth);
+
+            if (ImGui::Checkbox("Skip Post-Chapter Map Scene", &GameHook::skipMapScene_toggle)) {
+                GameHook::SkipMapScene(skipMapScene_toggle);
+            }
+            help_marker("Load Mission Select instead of Angel Attack. You will miss out on Halos and items.");
+            //ImGui::Checkbox("Skip Angel Attack (OLD)", &GameHook::loadReplace_toggle);
 
             if (ImGui::Checkbox("60 FPS Cutscenes", &GameHook::sixtyFpsCutscenes_toggle)) {
                 GameHook::SixtyFpsCutscenes(GameHook::sixtyFpsCutscenes_toggle);
@@ -778,10 +805,33 @@ void GameHook::GameImGui(void) {
             help_marker("Cutscenes play at 60fps instead of 30");
 
             ImGui::SameLine(sameLineWidth);
-            if (ImGui::Checkbox("Disable Gradient", &GameHook::disableGradient_toggle)) {
-                GameHook::DisableGradient(GameHook::disableGradient_toggle);
+
+            if (ImGui::Checkbox("Auto Cutscene Skip", &GameHook::autoCutsceneSkip_toggle)) {
+                GameHook::AutoCutsceneSkip(GameHook::autoCutsceneSkip_toggle);
             }
-            help_marker("Disable the gradient covering the game");
+            help_marker("Skip skippable cutscenes automatically");
+
+            if (ImGui::Checkbox("Get More Halos", &GameHook::getMoreHalos_toggle)) {
+                GameHook::GetMoreHalos(GameHook::getMoreHalos_toggle);
+            }
+            help_marker("Pick up Halos from further away");
+
+            ImGui::SameLine(sameLineWidth);
+
+            if (ImGui::Checkbox("Freeze Timers", &GameHook::freezeTimer_toggle)) {
+                GameHook::FreezeTimer(GameHook::freezeTimer_toggle);
+            }
+            help_marker("Freeze Alfheim timers");
+
+            ImGui::Checkbox("Easier Mashing##EasierMashToggle", &GameHook::easierMash_toggle);
+            help_marker("Make mash QTEs more reasonable");
+
+            ImGui::SameLine(sameLineWidth);
+
+            if (ImGui::Checkbox("Auto Complete QTEs", &GameHook::autoQTE_toggle)) {
+                GameHook::AutoQTE(GameHook::autoQTE_toggle);
+            }
+            help_marker("Does not auto complete torture attacks (because then you'd do it on every enemy you stand next to)");
 
             ImGui::BeginGroup();
             ImGui::Checkbox("Force Input Type", &GameHook::inputIcons_toggle);
@@ -805,7 +855,12 @@ void GameHook::GameImGui(void) {
 
             ImGui::Checkbox("Show Hotkey Messages", &GameHook::showMessages_toggle);
             help_marker("Show text in the corner of the screen when a hotkey is activated");
+
 			ImGui::SameLine(sameLineWidth);
+
+            ImGui::Checkbox("Save/Load Animation Hotkeys", &GameHook::saveStatesHotkeys_toggle);
+            help_marker("Enable/Disable the HOME and END enemy save state hotkeys");
+
 
             DrawBayoHookSettings();
 
@@ -1337,7 +1392,7 @@ void GameHook::GameImGui(void) {
             help_marker("if enabled in System");
             ImGui::Text("End = Load Locked On Enemy Anim");
             help_marker("if enabled in System");
-
+            ImGui::Spacing();
             ImGui::Text("LCtrl + F1 = Spawn Affinity (Spear)");
             ImGui::Text("LCtrl + F2 = Spawn Affinity (Trumpet)");
             ImGui::Text("LCtrl + F3 = Spawn Applaud (Spear)");

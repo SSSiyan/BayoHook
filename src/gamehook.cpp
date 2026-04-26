@@ -136,7 +136,8 @@ void GameHook::AutoQTE(bool enabled) {
 		GameHook::_patch((char*)(0x41652C), (char*)"\xE9\xEC\x01\x00\x00", 5);		// ch8 1 (A)
 		GameHook::_patch((char*)(0x41641A), (char*)"\xE9\xFE\x02\x00\x00\x90", 6);	// ch8 2 (Up+A)
 		GameHook::_patch((char*)(0x416492), (char*)"\xE9\x84\x02\x00\x00\x90", 6);	// ch15 elevator (side+jump)
-		GameHook::_patch((char*)(0x9CD0AC), (char*)"\x90\x90", 2);					// spin stick torture attack
+		GameHook::_patch((char*)(0x9CD0AC), (char*)"\x90\x90", 2);					// auto spin stick torture attack
+		// GameHook::_patch((char*)(0x9CD0C9), (char*)"\xC0", 1);						// spin stick torture attack 
 		// GameHook::_patch((char*)(0x416585), (char*)"\xE9\x93\x01\x00\x00", 5);	// Y+B but will torture attack every single dude
 	}
 	else {
@@ -146,7 +147,8 @@ void GameHook::AutoQTE(bool enabled) {
 		GameHook::_patch((char*)(0x41652C), (char*)"\xE9\xEA\x01\x00\x00", 5);		// ch8 1 (A)
 		GameHook::_patch((char*)(0x41641A), (char*)"\x0F\x86\x68\x03\x00\x00", 6);	// ch8 2 (Up+A)
 		GameHook::_patch((char*)(0x416492), (char*)"\x0F\x86\xF0\x02\x00\x00", 6);	// ch15 elevator (side+jump)
-		GameHook::_patch((char*)(0x9CD0AC), (char*)"\x74\x24", 2);					// spin stick torture attack
+		GameHook::_patch((char*)(0x9CD0AC), (char*)"\x74\x24", 2);					// auto spin stick torture attack
+		// GameHook::_patch((char*)(0x9CD0C9), (char*)"\xC1", 1);						// spin stick torture attack faster
 		// GameHook::_patch((char*)(0x416585), (char*)"\xE9\x91\x01\x00\x00", 5);   // Y+B but will torture attack every single dude
 	}
 }
@@ -249,15 +251,15 @@ void GameHook::DisableAfterBurnerBounce(bool enabled) {
 	}
 }
 
-bool GameHook::easyCutsceneSkip_toggle = false;
-void GameHook::EasyCutsceneSkip(bool enabled) {
+bool GameHook::autoCutsceneSkip_toggle = false;
+void GameHook::AutoCutsceneSkip(bool enabled) {
 	if (enabled) {
 		GameHook::_patch((char*)(0x48FEC4), (char*)"\x90\x90", 2);
-		GameHook::_patch((char*)(0x48FEC6), (char*)"\xF7\x05\xCC\x93\xA4\x05\x16\x00\x00\x00", 10); // X Pressed
+		GameHook::_patch((char*)(0x48FED0), (char*)"\xe9\x3b\xfd\xff\xff\x90", 6);
 	}
 	else {
 		GameHook::_patch((char*)(0x48FEC4), (char*)"\x74\x10", 2); // R2 Held
-		GameHook::_patch((char*)(0x48FEC6), (char*)"\xF7\x05\xCC\x93\xA4\x05\x00\x02\x00\x00", 10); // Select Pressed
+		GameHook::_patch((char*)(0x48FED0), (char*)"\x0f\x85\x3a\xfd\xff\xff", 6); // Select Pressed
 	}
 }
 
@@ -450,6 +452,30 @@ void GameHook::NoHitstop(bool enabled) {
 	}
 	else {
 		GameHook::_patch((char*)(0x452445), (char*)"\x72\x1B", 2); // jb Bayonetta.exe+52462
+	}
+}
+
+bool GameHook::skipAngelAttack_toggle = false;
+void GameHook::SkipAngelAttack(bool enabled) {
+	if (enabled) {
+		GameHook::_patch((char*)(0x6221C5), (char*)"\x83\xc4\x08\x90\x90", 5); // dont call a func that will get us stuck in AA
+		GameHook::_patch((char*)(0x622068), (char*)"\x90\x90", 2); // jump to store menu
+		GameHook::_patch((char*)(0x62207C), (char*)"\xeb", 1); // leave store
+	}
+	else {
+		GameHook::_patch((char*)(0x6221C5), (char*)"\xe8\x76\x1f\xee\xff", 5); // dont call a func that will get us stuck in AA
+		GameHook::_patch((char*)(0x622068), (char*)"\x75\xe8", 2); // jump to store menu
+		GameHook::_patch((char*)(0x62207C), (char*)"\x75", 1); // leave store
+	}
+}
+
+bool GameHook::skipMapScene_toggle = false;
+void GameHook::SkipMapScene(bool enabled) {
+	if (enabled) {
+		GameHook::_patch((char*)(0x619DA7), (char*)"\x90\x90\x90\x90\x90", 5);
+	}
+	else {
+		GameHook::_patch((char*)(0x619DA7), (char*)"\xe8\xd4\x1c\xee\xff", 5); // call Bayonetta.exe+FBA80
 	}
 }
 
@@ -661,6 +687,8 @@ bool GameHook::openMenuPause_toggle = false;
 float GameHook::turboZero = 0.0f;
 bool GameHook::turbo_toggle = false;
 float GameHook::turboValue = 1.0f;
+bool GameHook::turboCutscene_toggle = false;
+float GameHook::turboCutscene = 5.0f;
 static __declspec(naked) void TurboHookDetour(void) {
 	_asm {
 		cmp byte ptr [GameHook::openMenuPause_toggle], 1
@@ -673,13 +701,28 @@ static __declspec(naked) void TurboHookDetour(void) {
 		movss xmm0, [GameHook::turboZero]
 		jmp originalcode
 
-		turbocheck :
+		/*cutscenecheck:
+		cmp byte ptr [GameHook::turboCutscene_toggle], 1
+		jne turbocheck
+		push eax
+		mov eax, [GameHook::playerPointerAddress]
+		mov eax, [eax]
+		test eax, eax
+		je popcode
+		cmp byte ptr [eax+0x?], 1 // inCutscene
+		pop eax
+		jne turbocheck
+		// in cutscene
+		mulss xmm0, [GameHook::turboCutscene]*/
+		turbocheck:
 		cmp byte ptr [GameHook::turbo_toggle], 0
 		je originalcode
-		movss xmm0, [GameHook::turboValue]
+		mulss xmm0, [GameHook::turboValue]
 		jmp originalcode
 
-		originalcode :
+		popcode:
+		pop eax
+		originalcode:
 		movss [edi+0x44], xmm0
 		jmp dword ptr[turbo_jmp_ret]
 	}
@@ -3100,8 +3143,8 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	FreezeTimer(freezeTimer_toggle);
 	disableAfterBurnerBounce_toggle = cfg.get<bool>("disableAfterBurnerBounce_toggle").value_or(false);
 	DisableAfterBurnerBounce(disableAfterBurnerBounce_toggle);
-	easyCutsceneSkip_toggle = cfg.get<bool>("easyCutsceneSkip_toggle").value_or(false);
-	EasyCutsceneSkip(easyCutsceneSkip_toggle);
+	autoCutsceneSkip_toggle = cfg.get<bool>("autoCutsceneSkip_toggle").value_or(false);
+	AutoCutsceneSkip(autoCutsceneSkip_toggle);
 	disableLockOnDodge_toggle = cfg.get<bool>("disableLockOnDodge_toggle").value_or(false);
 	DisableLockOnDodge(disableLockOnDodge_toggle);
 	noHoldDodgeOffset_toggle = cfg.get<bool>("noHoldDodgeOffset_toggle").value_or(false);
@@ -3142,6 +3185,10 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	NoEnragedHitstop(noEnragedHitstop_toggle);
 	noHitstop_toggle = cfg.get<bool>("noHitstop_toggle").value_or(false);
 	NoHitstop(noHitstop_toggle);
+	skipAngelAttack_toggle = cfg.get<bool>("skipAngelAttack_toggle").value_or(false);
+	SkipAngelAttack(skipAngelAttack_toggle);
+	skipMapScene_toggle = cfg.get<bool>("skipMapScene_toggle").value_or(false);
+	SkipMapScene(skipMapScene_toggle);
 	unbanClimaxBrace_toggle = cfg.get<bool>("unbanClimaxBrace_toggle").value_or(false);
 	UnbanClimaxBrace(unbanClimaxBrace_toggle);
 	tauntWithTimeBracelet_toggle = cfg.get<bool>("tauntWithTimeBracelet_toggle").value_or(false);
@@ -3257,7 +3304,7 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("freezeTimer_toggle", freezeTimer_toggle);
 	cfg.set<bool>("showMessages_toggle", showMessages_toggle);
 	cfg.set<bool>("disableAfterBurnerBounce_toggle", disableAfterBurnerBounce_toggle);
-	cfg.set<bool>("easyCutsceneSkip_toggle", easyCutsceneSkip_toggle);
+	cfg.set<bool>("autoCutsceneSkip_toggle", autoCutsceneSkip_toggle);
 	cfg.set<bool>("disableLockOnDodge_toggle", disableLockOnDodge_toggle);
 	cfg.set<bool>("noHoldDodgeOffset_toggle", noHoldDodgeOffset_toggle);
 	cfg.set<bool>("jumpOffset_toggle", jumpOffset_toggle);
@@ -3278,6 +3325,8 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("multiplayerPatch_toggle", multiplayerPatch_toggle);
 	cfg.set<bool>("noEnragedHitstop_toggle", noEnragedHitstop_toggle);
 	cfg.set<bool>("noHitstop_toggle", noHitstop_toggle);
+	cfg.set<bool>("skipAngelAttack_toggle", skipAngelAttack_toggle);
+	cfg.set<bool>("skipMapScene_toggle", skipMapScene_toggle);
 	cfg.set<bool>("unbanClimaxBrace_toggle", unbanClimaxBrace_toggle);
 
 	// detours

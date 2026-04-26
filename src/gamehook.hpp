@@ -82,8 +82,8 @@ public:
 	static bool disableAfterBurnerBounce_toggle;
 	static void DisableAfterBurnerBounce(bool enabled);
 
-	static bool easyCutsceneSkip_toggle;
-	static void EasyCutsceneSkip(bool enabled);
+	static bool autoCutsceneSkip_toggle;
+	static void AutoCutsceneSkip(bool enabled);
 
 	static bool lessClothes_toggle;
 	static void LessClothes(bool enabled);
@@ -151,6 +151,12 @@ public:
 	static bool noHitstop_toggle;
 	static void NoHitstop(bool enabled);
 
+	static bool skipAngelAttack_toggle;
+	static void SkipAngelAttack(bool enabled);
+
+	static bool skipMapScene_toggle;
+	static void SkipMapScene(bool enabled);
+
 	static bool unbanClimaxBrace_toggle;
 	static void UnbanClimaxBrace(bool enabled);
 #endif
@@ -182,6 +188,8 @@ public:
 	static bool cancellableFallingKick_toggle;
 	static bool turbo_toggle;
 	static float turboValue;
+	static float turboCutscene;
+	static bool turboCutscene_toggle;
 	static float turboZero;
 	static bool altTeleInput_toggle;
 	static bool teleportComboAction_toggle;
