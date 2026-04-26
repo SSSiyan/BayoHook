@@ -136,8 +136,12 @@ void GameHook::AutoQTE(bool enabled) {
 		GameHook::_patch((char*)(0x41652C), (char*)"\xE9\xEC\x01\x00\x00", 5);		// ch8 1 (A)
 		GameHook::_patch((char*)(0x41641A), (char*)"\xE9\xFE\x02\x00\x00\x90", 6);	// ch8 2 (Up+A)
 		GameHook::_patch((char*)(0x416492), (char*)"\xE9\x84\x02\x00\x00\x90", 6);	// ch15 elevator (side+jump)
-		GameHook::_patch((char*)(0x9CD0AC), (char*)"\x90\x90", 2);					// auto spin stick torture attack
-		// GameHook::_patch((char*)(0x9CD0C9), (char*)"\xC0", 1);						// spin stick torture attack 
+
+		GameHook::_patch((char*)(0x9CD0AC), (char*)"\x90\x90", 2);					// auto grace torture attack
+		// GameHook::_patch((char*)(0x9CD0C9), (char*)"\xC0", 1);					// grace torture attack faster
+
+		GameHook::_patch((char*)(0x8DE5C8), (char*)"\x90\x90", 2);					// beloved grab
+
 		// GameHook::_patch((char*)(0x416585), (char*)"\xE9\x93\x01\x00\x00", 5);	// Y+B but will torture attack every single dude
 	}
 	else {
@@ -147,8 +151,12 @@ void GameHook::AutoQTE(bool enabled) {
 		GameHook::_patch((char*)(0x41652C), (char*)"\xE9\xEA\x01\x00\x00", 5);		// ch8 1 (A)
 		GameHook::_patch((char*)(0x41641A), (char*)"\x0F\x86\x68\x03\x00\x00", 6);	// ch8 2 (Up+A)
 		GameHook::_patch((char*)(0x416492), (char*)"\x0F\x86\xF0\x02\x00\x00", 6);	// ch15 elevator (side+jump)
+
 		GameHook::_patch((char*)(0x9CD0AC), (char*)"\x74\x24", 2);					// auto spin stick torture attack
-		// GameHook::_patch((char*)(0x9CD0C9), (char*)"\xC1", 1);						// spin stick torture attack faster
+		// GameHook::_patch((char*)(0x9CD0C9), (char*)"\xC1", 1);					// spin stick torture attack faster
+
+		GameHook::_patch((char*)(0x8DE5C8), (char*)"\x74\x3d", 2);					// beloved grab
+
 		// GameHook::_patch((char*)(0x416585), (char*)"\xE9\x91\x01\x00\x00", 5);   // Y+B but will torture attack every single dude
 	}
 }
