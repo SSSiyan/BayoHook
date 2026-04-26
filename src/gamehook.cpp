@@ -728,8 +728,8 @@ static __declspec(naked) void TurboHookDetour(void) {
 		mulss xmm0, [GameHook::turboValue]
 		jmp originalcode
 
-		popcode:
-		pop eax
+		//popcode:
+		//pop eax
 		originalcode:
 		movss [edi+0x44], xmm0
 		jmp dword ptr[turbo_jmp_ret]
