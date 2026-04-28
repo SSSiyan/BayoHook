@@ -96,16 +96,16 @@ void GameHook::DisableTutorials(bool enabled) {
 bool GameHook::disableFpsLimiter_toggle = false;
 void GameHook::DisableFpsLimiter(bool enabled) {
 	if (enabled) {
-		// GameHook::_patch((char*)(0xC54340), (char*)"\xC3", 1); // retn 
-		// GameHook::_patch((char*)(0xC54430), (char*)"\xC3", 1); // retn 
-		GameHook::_patch((char*)(0xC5450A), (char*)"\x90\x90\x90\x90\x90\x90\x90\x90", 8); // nop
-		// GameHook::_patch((char*)(0x49E25D), (char*)"\x90\xE9", 2); // jmp
+		GameHook::_patch((char*)(0xC54340), (char*)"\xC3", 1); // retn 
+		GameHook::_patch((char*)(0xC54430), (char*)"\xC3", 1); // retn 
+		GameHook::_patch((char*)(0x49E25D), (char*)"\x90\xE9", 2); // jmp
+		// GameHook::_patch((char*)(0xC5450A), (char*)"\x90\x90\x90\x90\x90\x90\x90\x90", 8); // nop
 	}
 	else {
-		// GameHook::_patch((char*)(0xC54340), (char*)"\xF3", 1); // movss
-		// GameHook::_patch((char*)(0xC54430), (char*)"\xF3", 1); // movss
-		GameHook::_patch((char*)(0xC5450A), (char*)"\xF3\x0F\x58\x05\xB8\x99\xDA\x00", 8); // addss xmm0,[Bayonetta.exe+9A99B8] (16.68f)
-		// GameHook::_patch((char*)(0x49E25D), (char*)"\x0F\x84", 2); // jz
+		GameHook::_patch((char*)(0xC54340), (char*)"\xF3", 1); // movss
+		GameHook::_patch((char*)(0xC54430), (char*)"\xF3", 1); // movss
+		GameHook::_patch((char*)(0x49E25D), (char*)"\x0F\x84", 2); // jz
+		// GameHook::_patch((char*)(0xC5450A), (char*)"\xF3\x0F\x58\x05\xB8\x99\xDA\x00", 8); // addss xmm0,[Bayonetta.exe+9A99B8] (16.68f)
 	}
 }
 

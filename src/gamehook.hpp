@@ -18,7 +18,7 @@
 
 //#define SPEEDRUN_BUILD
 
-#define BAYOHOOK_VERSION "2.0.0"
+#define BAYOHOOK_VERSION "2.0.1"
 #ifndef SPEEDRUN_BUILD
 #define BAYOHOOK_EDITION ""
 #else
