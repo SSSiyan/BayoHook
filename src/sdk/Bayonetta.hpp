@@ -109,7 +109,9 @@ struct BayoBone {
     Vec3 pos;             // 0x30
     char pad_3C[0xA4];    // 0x3C
     Vec3 scale;           // 0xE0
-    char pad_EC[0x24];    // 0xEC
+    char pad_EC[0x1C];    // 0xEC
+    int boneID;           // 0x108
+    int unknID;           // 0x10C
     BayoBone* prevBone;   // 0x110
     BayoBone* nextBone;   // 0x114
 }; // Size: 0x118

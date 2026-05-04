@@ -83,7 +83,7 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice)
 #ifndef SPEEDRUN_BUILD
 	UpdateGameSpeed();
 	if (GameHook::linkGameToDelta_toggle) {
-		SetGameSpeed();
+		//SetGameSpeed();
 	}
 #endif
 

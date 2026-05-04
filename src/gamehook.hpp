@@ -18,7 +18,7 @@
 
 //#define SPEEDRUN_BUILD
 
-#define BAYOHOOK_VERSION "2.0.1"
+#define BAYOHOOK_VERSION "2.0.2 PRE RELEASE"
 #ifndef SPEEDRUN_BUILD
 #define BAYOHOOK_EDITION ""
 #else
@@ -163,6 +163,7 @@ public:
 	// detour values
 	static bool uptimeFix_toggle;
 	static constexpr INT64 rebase_interval = 60;
+	static bool longerBufferWindows_toggle;
 	static bool inputIcons_toggle;
 	static int inputIconsValue;
 	static bool enable_scroll_transitions;

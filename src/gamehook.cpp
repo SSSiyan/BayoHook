@@ -122,8 +122,8 @@ void GameHook::LinkGameToDelta(bool enabled) {
 	}
 	else {
 		//GameHook::_patch((char*)(0x513E73), (char*)"\xB8\x00\x00\x80\x3F", 5); // mov eax, (float)1
-		float* gameSpeed = (float*)0xEF6588;
-		*gameSpeed = 1.0f;
+		//float* gameSpeed = (float*)0xEF6588;
+		//*gameSpeed = 1.0f;
 	}
 }
 
@@ -587,6 +587,119 @@ static __declspec(naked) void UptimeFixDetour() {
 	}
 }
 
+bool GameHook::longerBufferWindows_toggle = false;
+static std::unique_ptr<FunctionHook> punchBufferFramesHook;
+static uintptr_t punchBufferFrames_jmp_ret{ NULL };
+static __declspec(naked) void PunchBufferFramesDetour(void) {
+	_asm {
+		pushfd
+		// originalcode
+		mov ecx, [ebx+0x0009398C]
+		cmp byte ptr [GameHook::linkGameToDelta_toggle], 1
+		je fpscode
+		cmp byte ptr [GameHook::longerBufferWindows_toggle], 1
+		je morecode
+
+		fpscode:
+		cvtsi2ss xmm1, ecx // xmm1 is about to be overwritten
+		divss xmm1, [GameHook::deltaSpeed]
+		cvttss2si ecx, xmm1
+		cmp byte ptr [GameHook::longerBufferWindows_toggle], 1
+		je morecode
+		jmp retcode
+
+		morecode:
+		add ecx, ecx
+		retcode:
+		popfd
+		jmp dword ptr [punchBufferFrames_jmp_ret]
+	}
+}
+
+static std::unique_ptr<FunctionHook> kickBufferFramesHook;
+static uintptr_t kickBufferFrames_jmp_ret{ NULL };
+static __declspec(naked) void KickBufferFramesDetour(void) {
+	_asm {
+		pushfd
+		// originalcode
+		mov edx, [ebx+0x00093990]
+		cmp byte ptr [GameHook::linkGameToDelta_toggle], 1
+		je fpscode
+		cmp byte ptr [GameHook::longerBufferWindows_toggle], 1
+		je morecode
+
+		fpscode:
+		cvtsi2ss xmm1, edx // xmm1 is about to be overwritten
+		divss xmm1, [GameHook::deltaSpeed]
+		cvttss2si edx, xmm1
+		cmp byte ptr [GameHook::longerBufferWindows_toggle], 1
+		je morecode
+		jmp retcode
+
+		morecode:
+		add edx, edx
+		retcode:
+		popfd
+		jmp dword ptr [kickBufferFrames_jmp_ret]
+	}
+}
+
+static std::unique_ptr<FunctionHook> dodgeBufferFramesHook;
+static uintptr_t dodgeBufferFrames_jmp_ret{ NULL };
+static __declspec(naked) void DodgeBufferFramesDetour(void) {
+	_asm {
+		pushfd
+		// originalcode
+		mov eax, [ebx+0x00093994]
+		cmp byte ptr [GameHook::linkGameToDelta_toggle], 1
+		je fpscode
+		cmp byte ptr [GameHook::longerBufferWindows_toggle], 1
+		je morecode
+
+		fpscode:
+		cvtsi2ss xmm1, eax // xmm1 is about to be overwritten
+		divss xmm1, [GameHook::deltaSpeed]
+		cvttss2si eax, xmm1
+		cmp byte ptr [GameHook::longerBufferWindows_toggle], 1
+		je morecode
+		jmp retcode
+
+		morecode:
+		add eax, eax
+		retcode:
+		popfd
+		jmp dword ptr [dodgeBufferFrames_jmp_ret]
+	}
+}
+
+static std::unique_ptr<FunctionHook> gunBufferFramesHook;
+static uintptr_t gunBufferFrames_jmp_ret{ NULL };
+static __declspec(naked) void GunBufferFramesDetour(void) {
+	_asm {
+		pushfd
+		// originalcode
+		mov ecx, [ebx+0x0009398C]
+		cmp byte ptr [GameHook::linkGameToDelta_toggle], 1
+		je fpscode
+		cmp byte ptr [GameHook::longerBufferWindows_toggle], 1
+		je morecode
+
+		fpscode:
+		cvtsi2ss xmm0, ecx // xmm0 is about to be overwritten
+		divss xmm0, [GameHook::deltaSpeed]
+		cvttss2si ecx, xmm0
+		cmp byte ptr [GameHook::longerBufferWindows_toggle], 1
+		je morecode
+		jmp retcode
+
+		morecode:
+		add ecx, ecx
+		retcode:
+		popfd
+		jmp dword ptr [gunBufferFrames_jmp_ret]
+	}
+}
+
 static std::unique_ptr<FunctionHook> inputIconsHook;
 static uintptr_t inputIcons_jmp_ret{ NULL };
 bool GameHook::inputIcons_toggle = false;
@@ -603,7 +716,7 @@ static __declspec(naked) void InputIconsDetour(void) {
 		popfd
 		cmp dword ptr [ebx+0x000003E8], 00
 		mov [ebx+0x00000CA8], eax
-		jmp dword ptr[inputIcons_jmp_ret]
+		jmp dword ptr [inputIcons_jmp_ret]
 	}
 }
 
@@ -703,10 +816,22 @@ static __declspec(naked) void TurboHookDetour(void) {
 		je zerospeed
 		jmp turbocheck
 
-		zerospeed :
+		zerospeed:
 		cmp byte ptr [Base::Data::ShowMenu], 0
 		je turbocheck
 		movss xmm0, [GameHook::turboZero]
+		jmp originalcode
+
+		turbocheck:
+		cmp byte ptr [GameHook::turbo_toggle], 0
+		je fpscheck
+		mulss xmm0, [GameHook::turboValue]
+		jmp fpscheck
+
+		fpscheck:
+		cmp byte ptr [GameHook::linkGameToDelta_toggle], 0
+		je originalcode
+		mulss xmm0, [GameHook::deltaSpeed]
 		jmp originalcode
 
 		/*cutscenecheck:
@@ -722,11 +847,6 @@ static __declspec(naked) void TurboHookDetour(void) {
 		jne turbocheck
 		// in cutscene
 		mulss xmm0, [GameHook::turboCutscene]*/
-		turbocheck:
-		cmp byte ptr [GameHook::turbo_toggle], 0
-		je originalcode
-		mulss xmm0, [GameHook::turboValue]
-		jmp originalcode
 
 		//popcode:
 		//pop eax
@@ -3050,6 +3170,10 @@ void GameHook::InitializeDetours(void) {
 	std::random_device rd;
 	GameHook::rng.seed(rd() ^ (unsigned)time(NULL));
 	install_hook_absolute(0xC78100, uptimeFixHook, &UptimeFixDetour, &uptimeFix_jmp_ret, 6);
+	install_hook_absolute(0x8BE2B6, punchBufferFramesHook, &PunchBufferFramesDetour, &punchBufferFrames_jmp_ret, 6);
+	install_hook_absolute(0x8BE387, kickBufferFramesHook, &KickBufferFramesDetour, &kickBufferFrames_jmp_ret, 6);
+	install_hook_absolute(0x8BE471, dodgeBufferFramesHook, &DodgeBufferFramesDetour, &dodgeBufferFrames_jmp_ret, 6);
+	install_hook_absolute(0x8BE55B, gunBufferFramesHook, &GunBufferFramesDetour, &gunBufferFrames_jmp_ret, 6);
 	install_hook_absolute(0x411CD4, inputIconsHook, &InputIconsDetour, &inputIcons_jmp_ret, 13);
 	install_hook_absolute(0x4FC4EF, randomizeCostumeHook, &RandomizeCostumeDetour, &randomizeCostume_jmp_ret, 5);
 #ifndef SPEEDRUN_BUILD 
@@ -3199,6 +3323,8 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	SkipMapScene(skipMapScene_toggle);
 	unbanClimaxBrace_toggle = cfg.get<bool>("unbanClimaxBrace_toggle").value_or(false);
 	UnbanClimaxBrace(unbanClimaxBrace_toggle);
+	longerBufferWindows_toggle = cfg.get<bool>("longerBufferWindows_toggle").value_or(false);
+	//LongerBufferWindows(longerBufferWindows_toggle);
 	tauntWithTimeBracelet_toggle = cfg.get<bool>("tauntWithTimeBracelet_toggle").value_or(false);
 	TauntWithTimeBracelet(tauntWithTimeBracelet_toggle);
 
@@ -3336,6 +3462,7 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("skipAngelAttack_toggle", skipAngelAttack_toggle);
 	cfg.set<bool>("skipMapScene_toggle", skipMapScene_toggle);
 	cfg.set<bool>("unbanClimaxBrace_toggle", unbanClimaxBrace_toggle);
+	cfg.set<bool>("longerBufferWindows_toggle", longerBufferWindows_toggle);
 
 	// detours
 	cfg.set<bool>("drawHitboxes_toggle", drawHitboxes_toggle);

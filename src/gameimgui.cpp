@@ -280,7 +280,7 @@ static void DrawFPSUnlock() {
     GameHook::help_marker("If Bayonetta has been open for a long time you will experience small stutters. This option disables the built in FPS limiter so you can use an external limiter instead, which circumvents the issue");
 
     if (ImGui::Checkbox("Link Game Logic To Delta Time", &GameHook::linkGameToDelta_toggle)) {
-        GameHook::LinkGameToDelta(GameHook::linkGameToDelta_toggle);
+        //GameHook::LinkGameToDelta(GameHook::linkGameToDelta_toggle);
     }
     GameHook::help_marker("This is broken atm but when I figure this out we'll all be playing Bayo at 244hz without breaking everything, surely");
 #endif
@@ -653,6 +653,10 @@ void GameHook::GameImGui(void) {
             ImGui::Checkbox("Umbran Spear Offset", &GameHook::teleportComboAction_toggle);
             ImGui::SameLine();
             help_marker("Umbran spear will refresh your offset timer");
+
+            ImGui::Checkbox("Longer Buffer Windows", &GameHook::longerBufferWindows_toggle);
+            ImGui::SameLine();
+            help_marker("Double the number of buffer frames avaialble for punch, kick, dodge, shoot");
 
             ImGui::SeparatorText("Cheats");
 
