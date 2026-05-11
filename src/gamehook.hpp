@@ -82,8 +82,8 @@ public:
 	static bool disableAfterBurnerBounce_toggle;
 	static void DisableAfterBurnerBounce(bool enabled);
 
-	static bool autoCutsceneSkip_toggle;
-	static void AutoCutsceneSkip(bool enabled);
+	static bool easyCutsceneSkip_toggle;
+	static void EasyCutsceneSkip(bool enabled);
 
 	static bool lessClothes_toggle;
 	static void LessClothes(bool enabled);

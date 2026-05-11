@@ -810,10 +810,10 @@ void GameHook::GameImGui(void) {
 
             ImGui::SameLine(sameLineWidth);
 
-            if (ImGui::Checkbox("Auto Cutscene Skip", &GameHook::autoCutsceneSkip_toggle)) {
-                GameHook::AutoCutsceneSkip(GameHook::autoCutsceneSkip_toggle);
+            if (ImGui::Checkbox("Easy Cutscene Skip", &GameHook::easyCutsceneSkip_toggle)) {
+                GameHook::EasyCutsceneSkip(GameHook::easyCutsceneSkip_toggle);
             }
-            help_marker("Skip skippable cutscenes automatically");
+            help_marker("Skip skippable cutscenes with r2");
 
             if (ImGui::Checkbox("Get More Halos", &GameHook::getMoreHalos_toggle)) {
                 GameHook::GetMoreHalos(GameHook::getMoreHalos_toggle);

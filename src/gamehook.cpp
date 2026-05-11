@@ -259,15 +259,13 @@ void GameHook::DisableAfterBurnerBounce(bool enabled) {
 	}
 }
 
-bool GameHook::autoCutsceneSkip_toggle = false;
-void GameHook::AutoCutsceneSkip(bool enabled) {
+bool GameHook::easyCutsceneSkip_toggle = false;
+void GameHook::EasyCutsceneSkip(bool enabled) {
 	if (enabled) {
-		GameHook::_patch((char*)(0x48FEC4), (char*)"\x90\x90", 2);
-		GameHook::_patch((char*)(0x48FED0), (char*)"\xe9\x3b\xfd\xff\xff\x90", 6);
+		GameHook::_patch((char*)(0x48FEC6), (char*)"\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90", 10);
 	}
 	else {
-		GameHook::_patch((char*)(0x48FEC4), (char*)"\x74\x10", 2); // R2 Held
-		GameHook::_patch((char*)(0x48FED0), (char*)"\x0f\x85\x3a\xfd\xff\xff", 6); // Select Pressed
+		GameHook::_patch((char*)(0x48FEC6), (char*)"\xf7\x05\xcc\x93\xa4\x05\x00\x02\x00\x00", 10);
 	}
 }
 
@@ -711,7 +709,6 @@ static __declspec(naked) void PantherDoubleTapTimerDetour(void) {
 		divss xmm0, [GameHook::deltaSpeed]
 		originalcode:
 		movss [esi+0x00094AE0], xmm0
-		retcode:
 		popfd
 		jmp dword ptr [pantherDoubleTapTimer_jmp_ret]
 	}
@@ -3312,8 +3309,8 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	FreezeTimer(freezeTimer_toggle);
 	disableAfterBurnerBounce_toggle = cfg.get<bool>("disableAfterBurnerBounce_toggle").value_or(false);
 	DisableAfterBurnerBounce(disableAfterBurnerBounce_toggle);
-	autoCutsceneSkip_toggle = cfg.get<bool>("autoCutsceneSkip_toggle").value_or(false);
-	AutoCutsceneSkip(autoCutsceneSkip_toggle);
+	easyCutsceneSkip_toggle = cfg.get<bool>("easyCutsceneSkip_toggle").value_or(false);
+	EasyCutsceneSkip(easyCutsceneSkip_toggle);
 	disableLockOnDodge_toggle = cfg.get<bool>("disableLockOnDodge_toggle").value_or(false);
 	DisableLockOnDodge(disableLockOnDodge_toggle);
 	noHoldDodgeOffset_toggle = cfg.get<bool>("noHoldDodgeOffset_toggle").value_or(false);
@@ -3475,7 +3472,7 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("freezeTimer_toggle", freezeTimer_toggle);
 	cfg.set<bool>("showMessages_toggle", showMessages_toggle);
 	cfg.set<bool>("disableAfterBurnerBounce_toggle", disableAfterBurnerBounce_toggle);
-	cfg.set<bool>("autoCutsceneSkip_toggle", autoCutsceneSkip_toggle);
+	cfg.set<bool>("easyCutsceneSkip_toggle", easyCutsceneSkip_toggle);
 	cfg.set<bool>("disableLockOnDodge_toggle", disableLockOnDodge_toggle);
 	cfg.set<bool>("noHoldDodgeOffset_toggle", noHoldDodgeOffset_toggle);
 	cfg.set<bool>("jumpOffset_toggle", jumpOffset_toggle);
