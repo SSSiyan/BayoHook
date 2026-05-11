@@ -700,6 +700,39 @@ static __declspec(naked) void GunBufferFramesDetour(void) {
 	}
 }
 
+static std::unique_ptr<FunctionHook> pantherDoubleTapTimerHook;
+static uintptr_t pantherDoubleTapTimer_jmp_ret{ NULL };
+static __declspec(naked) void PantherDoubleTapTimerDetour(void) {
+	_asm {
+		pushfd
+		cmp byte ptr [GameHook::linkGameToDelta_toggle], 0
+		je originalcode
+
+		divss xmm0, [GameHook::deltaSpeed]
+		originalcode:
+		movss [esi+0x00094AE0], xmm0
+		retcode:
+		popfd
+		jmp dword ptr [pantherDoubleTapTimer_jmp_ret]
+	}
+}
+
+static std::unique_ptr<FunctionHook> birdDoubleTapTimerHook;
+static uintptr_t birdDoubleTapTimer_jmp_ret{ NULL };
+static __declspec(naked) void BirdDoubleTapTimerDetour(void) {
+	_asm {
+		pushfd
+		cmp byte ptr [GameHook::linkGameToDelta_toggle], 0
+		je originalcode
+
+		divss xmm0, [GameHook::deltaSpeed]
+		originalcode:
+		movss [esi+0x00094ADC], xmm0
+		popfd
+		jmp dword ptr [birdDoubleTapTimer_jmp_ret]
+	}
+}
+
 static std::unique_ptr<FunctionHook> inputIconsHook;
 static uintptr_t inputIcons_jmp_ret{ NULL };
 bool GameHook::inputIcons_toggle = false;
@@ -3170,12 +3203,16 @@ void GameHook::InitializeDetours(void) {
 	std::random_device rd;
 	GameHook::rng.seed(rd() ^ (unsigned)time(NULL));
 	install_hook_absolute(0xC78100, uptimeFixHook, &UptimeFixDetour, &uptimeFix_jmp_ret, 6);
+	install_hook_absolute(0x411CD4, inputIconsHook, &InputIconsDetour, &inputIcons_jmp_ret, 13);
+	install_hook_absolute(0x4FC4EF, randomizeCostumeHook, &RandomizeCostumeDetour, &randomizeCostume_jmp_ret, 5);
+	// fps stuff
 	install_hook_absolute(0x8BE2B6, punchBufferFramesHook, &PunchBufferFramesDetour, &punchBufferFrames_jmp_ret, 6);
 	install_hook_absolute(0x8BE387, kickBufferFramesHook, &KickBufferFramesDetour, &kickBufferFrames_jmp_ret, 6);
 	install_hook_absolute(0x8BE471, dodgeBufferFramesHook, &DodgeBufferFramesDetour, &dodgeBufferFrames_jmp_ret, 6);
 	install_hook_absolute(0x8BE55B, gunBufferFramesHook, &GunBufferFramesDetour, &gunBufferFrames_jmp_ret, 6);
-	install_hook_absolute(0x411CD4, inputIconsHook, &InputIconsDetour, &inputIcons_jmp_ret, 13);
-	install_hook_absolute(0x4FC4EF, randomizeCostumeHook, &RandomizeCostumeDetour, &randomizeCostume_jmp_ret, 5);
+	install_hook_absolute(0x9E8752, pantherDoubleTapTimerHook, &PantherDoubleTapTimerDetour, &pantherDoubleTapTimer_jmp_ret, 8);
+	install_hook_absolute(0x9E86DC, birdDoubleTapTimerHook, &BirdDoubleTapTimerDetour, &birdDoubleTapTimer_jmp_ret, 8);
+	// fps stuff over
 #ifndef SPEEDRUN_BUILD 
 	install_hook_absolute(0x41837E, getHitboxHook, &GetHitboxDetour, &getHitbox_jmp_ret, 8);
 	install_hook_absolute(0x4572BA, enemyHPHook, &EnemyHPDetour, &enemyHP_jmp_ret, 6);
