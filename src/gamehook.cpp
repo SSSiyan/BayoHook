@@ -57,7 +57,6 @@ int  GameHook::comboMakerMoveIDs[maxComboMakers]{};
 int  GameHook::comboMakerMoveParts[maxComboMakers]{};
 int  GameHook::comboMakerStringIDs[maxComboMakers]{};
 
-int GameHook::desiredThirdAccessory = 0;
 #endif
 
 // patches
@@ -1506,7 +1505,7 @@ static __declspec(naked) void DualAfterBurnerDetour(void) {
 	}
 }
 
-static std::unique_ptr<FunctionHook> loadReplaceHook;
+/*static std::unique_ptr<FunctionHook> loadReplaceHook;
 static uintptr_t loadReplace_jmp_ret{ NULL };
 bool GameHook::loadReplace_toggle = false;
 static __declspec(naked) void LoadReplaceDetour(void) {
@@ -1528,7 +1527,7 @@ static __declspec(naked) void LoadReplaceDetour(void) {
 		call edx
 		jmp dword ptr [loadReplace_jmp_ret]
 	}
-}
+}*/
 
 static std::unique_ptr<FunctionHook> longerPillowTalkChargeHook;
 static uintptr_t longerPillowTalkCharge_jmp_ret{ NULL };
@@ -1769,14 +1768,90 @@ static __declspec(naked) void TeleportComboActionDetour(void) { // player in ebx
 	}
 }
 
+static std::unique_ptr<FunctionHook> thirdAccessoryMenuHook;
+static uintptr_t thirdAccessoryMenu_jmp_ret = NULL;
+static uintptr_t thirdAccessoryMenu_jmp_alt = 0xB1E0DC;
+static uintptr_t thirdAccessoryMenuRightCall = 0xB28850;
+static uintptr_t thirdAccessoryMenuLeftCall = 0xB28880;
+bool GameHook::allowSettingThirdAccessory_toggle = false;
+static __declspec(naked) void ThirdAccessoryMenuDetour(void) {
+	_asm {
+		cmp dword ptr [GameHook::allowSettingThirdAccessory_toggle], 1
+		jne originalcode
 
+		push 01
+		mov ecx, esi
+		call dword ptr [thirdAccessoryMenuRightCall]
+		test eax, eax
+		je check_left
+		mov eax, [esi+0x00000088]
+		cmp eax, 00
+		je set_right
+		cmp eax, 02
+		jne check_left // only 0 and 2 move right
+		set_right:
+		mov dword ptr [esi+0x00000088], 00000001
+		jmp dword ptr [thirdAccessoryMenu_jmp_alt]
+
+		check_left:
+		push 01
+		mov ecx, esi
+		call dword ptr [thirdAccessoryMenuLeftCall]
+		test eax, eax
+		je check_down
+		mov eax, [esi+0x00000088]
+		cmp eax, 01
+		jne check_down
+		mov dword ptr [esi+0x00000088], 00000000
+		jmp dword ptr [thirdAccessoryMenu_jmp_alt]
+
+		check_down:
+		mov eax, ds:[0x5ACBFD4]
+		test al, 04
+		jne set_down
+		test eax, 0x00040000
+		je check_up
+		set_down:
+		cmp dword ptr [ecx+0x38], 00
+		je check_up
+		mov dword ptr [esi+0x00000088], 00000002 // 0 and 1 both move down to 2
+		jmp dword ptr [thirdAccessoryMenu_jmp_alt]
+
+		check_up:
+		mov eax, ds:[0x5ACBFD4] // 0
+		test al, 0x08
+		jne set_up
+		test eax, 0x00080000
+		je retcode
+		set_up:
+		cmp dword ptr [ecx+0x38], 00
+		je retcode
+		mov eax, [esi+0x00000088]
+		cmp eax, 02
+		jne retcode // only 2 moves up
+		mov dword ptr [esi+0x00000088], 00000000
+		retcode:
+		jmp dword ptr [thirdAccessoryMenu_jmp_alt]
+
+		originalcode:
+		push 01
+		mov ecx,esi
+		call dword ptr [thirdAccessoryMenuRightCall]
+		jmp thirdAccessoryMenu_jmp_ret
+	}
+}
+
+// accessories that use held y+b break without this
 static std::unique_ptr<FunctionHook> fixThirdAccessoryHook;
 static uintptr_t fixThirdAccessory_jmp_ret{ NULL };
 static uintptr_t fixThirdAccessoryCall = 0x4332F0;
 static __declspec(naked) void FixThirdAccessoryDetour(void) { // player in ebx
 	_asm {
 		//
-			cmp byte ptr [GameHook::desiredThirdAccessory], 0
+			push eax
+			mov eax, [GameHook::thirdAccessoryAddress]
+			cmp dword ptr [eax], 0
+			pop eax
 			je originalcode
 		//
 			push 2
@@ -3237,7 +3312,7 @@ void GameHook::InitializeDetours(void) {
 	install_hook_absolute(0x9E93B9, lowerDivekickHook, &LowerDivekickDetour, &lowerDivekick_jmp_ret, 7);
 	install_hook_absolute(0x94CAAF, dualAfterBurnerHook, &DualAfterBurnerDetour, &dualAfterBurner_jmp_ret, 5);
 	// install_hook_absolute(0xC798A7, getMotNameHook, &GetMotNameDetour, &getMotName_jmp_ret, 6);
-	install_hook_absolute(0x6222D0, loadReplaceHook, &LoadReplaceDetour, &loadReplace_jmp_ret, 6);
+	//install_hook_absolute(0x6222D0, loadReplaceHook, &LoadReplaceDetour, &loadReplace_jmp_ret, 6);
 	install_hook_absolute(0x4CCCA0, longerPillowTalkChargeHook, &LongerPillowTalkChargeDetour, &longerPillowTalkCharge_jmp_ret, 6);
 	install_hook_absolute(0x8EF527, alwaysWitchTimeHook, &AlwaysWitchTimeDetour, &alwaysWitchTime_jmp_ret, 8);
 	install_hook_absolute(0x87F270, customWeavesHook, &CustomWeavesDetour, &customWeaves_jmp_ret, 6);
@@ -3245,8 +3320,7 @@ void GameHook::InitializeDetours(void) {
 	install_hook_absolute(0x510450, viewEntitySpawnsHook, &ViewEntitySpawnsDetour, &viewEntitySpawns_jmp_ret, 8);
 	install_hook_absolute(0x9A0020, teleportComboActionHook, &TeleportComboActionDetour, &teleportComboAction_jmp_ret, 6);
 	install_hook_absolute(0x97ED07, fixThirdAccessoryHook, &FixThirdAccessoryDetour, &fixThirdAccessory_jmp_ret, 5);
-	// int& thirdAccessoryValue = *(int*)GameHook::thirdAccessoryAddress;
-	// thirdAccessoryValue = GameHook::desiredThirdAccessory;
+	install_hook_absolute(0xB1E0AC, thirdAccessoryMenuHook, &ThirdAccessoryMenuDetour, &thirdAccessoryMenu_jmp_ret, 9);
 	install_hook_absolute(0x9F5AF0, pl0012Hook, &pl0012Detour, NULL, 0);
 	install_hook_absolute(0x9FC890, pl0031Hook, &pl0031Detour, NULL, 0);
 	install_hook_absolute(0xA17420, pl004cHook, &pl004cDetour, NULL, 0);
@@ -3394,12 +3468,13 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	disableSlowmo_toggle = cfg.get<bool>("disableSlowmo_toggle").value_or(false);
 	lowerDivekick_toggle = cfg.get<bool>("lowerDivekick_toggle").value_or(false);
 	dualAfterBurner_toggle = cfg.get<bool>("dualAfterBurner_toggle").value_or(false);
-	loadReplace_toggle = cfg.get<bool>("loadReplace_toggle").value_or(false);
+	//loadReplace_toggle = cfg.get<bool>("loadReplace_toggle").value_or(false);
 	longerPillowTalkCharge_toggle = cfg.get<bool>("longerPillowTalkCharge_toggle").value_or(false);
 	alwaysWitchTime_toggle = cfg.get<bool>("alwaysWitchTime_toggle").value_or(false);
 	saveStatesHotkeys_toggle = cfg.get<bool>("saveStatesHotkeys_toggle").value_or(false);
 	omnicancelTele_toggle = cfg.get<bool>("omnicancelTele_toggle").value_or(false);
 	drawPlayerBones_toggle = cfg.get<bool>("drawPlayerBones_toggle").value_or(false);
+	allowSettingThirdAccessory_toggle = cfg.get<bool>("allowSettingThirdAccessory_toggle").value_or(false);
 
 	moveIDSwaps_toggle = cfg.get<bool>("moveIDSwaps_toggle").value_or(false);
 	for (int i = 0; i < maxMoveIDSwaps; ++i) {
@@ -3430,8 +3505,6 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 		customWeaveArray[i] = cfg.get<int>(std::string("CustomWeaveArray[") + std::to_string(i) + "]").value_or(-1);
 	}
 
-	//tick
-	GameHook::desiredThirdAccessory = cfg.get<int>("DesiredThirdAccessoryValue").value_or(0);
 #endif
 }
 
@@ -3526,7 +3599,7 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("disableSlowmo_toggle", disableSlowmo_toggle);
 	cfg.set<bool>("lowerDivekick_toggle", lowerDivekick_toggle);
 	cfg.set<bool>("dualAfterBurner_toggle", dualAfterBurner_toggle);
-	cfg.set<bool>("loadReplace_toggle", loadReplace_toggle);
+	//cfg.set<bool>("loadReplace_toggle", loadReplace_toggle);
 	cfg.set<bool>("longerPillowTalkCharge_toggle", longerPillowTalkCharge_toggle);
 	cfg.set<bool>("alwaysWitchTime_toggle", alwaysWitchTime_toggle);
 	cfg.set<bool>("saveStatesHotkeys_toggle", saveStatesHotkeys_toggle);
@@ -3534,6 +3607,7 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("omnicancelTele_toggle", omnicancelTele_toggle);
 	cfg.set<bool>("drawPlayerBones_toggle", drawPlayerBones_toggle);
 	cfg.set<bool>("drawFlyingStats_toggle", drawFlyingStats_toggle);
+	cfg.set<bool>("allowSettingThirdAccessory_toggle", allowSettingThirdAccessory_toggle);
 
 	cfg.set<bool>("moveIDSwaps_toggle", moveIDSwaps_toggle);
 	for (int i = 0; i < maxMoveIDSwaps; ++i) {
@@ -3564,8 +3638,6 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 		cfg.set<int>(("customWeaveArray[" + std::to_string(i) + "]").c_str(), customWeaveArray[i]);
 	}
 
-	// tick
-	cfg.set<int>("desiredThirdAccessory", desiredThirdAccessory);
 #endif
 	cfg.save(GameHook::cfgString);
 }

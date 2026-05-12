@@ -18,9 +18,6 @@ static void ApplyHairColour(LocalPlayer* player) {
 
 void GameHook::GameTick(void) { // also called while the menu isn't open
     static bool isFirstFrame = true;
-#ifndef SPEEDRUN_BUILD
-    *(int*)GameHook::thirdAccessoryAddress = GameHook::desiredThirdAccessory;
-#endif
     LocalPlayer* player = GetLocalPlayer();
     isFirstFrame = false;
     if (player) {
@@ -720,15 +717,9 @@ void GameHook::GameImGui(void) {
             help_marker("Set while in costume select\nSets character specific mechanics, e.g. if you have a dodge cap\n"
                 "If your game freezes at the end of a fight, flick the value back to default");
 
-            ImGui::SameLine(sameLineWidth);
-
             ImGui::SetNextItemWidth(inputItemWidth);
             ImGui::Combo("Current Costume##Combo", (int*)GameHook::currentCostumeAddress, costumeNames, IM_ARRAYSIZE(costumeNames));
             help_marker("Set while in mission select or before an area change\n");
-
-            ImGui::SetNextItemWidth(inputItemWidth);
-            ImGui::Combo("Third Accessory", &GameHook::desiredThirdAccessory, accessoryNames, IM_ARRAYSIZE(accessoryNames));
-            help_marker("Select your third accessory");
 
             tabHeight += ImGui::GetCursorPosY();
             ImGui::EndChild();
@@ -801,7 +792,6 @@ void GameHook::GameImGui(void) {
                 GameHook::SkipMapScene(skipMapScene_toggle);
             }
             help_marker("Load Mission Select instead of Angel Attack. You will miss out on Halos and items.");
-            //ImGui::Checkbox("Skip Angel Attack (OLD)", &GameHook::loadReplace_toggle);
 
             if (ImGui::Checkbox("60 FPS Cutscenes", &GameHook::sixtyFpsCutscenes_toggle)) {
                 GameHook::SixtyFpsCutscenes(GameHook::sixtyFpsCutscenes_toggle);
@@ -854,6 +844,9 @@ void GameHook::GameImGui(void) {
             if (ImGui::Checkbox("Disable Tutorials", &disableTutorials_toggle)) {
                 GameHook::DisableTutorials(disableTutorials_toggle);
             }
+
+            ImGui::Checkbox("Alow setting third accessory", &allowSettingThirdAccessory_toggle);
+            help_marker("When setting an accessory in the menu, press down to access the third slot");
 
 			ImGui::SeparatorText("BayoHook");
 

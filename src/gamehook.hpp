@@ -183,7 +183,7 @@ public:
 	static bool enemyHPOneHitKill_toggle;
 	static bool infMagic_toggle;
 	static float infMagic_value;
-	static int desiredThirdAccessory;
+	static bool allowSettingThirdAccessory_toggle;
 	static bool easierMash_toggle;
 	static bool cancellableAfterBurner_toggle;
 	static bool cancellableFallingKick_toggle;
@@ -197,7 +197,7 @@ public:
 	static bool disableSlowmo_toggle;
 	static bool lowerDivekick_toggle;
 	static bool dualAfterBurner_toggle;
-	static bool loadReplace_toggle;
+	// static bool loadReplace_toggle;
 	static bool longerPillowTalkCharge_toggle;
 	static bool alwaysWitchTime_toggle;
 	static bool omnicancelTele_toggle;
