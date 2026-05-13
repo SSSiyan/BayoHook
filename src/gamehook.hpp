@@ -44,6 +44,11 @@ public:
 	// static int forcedFileNum;
 
 #ifndef SPEEDRUN_BUILD
+	static bool faceTestA_toggle;
+	static void FaceTestA(bool enabled);
+	static bool faceTestB_toggle;
+	static void FaceTestB(bool enabled);
+
 	static bool disableFpsLimiter_toggle;
 	static void DisableFpsLimiter(bool enabled);
 
@@ -175,6 +180,11 @@ public:
 	static float comboUI_Y;
 	static bool randomizeCostume_toggle;
 #ifndef SPEEDRUN_BUILD
+	static bool customEffectColours_toggle;
+	static int customEffectColoursRestrictionID;
+	static ImColor effectCol[10];
+	static bool identifyEffects_toggle;
+	static std::vector<int> seenEffectIDs;
 	static int initialAngelSlayerFloor;
 	static bool openMenuPause_toggle;
 	static bool witchTimeMultiplier_toggle;

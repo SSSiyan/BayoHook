@@ -357,7 +357,6 @@ void GameHook::GameImGui(void) {
     tabHeight = 0.0f;
     maxUIHeight = ImGui::GetIO().DisplaySize.y * 0.9f;
 
-
     if (ImGui::Button("Save config")) {
         GameHook::onConfigSave(GameHook::cfg);
     }
@@ -1013,6 +1012,15 @@ void GameHook::GameImGui(void) {
             }
             help_marker("This is very hacky and probably breaks a lot. This is intended to stop the camera jumping between multiple spawned player characters");
 
+            if (ImGui::Checkbox("faceTestA", &GameHook::faceTestA_toggle)) {
+                GameHook::FaceTestA(GameHook::faceTestA_toggle);
+            }
+            help_marker("force face 3");
+            if (ImGui::Checkbox("faceTestB", &GameHook::faceTestB_toggle)) {
+                GameHook::FaceTestB(GameHook::faceTestB_toggle);
+            }
+            help_marker("force func to call that usually only calls during cutscenes");
+
             // entity spawn stuff
             {
                 const int knownEntityCount = sizeof(knownEntities) / sizeof(knownEntities[0]);
@@ -1126,6 +1134,33 @@ void GameHook::GameImGui(void) {
                         GameHook::EasySpawnEntityFromGui(guiEntitySpawn.entityID, guiEntitySpawn.settings.int_4_Variant, guiEntitySpawn.settings.int_8_SpawnModifier);
                     }
                 }
+            }
+
+            ImGui::Checkbox("List all seen effect IDs", &GameHook::identifyEffects_toggle);
+            if (GameHook::identifyEffects_toggle) {
+				ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x * 1.0f, 0.0f), ImGuiCond_Once, ImVec2(1.0f, 0));
+				ImGui::SetNextWindowSize(ImVec2(ImGui::GetFontSize() * 8, ImGui::GetIO().DisplaySize.y * 1.0f), ImGuiCond_Once);
+                ImGui::Begin("Effect ID Panel");
+                ImGui::BeginChild("EffectsChild");
+                ImGui::Text("Seen Effect IDs:");
+                if (ImGui::Button("Clear##SeenEffectIDsClearButton")) {
+                    GameHook::seenEffectIDs.clear();
+                }
+                for (int id : GameHook::seenEffectIDs) {
+                    ImGui::Text("0x%X", id);
+                }
+                ImGui::EndChild();
+                ImGui::End();
+            }
+
+            ImGui::Checkbox("Custom Effect Colours", &GameHook::customEffectColours_toggle);
+            if (GameHook::customEffectColours_toggle) {
+                static int step = 1;
+                static int stepBig = 10;
+                ImGui::Text("Only edit effects that match this ID");
+                ImGui::Text("Set to FFFFFFFF to edit all effects");
+                ImGui::InputScalar("##Only edit effects that match this ID InputScalar", ImGuiDataType_U32, &customEffectColoursRestrictionID, &step, &stepBig, "%08X");
+				ImGui::ColorPicker4("Colour##EffectColorPicker", &GameHook::effectCol[0].Value.x);
             }
 
             tabHeight += ImGui::GetCursorPosY();

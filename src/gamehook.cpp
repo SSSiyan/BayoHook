@@ -206,6 +206,26 @@ void GameHook::InfJumps(bool enabled) {
 	}
 }
 
+bool GameHook::faceTestA_toggle = false;
+void GameHook::FaceTestA(bool enabled) {
+	if (enabled) {
+		GameHook::_patch((char*)(0x8B74C4), (char*)"\xB8\x03\x00\x00\x00\x90", 6); // mov eax, 3 nop
+	}
+	else {
+		GameHook::_patch((char*)(0x8B74C4), (char*)"\x8B\x86\xD0\x65\x09\x00", 6); // mov eax, [esi+000965D0]
+	}
+}
+
+bool GameHook::faceTestB_toggle = false;
+void GameHook::FaceTestB(bool enabled) {
+	if (enabled) {
+		GameHook::_patch((char*)(0x8BFD1A), (char*)"\x90\x90", 2); // nop nop
+	}
+	else {
+		GameHook::_patch((char*)(0x8BFD1A), (char*)"\x74\x0c", 2); // je Bayonetta.exe+4BFD28
+	}
+}
+
 bool GameHook::noClip_toggle = false;
 void GameHook::NoClip(bool enabled) {
 	if (enabled)
@@ -779,6 +799,91 @@ static __declspec(naked) void RandomizeCostumeDetour(void) {
 
 
 #ifndef SPEEDRUN_BUILD
+#include <mutex>
+static std::mutex g_EffectIDsMutex;
+
+bool GameHook::identifyEffects_toggle = false;
+std::vector<int> GameHook::seenEffectIDs;
+static void RegisterEffectID(int id) {
+	std::lock_guard<std::mutex> lock(g_EffectIDsMutex);
+	if (std::find(GameHook::seenEffectIDs.begin(), GameHook::seenEffectIDs.end(), id) == GameHook::seenEffectIDs.end()) {
+		GameHook::seenEffectIDs.push_back(id);
+	}
+}
+
+static ImColor* GetAppropriateEffectColour(int id) {
+#if 0
+	switch (id)
+	{
+	case 0x1e: // attack streaks
+		return &GameHook::effectCol[0];
+	case 0x6: // streaks that follow the char when you attack
+	    return &GameHook::effectCol[1];
+	}
+#endif
+	if (GameHook::customEffectColoursRestrictionID == -1) {
+		return &GameHook::effectCol[0];
+	}
+	if (id == GameHook::customEffectColoursRestrictionID) {
+		return &GameHook::effectCol[0];
+	}
+	return nullptr;
+}
+
+ImColor GameHook::effectCol[10]{ ImColor(0.0f, 0.6f, 1.0f, 1.0f), ImColor(1.0f, 1.0f, 1.0f, 1.0f) };
+
+int GameHook::customEffectColoursRestrictionID = 0x1e;
+bool GameHook::customEffectColours_toggle = false;
+
+static std::unique_ptr<FunctionHook> customEffectColoursHook;
+static uintptr_t customEffectColours_jmp_ret{ NULL };
+
+static __declspec(naked) void CustomEffectColoursDetour() {
+	_asm {
+		cmp byte ptr [GameHook::identifyEffects_toggle], 0
+		je applyeffects
+
+		pushad
+		push edx
+		call RegisterEffectID
+		add esp, 4
+		popad
+
+		applyeffects:
+		cmp byte ptr [GameHook::customEffectColours_toggle], 0
+		je original_code
+		pushad
+		push edx
+		call GetAppropriateEffectColour
+		add esp, 4
+		test eax, eax
+		jz no_custom_colour
+		mov ecx, dword ptr [eax]
+		mov dword ptr [esi+0x318], ecx
+		mov ecx, dword ptr [eax+0x4]
+		mov dword ptr [esi+0x31C], ecx
+		mov ecx, dword ptr [eax+0x8]
+		mov dword ptr [esi+0x320], ecx
+		mov ecx, dword ptr [eax+0xC]
+		mov dword ptr [esi+0x324], ecx
+		popad
+		jmp dword ptr [customEffectColours_jmp_ret]
+
+	no_custom_colour:
+		popad
+
+	original_code:
+		mov eax, dword ptr [edi+0xC8]
+		mov dword ptr [esi+0x318], eax
+		mov eax, dword ptr [edi+0xCC]
+		mov dword ptr [esi+0x31C], eax
+		mov eax, dword ptr [edi+0xD0]
+		mov dword ptr [esi+0x320], eax
+		mov eax, dword ptr [edi+0xD4]
+		mov dword ptr [esi+0x324], eax
+		jmp dword ptr [customEffectColours_jmp_ret]
+	}
+}
 
 static std::unique_ptr<FunctionHook> initialAngelSlayerFloorHook;
 static uintptr_t initialAngelSlayerFloor_jmp_ret{ NULL };
@@ -3301,6 +3406,7 @@ void GameHook::InitializeDetours(void) {
 	install_hook_absolute(0x8D2AA3, lateKickStringIDSwapHook, &LateKickStringIDSwapDetour, &lateKickStringIDSwap_jmp_ret, 6); //
 	install_hook_absolute(0x4A8EFF, easierMashHook, &EasierMashDetour, &easierMash_jmp_ret, 5);
 	install_hook_absolute(0x41C8B5, initialAngelSlayerFloorHook, &InitialAngelSlayerFloorDetour, &initialAngelSlayerFloor_jmp_ret, 10);
+	install_hook_absolute(0x5819BB, customEffectColoursHook, &CustomEffectColoursDetour, &customEffectColours_jmp_ret, 32);
 	install_hook_absolute(0x95ABD3, cancellableAfterBurnerHook, &CancellableAfterBurnerDetour, &cancellableAfterBurner_jmp_ret, 6);
 	install_hook_absolute(0x952142, cancellableFallingKickHook, &CancellableFallingKickDetour, &cancellableFallingKick_jmp_ret, 5);
 	install_hook_absolute(0x920C44, cancellableFallingKickDurgaHook, &CancellableFallingKickDurgaDetour, &cancellableFallingKickDurga_jmp_ret, 8);
