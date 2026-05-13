@@ -328,7 +328,7 @@ static void DrawGlamour() {
     ImGui::EndGroup();
 #ifndef SPEEDRUN_BUILD
     ImGui::SameLine(GameHook::sameLineWidth);
-    if (ImGui::Checkbox("Force Summoning Clothes (F6)##LessClothesToggle", &GameHook::lessClothes_toggle)) {
+    if (ImGui::Checkbox("Force Summoning Clothes##LessClothesToggle", &GameHook::lessClothes_toggle)) {
         GameHook::LessClothes(GameHook::lessClothes_toggle);
     }
     GameHook::help_marker("Only works on outfits that have this function");
@@ -716,9 +716,15 @@ void GameHook::GameImGui(void) {
             help_marker("Set while in costume select\nSets character specific mechanics, e.g. if you have a dodge cap\n"
                 "If your game freezes at the end of a fight, flick the value back to default");
 
+            ImGui::SameLine(sameLineWidth);
+
             ImGui::SetNextItemWidth(inputItemWidth);
             ImGui::Combo("Current Costume##Combo", (int*)GameHook::currentCostumeAddress, costumeNames, IM_ARRAYSIZE(costumeNames));
             help_marker("Set while in mission select or before an area change\n");
+
+            if (ImGui::Checkbox("Force Cutscene Face", &GameHook::forceCutsceneFace_toggle)) {
+                GameHook::ForceCutsceneFace(GameHook::forceCutsceneFace_toggle);
+            }
 
             tabHeight += ImGui::GetCursorPosY();
             ImGui::EndChild();
@@ -1012,15 +1018,6 @@ void GameHook::GameImGui(void) {
             }
             help_marker("This is very hacky and probably breaks a lot. This is intended to stop the camera jumping between multiple spawned player characters");
 
-            if (ImGui::Checkbox("faceTestA", &GameHook::faceTestA_toggle)) {
-                GameHook::FaceTestA(GameHook::faceTestA_toggle);
-            }
-            help_marker("force face 3");
-            if (ImGui::Checkbox("faceTestB", &GameHook::faceTestB_toggle)) {
-                GameHook::FaceTestB(GameHook::faceTestB_toggle);
-            }
-            help_marker("force func to call that usually only calls during cutscenes");
-
             // entity spawn stuff
             {
                 const int knownEntityCount = sizeof(knownEntities) / sizeof(knownEntities[0]);
@@ -1136,6 +1133,15 @@ void GameHook::GameImGui(void) {
                 }
             }
 
+            // ImGui::Checkbox("animationScrub_toggle", &GameHook::animationScrub_toggle);
+            // ImGui::SliderFloat("##AnimationScrubDragFloat", &GameHook::currentAnimationScrub, 0.0f, GameHook::currentAnimationEndFrame, "%.0f");
+			LocalPlayer* player = GetLocalPlayer();
+            if (player) {
+                ImGui::Text("Player Anim Frame");
+                ImGui::SetNextItemWidth(-FLT_MIN);
+                ImGui::SliderFloat("##PlayerAnimationFrameSliderFloat", &player->animFrame, 0.0f, player->animFrameMax, "%.0f");
+            }
+
             ImGui::Checkbox("List all seen effect IDs", &GameHook::identifyEffects_toggle);
             if (GameHook::identifyEffects_toggle) {
 				ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x * 1.0f, 0.0f), ImGuiCond_Once, ImVec2(1.0f, 0));
@@ -1234,7 +1240,7 @@ void GameHook::GameImGui(void) {
                     ImGui::InputFloat("MP##PlayerMPInputFloat", &playerMagicValue, 1, 100, "%.0f");
                     ImGui::InputFloat("Remaining Witch Time Duration##PlayerRemainingWitchTimeDurationInputFloat", &player->witchTimeDuration, 10, 100, "%.0f");
                     ImGui::InputFloat("Remaining Invinciblity##PlayerRemainingInvinciblityInputFloat", &player->iFramesRemaining, 10, 100, "%.0f");
-                    ImGui::InputFloat("Animation Frame##PlayerAnimationFrameInputFloat", &player->animFrame, 1, 10, "%.0f");
+                    ImGui::SliderFloat("Animation Frame##PlayerAnimationFrameInputFloat", &player->animFrame, 0, player->animFrameMax, "%.0f");
                     //ImGui::InputInt("Move ID##PlayerMoveIDInputInt", &player->moveID);
                     ImGui::SetNextItemWidth(inputItemWidth * 3.0f);
                     ImGui::Combo("Move ID##PlayerMoveIDCombo", &player->moveID, moveIDNames, IM_ARRAYSIZE(moveIDNames));

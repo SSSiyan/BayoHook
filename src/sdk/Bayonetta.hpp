@@ -105,15 +105,17 @@ static_assert(sizeof(BayoLimb) == 0x190);
 
 #pragma pack(push, 1)
 struct BayoBone {
-    char pad_0[0x30];     // 0x00
-    Vec3 pos;             // 0x30
-    char pad_3C[0xA4];    // 0x3C
-    Vec3 scale;           // 0xE0
-    char pad_EC[0x1C];    // 0xEC
-    int boneID;           // 0x108
-    int unknID;           // 0x10C
-    BayoBone* prevBone;   // 0x110
-    BayoBone* nextBone;   // 0x114
+    char pad_0[0x30];      // 0x00
+    Vec3 pos;              // 0x30
+    char pad_3C[0x84];     // 0x3C
+    Vec3 offset;           // 0xC0
+    char pad_CC[0x14];     // 0xCC
+    Vec3 scale;            // 0xE0
+    char pad_EC[0x1C];     // 0xEC
+    int boneID;            // 0x108
+    int unknID;            // 0x10C
+    BayoBone* prevBone;    // 0x110
+    BayoBone* nextBone;    // 0x114
 }; // Size: 0x118
 #pragma pack(pop)
 static_assert(sizeof(BayoBone) == 0x118);
@@ -153,9 +155,11 @@ struct LocalPlayer {
     int invincibility; // 0x354
     int summoningSomething; // 0x358
     char pad_35c[0x88];
-    float animFrame;        // 0x3E4
-    char pad_3e8[0xDC];    // 0x3E8
-    float speed;           // 0x4C4
+    float animFrame; // 0x3E4
+    char pad_3e8[0x3C];
+    float animFrameMax; // 0x424
+    char pad_428[0x9C];
+    float speed; // 0x4C4
     char pad_4c8[0x1D4];   // 0x4C8
     int aerial;            // 0x69C
     char pad_6a0[0x14];

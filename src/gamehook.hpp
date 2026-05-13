@@ -44,10 +44,8 @@ public:
 	// static int forcedFileNum;
 
 #ifndef SPEEDRUN_BUILD
-	static bool faceTestA_toggle;
-	static void FaceTestA(bool enabled);
-	static bool faceTestB_toggle;
-	static void FaceTestB(bool enabled);
+	static bool forceCutsceneFace_toggle;
+	static void ForceCutsceneFace(bool enabled);
 
 	static bool disableFpsLimiter_toggle;
 	static void DisableFpsLimiter(bool enabled);
@@ -180,6 +178,9 @@ public:
 	static float comboUI_Y;
 	static bool randomizeCostume_toggle;
 #ifndef SPEEDRUN_BUILD
+	// static bool animationScrub_toggle;
+	// static float currentAnimationScrub;
+	// static float currentAnimationEndFrame;
 	static bool customEffectColours_toggle;
 	static int customEffectColoursRestrictionID;
 	static ImColor effectCol[10];
@@ -313,6 +314,8 @@ public:
 #ifndef SPEEDRUN_BUILD
 	static bool drawHitboxes_toggle;
 	static bool drawPlayerBones_toggle;
+	static BayoBone* selectedBone;
+	static int selectedBoneIndex;
 	static void Draw3dShapes();
 
 	static bool drawFlyingStats_toggle;

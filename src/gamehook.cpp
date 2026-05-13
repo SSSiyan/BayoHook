@@ -206,23 +206,13 @@ void GameHook::InfJumps(bool enabled) {
 	}
 }
 
-bool GameHook::faceTestA_toggle = false;
-void GameHook::FaceTestA(bool enabled) {
+bool GameHook::forceCutsceneFace_toggle = false;
+void GameHook::ForceCutsceneFace(bool enabled) {
 	if (enabled) {
 		GameHook::_patch((char*)(0x8B74C4), (char*)"\xB8\x03\x00\x00\x00\x90", 6); // mov eax, 3 nop
 	}
 	else {
 		GameHook::_patch((char*)(0x8B74C4), (char*)"\x8B\x86\xD0\x65\x09\x00", 6); // mov eax, [esi+000965D0]
-	}
-}
-
-bool GameHook::faceTestB_toggle = false;
-void GameHook::FaceTestB(bool enabled) {
-	if (enabled) {
-		GameHook::_patch((char*)(0x8BFD1A), (char*)"\x90\x90", 2); // nop nop
-	}
-	else {
-		GameHook::_patch((char*)(0x8BFD1A), (char*)"\x74\x0c", 2); // je Bayonetta.exe+4BFD28
 	}
 }
 
@@ -552,7 +542,7 @@ void GameHook::FreezeDifficulty(bool enabled) {
 
 bool GameHook::uptimeFix_toggle = false;
 static std::unique_ptr<FunctionHook> uptimeFixHook;
-static uintptr_t uptimeFix_jmp_ret{ NULL };
+static uintptr_t uptimeFix_jmp_ret = NULL;
 // INT64 GameHook::rebase_interval = 60; // constexpr now
 static float lastTickMs = 0.0f;
 static float tickDeltaMs = 16.68f;
@@ -606,7 +596,7 @@ static __declspec(naked) void UptimeFixDetour() {
 
 bool GameHook::longerBufferWindows_toggle = false;
 static std::unique_ptr<FunctionHook> punchBufferFramesHook;
-static uintptr_t punchBufferFrames_jmp_ret{ NULL };
+static uintptr_t punchBufferFrames_jmp_ret = NULL;
 static __declspec(naked) void PunchBufferFramesDetour(void) {
 	_asm {
 		pushfd
@@ -634,7 +624,7 @@ static __declspec(naked) void PunchBufferFramesDetour(void) {
 }
 
 static std::unique_ptr<FunctionHook> kickBufferFramesHook;
-static uintptr_t kickBufferFrames_jmp_ret{ NULL };
+static uintptr_t kickBufferFrames_jmp_ret = NULL;
 static __declspec(naked) void KickBufferFramesDetour(void) {
 	_asm {
 		pushfd
@@ -662,7 +652,7 @@ static __declspec(naked) void KickBufferFramesDetour(void) {
 }
 
 static std::unique_ptr<FunctionHook> dodgeBufferFramesHook;
-static uintptr_t dodgeBufferFrames_jmp_ret{ NULL };
+static uintptr_t dodgeBufferFrames_jmp_ret = NULL;
 static __declspec(naked) void DodgeBufferFramesDetour(void) {
 	_asm {
 		pushfd
@@ -690,7 +680,7 @@ static __declspec(naked) void DodgeBufferFramesDetour(void) {
 }
 
 static std::unique_ptr<FunctionHook> gunBufferFramesHook;
-static uintptr_t gunBufferFrames_jmp_ret{ NULL };
+static uintptr_t gunBufferFrames_jmp_ret = NULL;
 static __declspec(naked) void GunBufferFramesDetour(void) {
 	_asm {
 		pushfd
@@ -718,7 +708,7 @@ static __declspec(naked) void GunBufferFramesDetour(void) {
 }
 
 static std::unique_ptr<FunctionHook> pantherDoubleTapTimerHook;
-static uintptr_t pantherDoubleTapTimer_jmp_ret{ NULL };
+static uintptr_t pantherDoubleTapTimer_jmp_ret = NULL;
 static __declspec(naked) void PantherDoubleTapTimerDetour(void) {
 	_asm {
 		pushfd
@@ -734,7 +724,7 @@ static __declspec(naked) void PantherDoubleTapTimerDetour(void) {
 }
 
 static std::unique_ptr<FunctionHook> birdDoubleTapTimerHook;
-static uintptr_t birdDoubleTapTimer_jmp_ret{ NULL };
+static uintptr_t birdDoubleTapTimer_jmp_ret = NULL;
 static __declspec(naked) void BirdDoubleTapTimerDetour(void) {
 	_asm {
 		pushfd
@@ -750,7 +740,7 @@ static __declspec(naked) void BirdDoubleTapTimerDetour(void) {
 }
 
 static std::unique_ptr<FunctionHook> inputIconsHook;
-static uintptr_t inputIcons_jmp_ret{ NULL };
+static uintptr_t inputIcons_jmp_ret = NULL;
 bool GameHook::inputIcons_toggle = false;
 int GameHook::inputIconsValue = 0; // 0 keyboard, 1 gamepad
 static __declspec(naked) void InputIconsDetour(void) {
@@ -778,7 +768,7 @@ int RandomizeCostume(int currentCostume) {
 
 static std::unique_ptr<FunctionHook> randomizeCostumeHook;
 bool GameHook::randomizeCostume_toggle = false;
-static uintptr_t randomizeCostume_jmp_ret{ NULL };
+static uintptr_t randomizeCostume_jmp_ret = NULL;
 static __declspec(naked) void RandomizeCostumeDetour(void) {
 	_asm {
 		cmp byte ptr [GameHook::randomizeCostume_toggle], 0
@@ -836,7 +826,7 @@ int GameHook::customEffectColoursRestrictionID = 0x1e;
 bool GameHook::customEffectColours_toggle = false;
 
 static std::unique_ptr<FunctionHook> customEffectColoursHook;
-static uintptr_t customEffectColours_jmp_ret{ NULL };
+static uintptr_t customEffectColours_jmp_ret = NULL;
 
 static __declspec(naked) void CustomEffectColoursDetour() {
 	_asm {
@@ -885,8 +875,45 @@ static __declspec(naked) void CustomEffectColoursDetour() {
 	}
 }
 
+#if 0
+static std::unique_ptr<FunctionHook> animationScrubHook;
+static uintptr_t animationScrub_jmp_ret = NULL;
+bool GameHook::animationScrub_toggle = false;
+float GameHook::currentAnimationScrub = 0.0f;
+float GameHook::currentAnimationEndFrame = 0.0f;
+static __declspec(naked) void AnimationScrubDetour(void) {
+	_asm {
+		cmp byte ptr [GameHook::animationScrub_toggle], 0
+		je originalcode
+
+		// only edit player anim frame
+		push eax
+		push ebx
+		mov eax, 0xEF5A60
+		mov eax, [eax]
+		lea ebx,[esi-0x3d0]
+		cmp ebx, eax
+		pop ebx
+		pop eax
+		jne originalcode
+
+		movss xmm1, [esi+0x54]
+		movss [GameHook::currentAnimationEndFrame], xmm1
+		xorps xmm1, xmm1 // leave xmm1 in the state we found it
+		movss xmm0, [GameHook::currentAnimationScrub]
+		jmp contcode
+
+		originalcode:
+		addss xmm0, xmm3
+		contcode:
+		movss [esi+0x14], xmm0
+		jmp dword ptr [animationScrub_jmp_ret]
+	}
+}
+#endif
+
 static std::unique_ptr<FunctionHook> initialAngelSlayerFloorHook;
-static uintptr_t initialAngelSlayerFloor_jmp_ret{ NULL };
+static uintptr_t initialAngelSlayerFloor_jmp_ret = NULL;
 int GameHook::initialAngelSlayerFloor = 0;
 static __declspec(naked) void InitialAngelSlayerFloorDetour(void) {
 	_asm {
@@ -913,7 +940,7 @@ static void AddHitDataPtr(void* ptr) {
 }
 
 static std::unique_ptr<FunctionHook> getHitboxHook;
-static uintptr_t getHitbox_jmp_ret{ NULL };
+static uintptr_t getHitbox_jmp_ret = NULL;
 static float getHitboxXmm0Backup = 0.0f;
 static __declspec(naked) void GetHitboxDetour(void) {
 	_asm {
@@ -937,7 +964,7 @@ static __declspec(naked) void GetHitboxDetour(void) {
 }
 
 static std::unique_ptr<FunctionHook> turboHook;
-static uintptr_t turbo_jmp_ret{ NULL };
+static uintptr_t turbo_jmp_ret = NULL;
 bool GameHook::openMenuPause_toggle = false;
 float GameHook::turboZero = 0.0f;
 bool GameHook::turbo_toggle = false;
@@ -991,7 +1018,7 @@ static __declspec(naked) void TurboHookDetour(void) {
 }
 
 static std::unique_ptr<FunctionHook> enemyHPHook;
-static uintptr_t enemyHP_jmp_ret{ NULL };
+static uintptr_t enemyHP_jmp_ret = NULL;
 bool GameHook::enemyHPNoDamage_toggle = false;
 bool GameHook::enemyHPOneHitKill_toggle = false;
 static __declspec(naked) void EnemyHPDetour(void) {
@@ -1020,7 +1047,7 @@ static __declspec(naked) void EnemyHPDetour(void) {
 }
 
 static std::unique_ptr<FunctionHook> witchTimeHook;
-static uintptr_t witchTimeMultiplier_jmp_ret{ NULL };
+static uintptr_t witchTimeMultiplier_jmp_ret = NULL;
 bool GameHook::witchTimeMultiplier_toggle = false;
 float GameHook::witchTimeMultiplier = 1.0f;
 static __declspec(naked) void WitchTimeMultiplierDetour(void) {
@@ -1050,7 +1077,7 @@ void GameHook::SpawnStuff() {
 }
 
 std::unique_ptr<FunctionHook> infMagicHook;
-uintptr_t infMagic_jmp_ret{ NULL };
+uintptr_t infMagic_jmp_ret = NULL;
 bool GameHook::infMagic_toggle = false;
 float GameHook::infMagic_value = 1200.0f;
 static __declspec(naked) void InfMagicDetour(void) {
@@ -1075,7 +1102,7 @@ static __declspec(naked) void InfMagicDetour(void) {
 }
 
 static std::unique_ptr<FunctionHook> damageDealtMultiplierHook;
-static uintptr_t damageDealtMultiplier_jmp_ret{ NULL };
+static uintptr_t damageDealtMultiplier_jmp_ret = NULL;
 bool GameHook::damageDealtMultiplier_toggle = false;
 static float damageDealtMultiplierXmm0Backup = 0.0f;
 float GameHook::damageDealtMultiplierMult = 1.0f;
@@ -1099,7 +1126,7 @@ static __declspec(naked) void DamageDealtMultiplierDetour(void) {
 }
 
 static std::unique_ptr<FunctionHook> damageReceivedMultiplierHook;
-static uintptr_t damageReceivedMultiplier_jmp_ret{ NULL };
+static uintptr_t damageReceivedMultiplier_jmp_ret = NULL;
 bool GameHook::damageReceivedMultiplierNoDamage_toggle = false;
 bool GameHook::damageReceivedMultiplier_toggle = false;
 float GameHook::incoming_damage_mult = 1.0f;
@@ -1135,7 +1162,7 @@ static __declspec(naked) void DamageReceivedMultiplierDetour(void) {
 }
 
 static std::unique_ptr<FunctionHook> customCameraDistanceHook;
-static uintptr_t customCameraDistance_jmp_ret{ NULL };
+static uintptr_t customCameraDistance_jmp_ret = NULL;
 bool GameHook::customCameraDistance_toggle = false;
 float GameHook::customCameraDistance = 10.0f;
 static __declspec(naked) void CustomCameraDistanceDetour(void) {
@@ -1153,7 +1180,7 @@ static __declspec(naked) void CustomCameraDistanceDetour(void) {
 }
 
 static std::unique_ptr<FunctionHook> haloDisplayHook;
-static uintptr_t haloDisplay_jmp_ret{ NULL };
+static uintptr_t haloDisplay_jmp_ret = NULL;
 bool GameHook::haloDisplay_toggle = false;
 int GameHook::haloDisplayValue = 0;
 uintptr_t haloDisplayAddress = 0x5BB57B0;
@@ -1189,7 +1216,7 @@ int __stdcall GetSwappedMoveID(int nextMoveID) {
 }
 
 static std::unique_ptr<FunctionHook> moveIDSwapHook;
-static uintptr_t moveIDSwap_jmp_ret{ NULL };
+static uintptr_t moveIDSwap_jmp_ret = NULL;
 static __declspec(naked) void MoveIDSwapDetour(void) { // player in ecx
 	_asm {
 		cmp byte ptr [GameHook::moveIDSwaps_toggle], 0
@@ -1239,7 +1266,7 @@ int __stdcall GetSwappedStringID(int nextStringID) {
 }
 
 static std::unique_ptr<FunctionHook> punchStringIDSwapHook;
-static uintptr_t punchStringIDSwap_jmp_ret{ NULL };
+static uintptr_t punchStringIDSwap_jmp_ret = NULL;
 static __declspec(naked) void PunchStringIDSwapDetour(void) {
 	_asm {
 		cmp byte ptr [GameHook::stringSwaps_toggle], 0
@@ -1277,7 +1304,7 @@ static __declspec(naked) void PunchStringIDSwapDetour(void) {
 }
 
 static std::unique_ptr<FunctionHook> latePunchStringIDSwapHook;
-static uintptr_t latePunchStringIDSwap_jmp_ret{ NULL };
+static uintptr_t latePunchStringIDSwap_jmp_ret = NULL;
 static __declspec(naked) void LatePunchStringIDSwapDetour(void) {
 	_asm {
 		cmp byte ptr [GameHook::stringSwaps_toggle], 0
@@ -1314,7 +1341,7 @@ static __declspec(naked) void LatePunchStringIDSwapDetour(void) {
 }
 
 static std::unique_ptr<FunctionHook> kickStringIDSwapHook;
-static uintptr_t kickStringIDSwap_jmp_ret{ NULL };
+static uintptr_t kickStringIDSwap_jmp_ret = NULL;
 static __declspec(naked) void KickStringIDSwapDetour(void) {
 	_asm {
 		cmp byte ptr [GameHook::stringSwaps_toggle], 0
@@ -1351,7 +1378,7 @@ static __declspec(naked) void KickStringIDSwapDetour(void) {
 }
 
 static std::unique_ptr<FunctionHook> lateKickStringIDSwapHook;
-static uintptr_t lateKickStringIDSwap_jmp_ret{ NULL };
+static uintptr_t lateKickStringIDSwap_jmp_ret = NULL;
 static __declspec(naked) void LateKickStringIDSwapDetour(void) {
 	_asm {
 		cmp byte ptr [GameHook::stringSwaps_toggle], 0
@@ -1388,7 +1415,7 @@ static __declspec(naked) void LateKickStringIDSwapDetour(void) {
 }
 
 static std::unique_ptr<FunctionHook> easierMashHook;
-static uintptr_t easierMash_jmp_ret{ NULL };
+static uintptr_t easierMash_jmp_ret = NULL;
 bool GameHook::easierMash_toggle = false;
 static __declspec(naked) void EasierMashDetour(void) {
 	_asm {
@@ -1404,7 +1431,7 @@ static __declspec(naked) void EasierMashDetour(void) {
 }
 
 static std::unique_ptr<FunctionHook> cancellableAfterBurnerHook;
-static uintptr_t cancellableAfterBurner_jmp_ret{ NULL };
+static uintptr_t cancellableAfterBurner_jmp_ret = NULL;
 bool GameHook::cancellableAfterBurner_toggle = false;
 static uintptr_t cancellableMovesCall = 0x9E85E0;
 static __declspec(naked) void CancellableAfterBurnerDetour(void) {
@@ -1424,7 +1451,7 @@ static __declspec(naked) void CancellableAfterBurnerDetour(void) {
 }
 
 static std::unique_ptr<FunctionHook> cancellableFallingKickHook;
-static uintptr_t cancellableFallingKick_jmp_ret{ NULL };
+static uintptr_t cancellableFallingKick_jmp_ret = NULL;
 bool GameHook::cancellableFallingKick_toggle = false;
 static uintptr_t CancellableFallingKickDefaultCall = 0x433220;
 static __declspec(naked) void CancellableFallingKickDetour(void) {
@@ -1444,7 +1471,7 @@ static __declspec(naked) void CancellableFallingKickDetour(void) {
 }
 
 static std::unique_ptr<FunctionHook> cancellableFallingKickDurgaHook;
-static uintptr_t cancellableFallingKickDurga_jmp_ret{ NULL };
+static uintptr_t cancellableFallingKickDurga_jmp_ret = NULL;
 static __declspec(naked) void CancellableFallingKickDurgaDetour(void) {
 	_asm {
 		cmp byte ptr [GameHook::cancellableFallingKick_toggle], 0
@@ -1464,7 +1491,7 @@ static __declspec(naked) void CancellableFallingKickDurgaDetour(void) {
 }
 
 static std::unique_ptr<FunctionHook> altTeleInputHook;
-static uintptr_t altTeleInput_jmp_ret{ NULL };
+static uintptr_t altTeleInput_jmp_ret = NULL;
 static uintptr_t altTeleInput_jmp_jle = 0x8BE5AC;
 static uintptr_t altTeleInput_jmp_je = 0x8BE5B6;
 bool GameHook::altTeleInput_toggle = false;
@@ -1504,7 +1531,7 @@ static __declspec(naked) void AltTeleInputDetour(void) {
 }
 
 static std::unique_ptr<FunctionHook> tauntWithTimeBracelet2Hook; // tap taunt
-static uintptr_t tauntWithTimeBracelet2_jmp_ret{ NULL };
+static uintptr_t tauntWithTimeBracelet2_jmp_ret = NULL;
 static __declspec(naked) void TauntWithTimeBracelet2Detour(void) {
 	_asm {
 		cmp byte ptr [GameHook::tauntWithTimeBracelet_toggle], 1
@@ -1523,7 +1550,7 @@ static __declspec(naked) void TauntWithTimeBracelet2Detour(void) {
 }
 
 static std::unique_ptr<FunctionHook> tauntWithTimeBracelet3Hook; // hold taunt
-static uintptr_t tauntWithTimeBracelet3_jmp_ret{ NULL };
+static uintptr_t tauntWithTimeBracelet3_jmp_ret = NULL;
 static __declspec(naked) void TauntWithTimeBracelet3Detour(void) {
 	_asm {
 		cmp byte ptr [GameHook::tauntWithTimeBracelet_toggle], 1
@@ -1542,7 +1569,7 @@ static __declspec(naked) void TauntWithTimeBracelet3Detour(void) {
 }
 
 static std::unique_ptr<FunctionHook> disableSlowmoHook;
-static uintptr_t disableSlowmo_jmp_ret{ NULL };
+static uintptr_t disableSlowmo_jmp_ret = NULL;
 static float disableSlowmoDefaultSpeed = 1.0f;
 bool GameHook::disableSlowmo_toggle = false;
 static __declspec(naked) void DisableSlowmoDetour(void) {
@@ -1560,7 +1587,7 @@ static __declspec(naked) void DisableSlowmoDetour(void) {
 }
 
 static std::unique_ptr<FunctionHook> lowerDivekickHook;
-static uintptr_t lowerDivekick_jmp_ret{ NULL };
+static uintptr_t lowerDivekick_jmp_ret = NULL;
 static float lowerDivekickTime = 7.0f;
 bool GameHook::lowerDivekick_toggle = false;
 static __declspec(naked) void LowerDivekickDetour(void) {
@@ -1580,7 +1607,7 @@ static __declspec(naked) void LowerDivekickDetour(void) {
 }
 
 static std::unique_ptr<FunctionHook> dualAfterBurnerHook;
-static uintptr_t dualAfterBurner_jmp_ret{ NULL };
+static uintptr_t dualAfterBurner_jmp_ret = NULL;
 bool GameHook::dualAfterBurner_toggle = false;
 static uintptr_t dualAfterBurnerCall = 0x9E33D0;
 static __declspec(naked) void DualAfterBurnerDetour(void) {
@@ -1611,7 +1638,7 @@ static __declspec(naked) void DualAfterBurnerDetour(void) {
 }
 
 /*static std::unique_ptr<FunctionHook> loadReplaceHook;
-static uintptr_t loadReplace_jmp_ret{ NULL };
+static uintptr_t loadReplace_jmp_ret = NULL;
 bool GameHook::loadReplace_toggle = false;
 static __declspec(naked) void LoadReplaceDetour(void) {
 	_asm {
@@ -1635,7 +1662,7 @@ static __declspec(naked) void LoadReplaceDetour(void) {
 }*/
 
 static std::unique_ptr<FunctionHook> longerPillowTalkChargeHook;
-static uintptr_t longerPillowTalkCharge_jmp_ret{ NULL };
+static uintptr_t longerPillowTalkCharge_jmp_ret = NULL;
 bool GameHook::longerPillowTalkCharge_toggle = false;
 static float longerPillowTalkChargeMult = 2.0f;
 static __declspec(naked) void LongerPillowTalkChargeDetour(void) {
@@ -1654,7 +1681,7 @@ static __declspec(naked) void LongerPillowTalkChargeDetour(void) {
 }
 
 static std::unique_ptr<FunctionHook> alwaysWitchTimeHook;
-static uintptr_t alwaysWitchTime_jmp_ret{ NULL };
+static uintptr_t alwaysWitchTime_jmp_ret = NULL;
 bool GameHook::alwaysWitchTime_toggle = false;
 float alwaysWitchTimeTimer = 120.0f;
 static __declspec(naked) void AlwaysWitchTimeDetour(void) {
@@ -1686,7 +1713,7 @@ bool GameHook::customWeaves_toggles[customWeaveCount]{};
 int GameHook::customWeaveArray[customWeaveCount]{};
 int GameHook::customWeaveMoveIDArray[customWeaveCount]{};
 static std::unique_ptr<FunctionHook> customWeavesHook;
-static uintptr_t customWeaves_jmp_ret{ NULL };
+static uintptr_t customWeaves_jmp_ret = NULL;
 static __declspec(naked) void CustomWeavesDetour(void) { // player in esi
 	_asm {
 		// cmp byte ptr [GameHook::customWeaves_toggle], 0
@@ -1714,7 +1741,7 @@ static __declspec(naked) void CustomWeavesDetour(void) { // player in esi
 }
 
 static std::unique_ptr<FunctionHook> omnicancelTeleHook;
-static uintptr_t omnicancelTele_jmp_ret{ NULL };
+static uintptr_t omnicancelTele_jmp_ret = NULL;
 bool GameHook::omnicancelTele_toggle = false;
 static uintptr_t omnicancelTele_call = 0x009E6FA0;
 static uintptr_t omnicancelTele_ogcode = 0x05A97ED0;
@@ -1809,7 +1836,7 @@ void GameHook::DisplayRecentlySpawnedEntitiesInImGui() {
 }
 
 static std::unique_ptr<FunctionHook> viewEntitySpawnsHook;
-static uintptr_t viewEntitySpawns_jmp_ret{ NULL };
+static uintptr_t viewEntitySpawns_jmp_ret = NULL;
 bool GameHook::viewEntitySpawns_toggle = false;
 static __declspec(naked) void ViewEntitySpawnsDetour(void) {
 	__asm {
@@ -1858,7 +1885,7 @@ static __declspec(naked) void ViewEntitySpawnsDetour(void) {
 }
 
 static std::unique_ptr<FunctionHook> teleportComboActionHook;
-static uintptr_t teleportComboAction_jmp_ret{ NULL };
+static uintptr_t teleportComboAction_jmp_ret = NULL;
 bool GameHook::teleportComboAction_toggle = false;
 static __declspec(naked) void TeleportComboActionDetour(void) { // player in ebx
 	_asm {
@@ -1948,7 +1975,7 @@ static __declspec(naked) void ThirdAccessoryMenuDetour(void) {
 
 // accessories that use held y+b break without this
 static std::unique_ptr<FunctionHook> fixThirdAccessoryHook;
-static uintptr_t fixThirdAccessory_jmp_ret{ NULL };
+static uintptr_t fixThirdAccessory_jmp_ret = NULL;
 static uintptr_t fixThirdAccessoryCall = 0x4332F0;
 static __declspec(naked) void FixThirdAccessoryDetour(void) { // player in ebx
 	_asm {
@@ -1971,7 +1998,7 @@ static __declspec(naked) void FixThirdAccessoryDetour(void) { // player in ebx
 }
 
 static std::unique_ptr<FunctionHook> getMotNameHook;
-static uintptr_t getMotName_jmp_ret{ NULL };
+static uintptr_t getMotName_jmp_ret = NULL;
 bool GameHook::getMotName_toggle = false;
 static uintptr_t getMotName_playerTestAddress = NULL;
 static uintptr_t getMotName_weaponTestAddress = NULL;
@@ -3224,49 +3251,134 @@ void GameHook::Setup3dShapes() {
 
 bool GameHook::drawPlayerBones_toggle = false;
 bool GameHook::drawHitboxes_toggle = false;
+BayoBone* GameHook::selectedBone = nullptr;
+int GameHook::selectedBoneIndex = -1;
 void GameHook::Draw3dShapes() {
-	LocalPlayer* player = GetLocalPlayer();
-	if (!player) { return; }
+    LocalPlayer* player = GetLocalPlayer();
+    if (!player) { return; }
 
-	ImGui::SetNextWindowPos(ImVec2(0, 0));
-	ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
-	ImGui::Begin("WorldViz", nullptr,
-		ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar |
-		ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoBringToFrontOnFocus);
-	WorldVisualizer::SetDrawList(ImGui::GetWindowDrawList());
-	WorldVisualizer::SetViewProjectionMatrix(viewProj);
-	if (GameHook::drawPlayerBones_toggle) {
-		Vec3 playerPos = player->pos;
-		Matrix3x3 playerRot = WorldVisualizer::CreateRotationMatrix(player->rot.x, player->rot.y, player->rot.z);
-		// WorldVisualizer::DrawWorldSphere(playerPos, 0.1f, IM_COL32(0, 0, 255, 255), 32, 1.0f, &playerRot);
-		// WorldVisualizer::DrawWorldCapsule(player->pos + Vec3(0.0f, 0.25f, 0.0f), player->pos + Vec3(0.0f, 1.5f, 0.0f), 0.25f, IM_COL32(255, 0, 0, 255), 32, 1.0f, &playerRot);
+	std::vector<BayoBone*> allBones;
 
-		// WorldVisualizer::DrawWorldSphere(Vec3(-67.0f, 0.0f, -1.0f), 0.5f);
-		// WorldVisualizer::DrawWorldCapsule(Vec3(-67.0f, 0.0f, 0.0f), Vec3(-67.0f, 2.0f, 0.0f), 0.5f);
-		// WorldVisualizer::DrawWorldSphere(Vec3(-67.0f, 0.0f, 1.0f), 0.5f);
-		BayoBone* bone = player->bayoSkeleton;
-		// Draw forward
-		while (bone) {
-			WorldVisualizer::DrawWorldSphere(bone->pos, 0.01f, IM_COL32(0, 0, 255, 255), 32, 1.0f, &playerRot);
-			bone = bone->nextBone;
-		}
-		// Draw backward
-		if (player->bayoSkeleton) {
-			bone = player->bayoSkeleton->prevBone;
-			while (bone) {
-				WorldVisualizer::DrawWorldSphere(bone->pos, 0.01f, IM_COL32(0, 0, 255, 255), 32, 1.0f, &playerRot);
-				bone = bone->prevBone;
+    ImGui::SetNextWindowPos(ImVec2(0, 0));
+    ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
+    ImGui::Begin("WorldViz", nullptr,
+        ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar |
+        ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoBringToFrontOnFocus);
+    WorldVisualizer::SetDrawList(ImGui::GetWindowDrawList());
+    WorldVisualizer::SetViewProjectionMatrix(viewProj);
+
+    if (GameHook::drawPlayerBones_toggle) {
+        Matrix3x3 playerRot = WorldVisualizer::CreateRotationMatrix(player->rot.x, player->rot.y, player->rot.z);
+        ImVec2 mousePos = ImGui::GetIO().MousePos;
+        bool mouseClicked = ImGui::GetIO().MouseClicked[0];
+        float closestDist = 12.0f;
+        BayoBone* hoveredBone = nullptr;
+        int hoveredIndex = -1;
+
+
+        if (player->bayoSkeleton) {
+            BayoBone* b = player->bayoSkeleton->prevBone;
+            while (b) {
+                allBones.push_back(b);
+                b = b->prevBone;
+            }
+            std::reverse(allBones.begin(), allBones.end());
+        }
+        
+        BayoBone* b = player->bayoSkeleton;
+        while (b) {
+            allBones.push_back(b);
+            b = b->nextBone;
+        }
+
+        for (int i = 0; i < (int)allBones.size(); i++) {
+            BayoBone* bone = allBones[i];
+            bool isSelected = (bone == selectedBone);
+
+			ImU32 color;
+			if (isSelected) {
+				color = IM_COL32(255, 255, 0, 255);
+			}
+			else {
+				color = IM_COL32(0, 0, 255, 255);
+			}
+
+            WorldVisualizer::DrawWorldSphere(bone->pos, 0.01f, color, 32, 1.0f, &playerRot);
+
+            ImVec2 screenPos;
+            if (WorldVisualizer::WorldToScreen(bone->pos, screenPos)) {
+                float dx = screenPos.x - mousePos.x;
+                float dy = screenPos.y - mousePos.y;
+                float dist = sqrtf(dx * dx + dy * dy);
+                if (dist < closestDist) {
+                    closestDist = dist;
+                    hoveredBone = bone;
+                    hoveredIndex = i;
+                }
+            }
+        }
+
+        if (hoveredBone && hoveredBone != selectedBone) {
+            WorldVisualizer::DrawWorldSphere(hoveredBone->pos, 0.015f, IM_COL32(0, 255, 255, 255), 32, 1.5f, &playerRot);
+        }
+
+		if (mouseClicked && hoveredBone) {
+			if (hoveredBone == selectedBone) {
+				selectedBone = nullptr;
+			}
+			else {
+				selectedBone = hoveredBone;
+			}
+			if (selectedBone) {
+				selectedBoneIndex = hoveredIndex;
+			}
+			else {
+				selectedBoneIndex = -1;
 			}
 		}
-	}
-	if (GameHook::drawHitboxes_toggle) {
-		for (const HitboxSnapshot& snapshot : hitDataList) {
-			WorldVisualizer::DrawWorldSphere(snapshot.pos, snapshot.radius, IM_COL32(255, 0, 0, 255), 32, 1.0f);
-		}
-		hitDataList.clear();
-	}
+    }
 
-	ImGui::End();
+    if (GameHook::drawHitboxes_toggle) {
+        for (const HitboxSnapshot& snapshot : hitDataList) {
+            WorldVisualizer::DrawWorldSphere(snapshot.pos, snapshot.radius, IM_COL32(255, 0, 0, 255), 32, 1.0f);
+        }
+        hitDataList.clear();
+    }
+
+    ImGui::End();
+
+	if (selectedBone) {
+		ImGui::Begin("Bone Offsets", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize);
+		ImGui::Text("Bone index: #%d ptr: %p id: #%d", selectedBoneIndex, (void*)selectedBone, selectedBone->boneID);
+		ImGui::Separator();
+		ImGui::DragFloat("Offset X", &selectedBone->offset.x, 0.01f, NULL, NULL, "%.2f");
+		ImGui::DragFloat("Offset Y", &selectedBone->offset.y, 0.01f, NULL, NULL, "%.2f");
+		ImGui::DragFloat("Offset Z", &selectedBone->offset.z, 0.01f, NULL, NULL, "%.2f");
+
+		ImGui::Spacing();
+		ImGui::Separator();
+
+		if (!allBones.empty()) {
+			if (ImGui::SliderInt("Bone", &selectedBoneIndex, 0, (int)allBones.size() - 1)) {
+				selectedBone = allBones[selectedBoneIndex];
+			}
+		}
+
+		ImGui::Spacing();
+
+		if (ImGui::Button("Reset Offsets")) {
+			selectedBone->offset.x = 0.0f;
+			selectedBone->offset.y = 0.0f;
+			selectedBone->offset.z = 0.0f;
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Deselect")) {
+			selectedBone = nullptr;
+			selectedBoneIndex = -1;
+		}
+
+		ImGui::End();
+	}
 }
 
 bool GameHook::drawFlyingStats_toggle = false;
@@ -3427,6 +3539,7 @@ void GameHook::InitializeDetours(void) {
 	install_hook_absolute(0x9A0020, teleportComboActionHook, &TeleportComboActionDetour, &teleportComboAction_jmp_ret, 6);
 	install_hook_absolute(0x97ED07, fixThirdAccessoryHook, &FixThirdAccessoryDetour, &fixThirdAccessory_jmp_ret, 5);
 	install_hook_absolute(0xB1E0AC, thirdAccessoryMenuHook, &ThirdAccessoryMenuDetour, &thirdAccessoryMenu_jmp_ret, 9);
+	// install_hook_absolute(0x4AB55B, animationScrubHook, &AnimationScrubDetour, &animationScrub_jmp_ret, 9);
 	install_hook_absolute(0x9F5AF0, pl0012Hook, &pl0012Detour, NULL, 0);
 	install_hook_absolute(0x9FC890, pl0031Hook, &pl0031Detour, NULL, 0);
 	install_hook_absolute(0xA17420, pl004cHook, &pl004cDetour, NULL, 0);
@@ -3483,6 +3596,8 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	InfJumps(infJumps_toggle);
 	disableDaze_toggle = cfg.get<bool>("disableDaze_toggle").value_or(false);
 	DisableDaze(disableDaze_toggle);
+	forceCutsceneFace_toggle = cfg.get<bool>("forceCutsceneFace_toggle").value_or(false);
+	ForceCutsceneFace(forceCutsceneFace_toggle);
 	forceDaze_toggle = cfg.get<bool>("forceDaze_toggle").value_or(false);
 	ForceDaze(forceDaze_toggle);
 	freezeTimer_toggle = cfg.get<bool>("freezeTimer_toggle").value_or(false);
@@ -3647,6 +3762,7 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("damageReceivedMultiplierNoDamage_toggle", damageReceivedMultiplierNoDamage_toggle);
 	cfg.set<bool>("infJumps_toggle", infJumps_toggle);
 	cfg.set<bool>("disableDaze_toggle", disableDaze_toggle);
+	cfg.set<bool>("forceCutsceneFace_toggle", forceCutsceneFace_toggle);
 	cfg.set<bool>("forceDaze_toggle", forceDaze_toggle);
 	cfg.set<bool>("freezeTimer_toggle", freezeTimer_toggle);
 	cfg.set<bool>("showMessages_toggle", showMessages_toggle);
