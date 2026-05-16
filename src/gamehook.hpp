@@ -7,18 +7,17 @@
 #include "libmem++/libmem.hpp"
 #include "MinHook/include/MinHook.h"
 #include "../utils/FunctionHook.hpp"
+#include "../utils/Input.hpp"
 #include "imgui/imgui.h"
 #include "sdk/Bayonetta.hpp"
-#include <base.h> // for Data::ShowMenu
 #include <random> // for random costume
-// #include <cstdint> // for forward declaring a struct
 #ifndef IM_PI
 #define IM_PI 3.14159265358979323846f
 #endif
 
 //#define SPEEDRUN_BUILD
 
-#define BAYOHOOK_VERSION "2.0.2"
+#define BAYOHOOK_VERSION "2.0.3 PRE RELEASE"
 #ifndef SPEEDRUN_BUILD
 #define BAYOHOOK_EDITION ""
 #else
@@ -44,6 +43,46 @@ public:
 	// static int forcedFileNum;
 
 #ifndef SPEEDRUN_BUILD
+	static utility::Input g_input;
+	static std::vector<std::unique_ptr<utility::Hotkey>> g_hotkeys;
+	// hotkeys
+	static utility::Hotkey* hk_toggle_menu;
+	//static utility::Hotkey* pad_hk_toggle_menu;
+
+	static utility::Hotkey* hk_enemy_no_damage;
+	static utility::Hotkey* hk_player_no_damage;
+	static utility::Hotkey* hk_enemy_one_hit_kill;
+	static utility::Hotkey* hk_inf_jumps;
+	static utility::Hotkey* hk_no_clip;
+	static utility::Hotkey* hk_force_summoning_clothes;
+	static utility::Hotkey* hk_save_state;
+	static utility::Hotkey* hk_load_state;
+
+	static utility::Hotkey* hk_spawn_affinity_spear;
+	static utility::Hotkey* hk_spawn_affinity_trumpet;
+	static utility::Hotkey* hk_spawn_applaud_spear;
+	static utility::Hotkey* hk_spawn_applaud_greatsword;
+	static utility::Hotkey* hk_spawn_enchant;
+	static utility::Hotkey* hk_spawn_ardor_greatsword;
+	static utility::Hotkey* hk_spawn_ardor_axe;
+	static utility::Hotkey* hk_spawn_affinity_laser;
+	static utility::Hotkey* hk_spawn_fearless;
+	static utility::Hotkey* hk_spawn_fairness;
+	static utility::Hotkey* hk_spawn_harmony;
+	static utility::Hotkey* hk_spawn_brave;
+	static utility::Hotkey* hk_spawn_joy;
+	static utility::Hotkey* hk_spawn_grace;
+	static utility::Hotkey* hk_spawn_glory;
+	static utility::Hotkey* hk_spawn_gracious;
+	static utility::Hotkey* hk_spawn_glorious;
+	static utility::Hotkey* hk_spawn_kinship;
+	static utility::Hotkey* hk_spawn_beloved;
+	static utility::Hotkey* hk_spawn_golem;
+	static utility::Hotkey* hk_spawn_fortitudo;
+	static utility::Hotkey* hk_spawn_balder;
+	static utility::Hotkey* hk_spawn_jeanne_formal;
+	static utility::Hotkey* hk_spawn_bayonetta;
+
 	static bool forceCutsceneFace_toggle;
 	static void ForceCutsceneFace(bool enabled);
 
@@ -88,8 +127,8 @@ public:
 	static bool easyCutsceneSkip_toggle;
 	static void EasyCutsceneSkip(bool enabled);
 
-	static bool lessClothes_toggle;
-	static void LessClothes(bool enabled);
+	static bool forceSummoningClothes_toggle;
+	static void ForceSummoningClothes(bool enabled);
 
 	static bool disableLockOnDodge_toggle;
 	static void DisableLockOnDodge(bool enabled);

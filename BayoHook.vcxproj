@@ -140,16 +140,19 @@
     <ClCompile Include="src\hooks\EndScene.cpp" />
     <ClCompile Include="src\hooks\hooks.cpp" />
     <ClCompile Include="src\hooks\WndProc.cpp" />
+    <ClCompile Include="src\hooks\XInputHook.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="src\WorldVisualizer.cpp" />
+    <ClInclude Include="src\hooks\XInputHook.hpp" />
     <ClInclude Include="src\WorldVisualizer.hpp" />
     <ClCompile Include="utils\Address.cpp" />
     <ClCompile Include="utils\config.cpp" />
     <ClCompile Include="utils\FunctionHook.cpp" />
+    <ClCompile Include="utils\Input.cpp" />
     <ClCompile Include="utils\String.cpp" />
     <ClCompile Include="utils\Timer.cpp" />
   </ItemGroup>
@@ -180,6 +183,7 @@
     <ClInclude Include="utils\config.hpp" />
     <ClInclude Include="utils\FunctionHook.hpp" />
     <ClInclude Include="utils\Hash.hpp" />
+    <ClInclude Include="utils\Input.hpp" />
     <ClInclude Include="utils\String.hpp" />
     <ClInclude Include="utils\Timer.hpp" />
   </ItemGroup>

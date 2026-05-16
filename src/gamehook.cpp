@@ -1,6 +1,6 @@
 #include "gamehook.hpp"
 #include "WorldVisualizer.hpp"
-
+#include <base.h> // for Data::ShowMenu
 // system
 float GameHook::deltaTime = 0.0f;
 float GameHook::deltaSpeed = 0.0f;
@@ -16,7 +16,45 @@ float GameHook::sameLineWidth = 0.0f;
 bool GameHook::showComboUI_toggle = false;
 bool GameHook::testComboUI_toggle = false;
 bool GameHook::showMessages_toggle = false;
+utility::Input GameHook::g_input;
 std::mt19937 GameHook::rng;
+
+std::vector<std::unique_ptr<utility::Hotkey>> GameHook::g_hotkeys;
+utility::Hotkey* GameHook::hk_toggle_menu;
+//utility::Hotkey* GameHook::pad_hk_toggle_menu;
+utility::Hotkey* GameHook::hk_enemy_no_damage;
+utility::Hotkey* GameHook::hk_player_no_damage;
+utility::Hotkey* GameHook::hk_enemy_one_hit_kill;
+utility::Hotkey* GameHook::hk_inf_jumps;
+utility::Hotkey* GameHook::hk_no_clip;
+utility::Hotkey* GameHook::hk_force_summoning_clothes;
+utility::Hotkey* GameHook::hk_save_state;
+utility::Hotkey* GameHook::hk_load_state;
+utility::Hotkey* GameHook::hk_spawn_affinity_spear;
+utility::Hotkey* GameHook::hk_spawn_affinity_trumpet;
+utility::Hotkey* GameHook::hk_spawn_applaud_spear;
+utility::Hotkey* GameHook::hk_spawn_applaud_greatsword;
+utility::Hotkey* GameHook::hk_spawn_enchant;
+utility::Hotkey* GameHook::hk_spawn_ardor_greatsword;
+utility::Hotkey* GameHook::hk_spawn_ardor_axe;
+utility::Hotkey* GameHook::hk_spawn_affinity_laser;
+utility::Hotkey* GameHook::hk_spawn_fearless;
+utility::Hotkey* GameHook::hk_spawn_fairness;
+utility::Hotkey* GameHook::hk_spawn_harmony;
+utility::Hotkey* GameHook::hk_spawn_brave;
+utility::Hotkey* GameHook::hk_spawn_joy;
+utility::Hotkey* GameHook::hk_spawn_grace;
+utility::Hotkey* GameHook::hk_spawn_glory;
+utility::Hotkey* GameHook::hk_spawn_gracious;
+utility::Hotkey* GameHook::hk_spawn_glorious;
+utility::Hotkey* GameHook::hk_spawn_kinship;
+utility::Hotkey* GameHook::hk_spawn_beloved;
+utility::Hotkey* GameHook::hk_spawn_golem;
+utility::Hotkey* GameHook::hk_spawn_fortitudo;
+utility::Hotkey* GameHook::hk_spawn_balder;
+utility::Hotkey* GameHook::hk_spawn_jeanne_formal;
+utility::Hotkey* GameHook::hk_spawn_bayonetta;
+
 // bool GameHook::forceSaveFile = false;
 // int GameHook::forcedFileNum = 99;
 
@@ -278,8 +316,8 @@ void GameHook::EasyCutsceneSkip(bool enabled) {
 	}
 }
 
-bool GameHook::lessClothes_toggle = false;
-void GameHook::LessClothes(bool enabled) {
+bool GameHook::forceSummoningClothes_toggle = false;
+void GameHook::ForceSummoningClothes(bool enabled) {
 	if (enabled) {
 		GameHook::_nop((char*)(0x8B6BD2), 2);
 	}
@@ -3575,6 +3613,43 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	DisableTutorials(disableTutorials_toggle);
 #endif
 #ifndef SPEEDRUN_BUILD 
+	hk_toggle_menu = g_hotkeys.emplace_back(utility::create_keyboard_hotkey({ VK_DELETE }, "Toggle Menu", "hk_toggle_menu")).get();
+	//pad_hk_toggle_menu = g_hotkeys.emplace_back(utility::create_gamepad_hotkey({ LEFT_THUMB, RIGHT_THUMB }, "Toggle Menu", "pad_hk_toggle_menu")).get();
+	hk_enemy_no_damage = g_hotkeys.emplace_back(utility::create_keyboard_hotkey({ VK_F1 }, "Enemy Takes No Damage", "hk_enemy_no_damage")).get();
+	hk_player_no_damage = g_hotkeys.emplace_back(utility::create_keyboard_hotkey({ VK_F2 }, "Player Takes No Damage", "hk_player_no_damage")).get();
+	hk_enemy_one_hit_kill = g_hotkeys.emplace_back(utility::create_keyboard_hotkey({ VK_F3 }, "Enemy One Hit Kill", "hk_enemy_one_hit_kill")).get();
+	hk_inf_jumps = g_hotkeys.emplace_back(utility::create_keyboard_hotkey({ VK_F4 }, "Infinite Jumps", "hk_inf_jumps")).get();
+	hk_no_clip = g_hotkeys.emplace_back(utility::create_keyboard_hotkey({ VK_F5 }, "Noclip", "hk_no_clip")).get();
+	hk_force_summoning_clothes = g_hotkeys.emplace_back(utility::create_keyboard_hotkey({ VK_F6 }, "Force Summoning Clothes", "hk_force_summoning_clothes")).get();
+	hk_save_state = g_hotkeys.emplace_back(utility::create_keyboard_hotkey({ VK_HOME }, "Save State", "hk_save_state")).get();
+	hk_load_state = g_hotkeys.emplace_back(utility::create_keyboard_hotkey({ VK_END }, "Load State", "hk_load_state")).get();
+	hk_spawn_affinity_spear = g_hotkeys.emplace_back(utility::create_keyboard_hotkey({ VK_LCONTROL, VK_F1 }, "Spawn Affinity (Spear)", "hk_spawn_affinity_spear")).get();
+	hk_spawn_affinity_trumpet = g_hotkeys.emplace_back(utility::create_keyboard_hotkey({ VK_LCONTROL, VK_F2 }, "Spawn Affinity (Trumpet)", "hk_spawn_affinity_trumpet")).get();
+	hk_spawn_applaud_spear = g_hotkeys.emplace_back(utility::create_keyboard_hotkey({ VK_LCONTROL, VK_F3 }, "Spawn Applaud (Spear)", "hk_spawn_applaud_spear")).get();
+	hk_spawn_applaud_greatsword = g_hotkeys.emplace_back(utility::create_keyboard_hotkey({ VK_LCONTROL, VK_F4 }, "Spawn Applaud (Greatsword)", "hk_spawn_applaud_greatsword")).get();
+	hk_spawn_enchant = g_hotkeys.emplace_back(utility::create_keyboard_hotkey({ VK_LCONTROL, VK_F5 }, "Spawn Enchant", "hk_spawn_enchant")).get();
+	hk_spawn_ardor_greatsword = g_hotkeys.emplace_back(utility::create_keyboard_hotkey({ VK_LCONTROL, VK_F6 }, "Spawn Ardor (Greatsword)", "hk_spawn_ardor_greatsword")).get();
+	hk_spawn_ardor_axe = g_hotkeys.emplace_back(utility::create_keyboard_hotkey({ VK_LCONTROL, VK_F7 }, "Spawn Ardor (Axe)", "hk_spawn_ardor_axe")).get();
+	hk_spawn_affinity_laser = g_hotkeys.emplace_back(utility::create_keyboard_hotkey({ VK_LCONTROL, VK_F8 }, "Spawn Affinity (Laser)", "hk_spawn_affinity_laser")).get();
+	hk_spawn_fearless = g_hotkeys.emplace_back(utility::create_keyboard_hotkey({ VK_LCONTROL, VK_F9 }, "Spawn Fearless", "hk_spawn_fearless")).get();
+	hk_spawn_fairness = g_hotkeys.emplace_back(utility::create_keyboard_hotkey({ VK_LCONTROL, VK_F10 }, "Spawn Fairness", "hk_spawn_fairness")).get();
+	hk_spawn_harmony = g_hotkeys.emplace_back(utility::create_keyboard_hotkey({ VK_LCONTROL, VK_F11 }, "Spawn Harmony", "hk_spawn_harmony")).get();
+	hk_spawn_brave = g_hotkeys.emplace_back(utility::create_keyboard_hotkey({ VK_LCONTROL, VK_F12 }, "Spawn Brave", "hk_spawn_brave")).get();
+	hk_spawn_joy = g_hotkeys.emplace_back(utility::create_keyboard_hotkey({ VK_LSHIFT, VK_F1 }, "Spawn Joy", "hk_spawn_joy")).get();
+	hk_spawn_grace = g_hotkeys.emplace_back(utility::create_keyboard_hotkey({ VK_LSHIFT, VK_F2 }, "Spawn Grace", "hk_spawn_grace")).get();
+	hk_spawn_glory = g_hotkeys.emplace_back(utility::create_keyboard_hotkey({ VK_LSHIFT, VK_F3 }, "Spawn Glory", "hk_spawn_glory")).get();
+	hk_spawn_gracious = g_hotkeys.emplace_back(utility::create_keyboard_hotkey({ VK_LSHIFT, VK_F4 }, "Spawn Gracious", "hk_spawn_gracious")).get();
+	hk_spawn_glorious = g_hotkeys.emplace_back(utility::create_keyboard_hotkey({ VK_LSHIFT, VK_F5 }, "Spawn Glorious", "hk_spawn_glorious")).get();
+	hk_spawn_kinship = g_hotkeys.emplace_back(utility::create_keyboard_hotkey({ VK_LSHIFT, VK_F6 }, "Spawn Kinship", "hk_spawn_kinship")).get();
+	hk_spawn_beloved = g_hotkeys.emplace_back(utility::create_keyboard_hotkey({ VK_LSHIFT, VK_F7 }, "Spawn Beloved", "hk_spawn_beloved")).get();
+	hk_spawn_golem = g_hotkeys.emplace_back(utility::create_keyboard_hotkey({ VK_LSHIFT, VK_F8 }, "Spawn Golem", "hk_spawn_golem")).get();
+	hk_spawn_fortitudo = g_hotkeys.emplace_back(utility::create_keyboard_hotkey({ VK_LSHIFT, VK_F9 }, "Spawn Fortitudo", "hk_spawn_fortitudo")).get();
+	hk_spawn_balder = g_hotkeys.emplace_back(utility::create_keyboard_hotkey({ VK_LSHIFT, VK_F10 }, "Spawn Balder", "hk_spawn_balder")).get();
+	hk_spawn_jeanne_formal = g_hotkeys.emplace_back(utility::create_keyboard_hotkey({ VK_LSHIFT, VK_F11 }, "Spawn Jeanne", "hk_spawn_jeanne")).get();
+	hk_spawn_bayonetta = g_hotkeys.emplace_back(utility::create_keyboard_hotkey({ VK_LSHIFT, VK_F12 }, "Spawn Bayonetta", "hk_spawn_bayonetta")).get();
+	for (auto& hk : g_hotkeys)
+		hk->on_config_load(cfg);
+
 	autoQTE_toggle = cfg.get<bool>("autoQTE_toggle").value_or(false);
 	AutoQTE(autoQTE_toggle);
 	disableGradient_toggle = cfg.get<bool>("disableGradient_toggle").value_or(false);
@@ -3676,7 +3751,7 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 
 	customCameraDistance_toggle = cfg.get<bool>("customCameraDistance_toggle").value_or(false);
 	customCameraDistance = cfg.get<float>("customCameraDistance").value_or(10.0f);
-	lessClothes_toggle = cfg.get<bool>("lessClothes_toggle").value_or(false);
+	forceSummoningClothes_toggle = cfg.get<bool>("forceSummoningClothes_toggle").value_or(false);
 	haloDisplay_toggle = cfg.get<bool>("haloDisplay_toggle").value_or(false);
 	easierMash_toggle = cfg.get<bool>("easierMash_toggle").value_or(false);
 	initialAngelSlayerFloor = cfg.get<int>("initialAngelSlayerFloor").value_or(0);
@@ -3753,6 +3828,8 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<float>("badgeScaleBase", badgeScaleBase);
 #endif
 #ifndef SPEEDRUN_BUILD
+	for (auto& hk : GameHook::g_hotkeys)
+		hk->on_config_save(cfg);
 	// patches
 	cfg.set<bool>("autoQTE_toggle", autoQTE_toggle);
 	cfg.set<bool>("disableGradient_toggle", disableGradient_toggle);
@@ -3808,7 +3885,7 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<float>("incoming_damage_mult", incoming_damage_mult);
 	cfg.set<bool>("customCameraDistance_toggle", customCameraDistance_toggle);
 	cfg.set<float>("customCameraDistance", customCameraDistance);
-	cfg.set<bool>("lessClothes_toggle", lessClothes_toggle);
+	cfg.set<bool>("forceSummoningClothes_toggle", forceSummoningClothes_toggle);
 	cfg.set<bool>("haloDisplay_toggle", haloDisplay_toggle);
 	cfg.set<bool>("easierMash_toggle", easierMash_toggle);
 	cfg.set<int>("initialAngelSlayerFloor", initialAngelSlayerFloor);

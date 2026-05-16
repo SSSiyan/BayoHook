@@ -328,8 +328,8 @@ static void DrawGlamour() {
     ImGui::EndGroup();
 #ifndef SPEEDRUN_BUILD
     ImGui::SameLine(GameHook::sameLineWidth);
-    if (ImGui::Checkbox("Force Summoning Clothes##LessClothesToggle", &GameHook::lessClothes_toggle)) {
-        GameHook::LessClothes(GameHook::lessClothes_toggle);
+    if (ImGui::Checkbox("Force Summoning Clothes##SummoningClothesToggle", &GameHook::forceSummoningClothes_toggle)) {
+        GameHook::ForceSummoningClothes(GameHook::forceSummoningClothes_toggle);
     }
     GameHook::help_marker("Only works on outfits that have this function");
 #endif
@@ -357,7 +357,7 @@ void GameHook::GameImGui(void) {
     tabHeight = 0.0f;
     maxUIHeight = ImGui::GetIO().DisplaySize.y * 0.9f;
 
-    if (ImGui::Button("Save config")) {
+    if (ImGui::Button("Save Config")) {
         GameHook::onConfigSave(GameHook::cfg);
     }
 
@@ -386,7 +386,7 @@ void GameHook::GameImGui(void) {
 
             ImGui::SeparatorText("Damage");
 
-            if (ImGui::Checkbox("Deal No Damage (F1)##DealNoDamageToggle", &GameHook::enemyHPNoDamage_toggle)) {
+            if (ImGui::Checkbox("Deal No Damage##DealNoDamageToggle", &GameHook::enemyHPNoDamage_toggle)) {
                 GameHook::DisableKilling(GameHook::enemyHPNoDamage_toggle);
                 if (GameHook::enemyHPNoDamage_toggle) {
                     GameHook::enemyHPOneHitKill_toggle = false;
@@ -396,7 +396,7 @@ void GameHook::GameImGui(void) {
 
             ImGui::SameLine(sameLineWidth);
 
-            ImGui::Checkbox("Take No Damage (F2)", &GameHook::damageReceivedMultiplierNoDamage_toggle);
+            ImGui::Checkbox("Take No Damage", &GameHook::damageReceivedMultiplierNoDamage_toggle);
             help_marker("Take no damage from enemies");
 
             ImGui::BeginGroup();
@@ -425,7 +425,7 @@ void GameHook::GameImGui(void) {
             }
             ImGui::EndGroup();
 
-            if (ImGui::Checkbox("One Hit Kill (F3)##OneHitKillToggle", &GameHook::enemyHPOneHitKill_toggle)) {
+            if (ImGui::Checkbox("One Hit Kill##OneHitKillToggle", &GameHook::enemyHPOneHitKill_toggle)) {
                 if (GameHook::enemyHPOneHitKill_toggle) {
                     GameHook::enemyHPNoDamage_toggle = false;
                     GameHook::DisableKilling(GameHook::enemyHPNoDamage_toggle);
@@ -656,7 +656,7 @@ void GameHook::GameImGui(void) {
 
             ImGui::SeparatorText("Cheats");
 
-            if (ImGui::Checkbox("Infinite Jumps (F4)##InfJumpsToggle", &GameHook::infJumps_toggle)) {
+            if (ImGui::Checkbox("Infinite Jumps##InfJumpsToggle", &GameHook::infJumps_toggle)) {
                 GameHook::InfJumps(GameHook::infJumps_toggle);
             }
             help_marker("Infinite jumps");
@@ -1417,45 +1417,20 @@ void GameHook::GameImGui(void) {
             ImGui::EndTabItem();
         }
 
+        if (ImGui::BeginTabItem("Hotkeys")) {
+            ImGui::BeginChild("HotkeysChild");
+
+            ImGui::SeparatorText("Don't forget to hit Save Config after setting these!");
+            for (auto& hotkey : g_hotkeys)
+                hotkey->draw(g_input);
+
+            tabHeight += ImGui::GetCursorPosY();
+            ImGui::EndChild();
+            ImGui::EndTabItem();
+        }
+
         if (ImGui::BeginTabItem("Info")) {
             ImGui::BeginChild("InfoChild");
-
-            ImGui::SeparatorText("Hotkeys");
-
-            ImGui::Text("F1 = Deal No Damage");
-            ImGui::Text("F2 = Take No Damage");
-            ImGui::Text("F3 = One Hit Kill");
-            ImGui::Text("F4 = Infinite Jumps");
-            ImGui::Text("Home = Save Locked On Enemy Anim");
-            help_marker("if enabled in System");
-            ImGui::Text("End = Load Locked On Enemy Anim");
-            help_marker("if enabled in System");
-            ImGui::Spacing();
-            ImGui::Text("LCtrl + F1 = Spawn Affinity (Spear)");
-            ImGui::Text("LCtrl + F2 = Spawn Affinity (Trumpet)");
-            ImGui::Text("LCtrl + F3 = Spawn Applaud (Spear)");
-            ImGui::Text("LCtrl + F4 = Spawn Applaud (Greatsword)");
-            ImGui::Text("LCtrl + F5 = Spawn Enchant"); // top prio
-            ImGui::Text("LCtrl + F6 = Spawn Ardor (Greatsword)");
-            ImGui::Text("LCtrl + F7 = Spawn Ardor (Axe)");
-            ImGui::Text("LCtrl + F8 = Spawn Affinity (Laser)");
-            ImGui::Text("LCtrl + F9 = Spawn Fearless");
-            ImGui::Text("LCtrl + F10 = Spawn Fairness");
-            ImGui::Text("LCtrl + F11 = Spawn Harmony");
-            ImGui::Text("LCtrl + F12 = Spawn Brave");
-            ImGui::Spacing();
-            ImGui::Text("LShift + F1 = Spawn Joy");
-            ImGui::Text("LShift + F2 = Spawn Grace");
-            ImGui::Text("LShift + F3 = Spawn Glory");
-            ImGui::Text("LShift + F4 = Spawn Gracious");
-            ImGui::Text("LShift + F5 = Spawn Glorious");
-            ImGui::Text("LShift + F6 = Spawn Kinship");
-            ImGui::Text("LShift + F7 = Spawn Beloved (Silver)");
-            ImGui::Text("LShift + F8 = Spawn Golem");
-            ImGui::Text("LShift + F9 = Spawn Fortitudo (Green)");
-            ImGui::Text("LShift + F10 = Spawn Balder");
-            ImGui::Text("LShift + F11 = Spawn Jeanne Formal A");
-            ImGui::Text("LShift + F12 = Spawn Bayonetta");
 
             DrawCredits();
 

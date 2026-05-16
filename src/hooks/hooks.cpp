@@ -1,9 +1,12 @@
 #include <pch.h>
 #include <base.h>
 #include "../utils/FunctionHook.hpp"
+#include "XInputHook.hpp"
+#include "../../utils/Input.hpp"
 
 static uintptr_t D3DEndSceneJumpReturn;
 static FunctionHook* EndSceneFunctionHookInstance;
+static std::unique_ptr<XInputHook> m_xinput_hook;
 //Helper Functions Declarations
 
 BOOL CALLBACK EnumWindowsCallback(HWND handle, LPARAM lParam);
@@ -23,7 +26,6 @@ __declspec(naked) void D3DEndSceneDetour(void) {
 		jmp DWORD PTR [D3DEndSceneJumpReturn]
 	}
 }
-
 bool Base::Hooks::Init()
 {
 
@@ -52,6 +54,16 @@ bool Base::Hooks::Init()
 	VirtualProtect((void*)EndSceneCall, detour_length, oldprotect, &oldprotect);
 	EndSceneFunctionHookInstance = new FunctionHook(EndSceneCall, &D3DEndSceneDetour);
 	D3DEndSceneJumpReturn = EndSceneCall + detour_length;
+
+	m_xinput_hook = std::make_unique<XInputHook>();
+	if (m_xinput_hook->hook()) {
+		//spdlog::info("Hooked XInput");
+		utility::gamepads::set_gamepad_callbacks(); // needs xinput hook initialized
+	}
+	//else {
+		//spdlog::error("Failed to hook XInput!");
+	//}
+
 	return EndSceneFunctionHookInstance->create();
 #endif
 }

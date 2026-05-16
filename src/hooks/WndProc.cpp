@@ -6,7 +6,7 @@ extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam
 LRESULT CALLBACK Base::Hooks::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 	if(uMsg == WM_KEYDOWN || uMsg == WM_KEYUP)
 		Data::WmKeys[wParam] = uMsg;
-
+#ifdef SPEEDRUN_BUILD
 	if (uMsg == WM_KEYDOWN)
 	{
 		switch (wParam)
@@ -24,8 +24,8 @@ LRESULT CALLBACK Base::Hooks::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
 				GameHook::DisableClicking(GameHook::disableClicking_toggle);
 			}
 			break;
-
-#ifndef SPEEDRUN_BUILD
+#endif
+#if 0
 		case VK_F1:
 			if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl)) {
 				GameHook::EasySpawnEntityFromHotkey(0x20000, 1, 0); // affinity, spear
@@ -159,9 +159,9 @@ LRESULT CALLBACK Base::Hooks::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
 				GameHook::SaveStates_LoadState();
 			}
 			break;
-#endif
 		}
 	}
+#endif
 	ImGui_ImplWin32_WndProcHandler(hWnd, uMsg, wParam, lParam);
 	return CallWindowProc(Data::oWndProc, hWnd, uMsg, wParam, lParam);
 }
