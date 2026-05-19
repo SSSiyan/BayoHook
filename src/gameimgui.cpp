@@ -482,6 +482,9 @@ void GameHook::GameImGui(void) {
             }
             help_marker("Freeze the timer that starts when an enemy attacks, usually disallowing attacks");
 
+            ImGui::Checkbox("Random Enemy Spawns", &GameHook::randomizeSpawns_toggle);
+            // help_marker("");
+
             ImGui::SeparatorText("Misc");
 
             ImGui::Checkbox("Disable Slow Motion", &GameHook::disableSlowmo_toggle);

@@ -1103,7 +1103,7 @@ static __declspec(naked) void WitchTimeMultiplierDetour(void) {
 	}
 }
 
-void GameHook::SpawnStuff() {
+void GameHook::CallFromGameThread() {
 	if (GameHook::spawnEntityFromGui) {
 		GameHook::spawnEntityFromGui = false;
 		GameHook::SpawnEntity(guiEntitySpawn);
@@ -1121,7 +1121,7 @@ float GameHook::infMagic_value = 1200.0f;
 static __declspec(naked) void InfMagicDetour(void) {
 	_asm {
 		pushad
-		call GameHook::SpawnStuff
+		call GameHook::CallFromGameThread
 		popad
 
 		push eax
@@ -1873,25 +1873,110 @@ void GameHook::DisplayRecentlySpawnedEntitiesInImGui() {
 	}
 }
 
+enum class SpawnCategory {
+	EnemyT1,
+	EnemyT2,
+};
+
+// this is currently only checking for ID, not variant. The swapped ID will use whatever modifiers the original spawn had.
+static int GetRandomizedSpawn(int ID) {
+	// break possible swaps into types, so enemies can only be swapped with enemies etc
+	static const std::unordered_map<int, SpawnCategory> spawnTypes = {
+		{0x20000, SpawnCategory::EnemyT1}, // affinity
+		{0x20001, SpawnCategory::EnemyT1}, // ardor fire sword
+		{0x20002, SpawnCategory::EnemyT1}, // affinity laser
+		{0x20004, SpawnCategory::EnemyT1}, // ardor sword
+		{0x20007, SpawnCategory::EnemyT1}, // affinity fire axe
+		{0x20010, SpawnCategory::EnemyT1}, // decoration
+		{0x20011, SpawnCategory::EnemyT1}, // dear
+		{0x20012, SpawnCategory::EnemyT1}, // dear & decoration
+		{0x20030, SpawnCategory::EnemyT1}, // enchant
+		{0x20060, SpawnCategory::EnemyT1}, // harmony
+
+		{0x20080, SpawnCategory::EnemyT2}, // joy
+		{0x20040, SpawnCategory::EnemyT2}, // grace
+		{0x20041, SpawnCategory::EnemyT2}, // glory
+		{0x20042, SpawnCategory::EnemyT2}, // gracious
+		{0x20043, SpawnCategory::EnemyT2}, // glorious
+		{0x20050, SpawnCategory::EnemyT2}, // fearless
+		{0x20051, SpawnCategory::EnemyT2}, // fairness
+		{0x20070, SpawnCategory::EnemyT2}, // beloved
+		{0x20071, SpawnCategory::EnemyT2}, // beloved larger
+		{0x20073, SpawnCategory::EnemyT2}, // brave
+		{0x20074, SpawnCategory::EnemyT2}, // beloved silver
+		{0x20078, SpawnCategory::EnemyT2}, // beloved w/mask
+		{0x20090, SpawnCategory::EnemyT2}, // golem
+		{0x200A0, SpawnCategory::EnemyT2}, // kinship
+		{0x21010, SpawnCategory::EnemyT2}, // joy fake
+
+		// {0x10001, SpawnCategory::Enemy}, // panther
+		// {0x10002, SpawnCategory::Enemy}, // crow
+
+		// {0x30100, SpawnCategory::Other}, // Angel Wings
+		// {0x30101, SpawnCategory::Other}, // Angel Spear
+		// {0x30103, SpawnCategory::Other}, // Angel Trumpet
+		// {0x30105, SpawnCategory::Other}, // Angel Greatsword
+		// {0x30106, SpawnCategory::Other}, // Angel Bow
+		// {0x30108, SpawnCategory::Other}, // Angel Sword (Unused) / Angel Axe
+		// {0x3010A, SpawnCategory::Other}, // Angel Shield
+		// {0x3010D, SpawnCategory::Other}, // Angel Flail
+		// {0x30110, SpawnCategory::Other}, // Angel Clothes
+		// {0x30120, SpawnCategory::Other}, // Angel Mask
+		// {0x30126, SpawnCategory::Other}, // Grave & Glory Claws
+		// {0x30127, SpawnCategory::Other}, // Glory Claws
+		// {0x30150, SpawnCategory::Other}, // Angel Scythe
+		// {0x30160, SpawnCategory::Other}, // Grace Claws
+		// {0x30161, SpawnCategory::Other}, // Grace Claws
+		// {0x30163, SpawnCategory::Other}, // Gracious Claws
+		// {0x30164, SpawnCategory::Other}, // Gracious Claw
+		// {0x30165, SpawnCategory::Other}, // Glorious Claws
+		// {0x30166, SpawnCategory::Other}, // Glorious Claw
+		// {0x30170, SpawnCategory::Other}, // Harmony Chainsaw
+	};
+
+	auto typeIt = spawnTypes.find(ID);
+	if (typeIt == spawnTypes.end())
+		return ID;
+
+	const SpawnCategory category = typeIt->second;
+
+	std::vector<int> pool;
+
+	for (const auto& [spawnID, spawnCategory] : spawnTypes) {
+		if (spawnCategory == category)
+			pool.push_back(spawnID);
+	}
+
+	if (pool.empty())
+		return ID;
+
+	std::uniform_int_distribution<size_t> dist(0, pool.size() - 1);
+	return pool[dist(GameHook::rng)];
+}
+
 static std::unique_ptr<FunctionHook> viewEntitySpawnsHook;
 static uintptr_t viewEntitySpawns_jmp_ret = NULL;
 bool GameHook::viewEntitySpawns_toggle = false;
+bool GameHook::randomizeSpawns_toggle = false;
 static __declspec(naked) void ViewEntitySpawnsDetour(void) {
 	__asm {
 		pushfd
-		cmp byte ptr [GameHook::viewEntitySpawns_toggle], 0
-		je originalcode
+		cmp byte ptr [GameHook::randomizeSpawns_toggle], 1
+		je randomcode
+	check2:
+		cmp byte ptr [GameHook::viewEntitySpawns_toggle], 1
+		je viewcode
+		jmp originalcode
 
+	viewcode:
 		pushad
 		mov edx, [esp+0x28] // entityID
 		mov eax, [esp+0x2C] // optionalSettings
 		mov ecx, [esp+0x30] // unkn
-
 		test eax, eax
 		je dontLogEax
 		cmp eax, 0x10000
 		jb dontLogEax
-
 		push [eax+0x8] // struct.SpawnModifier
 		push [eax+0x4] // struct.Variant
 		push [eax+0x0] // struct.Unkn
@@ -1911,6 +1996,16 @@ static __declspec(naked) void ViewEntitySpawnsDetour(void) {
 		push edx
 		call LogEntitySpawn
 		add esp, 24
+		jmp popcode
+
+	randomcode:
+		pushad
+		push dword ptr [esp+0x28] // entityID
+		call GetRandomizedSpawn
+		add esp, 4
+		mov [esp+0x28], eax
+		popad
+		jmp check2
 
 	popcode:
 		popad
@@ -3769,6 +3864,7 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	alwaysWitchTime_toggle = cfg.get<bool>("alwaysWitchTime_toggle").value_or(false);
 	saveStatesHotkeys_toggle = cfg.get<bool>("saveStatesHotkeys_toggle").value_or(false);
 	omnicancelTele_toggle = cfg.get<bool>("omnicancelTele_toggle").value_or(false);
+	randomizeSpawns_toggle = cfg.get<bool>("randomizeSpawns_toggle").value_or(false);
 	drawPlayerBones_toggle = cfg.get<bool>("drawPlayerBones_toggle").value_or(false);
 	allowSettingThirdAccessory_toggle = cfg.get<bool>("allowSettingThirdAccessory_toggle").value_or(false);
 
@@ -3904,6 +4000,7 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("saveStatesHotkeys_toggle", saveStatesHotkeys_toggle);
 	cfg.set<bool>("tauntWithTimeBracelet_toggle", tauntWithTimeBracelet_toggle);
 	cfg.set<bool>("omnicancelTele_toggle", omnicancelTele_toggle);
+	cfg.set<bool>("randomizeSpawns_toggle", randomizeSpawns_toggle);
 	cfg.set<bool>("drawPlayerBones_toggle", drawPlayerBones_toggle);
 	cfg.set<bool>("drawFlyingStats_toggle", drawFlyingStats_toggle);
 	cfg.set<bool>("allowSettingThirdAccessory_toggle", allowSettingThirdAccessory_toggle);

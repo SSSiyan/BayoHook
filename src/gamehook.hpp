@@ -252,6 +252,7 @@ public:
 	static bool alwaysWitchTime_toggle;
 	static bool omnicancelTele_toggle;
 	static bool viewEntitySpawns_toggle;
+	static bool randomizeSpawns_toggle;
 	static void DisplayRecentlySpawnedEntitiesInImGui();
 
 	static bool damageDealtMultiplier_toggle;
@@ -364,7 +365,7 @@ public:
 	static void SpawnEntity(EntitySpawn&);
 	static void EasySpawnEntityFromHotkey(int enemyID, int variant, int spawnModifier);
 	static void EasySpawnEntityFromGui(int enemyID, int variant, int spawnModifier);
-	static void SpawnStuff(); // Do not call from outside of game thread. Set spawnEntityFromGui / spawnEntityFromHotkey true instead.
+	static void CallFromGameThread();
 	static bool spawnEntityFromGui;
 	static bool spawnEntityFromHotkey;
 	static EntitySpawn guiEntitySpawn;
