@@ -338,7 +338,7 @@ static AreaIDName areaIDNames[] = {
     { 0x0, "Start Screen" },
     { 0xa10, "Chapter Menu" },
     { 0x1a1, "RT - The Witch Hunts" },
-    { 0x1a1, "P - Vestibule" },
+    { 0x1c1, "P - Vestibule" },
     { 0x114, "I - The Angel's Metropolis" },
     { 0x12B, "II - Vigrid, City of Deja Vu" },
     { 0x132, "III - The Burning Ground" },
@@ -1066,14 +1066,14 @@ struct EntitySpawn {
     int unkn = -1;
 };
 
-struct SpawnFromListbox {
+struct SpawnInfo {
     const char* name;
     int id;
     int variant;
     int spawnModifier;
 };
 
-static const SpawnFromListbox spawnList[] = {
+static const SpawnInfo spawnList[] = {
     // {"Player Bayonetta", 0x10000, 0, 0}, // v0 = Moves, v2 = Doesn't Move
     // {"Player Jeanne", 0x10020, 0, 0},
     // {"Player Bayonetta P.E. A", 0x10025, 0, 0},
@@ -1115,6 +1115,8 @@ static const SpawnFromListbox spawnList[] = {
     {"Decoration", 0x20010, 0, 0},
     {"Dear", 0x20011, 0, 0},
     {"Dear & Decorations", 0x20012, 0, 0},
+    // {"Inspired (No HP Bar)", 0x20020},
+    // {"Inspired (Green)", 0x20022},
     {"Enchant", 0x20030, 0, 0},
     {"Grace", 0x20040, 0, 0},
     {"Glory", 0x20041, 0, 0},
@@ -1144,6 +1146,80 @@ static const SpawnFromListbox spawnList[] = {
     {"Jeanne Enemy Formal A", 0x21002, 0, 0},
     {"Bayo Enemy Default", 0x21003, 0, 0},
     // {"Joy Twin (Unkillable)", 0x21010, 0, 0},
+};
+
+enum class SpawnCategory {
+    EnemyTier1,
+    EnemyTier2,
+    EnemyBoss,
+    EnemyBigBoss,
+};
+
+struct SpawnEntry {
+    SpawnInfo info;
+    SpawnCategory category;
+};
+
+// break possible swaps into types, so enemies can only be swapped with enemies etc
+// this is also used for enemy swapper, but tier is ignored
+static const std::vector<SpawnEntry> spawnTypes = {
+    {{"Affinity (Spear)", 0x20000, 1, 0}, SpawnCategory::EnemyTier1},
+    {{"Affinity (Trumpet)", 0x20000, 2, 0}, SpawnCategory::EnemyTier1},
+    {{"Affinity (Mace)", 0x20000, 9, 0}, SpawnCategory::EnemyTier1},
+    {{"Applaud (Spear)", 0x20000, 4, 0}, SpawnCategory::EnemyTier1},
+    {{"Applaud (Greatsword)", 0x20000, 5, 0}, SpawnCategory::EnemyTier1},
+    {{"Applaud (Bow)", 0x20000, 6, 0}, SpawnCategory::EnemyTier1},
+    {{"Ardor (Fire) (Sword)", 0x20001, 0, 0}, SpawnCategory::EnemyTier1},
+    {{"Affinity (Spear) (Fire)", 0x20001, 1, 0}, SpawnCategory::EnemyTier1},
+    {{"Affinity (Laser)", 0x20002, 0, 0}, SpawnCategory::EnemyTier1},
+    {{"Affinity (Axe) (Fire)", 0x20007, 0, 0}, SpawnCategory::EnemyTier1},
+    {{"Decoration", 0x20010, 0, 0}, SpawnCategory::EnemyTier1},
+    {{"Dear", 0x20011, 0, 0}, SpawnCategory::EnemyTier1},
+    {{"Enchant", 0x20030, 0, 0}, SpawnCategory::EnemyTier1},
+    {{"Harmony", 0x20060, 0, 0}, SpawnCategory::EnemyTier1},
+
+    {{"Ardor (Sword)", 0x20004, 0, 0}, SpawnCategory::EnemyTier2},
+    {{"Ardor (Axe)", 0x20004, 1, 0}, SpawnCategory::EnemyTier2},
+    {{"Dear & Decorations", 0x20012, 0, 0}, SpawnCategory::EnemyTier2},
+    {{"Grace", 0x20040, 0, 0}, SpawnCategory::EnemyTier2},
+    {{"Glory", 0x20041, 0, 0}, SpawnCategory::EnemyTier2},
+    {{"Gracious", 0x20042, 0, 0}, SpawnCategory::EnemyTier2},
+    {{"Glorious", 0x20043, 0, 0}, SpawnCategory::EnemyTier2},
+    {{"Fearless", 0x20050, 0, 0}, SpawnCategory::EnemyTier2},
+    {{"Fairness", 0x20051, 0, 0}, SpawnCategory::EnemyTier2},
+    {{"Beloved", 0x20070, 0, 0}, SpawnCategory::EnemyTier2},
+    {{"Beloved (Larger)", 0x20071, 0, 0}, SpawnCategory::EnemyTier2},
+    {{"Brave", 0x20073, 0, 0}, SpawnCategory::EnemyTier1},
+    {{"Beloved (Silver)", 0x20074, 0, 0}, SpawnCategory::EnemyTier2},
+    {{"Joy", 0x20080, 0, 0}, SpawnCategory::EnemyTier2},
+    {{"Golem", 0x20090, 0, 0}, SpawnCategory::EnemyTier2},
+    {{"Kinship", 0x200A0, 0, 0}, SpawnCategory::EnemyTier2},
+
+    {{"Fortitudo (Green)", 0x200B0, 0, 0}, SpawnCategory::EnemyBoss},
+    {{"Balder", 0x20500, 0, 0}, SpawnCategory::EnemyBoss},
+    {{"Father Rodin (Unkillable)", 0x20510, 0, 0}, SpawnCategory::EnemyBoss},
+    {{"Jeanne Enemy Default", 0x21000, 0, 0}, SpawnCategory::EnemyBoss},
+    {{"Jeanne Enemy Old", 0x21001, 0, 0}, SpawnCategory::EnemyBoss},
+    {{"Jeanne Enemy Formal A", 0x21002, 0, 0}, SpawnCategory::EnemyBoss},
+    {{"Bayo Enemy Default", 0x21003, 0, 0}, SpawnCategory::EnemyBoss},
+    //{{"Joy Twin (Unkillable)", 0x21010, 0, 0}, SpawnCategory::EnemyBoss},
+
+    // these are currently not randomized because most of them would just instantly fall into the void
+    // {{"Inspired (No HP Bar)", 0x20020}, SpawnCategory::EnemyBigBoss},
+    // {{"Inspired (Green)", 0x20022}, SpawnCategory::EnemyBigBoss},
+    {{"Temperantia", 0x200C0, 0, 0}, SpawnCategory::EnemyBigBoss},
+    {{"Lustitia", 0x200D0, 0, 0}, SpawnCategory::EnemyBigBoss},
+    {{"Fortitudo", 0x20100, 0, 0}, SpawnCategory::EnemyBigBoss},
+    {{"Temperantia 2", 0x20200, 0, 0}, SpawnCategory::EnemyBigBoss},
+    {{"Temperantia 3", 0x2020D, 0, 0}, SpawnCategory::EnemyBigBoss},
+    {{"Sapentia", 0x20400, 0, 0}, SpawnCategory::EnemyBigBoss},
+};
+
+struct SwapRule {
+    int sourceIndex;
+    int targetIndex;
+    int spawnModifier;
+    bool enabled;
 };
 
 #endif

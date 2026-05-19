@@ -1873,41 +1873,47 @@ void GameHook::DisplayRecentlySpawnedEntitiesInImGui() {
 	}
 }
 
-enum class SpawnCategory {
-	EnemyT1,
-	EnemyT2,
-};
-
-// this is currently only checking for ID, not variant. The swapped ID will use whatever modifiers the original spawn had.
-static int GetRandomizedSpawn(int ID) {
-	// break possible swaps into types, so enemies can only be swapped with enemies etc
-	static const std::unordered_map<int, SpawnCategory> spawnTypes = {
-		{0x20000, SpawnCategory::EnemyT1}, // affinity
-		{0x20001, SpawnCategory::EnemyT1}, // ardor fire sword
-		{0x20002, SpawnCategory::EnemyT1}, // affinity laser
-		{0x20004, SpawnCategory::EnemyT1}, // ardor sword
-		{0x20007, SpawnCategory::EnemyT1}, // affinity fire axe
-		{0x20010, SpawnCategory::EnemyT1}, // decoration
-		{0x20011, SpawnCategory::EnemyT1}, // dear
-		{0x20012, SpawnCategory::EnemyT1}, // dear & decoration
-		{0x20030, SpawnCategory::EnemyT1}, // enchant
-		{0x20060, SpawnCategory::EnemyT1}, // harmony
-
-		{0x20080, SpawnCategory::EnemyT2}, // joy
-		{0x20040, SpawnCategory::EnemyT2}, // grace
-		{0x20041, SpawnCategory::EnemyT2}, // glory
-		{0x20042, SpawnCategory::EnemyT2}, // gracious
-		{0x20043, SpawnCategory::EnemyT2}, // glorious
-		{0x20050, SpawnCategory::EnemyT2}, // fearless
-		{0x20051, SpawnCategory::EnemyT2}, // fairness
-		{0x20070, SpawnCategory::EnemyT2}, // beloved
-		{0x20071, SpawnCategory::EnemyT2}, // beloved larger
-		{0x20073, SpawnCategory::EnemyT2}, // brave
-		{0x20074, SpawnCategory::EnemyT2}, // beloved silver
-		{0x20078, SpawnCategory::EnemyT2}, // beloved w/mask
-		{0x20090, SpawnCategory::EnemyT2}, // golem
-		{0x200A0, SpawnCategory::EnemyT2}, // kinship
-		{0x21010, SpawnCategory::EnemyT2}, // joy fake
+/*
+		// {"Player Bayonetta", 0x10000, 0, 0}, // v0 = Moves, v2 = Doesn't Move
+		// {"Player Jeanne", 0x10020, 0, 0},
+		// {"Player Bayonetta P.E. A", 0x10025, 0, 0},
+		// {"Player Bayonetta P.E. B", 0x10026, 0, 0},
+		// {"Player Bayonetta P.E. C", 0x10027, 0, 0},
+		// {"Player Bayonetta d'Arc maybe", 0x1002b, 0, 0},
+		// {"Player Bayonetta Umbra", 0x1002c, 0, 0},
+		// {"Player Bayonetta Various A", 0x1002d, 0, 0},
+		// {"Player Bayonetta Various B", 0x1002e, 0, 0},
+		// {"Player Bayonetta Various C", 0x1002f, 0, 0},
+		// {"Player Bayonetta Old", 0x10030, 0, 0},
+		// {"Player Jeanne Old", 0x10066, 0, 0},
+		// {"Player Jeanne Umbra", 0x10067, 0, 0},
+		// {"Player Jeanne Various A", 0x10068, 0, 0},
+		// {"Player Jeanne Various B", 0x10069, 0, 0},
+		// {"Player Jeanne Various C", 0x1006A, 0, 0},
+		// {"Player Jeanne Komachi A", 0x1006E, 0, 0},
+		// {"Player Jeanne Komachi B", 0x10070, 0, 0},
+		// {"Player Jeanne Komachi C", 0x10072, 0, 0},
+		// {"Player Jeanne Nun", 0x10074, 0, 0},
+		// {"Player Jeanne Queen", 0x10075, 0, 0},
+		// {"Player Bayonetta Komachi A", 0x10083, 0, 0},
+		// {"Player Bayonetta Komachi B", 0x10085, 0, 0},
+		// {"Player Bayonetta Komachi C", 0x10087, 0, 0},
+		// {"Player Bayonetta Nun", 0x10089, 0, 0},
+		// {"Player Bayonetta Witch", 0x1008a, 0, 0},
+		// {{"Fortitudo (Green)", 0x200B0, 0, 0}, SpawnCategory::EnemyBoss},
+		// {{"Temperantia", 0x200C0, 0, 0}, SpawnCategory::EnemyBoss},
+		// {{"Lustitia", 0x200D0, 0, 0}, SpawnCategory::EnemyBoss},
+		// {{"Fortitudo", 0x20100, 0, 0}, SpawnCategory::EnemyBoss},
+		// {{"Temperantia 2", 0x20200, 0, 0}, SpawnCategory::EnemyBoss},
+		// {{"Temperantia 3", 0x2020D, 0, 0}, SpawnCategory::EnemyBoss},
+		// {{"Sapentia", 0x20400, 0, 0}, SpawnCategory::EnemyBoss},
+		// {{"Balder", 0x20500, 0, 0}, SpawnCategory::EnemyBoss},
+		// {{"Father Rodin (Unkillable)", 0x20510, 0, 0}, SpawnCategory::EnemyBoss},
+		// {{"Jeanne Enemy Default", 0x21000, 0, 0}, SpawnCategory::EnemyBoss},
+		// {{"Jeanne Enemy Old", 0x21001, 0, 0}, SpawnCategory::EnemyBoss},
+		// {{"Jeanne Enemy Formal A", 0x21002, 0, 0}, SpawnCategory::EnemyBoss},
+		// {{"Bayo Enemy Default", 0x21003, 0, 0}, SpawnCategory::EnemyBoss},
+		// {"Joy Twin (Unkillable)", 0x21010, 0, 0},
 
 		// {0x10001, SpawnCategory::Enemy}, // panther
 		// {0x10002, SpawnCategory::Enemy}, // crow
@@ -1932,42 +1938,128 @@ static int GetRandomizedSpawn(int ID) {
 		// {0x30165, SpawnCategory::Other}, // Glorious Claws
 		// {0x30166, SpawnCategory::Other}, // Glorious Claw
 		// {0x30170, SpawnCategory::Other}, // Harmony Chainsaw
-	};
+*/
 
-	auto typeIt = spawnTypes.find(ID);
-	if (typeIt == spawnTypes.end())
-		return ID;
+struct SpawnResult {
+	int id;
+	int variant;
+	int spawnModifier;
+};
 
-	const SpawnCategory category = typeIt->second;
+static const std::unordered_map<SpawnCategory, std::vector<SpawnCategory>> spawnCategoryPool = {
+	{SpawnCategory::EnemyTier1, {SpawnCategory::EnemyTier1}},
+	{SpawnCategory::EnemyTier2, {SpawnCategory::EnemyTier2, SpawnCategory::EnemyTier1}},
+	{SpawnCategory::EnemyBoss,  {SpawnCategory::EnemyBoss, SpawnCategory::EnemyTier2}},
+};
 
-	std::vector<int> pool;
+static SpawnResult GetRandomizedSpawn(int id, int variant, int spawnModifier) {
+	const SpawnCategory* category = nullptr;
+	for (const auto& entry : spawnTypes) {
+		// only search for id because the other values vary so much. Modifier is set to 0 on every spawn, so randomized enemies are probably easy
+		if (entry.info.id == id) {
+			category = &entry.category;
+			break;
+		}
+	}
 
-	for (const auto& [spawnID, spawnCategory] : spawnTypes) {
-		if (spawnCategory == category)
-			pool.push_back(spawnID);
+	if (!category)
+		return { id, variant, spawnModifier };
+
+	std::vector<const SpawnInfo*> pool;
+	const auto& allowedCategories = spawnCategoryPool.at(*category);
+	for (const auto& entry : spawnTypes) {
+		if (std::find(allowedCategories.begin(), allowedCategories.end(), entry.category) != allowedCategories.end())
+			pool.push_back(&entry.info);
 	}
 
 	if (pool.empty())
-		return ID;
+		return { id, variant, spawnModifier };
 
 	std::uniform_int_distribution<size_t> dist(0, pool.size() - 1);
-	return pool[dist(GameHook::rng)];
+	const SpawnInfo* picked = pool[dist(GameHook::rng)];
+	return { picked->id, picked->variant, picked->spawnModifier };
+}
+
+static SpawnResult randomizer_spawnResult;
+static void DoRandomizeSpawn(int id, int variant, int spawnModifier) {
+	randomizer_spawnResult = GetRandomizedSpawn(id, variant, spawnModifier);
+}
+
+static SpawnResult GetSwappedSpawn(int id, int variant, int spawnModifier) {
+	for (const auto& rule : GameHook::swapRules) {
+		if (!rule.enabled)
+			continue;
+		const auto& src = spawnTypes[rule.sourceIndex].info;
+		if (src.id == id &&
+			src.variant == variant) {
+			const auto& dst = spawnTypes[rule.targetIndex].info;
+			return {dst.id, dst.variant, rule.spawnModifier == -1 ? dst.spawnModifier : rule.spawnModifier};
+		}
+	}
+	return { id, variant, spawnModifier };
+}
+
+static void DoSwapSpawn(int id, int variant, int spawnModifier) {
+	randomizer_spawnResult = GetSwappedSpawn(id, variant, spawnModifier);
+}
+
+std::vector<SwapRule> GameHook::swapRules;
+static void InitSwapRules() {
+	GameHook::swapRules.clear();
+	GameHook::swapRules.reserve(spawnTypes.size());
+	for (int i = 0; i < (int)spawnTypes.size(); i++) {
+		GameHook::swapRules.push_back({ i, i, -1, false});
+	}
 }
 
 static std::unique_ptr<FunctionHook> viewEntitySpawnsHook;
 static uintptr_t viewEntitySpawns_jmp_ret = NULL;
 bool GameHook::viewEntitySpawns_toggle = false;
 bool GameHook::randomizeSpawns_toggle = false;
+bool GameHook::swapSpawns_toggle = false;
 static __declspec(naked) void ViewEntitySpawnsDetour(void) {
 	__asm {
 		pushfd
-		cmp byte ptr [GameHook::randomizeSpawns_toggle], 1
-		je randomcode
-	check2:
 		cmp byte ptr [GameHook::viewEntitySpawns_toggle], 1
 		je viewcode
+		cmp byte ptr [GameHook::randomizeSpawns_toggle], 1
+		je randomcode
+		cmp byte ptr [GameHook::swapSpawns_toggle], 1
+		je swapcode
 		jmp originalcode
-
+ 
+	swapcode:
+		pushad
+		mov eax, [esp+0x28] // id
+		mov ecx, [esp+0x2C] // optionalSettings
+		test ecx, ecx
+		je swapNoStruct
+		push dword ptr [ecx+0x8] // spawnModifier
+		push dword ptr [ecx+0x4] // variant
+		push eax // id
+		call DoSwapSpawn
+		add esp, 12
+		mov ecx, [esp+0x2C]
+		mov eax, dword ptr [randomizer_spawnResult]
+		mov [esp+0x28], eax
+		mov eax, dword ptr [randomizer_spawnResult+4]
+		mov [ecx+0x4], eax
+		mov eax, dword ptr [randomizer_spawnResult+8]
+		mov [ecx+0x8], eax
+		jmp swapDone
+ 
+	swapNoStruct:
+		push 0
+		push 0
+		push eax
+		call DoSwapSpawn
+		add esp, 12
+		mov eax, dword ptr [randomizer_spawnResult]
+		mov [esp+0x28], eax
+	swapDone:
+		popad
+		jmp originalcode
+ 
 	viewcode:
 		pushad
 		mov edx, [esp+0x28] // entityID
@@ -2000,12 +2092,53 @@ static __declspec(naked) void ViewEntitySpawnsDetour(void) {
 
 	randomcode:
 		pushad
-		push dword ptr [esp+0x28] // entityID
-		call GetRandomizedSpawn
-		add esp, 4
+		mov eax, [esp+0x28] // ID
+		mov ecx, [esp+0x2C] // optionalSettings ptr
+		test ecx, ecx
+		je randNoStruct
+		push dword ptr [ecx+0x8] // spawnModifier
+		push dword ptr [ecx+0x4] // variant
+		push eax // ID
+		call DoRandomizeSpawn
+		add esp, 12
+		cmp byte ptr [GameHook::swapSpawns_toggle], 1
+		jne applyRandomResult
+		push dword ptr [randomizer_spawnResult+8]
+		push dword ptr [randomizer_spawnResult+4]
+		push dword ptr [randomizer_spawnResult]
+		call DoSwapSpawn
+		add esp, 12
+
+	applyRandomResult:
+		mov ecx, [esp+0x2C]
+		mov eax, dword ptr [randomizer_spawnResult]
 		mov [esp+0x28], eax
+		mov eax, dword ptr [randomizer_spawnResult+4]
+		mov [ecx+0x4], eax
+		mov eax, dword ptr [randomizer_spawnResult+8]
+		mov [ecx+0x8], eax
+		jmp randDone
+ 
+	randNoStruct:
+		push 0
+		push 0
+		push eax
+		call DoRandomizeSpawn
+		add esp, 12
+		cmp byte ptr [GameHook::swapSpawns_toggle], 1
+		jne applyRandomNoStruct
+		push 0
+		push 0
+		push dword ptr [randomizer_spawnResult]
+		call DoSwapSpawn
+		add esp, 12
+
+	applyRandomNoStruct:
+		mov eax, dword ptr [randomizer_spawnResult]
+		mov [esp+0x28], eax
+	randDone:
 		popad
-		jmp check2
+		jmp originalcode
 
 	popcode:
 		popad
@@ -3624,6 +3757,8 @@ bool install_hook_absolute(uintptr_t location, std::unique_ptr<FunctionHook>& ho
 void GameHook::InitializeDetours(void) {
 	std::random_device rd;
 	GameHook::rng.seed(rd() ^ (unsigned)time(NULL));
+	InitSwapRules();
+
 	install_hook_absolute(0xC78100, uptimeFixHook, &UptimeFixDetour, &uptimeFix_jmp_ret, 6);
 	install_hook_absolute(0x411CD4, inputIconsHook, &InputIconsDetour, &inputIcons_jmp_ret, 13);
 	install_hook_absolute(0x4FC4EF, randomizeCostumeHook, &RandomizeCostumeDetour, &randomizeCostume_jmp_ret, 5);
@@ -3688,7 +3823,7 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	inputIconsValue = cfg.get<int>("inputIconsValue").value_or(0);
 	showComboUI_toggle = cfg.get<bool>("showComboUI_toggle").value_or(false);
 	comboUI_X = cfg.get<float>("comboUI_X").value_or(0.880f);
-	comboUI_Y = cfg.get<float>("comboUI_Y").value_or(0.190f);
+	comboUI_Y = cfg.get<float>("comboUI_Y").value_or(0.218f);
 	enable_scroll_transitions = cfg.get<bool>("enable_scroll_transitions").value_or(true);
 	forceCostume = cfg.get<bool>("forceCostume").value_or(false);
 	tempCostume = cfg.get<int>("tempCostume").value_or(0);
@@ -3865,6 +4000,20 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	saveStatesHotkeys_toggle = cfg.get<bool>("saveStatesHotkeys_toggle").value_or(false);
 	omnicancelTele_toggle = cfg.get<bool>("omnicancelTele_toggle").value_or(false);
 	randomizeSpawns_toggle = cfg.get<bool>("randomizeSpawns_toggle").value_or(false);
+
+	swapSpawns_toggle = cfg.get<bool>("swapSpawns_toggle").value_or(false);
+	for (int i = 0; i < (int)swapRules.size(); i++) {
+		auto& rule = swapRules[i];
+		std::string keyEnabled = "swapRule_" + std::to_string(i) + "_enabled";
+		std::string keyTarget = "swapRule_" + std::to_string(i) + "_target";
+		std::string keyModifier = "swapRule_" + std::to_string(i) + "_modifier";
+		rule.enabled = cfg.get<bool>(keyEnabled).value_or(false);
+		rule.targetIndex = cfg.get<int>(keyTarget).value_or(rule.sourceIndex);
+		rule.spawnModifier = cfg.get<int>(keyModifier).value_or(-1);
+		if (rule.targetIndex < 0 || rule.targetIndex >= (int)spawnTypes.size())
+			rule.targetIndex = rule.sourceIndex;
+	}
+
 	drawPlayerBones_toggle = cfg.get<bool>("drawPlayerBones_toggle").value_or(false);
 	allowSettingThirdAccessory_toggle = cfg.get<bool>("allowSettingThirdAccessory_toggle").value_or(false);
 
@@ -4001,6 +4150,18 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("tauntWithTimeBracelet_toggle", tauntWithTimeBracelet_toggle);
 	cfg.set<bool>("omnicancelTele_toggle", omnicancelTele_toggle);
 	cfg.set<bool>("randomizeSpawns_toggle", randomizeSpawns_toggle);
+
+	cfg.set<bool>("swapSpawns_toggle", swapSpawns_toggle);
+	for (int i = 0; i < (int)swapRules.size(); i++) {
+		const auto& rule = swapRules[i];
+		std::string keyEnabled = "swapRule_" + std::to_string(i) + "_enabled";
+		std::string keyTarget = "swapRule_" + std::to_string(i) + "_target";
+		std::string keyModifier = "swapRule_" + std::to_string(i) + "_modifier";
+		cfg.set<bool>(keyEnabled, rule.enabled);
+		cfg.set<int>(keyTarget, rule.targetIndex);
+		cfg.set<int>(keyModifier, rule.spawnModifier);
+	}
+
 	cfg.set<bool>("drawPlayerBones_toggle", drawPlayerBones_toggle);
 	cfg.set<bool>("drawFlyingStats_toggle", drawFlyingStats_toggle);
 	cfg.set<bool>("allowSettingThirdAccessory_toggle", allowSettingThirdAccessory_toggle);

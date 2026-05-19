@@ -4,6 +4,132 @@
 #include <array>
 #include <chrono>
 
+static const char* GetSpawnName(int id, int variant) {
+    for (const auto& entry : spawnTypes)
+        if (entry.info.id == id && entry.info.variant == variant)
+            return entry.info.name;
+    return "Unknown";
+}
+
+static void DrawEnemySwapper() {
+    ImGui::Checkbox("Enemy Swapper", &GameHook::swapSpawns_toggle);
+    GameHook::help_marker("If you find an enemy that does not swap, its because the game used a variant I don't have listed here. Let me know and I'll add it."
+        "\nIf you want to help, spawn the enemy again and check \"Log Spawns\" on the \"Extras\" tab and let me know what the variant was\n\n"
+        "\"Spawn Modifier\" seems to be able to mean a few different things - sometimes spawn animation, sometimes difficulty.\n"
+        "Setting \"Original\" will keep whatever the game originally used, which may not work on your new enemy\n"
+        "If we can identify these properly I can probably just roll this into enemy selection?? But maybe there's too many, idk\n\n"
+        "You can use this on top of enemy randomizer to ensure certain enemies are what you want them to be");
+
+    if (GameHook::swapSpawns_toggle) {
+        if (ImGui::Button("Reset All")) {
+            for (int i = 0; i < (int)GameHook::swapRules.size(); i++) {
+                auto& rule = GameHook::swapRules[i];
+                rule.targetIndex = rule.sourceIndex;
+                rule.spawnModifier = -1;
+                rule.enabled = false;
+            }
+        }
+
+        ImGui::Separator();
+
+        if (ImGui::BeginTable("enemy_swapper_table", 5, ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_RowBg)) {
+            ImGui::TableSetupColumn("Enabled##EnemySwapper", ImGuiTableColumnFlags_WidthFixed, 30.0f);
+            ImGui::TableSetupColumn("Original Spawn##EnemySwapper", ImGuiTableColumnFlags_WidthStretch, 0.35f);
+            ImGui::TableSetupColumn("Replace With##EnemySwapper", ImGuiTableColumnFlags_WidthStretch, 0.45f);
+            ImGui::TableSetupColumn("Spawn Modifier##EnemySwapper", ImGuiTableColumnFlags_WidthFixed, 120.0f);
+            ImGui::TableSetupColumn("Reset##EnemySwapper", ImGuiTableColumnFlags_WidthFixed, 70.0f);
+            ImGui::TableHeadersRow();
+
+            for (int i = 0; i < (int)GameHook::swapRules.size(); i++) {
+                auto& rule = GameHook::swapRules[i];
+                const auto& source = spawnTypes[rule.sourceIndex];
+                const auto& target = spawnTypes[rule.targetIndex];
+                ImGui::PushID(i);
+                ImGui::TableNextRow();
+                ImGui::TableSetColumnIndex(0);
+                ImGui::Checkbox("##EnemySwapEnabledEnemySwapper", &rule.enabled);
+
+                ImGui::TableSetColumnIndex(1);
+                ImGui::Text("%s", source.info.name);
+                ImGui::TextDisabled("ID 0x%05X, Variant %d", source.info.id, source.info.variant);
+
+                ImGui::TableSetColumnIndex(2);
+                char comboPreview[64];
+                snprintf(comboPreview, sizeof(comboPreview), "%s (v%d)", target.info.name, target.info.variant);
+                ImGui::SetNextItemWidth(-FLT_MIN);
+                if (ImGui::BeginCombo("##target", comboPreview)) {
+                    for (int j = 0; j < (int)spawnTypes.size(); j++) {
+                        const auto& entry = spawnTypes[j];
+                        char label[128];
+                        snprintf(label, sizeof(label), "%s (0x%05X, v%d)", entry.info.name, entry.info.id, entry.info.variant);
+                        bool selected = (j == rule.targetIndex);
+                        if (ImGui::Selectable(label, selected)) {
+                            rule.targetIndex = j;
+                            rule.enabled = true;
+                        }
+                        if (selected)
+                            ImGui::SetItemDefaultFocus();
+                    }
+                    ImGui::EndCombo();
+                }
+
+                ImGui::TableSetColumnIndex(3);
+                ImGui::SetNextItemWidth(-FLT_MIN);
+                if (rule.spawnModifier == -1) {
+                    char defaultLabel[64];
+                    snprintf(defaultLabel, sizeof(defaultLabel), "Original");
+                    if (ImGui::BeginCombo("##spawnModifier", defaultLabel)) {
+                        if (ImGui::Selectable("Original", true))
+                            rule.spawnModifier = -1;
+                        for (int mod = 0; mod <= 10; mod++) {
+                            char label[32];
+                            snprintf(label, sizeof(label), "%d", mod);
+
+                            if (ImGui::Selectable(label, false))
+                                rule.spawnModifier = mod;
+                        }
+                        ImGui::EndCombo();
+                    }
+                }
+                else {
+                    char currentLabel[32];
+                    snprintf(currentLabel, sizeof(currentLabel), "%d", rule.spawnModifier);
+                    if (ImGui::BeginCombo("##spawnModifier", currentLabel)) {
+                        if (ImGui::Selectable("Original", false))
+                            rule.spawnModifier = -1;
+
+                        for (int mod = 0; mod <= 32; mod++) {
+                            char label[32];
+                            snprintf(label, sizeof(label), "%d", mod);
+                            bool selected = mod == rule.spawnModifier;
+                            if (ImGui::Selectable(label, selected))
+                                rule.spawnModifier = mod;
+                            if (selected)
+                                ImGui::SetItemDefaultFocus();
+                        }
+                        ImGui::EndCombo();
+                    }
+                }
+
+                ImGui::TableSetColumnIndex(4);
+                bool isDefault = rule.targetIndex == rule.sourceIndex && rule.spawnModifier == -1 && !rule.enabled;
+                if (isDefault)
+                    ImGui::BeginDisabled();
+
+                if (ImGui::Button("Reset")) {
+                    rule.targetIndex = rule.sourceIndex;
+                    rule.spawnModifier = -1;
+                    rule.enabled = false;
+                }
+                if (isDefault)
+                    ImGui::EndDisabled();
+                ImGui::PopID();
+            }
+            ImGui::EndTable();
+        }
+    }
+}
+
 bool GameHook::forceHairColour_toggle = false;
 Vec3 GameHook::desiredHairColourRGB = { 1.0f, 1.0f, 1.0f };
 float GameHook::desiredHairColourMult = 1.0f;
@@ -167,7 +293,7 @@ static void DrawBayoHookSettings() {
         ImGui::SameLine();
         if (ImGui::Button("Reset##ResetComboUIPositionButton")) {
             GameHook::comboUI_X = 0.880f;
-            GameHook::comboUI_Y = 0.190f;
+            GameHook::comboUI_Y = 0.218f;
         }
         ImGui::Unindent();
     }
@@ -189,7 +315,7 @@ static void DrawAreaJump() {
         }
     }
     const char* preview = areaIDNames[selectedIndex].name;
-    // ImGui::SetNextItemWidth(-FLT_MIN);
+    ImGui::PushItemWidth(GameHook::inputItemWidth*3);
     if (ImGui::BeginCombo("##AreaDropdown", preview)) {
         for (int i = 0; i < IM_ARRAYSIZE(areaIDNames); i++) {
             bool isSelected = (selectedIndex == i);
@@ -214,7 +340,7 @@ static void DrawAreaJump() {
     }
     ImGui::InputInt("Spawn", &spawn, step);
     ImGui::PopItemWidth();
-    GameHook::help_marker("Mostly unused, will change which Alfheim you get in B00 and whether to fight Rodin");
+    GameHook::help_marker("Mostly unused, will change which Alfheim you get in Angel Slayer (B00) and whether to fight Rodin in the shop");
     if (ImGui::Button("Teleport")) {
         GameHook::AreaJump(stageID, stagePart, spawn);
     }
@@ -436,8 +562,8 @@ void GameHook::GameImGui(void) {
             ImGui::SeparatorText("Difficulty");
 
             ImGui::BeginGroup();
-            ImGui::SetNextItemWidth(inputItemWidth);
-            ImGui::Combo("Difficulty", &difficultyValue, "Very Easy\0Easy\0Normal\0Hard\0Non-Stop Infinite Climax\0");
+            ImGui::SetNextItemWidth(inputItemWidth*2);
+            ImGui::Combo("##DifficultyCombo", &difficultyValue, "Very Easy\0Easy\0Normal\0Hard\0Non-Stop Infinite Climax\0");
             help_marker("Override the difficulty set ingame");
 
 			ImGui::SameLine(sameLineWidth);
@@ -481,9 +607,6 @@ void GameHook::GameImGui(void) {
                 GameHook::LessEnemyAttacks(GameHook::lessEnemyAttacks_toggle);
             }
             help_marker("Freeze the timer that starts when an enemy attacks, usually disallowing attacks");
-
-            ImGui::Checkbox("Random Enemy Spawns", &GameHook::randomizeSpawns_toggle);
-            // help_marker("");
 
             ImGui::SeparatorText("Misc");
 
@@ -741,7 +864,7 @@ void GameHook::GameImGui(void) {
 
             DrawAngelSlayer();
 
-            ImGui::SeparatorText("Common Enemy Spawns");
+            ImGui::SeparatorText("Enemy Spawner");
 
             static int selectedEnemyListbox = 0;
             if (ImGui::BeginListBox("##Enemy Spawn Listbox", ImVec2(-FLT_MIN, 20 * ImGui::GetTextLineHeightWithSpacing()))) {
@@ -749,7 +872,7 @@ void GameHook::GameImGui(void) {
                     const bool isSelected = (selectedEnemyListbox == i);
                     if (ImGui::Selectable(spawnList[i].name, isSelected)) {
                         selectedEnemyListbox = i;
-                        const SpawnFromListbox& selected = spawnList[i];
+                        const SpawnInfo& selected = spawnList[i];
                         GameHook::EasySpawnEntityFromHotkey(selected.id, selected.variant, selected.spawnModifier); // we use hotkey call to avoid custom settings
                     }
                     if (isSelected)
@@ -757,6 +880,13 @@ void GameHook::GameImGui(void) {
                 }
                 ImGui::EndListBox();
             }
+
+            ImGui::Checkbox("Random Enemy Spawns", &GameHook::randomizeSpawns_toggle);
+            help_marker("With how often this will crash or soft lock you, I advise using it in Angel Slayer. "
+                "It is very funny seeing cutscenes with incorrect enemies in the story, but you will be spending most of your time restarting the game\n"
+                "Spawn Modifier is set to 0 on every spawn, so randomized enemies are probably easy (e.g. the last boss in Angel Slayer has the last boss set to 6)");
+
+            DrawEnemySwapper();
 
             tabHeight += ImGui::GetCursorPosY();
             ImGui::EndChild();
@@ -1145,6 +1275,13 @@ void GameHook::GameImGui(void) {
                 ImGui::SliderFloat("##PlayerAnimationFrameSliderFloat", &player->animFrame, 0.0f, player->animFrameMax, "%.0f");
             }
 
+            ImGui::Checkbox("Log Spawns", &GameHook::viewEntitySpawns_toggle);
+            GameHook::help_marker("View the ID/arg combos used by the game to spawn entities to aid learning for our own spawner.\n"
+                "This is pretty crashy so be sure to enable/disable it around spawns you wish to observe");
+            ImGui::Indent();
+            GameHook::DisplayRecentlySpawnedEntitiesInImGui();
+            ImGui::Unindent();
+
             ImGui::Checkbox("List all seen effect IDs", &GameHook::identifyEffects_toggle);
             if (GameHook::identifyEffects_toggle) {
 				ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x * 1.0f, 0.0f), ImGuiCond_Once, ImVec2(1.0f, 0));
@@ -1404,15 +1541,6 @@ void GameHook::GameImGui(void) {
                 else
                     ImGui::Text("Load in to a stage to see these stats");
                 ImGui::TreePop();
-            }
-
-            if (ImGui::CollapsingHeader("Recent Spawns")) {
-                ImGui::Indent();
-                ImGui::Checkbox("Log Spawns", &GameHook::viewEntitySpawns_toggle);
-                GameHook::help_marker("View the ID/arg combos used by the game to spawn entities to aid learning for our own spawner.\n"
-                    "This is pretty crashy so be sure to enable/disable it around spawns you wish to observe");
-                GameHook::DisplayRecentlySpawnedEntitiesInImGui();
-                ImGui::Unindent();
             }
 
             tabHeight += ImGui::GetCursorPosY();

@@ -253,6 +253,8 @@ public:
 	static bool omnicancelTele_toggle;
 	static bool viewEntitySpawns_toggle;
 	static bool randomizeSpawns_toggle;
+	static std::vector<SwapRule> swapRules;
+	static bool swapSpawns_toggle;
 	static void DisplayRecentlySpawnedEntitiesInImGui();
 
 	static bool damageDealtMultiplier_toggle;
