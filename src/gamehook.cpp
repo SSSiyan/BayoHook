@@ -28,6 +28,8 @@ utility::Hotkey* GameHook::hk_enemy_one_hit_kill;
 utility::Hotkey* GameHook::hk_inf_jumps;
 utility::Hotkey* GameHook::hk_no_clip;
 utility::Hotkey* GameHook::hk_force_summoning_clothes;
+utility::Hotkey* GameHook::hk_end_current_fight;
+int GameHook::current_fight_timer = 0; // set it back to default after toggling it for a sec so we don't end a whole verse of Angel Slayer
 utility::Hotkey* GameHook::hk_save_state;
 utility::Hotkey* GameHook::hk_load_state;
 utility::Hotkey* GameHook::hk_spawn_affinity_spear;
@@ -3851,6 +3853,7 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	hk_inf_jumps = g_hotkeys.emplace_back(utility::create_keyboard_hotkey({ VK_F4 }, "Infinite Jumps", "hk_inf_jumps")).get();
 	hk_no_clip = g_hotkeys.emplace_back(utility::create_keyboard_hotkey({ VK_F5 }, "Noclip", "hk_no_clip")).get();
 	hk_force_summoning_clothes = g_hotkeys.emplace_back(utility::create_keyboard_hotkey({ VK_F6 }, "Force Summoning Clothes", "hk_force_summoning_clothes")).get();
+	hk_end_current_fight = g_hotkeys.emplace_back(utility::create_keyboard_hotkey({ VK_F11 }, "End Current Fight", "hk_end_current_fight")).get();
 	hk_save_state = g_hotkeys.emplace_back(utility::create_keyboard_hotkey({ VK_HOME }, "Save State", "hk_save_state")).get();
 	hk_load_state = g_hotkeys.emplace_back(utility::create_keyboard_hotkey({ VK_END }, "Load State", "hk_load_state")).get();
 	hk_spawn_affinity_spear = g_hotkeys.emplace_back(utility::create_keyboard_hotkey({ VK_LCONTROL, VK_F1 }, "Spawn Affinity (Spear)", "hk_spawn_affinity_spear")).get();

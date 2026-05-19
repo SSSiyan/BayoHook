@@ -3,6 +3,7 @@
 #include "gamehook.hpp"
 #include <array>
 #include "misc/FontRoboto.cpp"
+
 #ifndef SPEEDRUN_BUILD
 static void UpdateGameSpeed() {
 	static LARGE_INTEGER s_lastQPC = {};
@@ -60,17 +61,29 @@ static void HotkeyStuff() {
 		GameHook::InfJumps(GameHook::infJumps_toggle);
 		GameHook::DisplayMessageText("Infinite Jumps", GameHook::infJumps_toggle);
 	}
-
 	if (GameHook::hk_no_clip->check(GameHook::g_input)) {
 		GameHook::noClip_toggle = !GameHook::noClip_toggle;
 		GameHook::NoClip(GameHook::noClip_toggle);
 		GameHook::DisplayMessageText("No Clip", GameHook::noClip_toggle);
 	}
-
 	if (GameHook::hk_force_summoning_clothes->check(GameHook::g_input)) {
 		GameHook::forceSummoningClothes_toggle = !GameHook::forceSummoningClothes_toggle;
 		GameHook::ForceSummoningClothes(GameHook::forceSummoningClothes_toggle);
 		GameHook::DisplayMessageText("Force Summoning Clothes", GameHook::forceSummoningClothes_toggle);
+	}
+	if (GameHook::hk_end_current_fight->check(GameHook::g_input)) {
+		if (GameHook::GetLocalPlayer()) {
+			*(int*)0x51ADE44 = 0x10000000;
+			GameHook::DisplayMessageText("End Current Fight");
+			GameHook::current_fight_timer = 5;
+		}
+	}
+	if (GameHook::current_fight_timer > 0) {
+		GameHook::current_fight_timer--;
+		if (GameHook::current_fight_timer <= 0) {
+			GameHook::current_fight_timer = 0;
+			*(int*)0x51ADE44 = 0;
+		}
 	}
 
 	if (GameHook::hk_save_state->check(GameHook::g_input) && GameHook::saveStatesHotkeys_toggle) GameHook::SaveStates_SaveState();

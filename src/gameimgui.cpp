@@ -884,7 +884,8 @@ void GameHook::GameImGui(void) {
             ImGui::Checkbox("Random Enemy Spawns", &GameHook::randomizeSpawns_toggle);
             help_marker("With how often this will crash or soft lock you, I advise using it in Angel Slayer. "
                 "It is very funny seeing cutscenes with incorrect enemies in the story, but you will be spending most of your time restarting the game\n"
-                "Spawn Modifier is set to 0 on every spawn, so randomized enemies are probably easy (e.g. the last boss in Angel Slayer has the last boss set to 6)");
+                "Spawn Modifier is set to 0 on every spawn, so randomized enemies are probably easy (e.g. the last boss in Angel Slayer has the last boss set to 6)\n"
+                "Hit F11 (default) to attempt to kill all spawned enemies if you get softlocked");
 
             DrawEnemySwapper();
 

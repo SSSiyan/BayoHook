@@ -55,6 +55,8 @@ public:
 	static utility::Hotkey* hk_inf_jumps;
 	static utility::Hotkey* hk_no_clip;
 	static utility::Hotkey* hk_force_summoning_clothes;
+	static utility::Hotkey* hk_end_current_fight;
+	static int current_fight_timer;
 	static utility::Hotkey* hk_save_state;
 	static utility::Hotkey* hk_load_state;
 

@@ -1192,9 +1192,9 @@ static const std::vector<SpawnEntry> spawnTypes = {
     {{"Brave", 0x20073, 0, 0}, SpawnCategory::EnemyTier1},
     {{"Beloved (Silver)", 0x20074, 0, 0}, SpawnCategory::EnemyTier2},
     {{"Joy", 0x20080, 0, 0}, SpawnCategory::EnemyTier2},
-    {{"Golem", 0x20090, 0, 0}, SpawnCategory::EnemyTier2},
     {{"Kinship", 0x200A0, 0, 0}, SpawnCategory::EnemyTier2},
 
+    {{"Golem", 0x20090, 0, 0}, SpawnCategory::EnemyBoss},
     {{"Fortitudo (Green)", 0x200B0, 0, 0}, SpawnCategory::EnemyBoss},
     {{"Balder", 0x20500, 0, 0}, SpawnCategory::EnemyBoss},
     {{"Father Rodin (Unkillable)", 0x20510, 0, 0}, SpawnCategory::EnemyBoss},
