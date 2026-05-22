@@ -189,6 +189,9 @@ public:
 	static bool multiplayerPatch_toggle;
 	static void MultiplayerPatch(bool enabled);
 
+	//static bool player2Controller2_toggle;
+	static void Player2Controller(int id);
+
 	static bool noEnragedHitstop_toggle;
 	static void NoEnragedHitstop(bool enabled);
 
@@ -308,6 +311,7 @@ public:
 #endif
 	// addresses
 	static uintptr_t playerPointerAddress;
+	static uintptr_t player2PointerAddress;
 	static uintptr_t enemyLockedOnAddress;
 	static uintptr_t comboMultiplierAddress;
 	static uintptr_t comboPointsAddress;
@@ -382,7 +386,8 @@ public:
 #endif
 
 	// dev functions
-	static LocalPlayer* GetLocalPlayer();;
+	static LocalPlayer* GetLocalPlayer();
+	static LocalPlayer* GetPlayer2();
 
 	struct HotkeyMessage {
 		std::string text;

@@ -65,6 +65,7 @@ int GameHook::tempCostume = 0;
 
 // update
 uintptr_t GameHook::playerPointerAddress = 0xEF5A60;
+uintptr_t GameHook::player2PointerAddress = 0x5B6075C;
 uintptr_t GameHook::enemyLockedOnAddress = 0xF2B744;
 uintptr_t GameHook::comboPointsAddress = 0x5BB519C;
 uintptr_t GameHook::comboMultiplierAddress = 0x5BB51A0;
@@ -488,6 +489,13 @@ void GameHook::MultiplayerPatch(bool enabled) {
 	else {
 		GameHook::_patch((char*)(0x8BD007), (char*)"\x74", 1); // je Bayonetta.exe+4BD00F
 	}
+}
+
+//bool GameHook::player2Controller2_toggle = false;
+void GameHook::Player2Controller(int id) {
+	LocalPlayer* player2 = GameHook::GetPlayer2();
+	if (player2)
+		player2->controllerNum = id;
 }
 
 bool GameHook::noEnragedHitstop_toggle = false;
@@ -3432,6 +3440,13 @@ void GameHook::WeaponSwapCaller(void) {
 #endif
 
 LocalPlayer* GameHook::GetLocalPlayer() {
+	if (LocalPlayer* player = *(LocalPlayer**)GameHook::playerPointerAddress)
+		return player;
+	else
+		return nullptr;
+}
+
+LocalPlayer* GameHook::GetPlayer2() {
 	if (LocalPlayer* player = *(LocalPlayer**)GameHook::playerPointerAddress)
 		return player;
 	else

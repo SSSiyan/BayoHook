@@ -153,7 +153,7 @@ struct LocalPlayer {
     int moveID; // 0x34c
     int movePart; // 0x350
     int invincibility; // 0x354
-    int summoningSomething; // 0x358
+    int controllerNum; // 0x358
     char pad_35c[0x88];
     float animFrame; // 0x3E4
     char pad_3e8[0x3C];
@@ -853,7 +853,7 @@ static const EntityInfo knownEntities[] = {
     {"Player Bayonetta P.E. A", 0x10025},
     {"Player Bayonetta P.E. B", 0x10026},
     {"Player Bayonetta P.E. C", 0x10027},
-    {"Player Bayonetta d'Arc maybe", 0x1002b},
+    {"Player Bayonetta d'Arc", 0x1002b},
     {"Player Bayonetta Umbra", 0x1002c},
     {"Player Bayonetta Various A", 0x1002d},
     {"Player Bayonetta Various B", 0x1002e},
@@ -870,6 +870,10 @@ static const EntityInfo knownEntities[] = {
     {"Jeanne Sleeve Hair", 0x1004C},
     {"Nude Jeanne", 0x1004E},
     {"Detached Spot", 0x200B7},
+    {"Player Jeanne P.E. A", 0x10061},
+    {"Player Jeanne P.E. B", 0x10061},
+    {"Player Jeanne P.E. C", 0x10062},
+    {"Player Jeanne Formal B", 0x10064},
     {"Player Jeanne Old", 0x10066},
     {"Player Jeanne Umbra", 0x10067},
     {"Player Jeanne Various A", 0x10068},
@@ -1085,6 +1089,10 @@ static const SpawnInfo spawnList[] = {
     // {"Player Bayonetta Various B", 0x1002e, 0, 0},
     // {"Player Bayonetta Various C", 0x1002f, 0, 0},
     // {"Player Bayonetta Old", 0x10030, 0, 0},
+    // {"Player Jeanne P.E. A", 0x10061, 0, 0},
+    // {"Player Jeanne P.E. B", 0x10061, 0, 0},
+    // {"Player Jeanne P.E. C", 0x10062, 0, 0},
+    // {"Player Jeanne Formal B", 0x10064, 0, 0},
     // {"Player Jeanne Old", 0x10066, 0, 0},
     // {"Player Jeanne Umbra", 0x10067, 0, 0},
     // {"Player Jeanne Various A", 0x10068, 0, 0},
@@ -1220,6 +1228,45 @@ struct SwapRule {
     int targetIndex;
     int spawnModifier;
     bool enabled;
+};
+
+struct PlayerCharacterSpawn {
+    const char* name;
+    int id;
+};
+
+static PlayerCharacterSpawn coop_characters[] = {
+    { "Bayonetta", 0x10000 },
+    { "Bayonetta (d'Arc)", 0x1002b },
+    { "Bayonetta (Nun)", 0x10089 },
+    { "Bayonetta (Queen)", 0x1008a },
+    { "Bayonetta (Old)", 0x10030 },
+    { "Bayonetta (Umbra)", 0x1002c },
+    { "Bayonetta (P.E. A)", 0x10025 },
+    { "Bayonetta (P.E. B)", 0x10026 },
+    { "Bayonetta (P.E. C)", 0x10027 },
+    { "Bayonetta (Various A)", 0x1002d },
+    { "Bayonetta (Various B)", 0x1002e },
+    { "Bayonetta (Various C)", 0x1002f },
+    { "Bayonetta (Komachi) A", 0x10083 },
+    { "Bayonetta (Komachi) B", 0x10085 },
+    { "Bayonetta (Komachi) C", 0x10087 },
+
+    { "Jeanne (Formal)", 0x10020 },
+    { "Jeanne (Formal) B", 0x10064 },
+    { "Jeanne (Nun)", 0x10074 },
+    { "Jeanne (Queen)", 0x10075 },
+    { "Jeanne (Old)", 0x10066 },
+    { "Jeanne (Umbra)", 0x10067 },
+    { "Jeanne (P.E.) A", 0x10061 },
+    { "Jeanne (P.E.) B", 0x10061 },
+    { "Jeanne (P.E.) C", 0x10062 },
+    { "Jeanne (Various) A", 0x10068 },
+    { "Jeanne (Various) B", 0x10069 },
+    { "Jeanne (Various) C", 0x1006A },
+    { "Jeanne (Komachi) A", 0x1006E },
+    { "Jeanne (Komachi) B", 0x10070 },
+    { "Jeanne (Komachi) C", 0x10072 },
 };
 
 #endif

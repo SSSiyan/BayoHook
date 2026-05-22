@@ -1147,10 +1147,33 @@ void GameHook::GameImGui(void) {
 
             ImGui::SeparatorText("Other");
 
-            if (ImGui::Checkbox("Multiplayer Patch", &GameHook::multiplayerPatch_toggle)) {
+            if (ImGui::Checkbox("Multiplayer Camera Patch", &GameHook::multiplayerPatch_toggle)) {
                 GameHook::MultiplayerPatch(GameHook::multiplayerPatch_toggle);
             }
-            help_marker("This is very hacky and probably breaks a lot. This is intended to stop the camera jumping between multiple spawned player characters");
+            help_marker("Stops the camera jumping between multiple spawned player characters that are controlled by the same player");
+
+            ImGui::SeparatorText("Co-op");
+
+            static int g_selected_character = 0;
+            const char* preview = coop_characters[g_selected_character].name;
+            ImGui::SetNextItemWidth(inputItemWidth);
+            if (ImGui::BeginCombo("Character 2", preview)) {
+                for (int i = 0; i < IM_ARRAYSIZE(coop_characters); i++) {
+                    bool selected = (g_selected_character == i);
+                    if (ImGui::Selectable(coop_characters[i].name, selected)) {
+                        g_selected_character = i;
+                    }
+                    if (selected)
+                        ImGui::SetItemDefaultFocus();
+                }
+                ImGui::EndCombo();
+            }
+            ImGui::Spacing();
+
+            if (ImGui::Button("Spawn co-op character and set them to controller 2")) {
+                int id = coop_characters[g_selected_character].id;
+                GameHook::EasySpawnEntityFromHotkey(id, 1, 0);
+            }
 
             // entity spawn stuff
             {
@@ -1441,7 +1464,7 @@ void GameHook::GameImGui(void) {
                     ImGui::Combo("+34C moveID", &player->moveID, moveIDNames, IM_ARRAYSIZE(moveIDNames));
                     ImGui::InputInt("+350 movePart", &player->movePart);
                     ImGui::InputInt("+354 invincibility", &player->invincibility);
-                    ImGui::InputInt("+358 summoningSomething", &player->summoningSomething);
+                    ImGui::InputInt("+358 controllerNum", &player->controllerNum);
                     ImGui::InputFloat("+3E4 animFrame", &player->animFrame);
                     ImGui::InputFloat("+4C4 speed", &player->speed);
                     ImGui::InputInt("+69C aerial", &player->aerial);
