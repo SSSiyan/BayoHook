@@ -1175,6 +1175,14 @@ void GameHook::GameImGui(void) {
                 GameHook::EasySpawnEntityFromHotkey(id, 1, 0);
             }
 
+            if (ImGui::Button("Teleport player 2 to player 1")) {
+				LocalPlayer* player1 = GetLocalPlayer();
+				if (!player1) { return; }
+                LocalPlayer* player2 = GameHook::GetPlayer2();
+                if (!player2) { return; }
+                player2->pos = player1->pos;
+            }
+
             // entity spawn stuff
             {
                 const int knownEntityCount = sizeof(knownEntities) / sizeof(knownEntities[0]);

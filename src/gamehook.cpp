@@ -65,7 +65,7 @@ int GameHook::tempCostume = 0;
 
 // update
 uintptr_t GameHook::playerPointerAddress = 0xEF5A60;
-uintptr_t GameHook::player2PointerAddress = 0x5B6075C;
+uintptr_t GameHook::player2PointerAddress = 0xF30190;
 uintptr_t GameHook::enemyLockedOnAddress = 0xF2B744;
 uintptr_t GameHook::comboPointsAddress = 0x5BB519C;
 uintptr_t GameHook::comboMultiplierAddress = 0x5BB51A0;
@@ -3447,7 +3447,7 @@ LocalPlayer* GameHook::GetLocalPlayer() {
 }
 
 LocalPlayer* GameHook::GetPlayer2() {
-	if (LocalPlayer* player = *(LocalPlayer**)GameHook::playerPointerAddress)
+	if (LocalPlayer* player = *(LocalPlayer**)GameHook::player2PointerAddress)
 		return player;
 	else
 		return nullptr;
