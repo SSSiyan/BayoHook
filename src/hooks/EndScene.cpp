@@ -86,35 +86,40 @@ static void HotkeyStuff() {
 		}
 	}
 
-	if (GameHook::hk_save_state->check(GameHook::g_input) && GameHook::saveStatesHotkeys_toggle) GameHook::SaveStates_SaveState();
-	if (GameHook::hk_load_state->check(GameHook::g_input) && GameHook::saveStatesHotkeys_toggle) GameHook::SaveStates_LoadState();
-	if (GameHook::hk_save_state->check(GameHook::g_input) && GameHook::saveStatesHotkeys_toggle) GameHook::SaveStates_SaveState();
-	if (GameHook::hk_load_state->check(GameHook::g_input) && GameHook::saveStatesHotkeys_toggle) GameHook::SaveStates_LoadState();
-	if (GameHook::hk_spawn_affinity_spear->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x20000, 1, 0);
-	if (GameHook::hk_spawn_affinity_trumpet->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x20000, 2, 0);
-	if (GameHook::hk_spawn_applaud_spear->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x20000, 4, 0);
-	if (GameHook::hk_spawn_applaud_greatsword->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x20000, 5, 0);
-	if (GameHook::hk_spawn_enchant->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x20030, 0, 0);
-	if (GameHook::hk_spawn_ardor_greatsword->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x20004, 0, 0);
-	if (GameHook::hk_spawn_ardor_axe->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x20004, 1, 0);
-	if (GameHook::hk_spawn_affinity_laser->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x20002, 0, 0);
-	if (GameHook::hk_spawn_fearless->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x20050, 0, 0);
-	if (GameHook::hk_spawn_fairness->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x20051, 0, 0);
-	if (GameHook::hk_spawn_harmony->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x20060, 0, 0);
-	if (GameHook::hk_spawn_brave->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x20073, 0, 0);
-	if (GameHook::hk_spawn_joy->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x20080, 0, 0);
-	if (GameHook::hk_spawn_grace->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x20040, 0, 0);
-	if (GameHook::hk_spawn_glory->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x20041, 0, 0);
-	if (GameHook::hk_spawn_gracious->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x20042, 0, 0);
-	if (GameHook::hk_spawn_glorious->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x20043, 0, 0);
-	if (GameHook::hk_spawn_kinship->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x200A0, 0, 0);
-	if (GameHook::hk_spawn_beloved->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x20074, 0, 0);
-	if (GameHook::hk_spawn_golem->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x20090, 0, 0);
-	if (GameHook::hk_spawn_fortitudo->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x200B0, 0, 0);
-	if (GameHook::hk_spawn_balder->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x20500, 0, 0);
-	if (GameHook::hk_spawn_jeanne_formal->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x21002, 0, 0);
-	if (GameHook::hk_spawn_bayonetta->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x21003, 0, 0);
-	GameHook::g_input.update();
+	DWORD foregroundPid = 0;
+	HWND hwnd = GetForegroundWindow();
+	GetWindowThreadProcessId(hwnd, &foregroundPid);
+	if (foregroundPid == GetCurrentProcessId()) {
+		if (GameHook::hk_save_state->check(GameHook::g_input) && GameHook::saveStatesHotkeys_toggle) GameHook::SaveStates_SaveState();
+		if (GameHook::hk_load_state->check(GameHook::g_input) && GameHook::saveStatesHotkeys_toggle) GameHook::SaveStates_LoadState();
+		if (GameHook::hk_save_state->check(GameHook::g_input) && GameHook::saveStatesHotkeys_toggle) GameHook::SaveStates_SaveState();
+		if (GameHook::hk_load_state->check(GameHook::g_input) && GameHook::saveStatesHotkeys_toggle) GameHook::SaveStates_LoadState();
+		if (GameHook::hk_spawn_affinity_spear->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x20000, 1, 0);
+		if (GameHook::hk_spawn_affinity_trumpet->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x20000, 2, 0);
+		if (GameHook::hk_spawn_applaud_spear->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x20000, 4, 0);
+		if (GameHook::hk_spawn_applaud_greatsword->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x20000, 5, 0);
+		if (GameHook::hk_spawn_enchant->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x20030, 0, 0);
+		if (GameHook::hk_spawn_ardor_greatsword->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x20004, 0, 0);
+		if (GameHook::hk_spawn_ardor_axe->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x20004, 1, 0);
+		if (GameHook::hk_spawn_affinity_laser->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x20002, 0, 0);
+		if (GameHook::hk_spawn_fearless->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x20050, 0, 0);
+		if (GameHook::hk_spawn_fairness->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x20051, 0, 0);
+		if (GameHook::hk_spawn_harmony->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x20060, 0, 0);
+		if (GameHook::hk_spawn_brave->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x20073, 0, 0);
+		if (GameHook::hk_spawn_joy->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x20080, 0, 0);
+		if (GameHook::hk_spawn_grace->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x20040, 0, 0);
+		if (GameHook::hk_spawn_glory->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x20041, 0, 0);
+		if (GameHook::hk_spawn_gracious->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x20042, 0, 0);
+		if (GameHook::hk_spawn_glorious->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x20043, 0, 0);
+		if (GameHook::hk_spawn_kinship->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x200A0, 0, 0);
+		if (GameHook::hk_spawn_beloved->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x20074, 0, 0);
+		if (GameHook::hk_spawn_golem->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x20090, 0, 0);
+		if (GameHook::hk_spawn_fortitudo->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x200B0, 0, 0);
+		if (GameHook::hk_spawn_balder->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x20500, 0, 0);
+		if (GameHook::hk_spawn_jeanne_formal->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x21002, 0, 0);
+		if (GameHook::hk_spawn_bayonetta->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x21003, 0, 0);
+		GameHook::g_input.update();
+	}
 }
 
 HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice) {

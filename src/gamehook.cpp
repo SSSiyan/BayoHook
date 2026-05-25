@@ -257,6 +257,16 @@ void GameHook::ForceCutsceneFace(bool enabled) {
 	}
 }
 
+bool GameHook::runWithGuns_toggle = false;
+void GameHook::RunWithGuns(bool enabled) {
+	if (enabled) {
+		GameHook::_patch((char*)(0x8E9D39), (char*)"\x90\x90\x90\x90\x90\x90", 6); // nop 6
+	}
+	else {
+		GameHook::_patch((char*)(0x8E9D39), (char*)"\x89\xBE\xBC\x6D\x09\x00", 6); // mov [esi+00096DBC],edi
+	}
+}
+
 bool GameHook::noClip_toggle = false;
 void GameHook::NoClip(bool enabled) {
 	if (enabled)
@@ -3921,6 +3931,8 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	DisableDaze(disableDaze_toggle);
 	forceCutsceneFace_toggle = cfg.get<bool>("forceCutsceneFace_toggle").value_or(false);
 	ForceCutsceneFace(forceCutsceneFace_toggle);
+	runWithGuns_toggle = cfg.get<bool>("runWithGuns_toggle").value_or(false);
+	RunWithGuns(runWithGuns_toggle);
 	forceDaze_toggle = cfg.get<bool>("forceDaze_toggle").value_or(false);
 	ForceDaze(forceDaze_toggle);
 	freezeTimer_toggle = cfg.get<bool>("freezeTimer_toggle").value_or(false);
@@ -4103,6 +4115,7 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("infJumps_toggle", infJumps_toggle);
 	cfg.set<bool>("disableDaze_toggle", disableDaze_toggle);
 	cfg.set<bool>("forceCutsceneFace_toggle", forceCutsceneFace_toggle);
+	cfg.set<bool>("runWithGuns_toggle", runWithGuns_toggle);
 	cfg.set<bool>("forceDaze_toggle", forceDaze_toggle);
 	cfg.set<bool>("freezeTimer_toggle", freezeTimer_toggle);
 	cfg.set<bool>("showMessages_toggle", showMessages_toggle);

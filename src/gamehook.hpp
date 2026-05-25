@@ -88,6 +88,9 @@ public:
 	static bool forceCutsceneFace_toggle;
 	static void ForceCutsceneFace(bool enabled);
 
+	static bool runWithGuns_toggle;
+	static void RunWithGuns(bool enabled);
+
 	static bool disableFpsLimiter_toggle;
 	static void DisableFpsLimiter(bool enabled);
 

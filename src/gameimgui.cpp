@@ -852,6 +852,13 @@ void GameHook::GameImGui(void) {
                 GameHook::ForceCutsceneFace(GameHook::forceCutsceneFace_toggle);
             }
 
+            ImGui::SameLine(sameLineWidth);
+
+            if (ImGui::Checkbox("Run With Guns", &GameHook::runWithGuns_toggle)) {
+                GameHook::RunWithGuns(GameHook::runWithGuns_toggle);
+            }
+            help_marker("Stop your guns disappearing when you run");
+
             tabHeight += ImGui::GetCursorPosY();
             ImGui::EndChild();
             ImGui::EndTabItem();

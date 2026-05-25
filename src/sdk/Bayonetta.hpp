@@ -142,7 +142,7 @@ struct LocalPlayer {
     char pad_4[0xcc];
     Vec3 pos; // 0xd0
     char pad_dc[0x4];
-    Vec3 rot; // 0xe
+    Vec3 rot; // 0xe0
     char pad_ec[0x4];
     Vec3 scale; // 0xf0
     char pad_fc[0x218];
