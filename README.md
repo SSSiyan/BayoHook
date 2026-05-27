@@ -18,3 +18,11 @@ Please back up your save before using this hook. Savedata can be found in `C:\Pr
 
 ## Instructions
 For help regarding usage of the trainer, check our [wiki.](https://github.com/SSSiyan/BayoHook/wiki)
+
+## Speedrun edition builds
+
+The solution includes `DebugSpeedrun|x86` and `ReleaseSpeedrun|x86` configurations. These define `SPEEDRUN_BUILD` at compile time, so contributors can build the speedrun edition without editing `src/gamehook.hpp`.
+
+Use `ReleaseSpeedrun|x86` for a candidate DLL and keep the output filename as `dinput8.dll` when placing it beside `Bayonetta.exe`.
+
+The speedrun edition keeps the speedrun-specific UI path, including the proof badge overlay and non-gameplay quality-of-life settings exposed by `SPEEDRUN_BUILD`. It does not by itself certify leaderboard legality or prove high-refresh/delta-time behavior; those still need in-game Windows validation by runners and maintainers.
