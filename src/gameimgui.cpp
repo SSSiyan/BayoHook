@@ -4,13 +4,6 @@
 #include <array>
 #include <chrono>
 
-static const char* GetSpawnName(int id, int variant) {
-    for (const auto& entry : spawnTypes)
-        if (entry.info.id == id && entry.info.variant == variant)
-            return entry.info.name;
-    return "Unknown";
-}
-
 static void DrawEnemySwapper() {
     ImGui::Checkbox("Enemy Swapper", &GameHook::swapSpawns_toggle);
     GameHook::help_marker("If you find an enemy that does not swap, its because the game used a variant I don't have listed here. Let me know and I'll add it."
@@ -21,12 +14,75 @@ static void DrawEnemySwapper() {
         "You can use this on top of enemy randomizer to ensure certain enemies are what you want them to be");
 
     if (GameHook::swapSpawns_toggle) {
+        static int setAllTargetIndex = 0;
+        static int setAllSpawnModifier = -1;
         if (ImGui::Button("Reset All")) {
             for (int i = 0; i < (int)GameHook::swapRules.size(); i++) {
                 auto& rule = GameHook::swapRules[i];
                 rule.targetIndex = rule.sourceIndex;
                 rule.spawnModifier = -1;
                 rule.enabled = false;
+            }
+        }
+
+        if (ImGui::Button("Set All To:")) {
+            for (int i = 0; i < (int)GameHook::swapRules.size(); i++) {
+                auto& rule = GameHook::swapRules[i];
+
+                rule.targetIndex = setAllTargetIndex;
+                rule.spawnModifier = setAllSpawnModifier;
+                rule.enabled = true;
+            }
+        }
+        ImGui::SameLine();
+        char setAllPreview[128];
+        snprintf(setAllPreview, sizeof(setAllPreview), "%s (v%d)", spawnTypes[setAllTargetIndex].info.name, spawnTypes[setAllTargetIndex].info.variant);
+        ImGui::SetNextItemWidth(GameHook::inputItemWidth * 2);
+        if (ImGui::BeginCombo("##SetAllEnemyTarget", setAllPreview)) {
+            for (int i = 0; i < (int)spawnTypes.size(); i++) {
+                const auto& entry = spawnTypes[i];
+                char label[128];
+                snprintf(label, sizeof(label), "%s (0x%05X, v%d)", entry.info.name, entry.info.id, entry.info.variant);
+                bool selected = (i == setAllTargetIndex);
+                if (ImGui::Selectable(label, selected))
+                    setAllTargetIndex = i;
+                if (selected)
+                    ImGui::SetItemDefaultFocus();
+            }
+            ImGui::EndCombo();
+        }
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(GameHook::inputItemWidth);
+        if (setAllSpawnModifier == -1) {
+            if (ImGui::BeginCombo("##SetAllSpawnModifier", "Original")) {
+                if (ImGui::Selectable("Original", true))
+                    setAllSpawnModifier = -1;
+                for (int mod = 0; mod <= 32; mod++) {
+                    char label[32];
+                    snprintf(label, sizeof(label), "%d", mod);
+
+                    if (ImGui::Selectable(label, false))
+                        setAllSpawnModifier = mod;
+                }
+                ImGui::EndCombo();
+            }
+        }
+        else {
+            char currentLabel[32];
+            snprintf(currentLabel, sizeof(currentLabel), "%d", setAllSpawnModifier);
+            if (ImGui::BeginCombo("##SetAllSpawnModifier", currentLabel)) {
+                if (ImGui::Selectable("Original", false))
+                    setAllSpawnModifier = -1;
+                for (int mod = 0; mod <= 32; mod++) {
+                    char label[32];
+                    snprintf(label, sizeof(label), "%d", mod);
+                    bool selected = (mod == setAllSpawnModifier);
+                    if (ImGui::Selectable(label, selected))
+                        setAllSpawnModifier = mod;
+                    if (selected)
+                        ImGui::SetItemDefaultFocus();
+                }
+                ImGui::EndCombo();
             }
         }
 
@@ -403,7 +459,7 @@ static void DrawFPSUnlock() {
     GameHook::help_marker("If Bayonetta has been open for a long time you will experience small stutters. This option disables the built in FPS limiter so you can use an external limiter instead, which circumvents the issue");
 
     if (ImGui::Checkbox("Link Game Logic To Delta Time", &GameHook::linkGameToDelta_toggle)) {
-        //GameHook::LinkGameToDelta(GameHook::linkGameToDelta_toggle);
+        GameHook::LinkGameToDelta(GameHook::linkGameToDelta_toggle);
     }
     GameHook::help_marker("This is broken atm but when I figure this out we'll all be playing Bayo at 244hz without breaking everything, surely");
 #endif
@@ -1184,10 +1240,9 @@ void GameHook::GameImGui(void) {
 
             if (ImGui::Button("Teleport player 2 to player 1")) {
 				LocalPlayer* player1 = GetLocalPlayer();
-				if (!player1) { return; }
                 LocalPlayer* player2 = GameHook::GetPlayer2();
-                if (!player2) { return; }
-                player2->pos = player1->pos;
+                if (player1 && player2)
+                    player2->pos = player1->pos;
             }
 
             // entity spawn stuff

@@ -18,6 +18,8 @@ static void UpdateGameSpeed() {
 	s_lastQPC = now;
 	GameHook::deltaTime = gameFpsDelta;
 	GameHook::deltaSpeed = gameFpsDelta / 16.6667f;
+	GameHook::deltaSpeed2 = GameHook::deltaSpeed * 2.0f;
+	GameHook::deltaSpeed3 = GameHook::deltaSpeed * 3.0f;
 }
 
 static void SetGameSpeed() {

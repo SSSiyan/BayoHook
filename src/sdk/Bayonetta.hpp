@@ -1170,6 +1170,13 @@ struct SpawnEntry {
 
 // break possible swaps into types, so enemies can only be swapped with enemies etc
 // this is also used for enemy swapper, but tier is ignored
+/*  
+    const char* name;
+    int id;
+    int variant;
+    int spawnModifier;
+    int tier
+*/
 static const std::vector<SpawnEntry> spawnTypes = {
     {{"Affinity (Spear)", 0x20000, 1, 0}, SpawnCategory::EnemyTier1},
     {{"Affinity (Trumpet)", 0x20000, 2, 0}, SpawnCategory::EnemyTier1},

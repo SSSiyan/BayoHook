@@ -28,6 +28,8 @@ class GameHook {
 public:
 	static float deltaTime;
 	static float deltaSpeed;
+	static float deltaSpeed2;
+	static float deltaSpeed3;
 	static std::mt19937 rng;
 	// patches
 	static bool focusPatch_toggle;

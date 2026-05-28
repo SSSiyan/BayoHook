@@ -4,6 +4,8 @@
 // system
 float GameHook::deltaTime = 0.0f;
 float GameHook::deltaSpeed = 0.0f;
+float GameHook::deltaSpeed2 = 0.0f;
+float GameHook::deltaSpeed3 = 0.0f;
 bool GameHook::enable_scroll_transitions = false;
 float GameHook::windowScalingFactor = 1.0f;
 float GameHook::bayoHookFontSize = 16.0f;
@@ -149,21 +151,55 @@ void GameHook::DisableFpsLimiter(bool enabled) {
 	}
 }
 
-static __declspec(naked) void MovDeltaTimePatch(void) {
+/*static __declspec(naked) void MovDeltaTimePatch(void) {
 	_asm {
 		mov eax, [GameHook::deltaTime]
+	}
+}*/
+static __declspec(naked) void fldDeltaSpeed1(void) {
+	_asm {
+		fld dword ptr [GameHook::deltaSpeed]
+	}
+}
+static __declspec(naked) void movssXmm0DeltaSpeed1(void) {
+	_asm {
+		movss xmm0, [GameHook::deltaSpeed]
+	}
+}
+static __declspec(naked) void movssXmm1DeltaSpeed3(void) {
+	_asm {
+		movss xmm1, [GameHook::deltaSpeed3]
+	}
+}
+static __declspec(naked) void movssXmm2DeltaSpeed1(void) {
+	_asm {
+		movss xmm2, [GameHook::deltaSpeed]
+	}
+}
+static __declspec(naked) void movssXmm3DeltaSpeed2(void) {
+	_asm {
+		movss xmm3, [GameHook::deltaSpeed2]
 	}
 }
 
 bool GameHook::linkGameToDelta_toggle;
 void GameHook::LinkGameToDelta(bool enabled) {
 	if (enabled) {
-		//GameHook::_patch((char*)(0x513E73), (char*)MovDeltaTimePatch, 5);
+		GameHook::_patch((char*)(0x513974), (char*)fldDeltaSpeed1, 6); // Bird (and prob more, verify by noping)
+		GameHook::_patch((char*)(0xA95BD1), (char*)movssXmm0DeltaSpeed1, 8); // Camera
+		GameHook::_patch((char*)(0xA9401A), (char*)movssXmm3DeltaSpeed2, 8); // Camera rot
+		GameHook::_patch((char*)(0xA9402E), (char*)movssXmm1DeltaSpeed3, 8); // Camera rot panther
+		GameHook::_patch((char*)(0x9CDA09), (char*)movssXmm0DeltaSpeed1, 8); // parry
+		GameHook::_patch((char*)(0x8BD6BC), (char*)movssXmm2DeltaSpeed1, 8); // bat within / perfect parry / panther + bird double tap timer
 	}
 	else {
-		//GameHook::_patch((char*)(0x513E73), (char*)"\xB8\x00\x00\x80\x3F", 5); // mov eax, (float)1
-		//float* gameSpeed = (float*)0xEF6588;
-		//*gameSpeed = 1.0f;
+		GameHook::_patch((char*)(0x513974), (char*)"\xD9\x05\x88\x65\xEF\x00", 6); // Bird // fld dword ptr [Bayonetta.exe+AF6588] (1.0f)
+		GameHook::_patch((char*)(0xA95BD1), (char*)"\xF3\x0F\x10\x05\x88\x65\xEF\x00", 8); // Camera movss xmm0,[Bayonetta.exe+AF6588] (1.0f)
+		GameHook::_patch((char*)(0xA9401A), (char*)"\xF3\x0F\x10\x1D\xF4\x0B\xDA\x00", 8); // Camera rot // movss xmm3,[Bayonetta.exe+AF6588] (2.0f)
+		GameHook::_patch((char*)(0xA9402E), (char*)"\xF3\x0F\x10\x0D\x9C\xD7\xD9\x00", 8); // Camera rot panther // movss xmm1,[Bayonetta.exe+AF6588] (3.0f)
+		GameHook::_patch((char*)(0x9CDA09), (char*)"\xF3\x0F\x10\x05\xF8\xD6\xD9\x00", 8); // parry // movss xmm0,[Bayonetta.exe+99D6F8] (1.0f)
+		GameHook::_patch((char*)(0x8BD6BC), (char*)"\xF3\x0F\x10\x15\xF8\xD6\xD9\x00", 8); // bat within / perfect parry / panther + bird double tap timer // movss xmm2,[Bayonetta.exe+99D6F8] (1.0f)
+		
 	}
 }
 
@@ -762,38 +798,6 @@ static __declspec(naked) void GunBufferFramesDetour(void) {
 		retcode:
 		popfd
 		jmp dword ptr [gunBufferFrames_jmp_ret]
-	}
-}
-
-static std::unique_ptr<FunctionHook> pantherDoubleTapTimerHook;
-static uintptr_t pantherDoubleTapTimer_jmp_ret = NULL;
-static __declspec(naked) void PantherDoubleTapTimerDetour(void) {
-	_asm {
-		pushfd
-		cmp byte ptr [GameHook::linkGameToDelta_toggle], 0
-		je originalcode
-
-		divss xmm0, [GameHook::deltaSpeed]
-		originalcode:
-		movss [esi+0x00094AE0], xmm0
-		popfd
-		jmp dword ptr [pantherDoubleTapTimer_jmp_ret]
-	}
-}
-
-static std::unique_ptr<FunctionHook> birdDoubleTapTimerHook;
-static uintptr_t birdDoubleTapTimer_jmp_ret = NULL;
-static __declspec(naked) void BirdDoubleTapTimerDetour(void) {
-	_asm {
-		pushfd
-		cmp byte ptr [GameHook::linkGameToDelta_toggle], 0
-		je originalcode
-
-		divss xmm0, [GameHook::deltaSpeed]
-		originalcode:
-		movss [esi+0x00094ADC], xmm0
-		popfd
-		jmp dword ptr [birdDoubleTapTimer_jmp_ret]
 	}
 }
 
@@ -1892,73 +1896,6 @@ void GameHook::DisplayRecentlySpawnedEntitiesInImGui() {
 		ImGui::PopID();
 	}
 }
-
-/*
-		// {"Player Bayonetta", 0x10000, 0, 0}, // v0 = Moves, v2 = Doesn't Move
-		// {"Player Jeanne", 0x10020, 0, 0},
-		// {"Player Bayonetta P.E. A", 0x10025, 0, 0},
-		// {"Player Bayonetta P.E. B", 0x10026, 0, 0},
-		// {"Player Bayonetta P.E. C", 0x10027, 0, 0},
-		// {"Player Bayonetta d'Arc maybe", 0x1002b, 0, 0},
-		// {"Player Bayonetta Umbra", 0x1002c, 0, 0},
-		// {"Player Bayonetta Various A", 0x1002d, 0, 0},
-		// {"Player Bayonetta Various B", 0x1002e, 0, 0},
-		// {"Player Bayonetta Various C", 0x1002f, 0, 0},
-		// {"Player Bayonetta Old", 0x10030, 0, 0},
-		// {"Player Jeanne Old", 0x10066, 0, 0},
-		// {"Player Jeanne Umbra", 0x10067, 0, 0},
-		// {"Player Jeanne Various A", 0x10068, 0, 0},
-		// {"Player Jeanne Various B", 0x10069, 0, 0},
-		// {"Player Jeanne Various C", 0x1006A, 0, 0},
-		// {"Player Jeanne Komachi A", 0x1006E, 0, 0},
-		// {"Player Jeanne Komachi B", 0x10070, 0, 0},
-		// {"Player Jeanne Komachi C", 0x10072, 0, 0},
-		// {"Player Jeanne Nun", 0x10074, 0, 0},
-		// {"Player Jeanne Queen", 0x10075, 0, 0},
-		// {"Player Bayonetta Komachi A", 0x10083, 0, 0},
-		// {"Player Bayonetta Komachi B", 0x10085, 0, 0},
-		// {"Player Bayonetta Komachi C", 0x10087, 0, 0},
-		// {"Player Bayonetta Nun", 0x10089, 0, 0},
-		// {"Player Bayonetta Witch", 0x1008a, 0, 0},
-		// {{"Fortitudo (Green)", 0x200B0, 0, 0}, SpawnCategory::EnemyBoss},
-		// {{"Temperantia", 0x200C0, 0, 0}, SpawnCategory::EnemyBoss},
-		// {{"Lustitia", 0x200D0, 0, 0}, SpawnCategory::EnemyBoss},
-		// {{"Fortitudo", 0x20100, 0, 0}, SpawnCategory::EnemyBoss},
-		// {{"Temperantia 2", 0x20200, 0, 0}, SpawnCategory::EnemyBoss},
-		// {{"Temperantia 3", 0x2020D, 0, 0}, SpawnCategory::EnemyBoss},
-		// {{"Sapentia", 0x20400, 0, 0}, SpawnCategory::EnemyBoss},
-		// {{"Balder", 0x20500, 0, 0}, SpawnCategory::EnemyBoss},
-		// {{"Father Rodin (Unkillable)", 0x20510, 0, 0}, SpawnCategory::EnemyBoss},
-		// {{"Jeanne Enemy Default", 0x21000, 0, 0}, SpawnCategory::EnemyBoss},
-		// {{"Jeanne Enemy Old", 0x21001, 0, 0}, SpawnCategory::EnemyBoss},
-		// {{"Jeanne Enemy Formal A", 0x21002, 0, 0}, SpawnCategory::EnemyBoss},
-		// {{"Bayo Enemy Default", 0x21003, 0, 0}, SpawnCategory::EnemyBoss},
-		// {"Joy Twin (Unkillable)", 0x21010, 0, 0},
-
-		// {0x10001, SpawnCategory::Enemy}, // panther
-		// {0x10002, SpawnCategory::Enemy}, // crow
-
-		// {0x30100, SpawnCategory::Other}, // Angel Wings
-		// {0x30101, SpawnCategory::Other}, // Angel Spear
-		// {0x30103, SpawnCategory::Other}, // Angel Trumpet
-		// {0x30105, SpawnCategory::Other}, // Angel Greatsword
-		// {0x30106, SpawnCategory::Other}, // Angel Bow
-		// {0x30108, SpawnCategory::Other}, // Angel Sword (Unused) / Angel Axe
-		// {0x3010A, SpawnCategory::Other}, // Angel Shield
-		// {0x3010D, SpawnCategory::Other}, // Angel Flail
-		// {0x30110, SpawnCategory::Other}, // Angel Clothes
-		// {0x30120, SpawnCategory::Other}, // Angel Mask
-		// {0x30126, SpawnCategory::Other}, // Grave & Glory Claws
-		// {0x30127, SpawnCategory::Other}, // Glory Claws
-		// {0x30150, SpawnCategory::Other}, // Angel Scythe
-		// {0x30160, SpawnCategory::Other}, // Grace Claws
-		// {0x30161, SpawnCategory::Other}, // Grace Claws
-		// {0x30163, SpawnCategory::Other}, // Gracious Claws
-		// {0x30164, SpawnCategory::Other}, // Gracious Claw
-		// {0x30165, SpawnCategory::Other}, // Glorious Claws
-		// {0x30166, SpawnCategory::Other}, // Glorious Claw
-		// {0x30170, SpawnCategory::Other}, // Harmony Chainsaw
-*/
 
 struct SpawnResult {
 	int id;
@@ -3794,8 +3731,6 @@ void GameHook::InitializeDetours(void) {
 	install_hook_absolute(0x8BE387, kickBufferFramesHook, &KickBufferFramesDetour, &kickBufferFrames_jmp_ret, 6);
 	install_hook_absolute(0x8BE471, dodgeBufferFramesHook, &DodgeBufferFramesDetour, &dodgeBufferFrames_jmp_ret, 6);
 	install_hook_absolute(0x8BE55B, gunBufferFramesHook, &GunBufferFramesDetour, &gunBufferFrames_jmp_ret, 6);
-	install_hook_absolute(0x9E8752, pantherDoubleTapTimerHook, &PantherDoubleTapTimerDetour, &pantherDoubleTapTimer_jmp_ret, 8);
-	install_hook_absolute(0x9E86DC, birdDoubleTapTimerHook, &BirdDoubleTapTimerDetour, &birdDoubleTapTimer_jmp_ret, 8);
 	// fps stuff over
 #ifndef SPEEDRUN_BUILD 
 	install_hook_absolute(0x41837E, getHitboxHook, &GetHitboxDetour, &getHitbox_jmp_ret, 8);
