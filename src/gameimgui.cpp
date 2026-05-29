@@ -866,7 +866,7 @@ void GameHook::GameImGui(void) {
             if (GameHook::witchTimeMultiplier_toggle) {
                 ImGui::Indent();
                 ImGui::PushItemWidth(inputItemWidth);
-                ImGui::InputFloat("##WitchTimeMultiplier", &GameHook::witchTimeMultiplier, 0, 0, "%.1f");
+                ImGui::InputFloat("##WitchTimeMultiplier", &GameHook::witchTimeMultiplier, 0.1f, 1.0f, "%.1f");
                 ImGui::PopItemWidth();
                 ImGui::Unindent();
             }

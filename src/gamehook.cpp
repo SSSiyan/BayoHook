@@ -185,21 +185,24 @@ static __declspec(naked) void movssXmm3DeltaSpeed2(void) {
 bool GameHook::linkGameToDelta_toggle;
 void GameHook::LinkGameToDelta(bool enabled) {
 	if (enabled) {
-		GameHook::_patch((char*)(0x513974), (char*)fldDeltaSpeed1, 6); // Bird (and prob more, verify by noping)
+		GameHook::_patch((char*)(0x513974), (char*)fldDeltaSpeed1, 6); // Bird (and prob more, verify by noping - bird became invisible)
 		GameHook::_patch((char*)(0xA95BD1), (char*)movssXmm0DeltaSpeed1, 8); // Camera
 		GameHook::_patch((char*)(0xA9401A), (char*)movssXmm3DeltaSpeed2, 8); // Camera rot
 		GameHook::_patch((char*)(0xA9402E), (char*)movssXmm1DeltaSpeed3, 8); // Camera rot panther
+		GameHook::_patch((char*)(0xA93FDE), (char*)movssXmm0DeltaSpeed1, 8); // Camera rot jump
 		GameHook::_patch((char*)(0x9CDA09), (char*)movssXmm0DeltaSpeed1, 8); // parry
 		GameHook::_patch((char*)(0x8BD6BC), (char*)movssXmm2DeltaSpeed1, 8); // bat within / perfect parry / panther + bird double tap timer
+		GameHook::_patch((char*)(0x651989), (char*)"\x90\x90", 2); // afterburner kick knockback magnitude check
 	}
 	else {
 		GameHook::_patch((char*)(0x513974), (char*)"\xD9\x05\x88\x65\xEF\x00", 6); // Bird // fld dword ptr [Bayonetta.exe+AF6588] (1.0f)
-		GameHook::_patch((char*)(0xA95BD1), (char*)"\xF3\x0F\x10\x05\x88\x65\xEF\x00", 8); // Camera movss xmm0,[Bayonetta.exe+AF6588] (1.0f)
+		GameHook::_patch((char*)(0xA95BD1), (char*)"\xF3\x0F\x10\x05\x88\x65\xEF\x00", 8); // Camera // movss xmm0,[Bayonetta.exe+AF6588] (1.0f)
 		GameHook::_patch((char*)(0xA9401A), (char*)"\xF3\x0F\x10\x1D\xF4\x0B\xDA\x00", 8); // Camera rot // movss xmm3,[Bayonetta.exe+AF6588] (2.0f)
 		GameHook::_patch((char*)(0xA9402E), (char*)"\xF3\x0F\x10\x0D\x9C\xD7\xD9\x00", 8); // Camera rot panther // movss xmm1,[Bayonetta.exe+AF6588] (3.0f)
+		GameHook::_patch((char*)(0xA93FDE), (char*)"\xF3\x0F\x10\x05\xF8\xD6\xD9\x00", 8); // Camera rot jump // movss xmm0,[Bayonetta.exe+99D6F8] (1.0f)
 		GameHook::_patch((char*)(0x9CDA09), (char*)"\xF3\x0F\x10\x05\xF8\xD6\xD9\x00", 8); // parry // movss xmm0,[Bayonetta.exe+99D6F8] (1.0f)
 		GameHook::_patch((char*)(0x8BD6BC), (char*)"\xF3\x0F\x10\x15\xF8\xD6\xD9\x00", 8); // bat within / perfect parry / panther + bird double tap timer // movss xmm2,[Bayonetta.exe+99D6F8] (1.0f)
-		
+		GameHook::_patch((char*)(0x651989), (char*)"\x76\x48", 2); // afterburner kick knockback magnitude check
 	}
 }
 
@@ -798,6 +801,61 @@ static __declspec(naked) void GunBufferFramesDetour(void) {
 		retcode:
 		popfd
 		jmp dword ptr [gunBufferFrames_jmp_ret]
+	}
+}
+
+static std::unique_ptr<FunctionHook> controllerCameraSensHook;
+static uintptr_t controllerCameraSens_jmp_ret = NULL;
+static __declspec(naked) void ControllerCameraSensDetour(void) {
+	_asm {
+		pushfd
+		// originalcode
+		movss xmm7, ds:[0xDA47F8] // was 0.02
+		cmp byte ptr [GameHook::linkGameToDelta_toggle], 1
+		jne retcode
+
+		mulss xmm7, [GameHook::deltaSpeed] // mul 0.02
+		mulss xmm0, [GameHook::deltaSpeed] // mul cam settings sens
+
+		retcode:
+		popfd
+		jmp dword ptr [controllerCameraSens_jmp_ret]
+	}
+}
+
+static std::unique_ptr<FunctionHook> fpsSkateSpeed1Hook;
+static uintptr_t fpsSkateSpeed1_jmp_ret = NULL;
+static __declspec(naked) void FpsSkateSpeed1Detour(void) {
+	_asm {
+		pushfd
+		// originalcode
+		movss xmm0, ds:[0xDA81C4] // was 0.05
+		cmp byte ptr [GameHook::linkGameToDelta_toggle], 1
+		jne retcode
+
+		mulss xmm0, [GameHook::deltaSpeed]
+
+		retcode:
+		popfd
+		jmp dword ptr [fpsSkateSpeed1_jmp_ret]
+	}
+}
+
+static std::unique_ptr<FunctionHook> fpsSkateSpeed2Hook;
+static uintptr_t fpsSkateSpeed2_jmp_ret = NULL;
+static __declspec(naked) void FpsSkateSpeed2Detour(void) {
+	_asm {
+		pushfd
+		// originalcode
+		movss xmm0, ds:[0xDA81C4] // was 0.05
+		cmp byte ptr [GameHook::linkGameToDelta_toggle], 1
+		jne retcode
+
+		mulss xmm0, [GameHook::deltaSpeed]
+
+		retcode:
+		popfd
+		jmp dword ptr [fpsSkateSpeed2_jmp_ret]
 	}
 }
 
@@ -3731,6 +3789,9 @@ void GameHook::InitializeDetours(void) {
 	install_hook_absolute(0x8BE387, kickBufferFramesHook, &KickBufferFramesDetour, &kickBufferFrames_jmp_ret, 6);
 	install_hook_absolute(0x8BE471, dodgeBufferFramesHook, &DodgeBufferFramesDetour, &dodgeBufferFrames_jmp_ret, 6);
 	install_hook_absolute(0x8BE55B, gunBufferFramesHook, &GunBufferFramesDetour, &gunBufferFrames_jmp_ret, 6);
+	install_hook_absolute(0xA8FBB1, controllerCameraSensHook, &ControllerCameraSensDetour, &controllerCameraSens_jmp_ret, 8);
+	install_hook_absolute(0x8F2EB6, fpsSkateSpeed1Hook, &FpsSkateSpeed1Detour, &fpsSkateSpeed1_jmp_ret, 8);
+	install_hook_absolute(0x8E72B3, fpsSkateSpeed2Hook, &FpsSkateSpeed2Detour, &fpsSkateSpeed2_jmp_ret, 8);
 	// fps stuff over
 #ifndef SPEEDRUN_BUILD 
 	install_hook_absolute(0x41837E, getHitboxHook, &GetHitboxDetour, &getHitbox_jmp_ret, 8);
@@ -3780,7 +3841,10 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	// both speedrun and non speedrun
 	focusPatch_toggle = cfg.get<bool>("focusPatch_toggle").value_or(false);
 	FocusPatch(focusPatch_toggle);
-
+	disableFpsLimiter_toggle = cfg.get<bool>("disableFpsLimiter_toggle").value_or(false);
+	DisableFpsLimiter(disableFpsLimiter_toggle);
+	linkGameToDelta_toggle = cfg.get<bool>("linkGameToDelta_toggle").value_or(false);
+	LinkGameToDelta(linkGameToDelta_toggle);
 	inputIcons_toggle = cfg.get<bool>("inputIcons_toggle").value_or(false);
 	inputIconsValue = cfg.get<int>("inputIconsValue").value_or(0);
 	showComboUI_toggle = cfg.get<bool>("showComboUI_toggle").value_or(false);
@@ -3847,8 +3911,6 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	AutoQTE(autoQTE_toggle);
 	disableGradient_toggle = cfg.get<bool>("disableGradient_toggle").value_or(false);
 	DisableGradient(disableGradient_toggle);
-	disableFpsLimiter_toggle = cfg.get<bool>("disableFpsLimiter_toggle").value_or(false);
-	DisableFpsLimiter(disableFpsLimiter_toggle);
 	uptimeFix_toggle = cfg.get<bool>("uptimeFix_toggle").value_or(false);
 	disableTutorials_toggle = cfg.get<bool>("disableTutorials_toggle").value_or(false);
 	DisableTutorials(disableTutorials_toggle);
@@ -4016,7 +4078,9 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 
 void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("uptimeFix_toggle", uptimeFix_toggle);
+	cfg.set<bool>("disableFpsLimiter_toggle", disableFpsLimiter_toggle);
 	cfg.set<bool>("focusPatch_toggle", focusPatch_toggle);
+	cfg.set<bool>("linkGameToDelta_toggle", linkGameToDelta_toggle);
 	cfg.set<bool>("inputIcons_toggle", inputIcons_toggle);
 	cfg.set<int>("inputIconsValue", inputIconsValue);
 	cfg.set<bool>("showComboUI_toggle", showComboUI_toggle);
@@ -4043,7 +4107,6 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	// patches
 	cfg.set<bool>("autoQTE_toggle", autoQTE_toggle);
 	cfg.set<bool>("disableGradient_toggle", disableGradient_toggle);
-	cfg.set<bool>("disableFpsLimiter_toggle", disableFpsLimiter_toggle);
 	cfg.set<bool>("sixtyFpsCutscenes_toggle", sixtyFpsCutscenes_toggle);
 	// cfg.set<bool>("memPatch_toggle", memPatch_toggle);
 	cfg.set<bool>("damageReceivedMultiplierNoDamage_toggle", damageReceivedMultiplierNoDamage_toggle);
