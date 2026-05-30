@@ -37,7 +37,7 @@ static void DrawEnemySwapper() {
         ImGui::SameLine();
         char setAllPreview[128];
         snprintf(setAllPreview, sizeof(setAllPreview), "%s (v%d)", spawnTypes[setAllTargetIndex].info.name, spawnTypes[setAllTargetIndex].info.variant);
-        ImGui::SetNextItemWidth(GameHook::inputItemWidth * 2);
+        ImGui::SetNextItemWidth(GameHook::inputItemWidth * 2.0f);
         if (ImGui::BeginCombo("##SetAllEnemyTarget", setAllPreview)) {
             for (int i = 0; i < (int)spawnTypes.size(); i++) {
                 const auto& entry = spawnTypes[i];
@@ -1219,8 +1219,9 @@ void GameHook::GameImGui(void) {
 
             static int g_selected_character = 0;
             const char* preview = coop_characters[g_selected_character].name;
-            ImGui::SetNextItemWidth(inputItemWidth);
-            if (ImGui::BeginCombo("Character 2", preview)) {
+
+            ImGui::SetNextItemWidth(inputItemWidth * 2.0f);
+            if (ImGui::BeginCombo("Player 2 Character", preview)) {
                 for (int i = 0; i < IM_ARRAYSIZE(coop_characters); i++) {
                     bool selected = (g_selected_character == i);
                     if (ImGui::Selectable(coop_characters[i].name, selected)) {
@@ -1231,19 +1232,56 @@ void GameHook::GameImGui(void) {
                 }
                 ImGui::EndCombo();
             }
-            ImGui::Spacing();
 
-            if (ImGui::Button("Spawn co-op character and set them to controller 2")) {
+            if (ImGui::Button("Spawn Player 2")) {
                 int id = coop_characters[g_selected_character].id;
                 GameHook::EasySpawnEntityFromHotkey(id, 1, 0);
             }
 
-            if (ImGui::Button("Teleport player 2 to player 1")) {
-				LocalPlayer* player1 = GetLocalPlayer();
-                LocalPlayer* player2 = GameHook::GetPlayer2();
-                if (player1 && player2)
-                    player2->pos = player1->pos;
+            LocalPlayer* player1 = GetPlayer1();
+            LocalPlayer* player2 = GameHook::GetPlayer2();
+            if (player1 && player2) {
+
+                ImGui::SameLine(GameHook::sameLineWidth);
+
+                if (ImGui::Button("Teleport Player 2 to Player 1")) {
+                    LocalPlayer* player1 = GetLocalPlayer();
+                    LocalPlayer* player2 = GameHook::GetPlayer2();
+                    if (player1 && player2)
+                        player2->pos = player1->pos;
+                }
+
+                int readablePlayer1Controller = player1->controllerNum + 1;
+                int readablePlayer2Controller = player2->controllerNum + 1;
+
+                ImGui::PushItemWidth(GameHook::inputItemWidth);
+
+                if (ImGui::SliderInt("Player 1 Controller", &readablePlayer1Controller, 1, 2))
+                    player1->controllerNum = readablePlayer1Controller - 1;
+
+                ImGui::SameLine(GameHook::sameLineWidth);
+
+                if (ImGui::SliderInt("Player 2 Controller", &readablePlayer2Controller, 1, 2))
+                    player2->controllerNum = readablePlayer2Controller - 1;
+
+                ImGui::PopItemWidth();
+
+                if (ImGui::Button("Register player 2 as an enemy")) {
+                    using RegisterFn = void(__thiscall*)(void* manager, void* obj);
+                    player2->beFlag |= (BE_EM | BE_LOCKENABLE);
+                    auto registerFn = (RegisterFn)0x00499FC0;
+                    void* enemyList = (void*)0x5A569F0;
+                    registerFn(enemyList, player2);
+                }
             }
+
+            ImGui::Checkbox("pvp", &GameHook::pvp_toggle);
+            ImGui::Checkbox("GameHook::pvpDamageRemaps_toggle", &GameHook::pvpDamageRemaps_toggle);
+            ImGui::InputScalar("Last seen atk", ImGuiDataType_U32, &GameHook::lastSeenAtk, NULL, NULL, "%X", ImGuiInputTextFlags_CharsHexadecimal);
+            ImGui::InputScalar("Last seen atk converted", ImGuiDataType_U32, &GameHook::lastSeenAtkConverted, NULL, NULL, "%X", ImGuiInputTextFlags_CharsHexadecimal);
+            ImGui::InputScalar("atkTest", ImGuiDataType_U32, &GameHook::atkTest, NULL, NULL, "%X", ImGuiInputTextFlags_CharsHexadecimal);
+            help_marker("test a different knockback type on an pvp attack by inserting its ID here");
+            ImGui::InputScalar("atkTestReplacement", ImGuiDataType_U32, &GameHook::atkTestReplacement, NULL, NULL, "%X", ImGuiInputTextFlags_CharsHexadecimal);
 
             // entity spawn stuff
             {

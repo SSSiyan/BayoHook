@@ -235,6 +235,12 @@ public:
 	static ImColor effectCol[10];
 	static bool identifyEffects_toggle;
 	static std::vector<int> seenEffectIDs;
+	static bool pvp_toggle;
+	static int lastSeenAtk;
+	static int lastSeenAtkConverted;
+	static int atkTest;
+	static int atkTestReplacement;
+	static bool pvpDamageRemaps_toggle;
 	static int initialAngelSlayerFloor;
 	static bool openMenuPause_toggle;
 	static bool witchTimeMultiplier_toggle;
@@ -316,6 +322,7 @@ public:
 #endif
 	// addresses
 	static uintptr_t playerPointerAddress;
+	static uintptr_t player1PointerAddress;
 	static uintptr_t player2PointerAddress;
 	static uintptr_t enemyLockedOnAddress;
 	static uintptr_t comboMultiplierAddress;
@@ -392,6 +399,7 @@ public:
 
 	// dev functions
 	static LocalPlayer* GetLocalPlayer();
+	static LocalPlayer* GetPlayer1();
 	static LocalPlayer* GetPlayer2();
 
 	struct HotkeyMessage {

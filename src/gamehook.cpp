@@ -67,6 +67,7 @@ int GameHook::tempCostume = 0;
 
 // update
 uintptr_t GameHook::playerPointerAddress = 0xEF5A60;
+uintptr_t GameHook::player1PointerAddress = 0x5B6075C;
 uintptr_t GameHook::player2PointerAddress = 0xF30190;
 uintptr_t GameHook::enemyLockedOnAddress = 0xF2B744;
 uintptr_t GameHook::comboPointsAddress = 0x5BB519C;
@@ -193,6 +194,10 @@ void GameHook::LinkGameToDelta(bool enabled) {
 		GameHook::_patch((char*)(0x9CDA09), (char*)movssXmm0DeltaSpeed1, 8); // parry
 		GameHook::_patch((char*)(0x8BD6BC), (char*)movssXmm2DeltaSpeed1, 8); // bat within / perfect parry / panther + bird double tap timer
 		GameHook::_patch((char*)(0x651989), (char*)"\x90\x90", 2); // afterburner kick knockback magnitude check
+		// find shooting with legs camera sens
+		// find menu speed
+		// find whatever's wrong with hitboxes
+		// find cutscene speed
 	}
 	else {
 		GameHook::_patch((char*)(0x513974), (char*)"\xD9\x05\x88\x65\xEF\x00", 6); // Bird // fld dword ptr [Bayonetta.exe+AF6588] (1.0f)
@@ -1031,6 +1036,465 @@ static __declspec(naked) void AnimationScrubDetour(void) {
 	}
 }
 #endif
+
+int GameHook::atkTest = -1;
+int GameHook::atkTestReplacement = 0;
+static int GetPvpReaction(int atkType) {
+	if (atkType == GameHook::atkTest) {
+		return GameHook::atkTestReplacement;
+	}
+	switch (atkType) {
+	// LIGHT
+	case ATHIT_TYPE_PL_HANDGUN:
+	case ATHIT_TYPE_PL_HANDGUN_SML:
+	case ATHIT_TYPE_PL_S_HANDGUN:
+	case ATHIT_TYPE_PL_M_HANDGUN:
+	case ATHIT_TYPE_PL_HANDGUN_REFLECT:
+	case ATHIT_TYPE_PL_SHOTGUN_SML:
+	case ATHIT_TYPE_PL_SHOOTING_HANDGUN:
+	case ATHIT_TYPE_PL_STAMP: // falling
+	case ATHIT_TYPE_PL_NUNCHUK_BEAM_SML:
+	case ATHIT_TYPE_PL_VARIANT_ARROW:
+	case ATHIT_TYPE_PL_VARIANT_TRUMPET:
+	case ATHIT_TYPE_PL_VARIANT_S_TRUMPET:
+	case ATHIT_TYPE_PL_LASER_SHOT:
+	case ATHIT_TYPE_PL_LASER_FOOTSHOT:
+	case ATHIT_TYPE_PL_LASER_S_BEAM:
+	case ATHIT_TYPE_PL_GW_ARROW:
+	case ATHIT_TYPE_PL_FIREBALL:
+	case ATHIT_TYPE_PL_KISSMARK:
+	case ATHIT_TYPE_PL_MACHINEGUN:
+		return PVP_LIGHT;
+
+	// HEAVY
+	case ATHIT_TYPE_PL_BLOWPUNCH:
+	case ATHIT_TYPE_PL_BLOWPUNCH2:
+	case ATHIT_TYPE_PL_BLOWKICK:
+	case ATHIT_TYPE_PL_BLOWKICK2:
+	case ATHIT_TYPE_PL_S_BLOWKICK:
+	case ATHIT_TYPE_PL_BIGFALLKICK:
+	case ATHIT_TYPE_PL_BLOWBLADE:
+	case ATHIT_TYPE_PL_CLAWCOMBO_FINISH:
+	case ATHIT_TYPE_PL_F_CLAW_KICK_BIG:
+	case ATHIT_TYPE_PL_F_CLAW_BLOWKICK:
+	case ATHIT_TYPE_PL_F_CLAW_BIGFALLKICK:
+	case ATHIT_TYPE_PL_E_CLAW_KICK_BIG:
+	case ATHIT_TYPE_PL_E_CLAW_BLOWKICK:
+	case ATHIT_TYPE_PL_E_CLAW_BIGFALLKICK:
+	case ATHIT_TYPE_PL_SKATES_KICK_BIG:
+	case ATHIT_TYPE_PL_SKATES_BLOWKICK:
+	case ATHIT_TYPE_PL_SKATES_BIGFALLKICK:
+	case ATHIT_TYPE_PL_EM_BLOW:
+	case ATHIT_TYPE_PL_EM_BIGBLOW:
+	case ATHIT_TYPE_PL_BIGLANDING:
+	case ATHIT_TYPE_PL_BIGFALL:
+	case ATHIT_TYPE_PL_GW_THROW:
+	case ATHIT_TYPE_PL_THROWED_CAR:
+	case ATHIT_TYPE_PL_ROCK:
+	case ATHIT_TYPE_PL_BIKE:
+	case ATHIT_TYPE_PL_DEVIL_BLADESTAMP:
+	case ATHIT_TYPE_PL_DEVIL_FIRE_CLAWSTAMP:
+	case ATHIT_TYPE_PL_DEVIL_ELEC_CLAWSTAMP:
+	case ATHIT_TYPE_PL_DEVIL_ICE_STAMP:
+	case ATHIT_TYPE_PL_DEVIL_MINI_BLADESTAMP:
+	case ATHIT_TYPE_PL_STAMPKICK:
+	case ATHIT_TYPE_PL_FALLKICK:
+	case ATHIT_TYPE_PL_STAMPBLADE:
+	case ATHIT_TYPE_PL_STAMPBLADE_F:
+	case ATHIT_TYPE_PL_LB_STAMPBLADE:
+	case ATHIT_TYPE_PL_LB_STAMPBLADE_F:
+	case ATHIT_TYPE_PL_F_CLAW_STAMP:
+	case ATHIT_TYPE_PL_F_CLAW_FALLKICK:
+	case ATHIT_TYPE_PL_E_CLAW_STAMP:
+	case ATHIT_TYPE_PL_E_CLAW_FALLKICK:
+	case ATHIT_TYPE_PL_NUNCHUKSTAMP:
+	case ATHIT_TYPE_PL_TRUMPET:
+	case ATHIT_TYPE_PL_S_TRUMPET:
+	case ATHIT_TYPE_PL_HORN:
+	case ATHIT_TYPE_PL_S_HORN:
+	case ATHIT_TYPE_PL_DEVIL_PUNCH:
+	case ATHIT_TYPE_PL_DEVIL_KICK:
+	case ATHIT_TYPE_PL_DEVIL_STAMP:
+		return PVP_HEAVY;
+
+	// LAUNCHER
+	case ATHIT_TYPE_PL_UPPER:
+	case ATHIT_TYPE_PL_KICKUPPER:
+	case ATHIT_TYPE_PL_UPPERBLADE:
+	case ATHIT_TYPE_PL_AIRUPPERBLADE:
+	case ATHIT_TYPE_PL_LB_UPPERBLADE:
+	case ATHIT_TYPE_PL_LB_AIRUPPERBLADE:
+	case ATHIT_TYPE_PL_WHIPUPPER:
+	case ATHIT_TYPE_PL_UPPERCLAW:
+	case ATHIT_TYPE_PL_F_CLAW_KICKUPPER:
+	case ATHIT_TYPE_PL_ELEC_UPPERCLAW:
+	case ATHIT_TYPE_PL_E_CLAW_KICKUPPER:
+	case ATHIT_TYPE_PL_UPPERTONFA:
+	case ATHIT_TYPE_PL_SKATES_KICKUPPER:
+	case ATHIT_TYPE_PL_NUNCHUK_UPPER:
+	case ATHIT_TYPE_PL_GW_BOWBLADEUPPER:
+	case ATHIT_TYPE_PL_DEVIL_UPPER:
+	case ATHIT_TYPE_PL_DEVIL_BLADEUPPER:
+	case ATHIT_TYPE_PL_DEVIL_FIRE_CLAWUPPER:
+	case ATHIT_TYPE_PL_DEVIL_ELEC_CLAWUPPER:
+	case ATHIT_TYPE_PL_DEVIL_ICE_UPPER:
+	case ATHIT_TYPE_PL_DEVIL_MINI_BLADEUPPER:
+		return PVP_LAUNCHER;
+
+	// BLUE ELECTRIC NORMAL
+	case ATHIT_TYPE_PL_CLAWELECBOMB:
+	case ATHIT_TYPE_PL_ELEC_CLAW1:
+	case ATHIT_TYPE_PL_ELEC_CLAW2:
+	case ATHIT_TYPE_PL_ELEC_CLAW3:
+	case ATHIT_TYPE_PL_ELEC_CLAW4:
+	case ATHIT_TYPE_PL_ELEC_DASHCLAW:
+	case ATHIT_TYPE_PL_ELEC_CLAWKICK1:
+	case ATHIT_TYPE_PL_ELEC_CLAWKICK2:
+	case ATHIT_TYPE_PL_ELEC_CLAWKICK3:
+	case ATHIT_TYPE_PL_ELEC_CHANGECLAW:
+	case ATHIT_TYPE_PL_ELEC_SPINKICKCLAW:
+	case ATHIT_TYPE_PL_ELEC_SPINPUNCHCLAW:
+	case ATHIT_TYPE_PL_ELEC_CLAWCOMBO:
+	case ATHIT_TYPE_PL_VARIANT_CLAW_ELEC:
+	case ATHIT_TYPE_PL_GW_CLAW_ELEC:
+	case ATHIT_TYPE_PL_DEVIL_ELEC_CLAW:
+	case ATHIT_TYPE_PL_DEVIL_ELEC_CLAW_RU:
+	case ATHIT_TYPE_PL_DEVIL_ELEC_CLAW_LU:
+	case ATHIT_TYPE_PL_DEVIL_ELEC_MDL_CLAW:
+		return PVP_BLUE_ELECTRIC_NORMAL;
+
+	// BLUE ELECTRIC AIR
+	case ATHIT_TYPE_PL_ELEC_AIRCLAW1:
+	case ATHIT_TYPE_PL_ELEC_AIRCLAW2:
+	case ATHIT_TYPE_PL_ELEC_AIRCLAW3:
+	case ATHIT_TYPE_PL_ELEC_AIRCLAW4:
+		return PVP_BLUE_ELECTRIC_AIR;
+
+	// YELLOW ELECTRIC
+	case ATHIT_TYPE_PL_KAMEHAMEHA:
+	case ATHIT_TYPE_PL_LASER_BEAM:
+	case ATHIT_TYPE_PL_NUNCHUK_BEAM:
+		return PVP_YELLOW_ELECTRIC;
+
+	// NORMAL
+	case ATHIT_TYPE_PL_SHOTGUN:
+	case ATHIT_TYPE_PL_S_SHOTGUN:
+	case ATHIT_TYPE_PL_TONFA_ROCKET:
+	case ATHIT_TYPE_PL_TONFA_G_ROCKET:
+	case ATHIT_TYPE_PL_PUNCH:
+	case ATHIT_TYPE_PL_PUNCH2:
+	case ATHIT_TYPE_PL_DASHPUNCH:
+	case ATHIT_TYPE_PL_SPINPUNCH:
+	case ATHIT_TYPE_PL_COMBOATK:
+	case ATHIT_TYPE_PL_COMBOATK_E:
+	case ATHIT_TYPE_PL_100PUNCH:
+	case ATHIT_TYPE_PL_100PUNCH_E:
+	case ATHIT_TYPE_PL_KICK:
+	case ATHIT_TYPE_PL_KICK2:
+	case ATHIT_TYPE_PL_JUMPKICKUPPER:
+	case ATHIT_TYPE_PL_DASHKICK:
+	case ATHIT_TYPE_PL_SPINKICK:
+	case ATHIT_TYPE_PL_JUMPKICK:
+	case ATHIT_TYPE_PL_100KICK:
+	case ATHIT_TYPE_PL_100KICK_E:
+	case ATHIT_TYPE_PL_HEELKICK:
+	case ATHIT_TYPE_PL_LOWSPINKICK_L:
+	case ATHIT_TYPE_PL_LOWSPINKICK_R:
+	case ATHIT_TYPE_PL_AIRSPINKICK_L:
+	case ATHIT_TYPE_PL_AIRSPINKICK_R:
+	case ATHIT_TYPE_PL_LOWSPINKICK_L_E:
+	case ATHIT_TYPE_PL_LOWSPINKICK_R_E:
+	case ATHIT_TYPE_PL_AIRSPINKICK_L_E:
+	case ATHIT_TYPE_PL_AIRSPINKICK_R_E:
+	case ATHIT_TYPE_PL_BLADE1:
+	case ATHIT_TYPE_PL_BLADE2:
+	case ATHIT_TYPE_PL_BLADE3:
+	case ATHIT_TYPE_PL_BLADE4:
+	case ATHIT_TYPE_PL_BLADE_AIR1:
+	case ATHIT_TYPE_PL_BLADE_AIR2:
+	case ATHIT_TYPE_PL_BLADE_AIR3:
+	case ATHIT_TYPE_PL_BLADE_AIR4:
+	case ATHIT_TYPE_PL_DELAYBLADE_A1:
+	case ATHIT_TYPE_PL_DELAYBLADE_A2:
+	case ATHIT_TYPE_PL_DELAYBLADE_A3:
+	case ATHIT_TYPE_PL_DELAYBLADE_B1:
+	case ATHIT_TYPE_PL_DELAYBLADE_B2:
+	case ATHIT_TYPE_PL_DELAYBLADE_B3:
+	case ATHIT_TYPE_PL_DELAYBLADE_C:
+	case ATHIT_TYPE_PL_BLADE:
+	case ATHIT_TYPE_PL_BLADE_SIDE:
+	case ATHIT_TYPE_PL_BLADE_IAI:
+	case ATHIT_TYPE_PL_BLADE_IAI_MAX:
+	case ATHIT_TYPE_PL_COMBOBLADE:
+	case ATHIT_TYPE_PL_COMBOBLADE_SIDE:
+	case ATHIT_TYPE_PL_COMBOBLADE_E:
+	case ATHIT_TYPE_PL_DASHBLADE:
+	case ATHIT_TYPE_PL_SPINPBLADE:
+	case ATHIT_TYPE_PL_SPINPBLADE2:
+	case ATHIT_TYPE_PL_SPINPBLADE3:
+	case ATHIT_TYPE_PL_BLADEWAVE:
+	case ATHIT_TYPE_PL_BLADEWAVE_MAX:
+	case ATHIT_TYPE_PL_LB_BLADE1:
+	case ATHIT_TYPE_PL_LB_BLADE2:
+	case ATHIT_TYPE_PL_LB_BLADE3:
+	case ATHIT_TYPE_PL_LB_BLADE4:
+	case ATHIT_TYPE_PL_LB_BLADE_AIR1:
+	case ATHIT_TYPE_PL_LB_BLADE_AIR2:
+	case ATHIT_TYPE_PL_LB_BLADE_AIR3:
+	case ATHIT_TYPE_PL_LB_BLADE_AIR4:
+	case ATHIT_TYPE_PL_LB_DELAYBLADE_A1:
+	case ATHIT_TYPE_PL_LB_DELAYBLADE_A2:
+	case ATHIT_TYPE_PL_LB_DELAYBLADE_A3:
+	case ATHIT_TYPE_PL_LB_DELAYBLADE_B1:
+	case ATHIT_TYPE_PL_LB_DELAYBLADE_B2:
+	case ATHIT_TYPE_PL_LB_DELAYBLADE_B3:
+	case ATHIT_TYPE_PL_LB_DELAYBLADE_C:
+	case ATHIT_TYPE_PL_LB_BLADE:
+	case ATHIT_TYPE_PL_LB_BLADE_SIDE:
+	case ATHIT_TYPE_PL_LB_BLADE_IAI:
+	case ATHIT_TYPE_PL_LB_BLADE_IAI_MAX:
+	case ATHIT_TYPE_PL_LB_COMBOBLADE:
+	case ATHIT_TYPE_PL_LB_COMBOBLADE_SIDE:
+	case ATHIT_TYPE_PL_LB_COMBOBLADE_E:
+	case ATHIT_TYPE_PL_LB_DASHBLADE:
+	case ATHIT_TYPE_PL_LB_SPINPBLADE:
+	case ATHIT_TYPE_PL_LB_SPINPBLADE2:
+	case ATHIT_TYPE_PL_LB_SPINPBLADE3:
+	case ATHIT_TYPE_PL_LB_BLOWBLADE:
+	case ATHIT_TYPE_PL_LB_BLADEWAVE:
+	case ATHIT_TYPE_PL_LB_BLADEWAVE_MAX:
+	case ATHIT_TYPE_PL_WHIP:
+	case ATHIT_TYPE_PL_WHIPSPIN:
+	case ATHIT_TYPE_PL_CLAW1:
+	case ATHIT_TYPE_PL_CLAW2:
+	case ATHIT_TYPE_PL_CLAW3:
+	case ATHIT_TYPE_PL_AIRCLAW1:
+	case ATHIT_TYPE_PL_AIRCLAW2:
+	case ATHIT_TYPE_PL_AIRCLAW3:
+	case ATHIT_TYPE_PL_DASHCLAW:
+	case ATHIT_TYPE_PL_CLAWFIREBOMB_LV1:
+	case ATHIT_TYPE_PL_CLAWFIREBOMB_LV2:
+	case ATHIT_TYPE_PL_CLAWFIREBOMB_LV3:
+	case ATHIT_TYPE_PL_CLAWKICK1:
+	case ATHIT_TYPE_PL_CLAWKICK2:
+	case ATHIT_TYPE_PL_CLAWKICK3:
+	case ATHIT_TYPE_PL_CHANGECLAW:
+	case ATHIT_TYPE_PL_SPINKICKCLAW:
+	case ATHIT_TYPE_PL_SPINPUNCHCLAW:
+	case ATHIT_TYPE_PL_CLAWCOMBO:
+	case ATHIT_TYPE_PL_F_CLAW_100KICK_E:
+	case ATHIT_TYPE_PL_F_CLAW_HEELKICK:
+	case ATHIT_TYPE_PL_F_CLAW_LOWSPINKICK_L:
+	case ATHIT_TYPE_PL_F_CLAW_LOWSPINKICK_R:
+	case ATHIT_TYPE_PL_F_CLAW_AIRSPINKICK_L:
+	case ATHIT_TYPE_PL_F_CLAW_AIRSPINKICK_R:
+	case ATHIT_TYPE_PL_F_CLAW_LOWSPINKICK_L_E:
+	case ATHIT_TYPE_PL_F_CLAW_LOWSPINKICK_R_E:
+	case ATHIT_TYPE_PL_F_CLAW_AIRSPINKICK_L_E:
+	case ATHIT_TYPE_PL_F_CLAW_AIRSPINKICK_R_E:
+	case ATHIT_TYPE_PL_TONFA1:
+	case ATHIT_TYPE_PL_TONFA2:
+	case ATHIT_TYPE_PL_TONFA3:
+	case ATHIT_TYPE_PL_DASHTONFA:
+	case ATHIT_TYPE_PL_DASHTONFA_E:
+	case ATHIT_TYPE_PL_TONFAKICK:
+	case ATHIT_TYPE_PL_TONFASPIN:
+	case ATHIT_TYPE_PL_SKATES_KICK1:
+	case ATHIT_TYPE_PL_SKATES_KICK2:
+	case ATHIT_TYPE_PL_SKATES_KICK3:
+	case ATHIT_TYPE_PL_SKATES_KICK4:
+	case ATHIT_TYPE_PL_SKATES_100:
+	case ATHIT_TYPE_PL_SKATES_100KICK_E:
+	case ATHIT_TYPE_PL_SKATES_HEELKICK:
+	case ATHIT_TYPE_PL_SKATES_LOWSPINKICK_L:
+	case ATHIT_TYPE_PL_SKATES_LOWSPINKICK_R:
+	case ATHIT_TYPE_PL_SKATES_AIRSPINKICK_L:
+	case ATHIT_TYPE_PL_SKATES_AIRSPINKICK_R:
+	case ATHIT_TYPE_PL_SKATES_LOWSPINKICK_L_E:
+	case ATHIT_TYPE_PL_SKATES_LOWSPINKICK_R_E:
+	case ATHIT_TYPE_PL_SKATES_AIRSPINKICK_L_E:
+	case ATHIT_TYPE_PL_SKATES_AIRSPINKICK_R_E:
+	case ATHIT_TYPE_PL_NUNCHUK1:
+	case ATHIT_TYPE_PL_NUNCHUK_CHOP:
+	case ATHIT_TYPE_PL_GW_BLADE:
+	case ATHIT_TYPE_PL_GW_BLADE_SIDE:
+	case ATHIT_TYPE_PL_GW_DASHBLADE:
+	case ATHIT_TYPE_PL_GW_AXE:
+	case ATHIT_TYPE_PL_GW_AXE_SIDE:
+	case ATHIT_TYPE_PL_GW_CLAW:
+	case ATHIT_TYPE_PL_GW_CLAW_SIDE:
+	case ATHIT_TYPE_PL_GW_CLAW_FIRESPIN:
+	case ATHIT_TYPE_PL_GW_MSTAR:
+	case ATHIT_TYPE_PL_GW_MSTAR_MDL:
+	case ATHIT_TYPE_PL_GW_MSTAR_BIG:
+	case ATHIT_TYPE_PL_GW_BOWBLADE1:
+	case ATHIT_TYPE_PL_GW_BOWBLADE2:
+	case ATHIT_TYPE_PL_GW_BOWBLADE3:
+	case ATHIT_TYPE_PL_GW_BOWBLADE_FIN:
+	case ATHIT_TYPE_PL_GW_LAMPPOST1:
+	case ATHIT_TYPE_PL_GW_LAMPPOST2:
+	case ATHIT_TYPE_PL_GW_LAMPPOST3:
+	case ATHIT_TYPE_PL_GW_POLESPINKICK:
+	case ATHIT_TYPE_PL_GW_CHAINSAW1:
+	case ATHIT_TYPE_PL_GW_CHAINSAW2:
+	case ATHIT_TYPE_PL_GW_CHAINSAW3:
+	case ATHIT_TYPE_PL_GW_CHAINSAW:
+	case ATHIT_TYPE_PL_GW_CHAINSAW_SIDE:
+	case ATHIT_TYPE_PL_CROW_WING:
+	case ATHIT_TYPE_PL_GUARDIAN_BLOOD:
+	case ATHIT_TYPE_PL_PANTHERDASH:
+	case ATHIT_TYPE_PL_PANTHERCHARGE:
+	case ATHIT_TYPE_PL_SLAP:
+	case ATHIT_TYPE_PL_SLAP_E:
+	case ATHIT_TYPE_PL_LAVA:
+	case ATHIT_TYPE_PL_DMG_COUNTER:
+	case ATHIT_TYPE_PL_DEVIL_MDL_PUNCH:
+	case ATHIT_TYPE_PL_DEVIL_MDL_KICK:
+	case ATHIT_TYPE_PL_DEVIL_BLADE:
+	case ATHIT_TYPE_PL_DEVIL_BLADE_R:
+	case ATHIT_TYPE_PL_DEVIL_BLADE_RU:
+	case ATHIT_TYPE_PL_DEVIL_BLADE_LU:
+	case ATHIT_TYPE_PL_DEVIL_BLADESTING:
+	case ATHIT_TYPE_PL_DEVIL_BLADECHOP:
+	case ATHIT_TYPE_PL_DEVIL_MDL_WHIP:
+	case ATHIT_TYPE_PL_DEVIL_WHIP:
+	case ATHIT_TYPE_PL_DEVIL_FIRE_CLAW:
+	case ATHIT_TYPE_PL_DEVIL_FIRE_CLAW_RU:
+	case ATHIT_TYPE_PL_DEVIL_FIRE_CLAW_LU:
+	case ATHIT_TYPE_PL_DEVIL_FIRE_MDL_CLAW:
+	case ATHIT_TYPE_PL_DEVIL_ICE_KICK:
+	case ATHIT_TYPE_PL_DEVIL_ICE_MDL_KICK:
+	case ATHIT_TYPE_PL_DEVIL_ICE_MINI_KICK:
+	case ATHIT_TYPE_PL_DEVIL_MINI_PUNCH:
+	case ATHIT_TYPE_PL_DEVIL_MINI_KICK:
+	case ATHIT_TYPE_PL_DEVIL_ROCKETPUNCH:
+	case ATHIT_TYPE_PL_DEVIL_MINI_BLADE_L:
+	case ATHIT_TYPE_PL_DEVIL_MINI_BLADE_R:
+	case ATHIT_TYPE_PL_DEVIL_MINI_BLADE_RU:
+	case ATHIT_TYPE_PL_DEVIL_MINI_BLADE_LU:
+	case ATHIT_TYPE_PL_DEVIL_MINI_BLADESTING:
+	case ATHIT_TYPE_PL_DEVIL_MINI_BLADECHOP:
+	case ATHIT_TYPE_PL_SHOOTING_DEVILPUNCH:
+	case ATHIT_TYPE_PL_HIGHWAYBIKE:
+	case ATHIT_TYPE_PL_ITEMBOMB:
+	case ATHIT_TYPE_PL_BIKESLIDING:
+	case ATHIT_TYPE_PL_BIKERUN:
+	case ATHIT_TYPE_PL_BONUS_GAME:
+		return PVP_NORMAL;
+
+	default:
+		return PVP_NORMAL;
+	}
+}
+
+bool GameHook::pvp_toggle = false;
+static std::unique_ptr<FunctionHook> pvpHook1;
+static uintptr_t pvp_jmp_ret1 = NULL;
+static __declspec(naked) void PvpDetour1(void) {
+	_asm {
+		cmp byte ptr [GameHook::pvp_toggle], 0
+		je originalcode
+		jmp newcode
+#if 0
+	// this was only true for a frame and its called like 10 times lmao
+	// checkplayer1:
+		push ebx
+		mov ebx, [GameHook::player1PointerAddress]
+		mov ebx, [ebx]
+		cmp eax, ebx
+		pop ebx
+		je isplayer1
+		jmp checkplayer2
+
+	isplayer1:
+		push ebx
+		mov ebx, [GameHook::player2PointerAddress]
+		mov ebx, [ebx]
+		cmp ebx, [esi+0x28]
+		pop ebx
+		je newcode
+		jmp originalcode
+
+	checkplayer2:
+		push ebx
+		mov ebx, [GameHook::player2PointerAddress]
+		mov ebx, [ebx]
+		cmp eax, ebx
+		pop ebx
+		je isplayer2
+		jmp originalcode
+
+	isplayer2:
+		push ebx
+		mov ebx, [GameHook::player1PointerAddress]
+		mov ebx, [ebx]
+		cmp ebx, [esi+0x28]
+		pop ebx
+		je newcode
+		jmp originalcode
+#endif
+	newcode:
+		mov eax, 4 // ATHIT_TARGET_PLEM
+		jmp cont
+
+	originalcode:
+		mov eax, [esi+0x10]
+	cont:
+		cmp eax, 4
+		jmp dword ptr [pvp_jmp_ret1]
+	}
+}
+
+int GameHook::lastSeenAtk = 0;
+int GameHook::lastSeenAtkConverted = 0;
+bool GameHook::pvpDamageRemaps_toggle = true;
+static std::unique_ptr<FunctionHook> pvpHook2;
+static uintptr_t pvp_jmp_ret2 = NULL;
+static __declspec(naked) void PvpDetour2(void) { // func is only called when a player is hit
+	_asm { // p2 hit = p2 in edi+60, esi, 
+		// ebx+28 = attacker
+		// originalcode
+		mov eax, [edi+0x14]
+		mov [GameHook::lastSeenAtk], eax
+
+		cmp byte ptr [GameHook::pvp_toggle], 0
+		je cont
+
+		push eax
+		mov eax, [GameHook::player1PointerAddress]
+		mov eax, [eax]
+		cmp eax, [ebx+0x28]
+		pop eax
+		je pvpcode
+		jmp checkplayer2
+
+		checkplayer2:
+		push eax
+		mov eax, [GameHook::player2PointerAddress]
+		mov eax, [eax]
+		cmp eax, [ebx+0x28]
+		pop eax
+		je pvpcode
+		jmp cont
+		
+		pvpcode:
+		cmp byte ptr [GameHook::pvpDamageRemaps_toggle], 0
+		je simpleSwap
+		push eax
+		call GetPvpReaction
+		add esp, 4 // keep new eax
+		jmp retcode
+
+		simpleSwap:
+		sub eax, 8
+		jmp retcode
+
+		cont:
+		add eax, 0xFFFFFEB5 // 0x14b
+		retcode:
+		jmp dword ptr [pvp_jmp_ret2]
+	}
+}
 
 static std::unique_ptr<FunctionHook> initialAngelSlayerFloorHook;
 static uintptr_t initialAngelSlayerFloor_jmp_ret = NULL;
@@ -3451,6 +3915,13 @@ LocalPlayer* GameHook::GetLocalPlayer() {
 		return nullptr;
 }
 
+LocalPlayer* GameHook::GetPlayer1() {
+	if (LocalPlayer* player = *(LocalPlayer**)GameHook::player1PointerAddress)
+		return player;
+	else
+		return nullptr;
+}
+
 LocalPlayer* GameHook::GetPlayer2() {
 	if (LocalPlayer* player = *(LocalPlayer**)GameHook::player2PointerAddress)
 		return player;
@@ -3809,6 +4280,8 @@ void GameHook::InitializeDetours(void) {
 	install_hook_absolute(0x8D2AA3, lateKickStringIDSwapHook, &LateKickStringIDSwapDetour, &lateKickStringIDSwap_jmp_ret, 6); //
 	install_hook_absolute(0x4A8EFF, easierMashHook, &EasierMashDetour, &easierMash_jmp_ret, 5);
 	install_hook_absolute(0x41C8B5, initialAngelSlayerFloorHook, &InitialAngelSlayerFloorDetour, &initialAngelSlayerFloor_jmp_ret, 10);
+	install_hook_absolute(0x419262, pvpHook1, &PvpDetour1, &pvp_jmp_ret1, 6);
+	install_hook_absolute(0x8BA9C7, pvpHook2, &PvpDetour2, &pvp_jmp_ret2, 8);
 	install_hook_absolute(0x5819BB, customEffectColoursHook, &CustomEffectColoursDetour, &customEffectColours_jmp_ret, 32);
 	install_hook_absolute(0x95ABD3, cancellableAfterBurnerHook, &CancellableAfterBurnerDetour, &cancellableAfterBurner_jmp_ret, 6);
 	install_hook_absolute(0x952142, cancellableFallingKickHook, &CancellableFallingKickDetour, &cancellableFallingKick_jmp_ret, 5);

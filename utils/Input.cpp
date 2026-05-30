@@ -409,8 +409,8 @@ namespace utility {
             // mod binds f1 and other one ctrl + f1 and both get activated
             // fixing this properly is for the next refuqtor im tired
             static constexpr std::array<size_t, 11> modifiers{
-                0x01, // lmouse
-                0x02, // rmouse
+                // 0x01, // lmouse
+                // 0x02, // rmouse
                 0x10, // shift
                 0x11, // ctrl
                 0x12, // alt

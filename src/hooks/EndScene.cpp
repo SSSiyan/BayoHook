@@ -94,8 +94,6 @@ static void HotkeyStuff() {
 	if (foregroundPid == GetCurrentProcessId()) {
 		if (GameHook::hk_save_state->check(GameHook::g_input) && GameHook::saveStatesHotkeys_toggle) GameHook::SaveStates_SaveState();
 		if (GameHook::hk_load_state->check(GameHook::g_input) && GameHook::saveStatesHotkeys_toggle) GameHook::SaveStates_LoadState();
-		if (GameHook::hk_save_state->check(GameHook::g_input) && GameHook::saveStatesHotkeys_toggle) GameHook::SaveStates_SaveState();
-		if (GameHook::hk_load_state->check(GameHook::g_input) && GameHook::saveStatesHotkeys_toggle) GameHook::SaveStates_LoadState();
 		if (GameHook::hk_spawn_affinity_spear->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x20000, 1, 0);
 		if (GameHook::hk_spawn_affinity_trumpet->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x20000, 2, 0);
 		if (GameHook::hk_spawn_applaud_spear->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x20000, 4, 0);
