@@ -350,6 +350,7 @@ public:
 	static void GameTick(void);
 	static void ImGuiStyle(void);
 	static void help_marker(const char* desc);
+	static void FlagCheckbox(const char* label, uint32_t& flags, uint32_t flag);
 	static inline void under_line(const ImColor& col);
 	static ImFont* bayoHookFont;
 	static float windowWidth;
@@ -378,8 +379,8 @@ public:
 	static int selectedBoneIndex;
 	static void Draw3dShapes();
 
-	static bool drawFlyingStats_toggle;
-	static void DrawFlyingStats();
+	static bool drawStats_toggle;
+	static void DrawStats();
 
 	static void Setup3dShapes();
 	static void SpawnEntity(EntitySpawn&);

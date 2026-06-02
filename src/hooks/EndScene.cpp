@@ -22,10 +22,10 @@ static void UpdateGameSpeed() {
 	GameHook::deltaSpeed3 = GameHook::deltaSpeed * 3.0f;
 }
 
-static void SetGameSpeed() {
+/*static void SetGameSpeed() {
 	float* gameSpeed = (float*)0xEF6588;
 	*gameSpeed = GameHook::deltaSpeed;
-}
+}*/
 #endif
 
 static void HotkeyStuff() {

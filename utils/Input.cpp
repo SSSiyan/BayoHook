@@ -374,6 +374,7 @@ namespace utility {
     };
 
     bool Hotkey::check(utility::Input& input) {
+        if (!this) return false;
 #if 0
         // TODO: move gamepad stuffs into separate class or idk
         // gamepad path

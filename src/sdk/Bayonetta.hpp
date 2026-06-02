@@ -137,6 +137,31 @@ struct hitbox { // this is the seq files
 static_assert(sizeof(hitbox) == 0x60);
 
 #pragma pack(push, 1)
+struct Enemy {
+    char pad_0[0xd0];
+    Vec3 pos; // 0xd0
+    char pad_dc[0x270];
+    int moveID; // 0x34c
+    char pad_350[0x20];
+    int id; // 0x370
+    int eBeFlag; // 0x374
+    char pad_378[0x6C];
+    float animFrame; // 0x3e4
+    char pad_3e8[0x2cc];
+    int hp; // 0x6b4
+    int hpOld; // 0x6b8
+    int hpMax; // 0x6bc
+    int hpMaxOld; // 0x6c0
+    char pad_6c4[0x5d0];
+    float daze; // 0xc94
+    float dazeMax; // 0xc98
+    float dazeCurrentDuration; // 0xc9c
+    float dazeMaxDurationProbably; // 0xca0
+}; // Size: 0xca4
+#pragma pack(pop)
+static_assert(sizeof(Enemy) == 0xca4);
+
+#pragma pack(push, 1)
 struct LocalPlayer {
     uintptr_t vtable; // 0x0
     char pad_4[0xcc];
@@ -167,8 +192,10 @@ struct LocalPlayer {
     char pad_4c8[0x1D4];   // 0x4C8
     int aerial;            // 0x69C
     char pad_6a0[0x14];
-    int hpDamage; // 0x6b4
-    char pad_6b8[0x14];
+    int hp; // 0x6b4
+    int hpOld; // 0x6b8
+    int hpMax; // 0x6bc
+    char pad_6c0[0xC];
     float slowmo; // 0x6cc
     char pad_6d0[0x60];
     float iFramesRemaining; // 0x730
@@ -182,7 +209,7 @@ struct LocalPlayer {
     char pad_92250[0xeb4];
     bool clip; // 0x93104
     char pad_93105[0x403];
-    int hp; // 0x93508
+    int hpUnk; // 0x93508
     char pad_9350c[0x10];
     float birdTimer; // 0x9351c
     char pad_93520[0x58];
@@ -200,7 +227,9 @@ struct LocalPlayer {
     WickedWeave* idkWeave2; // 0x937c8
     WickedWeave* idkWeave3; // 0x937cc
     WickedWeave* legWeave; // 0x937d0
-    char pad_937d4[0x230];
+    char pad_937d4[0x180];
+    Enemy* softLockEnemy; // 0x93954
+    char pad_93958[0xAC];
     float m_RhythmTimer; // 0x93a04
     char pad_93a08[0x8];
     int m_bRhythmActionSuccess; // 0x93a10
@@ -267,26 +296,6 @@ struct LocalPlayer {
 }; // Size: 0x96c0c
 #pragma pack(pop)
 static_assert(sizeof(LocalPlayer) == 0x96c0c);
-
-#pragma pack(push, 1)
-struct Enemy {
-    char pad_0[0xd0];
-    Vec3 pos; // 0xd0
-    char pad_dc[0x270];
-    int moveID; // 0x34c
-    char pad_350[0x94];
-    float animFrame; // 0x3e4
-    char pad_3e8[0x2cc];
-    int hp; // 0x6b4
-    int hpMax; // 0x6b8
-    char pad_6bc[0x5d8];
-    float daze; // 0xc94
-    float dazeMax; // 0xc98
-    float dazeCurrentDuration; // 0xc9c
-    float dazeMaxDurationProbably; // 0xca0
-}; // Size: 0xca4
-#pragma pack(pop)
-static_assert(sizeof(Enemy) == 0xca4);
 
 struct EntitySpawnArg2 {
     int int_0 = 0;                // 0x0

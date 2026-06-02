@@ -1044,28 +1044,6 @@ static int GetPvpReaction(int atkType) {
 		return GameHook::atkTestReplacement;
 	}
 	switch (atkType) {
-	// LIGHT
-	case ATHIT_TYPE_PL_HANDGUN:
-	case ATHIT_TYPE_PL_HANDGUN_SML:
-	case ATHIT_TYPE_PL_S_HANDGUN:
-	case ATHIT_TYPE_PL_M_HANDGUN:
-	case ATHIT_TYPE_PL_HANDGUN_REFLECT:
-	case ATHIT_TYPE_PL_SHOTGUN_SML:
-	case ATHIT_TYPE_PL_SHOOTING_HANDGUN:
-	case ATHIT_TYPE_PL_STAMP: // falling
-	case ATHIT_TYPE_PL_NUNCHUK_BEAM_SML:
-	case ATHIT_TYPE_PL_VARIANT_ARROW:
-	case ATHIT_TYPE_PL_VARIANT_TRUMPET:
-	case ATHIT_TYPE_PL_VARIANT_S_TRUMPET:
-	case ATHIT_TYPE_PL_LASER_SHOT:
-	case ATHIT_TYPE_PL_LASER_FOOTSHOT:
-	case ATHIT_TYPE_PL_LASER_S_BEAM:
-	case ATHIT_TYPE_PL_GW_ARROW:
-	case ATHIT_TYPE_PL_FIREBALL:
-	case ATHIT_TYPE_PL_KISSMARK:
-	case ATHIT_TYPE_PL_MACHINEGUN:
-		return PVP_LIGHT;
-
 	// HEAVY
 	case ATHIT_TYPE_PL_BLOWPUNCH:
 	case ATHIT_TYPE_PL_BLOWPUNCH2:
@@ -1175,6 +1153,29 @@ static int GetPvpReaction(int atkType) {
 	case ATHIT_TYPE_PL_LASER_BEAM:
 	case ATHIT_TYPE_PL_NUNCHUK_BEAM:
 		return PVP_YELLOW_ELECTRIC;
+
+		// LIGHT
+	case ATHIT_TYPE_PL_HANDGUN:
+	case ATHIT_TYPE_PL_HANDGUN_SML:
+	case ATHIT_TYPE_PL_S_HANDGUN:
+	case ATHIT_TYPE_PL_M_HANDGUN:
+	case ATHIT_TYPE_PL_HANDGUN_REFLECT:
+	case ATHIT_TYPE_PL_SHOTGUN_SML:
+	case ATHIT_TYPE_PL_SHOOTING_HANDGUN:
+	case ATHIT_TYPE_PL_STAMP: // falling
+	case ATHIT_TYPE_PL_NUNCHUK_BEAM_SML:
+	case ATHIT_TYPE_PL_VARIANT_ARROW:
+	case ATHIT_TYPE_PL_VARIANT_TRUMPET:
+	case ATHIT_TYPE_PL_VARIANT_S_TRUMPET:
+	case ATHIT_TYPE_PL_LASER_SHOT:
+	case ATHIT_TYPE_PL_LASER_FOOTSHOT:
+	case ATHIT_TYPE_PL_LASER_S_BEAM:
+	case ATHIT_TYPE_PL_GW_ARROW:
+	case ATHIT_TYPE_PL_FIREBALL:
+	case ATHIT_TYPE_PL_KISSMARK:
+	case ATHIT_TYPE_PL_MACHINEGUN:
+		//return PVP_LIGHT; // not usable on anything fast, the stun is so quick and you can be hit immediately after
+							// so lets roll this into normal
 
 	// NORMAL
 	case ATHIT_TYPE_PL_SHOTGUN:
@@ -1390,6 +1391,8 @@ static int GetPvpReaction(int atkType) {
 bool GameHook::pvp_toggle = false;
 static std::unique_ptr<FunctionHook> pvpHook1;
 static uintptr_t pvp_jmp_ret1 = NULL;
+// change players to be able to damage both players and enemies via forcing enum ATHIT_TARGET to ATHIT_TARGET_PLEM
+// you could also just patch the push @ 009D13EF
 static __declspec(naked) void PvpDetour1(void) {
 	_asm {
 		cmp byte ptr [GameHook::pvp_toggle], 0
@@ -1450,14 +1453,23 @@ int GameHook::lastSeenAtkConverted = 0;
 bool GameHook::pvpDamageRemaps_toggle = true;
 static std::unique_ptr<FunctionHook> pvpHook2;
 static uintptr_t pvp_jmp_ret2 = NULL;
+// change damage reactions for pvp
 static __declspec(naked) void PvpDetour2(void) { // func is only called when a player is hit
 	_asm { // p2 hit = p2 in edi+60, esi, 
 		// ebx+28 = attacker
 		// originalcode
+		pushfd
 		mov eax, [edi+0x14]
 		mov [GameHook::lastSeenAtk], eax
 
 		cmp byte ptr [GameHook::pvp_toggle], 0
+		je cont
+
+		push eax // check p2 exists in case pvp is enabled pointlessly
+		mov eax, [GameHook::player2PointerAddress]
+		mov eax, [eax]
+		test eax, eax
+		pop eax
 		je cont
 
 		push eax
@@ -1492,7 +1504,58 @@ static __declspec(naked) void PvpDetour2(void) { // func is only called when a p
 		cont:
 		add eax, 0xFFFFFEB5 // 0x14b
 		retcode:
+		popfd
 		jmp dword ptr [pvp_jmp_ret2]
+	}
+}
+
+static std::unique_ptr<FunctionHook> pvpHook3;
+static uintptr_t pvp_jmp_ret3 = NULL;
+static constexpr uintptr_t pvp_jmp_out3 = 0x49A65B;
+// exclude locking on to self with lock on
+static __declspec(naked) void PvpDetour3(void) {
+	_asm {
+		pushfd // add 4 to esp
+		cmp byte ptr [GameHook::pvp_toggle], 0
+		je originalcode
+
+		cmp ecx, [esp+0x8] // exclude self
+		je jmpout
+
+		originalcode:
+		mov edx, [ecx+0x00000378]
+		// retcode:
+		popfd
+		jmp dword ptr [pvp_jmp_ret3]
+
+		jmpout:
+		popfd
+		jmp dword ptr [pvp_jmp_out3]
+	}
+}
+
+static std::unique_ptr<FunctionHook> pvpHook4;
+static uintptr_t pvp_jmp_ret4 = NULL;
+static constexpr uintptr_t pvp_jmp_out4 = 0x49A998;
+// exclude locking on to self with movement or attacks
+static __declspec(naked) void PvpDetour4(void) {
+	_asm {
+		pushfd // add 4 to esp
+		cmp byte ptr [GameHook::pvp_toggle], 0
+		je originalcode
+
+		cmp ecx, [esp+0x8] // exclude self
+		je jmpout
+
+		originalcode:
+		mov edx, [ecx+0x00000378]
+		// retcode:
+		popfd
+		jmp dword ptr [pvp_jmp_ret4]
+
+		jmpout:
+		popfd
+		jmp dword ptr [pvp_jmp_out4]
 	}
 }
 
@@ -1525,21 +1588,22 @@ static void AddHitDataPtr(void* ptr) {
 
 static std::unique_ptr<FunctionHook> getHitboxHook;
 static uintptr_t getHitbox_jmp_ret = NULL;
-static float getHitboxXmm0Backup = 0.0f;
 static __declspec(naked) void GetHitboxDetour(void) {
 	_asm {
 		pushfd
 		cmp byte ptr [GameHook::drawHitboxes_toggle], 0
 		je originalcode
 
-		movss [getHitboxXmm0Backup], xmm0
+		sub esp, 4
+		movss [esp], xmm0 // backup xmm0
 		pushad
 		add ebx, 0xD0 // old offset was +0x30
 		push ebx
 		call AddHitDataPtr
 		add esp, 4
 		popad
-		movss xmm0, [getHitboxXmm0Backup]
+		add esp, 4
+		movss xmm0, [esp] // restore xmm0
 		originalcode:
 		popfd
 		addss xmm0, [ebx+0x00000100]
@@ -1557,6 +1621,7 @@ bool GameHook::turboCutscene_toggle = false;
 float GameHook::turboCutscene = 5.0f;
 static __declspec(naked) void TurboHookDetour(void) {
 	_asm {
+		pushfd
 		cmp byte ptr [GameHook::openMenuPause_toggle], 1
 		je zerospeed
 		jmp turbocheck
@@ -1596,6 +1661,7 @@ static __declspec(naked) void TurboHookDetour(void) {
 		//popcode:
 		//pop eax
 		originalcode:
+		popfd
 		movss [edi+0x44], xmm0
 		jmp dword ptr[turbo_jmp_ret]
 	}
@@ -1607,6 +1673,7 @@ bool GameHook::enemyHPNoDamage_toggle = false;
 bool GameHook::enemyHPOneHitKill_toggle = false;
 static __declspec(naked) void EnemyHPDetour(void) {
 	_asm {
+		pushfd
 		cmp byte ptr [GameHook::enemyHPOneHitKill_toggle], 1
 		je one_hit_kill
 		jmp check2
@@ -1617,14 +1684,16 @@ static __declspec(naked) void EnemyHPDetour(void) {
 		jmp originalcode
 
 		no_damage:
-		jmp dword ptr [enemyHP_jmp_ret]
+		jmp retcode
 
 		one_hit_kill:
 		mov dword ptr [esi+0x000006B4], 0
-		jmp dword ptr [enemyHP_jmp_ret]
+		jmp retcode
 
 		originalcode:
 		mov [esi+0x000006B4], eax
+		retcode:
+		popfd
 		jmp dword ptr [enemyHP_jmp_ret]
 		// this hides test eax,eax in CE but it is still there
 	}
@@ -1636,15 +1705,18 @@ bool GameHook::witchTimeMultiplier_toggle = false;
 float GameHook::witchTimeMultiplier = 1.0f;
 static __declspec(naked) void WitchTimeMultiplierDetour(void) {
 	_asm {
+		pushfd
 		cmp byte ptr [GameHook::witchTimeMultiplier_toggle], 0
 		je originalcode
 
 		fmul dword ptr [esi+0x00095D68] // might be game speed or something? 1 by default
 		fdiv dword ptr [GameHook::witchTimeMultiplier]
-		jmp dword ptr [witchTimeMultiplier_jmp_ret]
+		jmp retcode
 
 		originalcode:
 		fmul dword ptr [esi+0x00095D68]
+		retcode:
+		popfd
 		jmp dword ptr [witchTimeMultiplier_jmp_ret]
 	}
 }
@@ -1666,6 +1738,7 @@ bool GameHook::infMagic_toggle = false;
 float GameHook::infMagic_value = 1200.0f;
 static __declspec(naked) void InfMagicDetour(void) {
 	_asm {
+		pushfd
 		pushad
 		call GameHook::CallFromGameThread
 		popad
@@ -1681,6 +1754,7 @@ static __declspec(naked) void InfMagicDetour(void) {
 		originalcode:
 		movss xmm0, [eax]
 		pop eax
+		popfd
 		jmp dword ptr [infMagic_jmp_ret]
 	}
 }
@@ -1688,23 +1762,26 @@ static __declspec(naked) void InfMagicDetour(void) {
 static std::unique_ptr<FunctionHook> damageDealtMultiplierHook;
 static uintptr_t damageDealtMultiplier_jmp_ret = NULL;
 bool GameHook::damageDealtMultiplier_toggle = false;
-static float damageDealtMultiplierXmm0Backup = 0.0f;
 float GameHook::damageDealtMultiplierMult = 1.0f;
 static __declspec(naked) void DamageDealtMultiplierDetour(void) {
 	_asm {
+		pushfd
 		mov [esi+0x000006B8], eax // originalcode, early bytes to avoid EnemyHPDetour
 		cmp byte ptr [GameHook::damageDealtMultiplier_toggle], 0
 		je originalcode
 
-		movss [damageDealtMultiplierXmm0Backup], xmm0 // xmm0 backup
+		sub esp, 4
+		movss [esp], xmm0 // backup xmm0
 		cvtsi2ss xmm0, edi // convert to float
 		mulss xmm0, [GameHook::damageDealtMultiplierMult] // multiply
 		cvttss2si edi, xmm0 // convert from float
-		movss xmm0,[damageDealtMultiplierXmm0Backup] // restore xmm0
+		movss xmm0, [esp] // restore xmm0
+		add esp, 4
 
 		originalcode:
 		sub eax, edi
 		mov [GameHook::haloDisplayValue], eax // after damage subtraction
+		popfd
 		jmp dword ptr [damageDealtMultiplier_jmp_ret]
 	}
 }
@@ -1714,9 +1791,9 @@ static uintptr_t damageReceivedMultiplier_jmp_ret = NULL;
 bool GameHook::damageReceivedMultiplierNoDamage_toggle = false;
 bool GameHook::damageReceivedMultiplier_toggle = false;
 float GameHook::incoming_damage_mult = 1.0f;
-static float damageMultXmm0Backup = 0.0f;
 static __declspec(naked) void DamageReceivedMultiplierDetour(void) {
 	_asm {
+		pushfd
 		cmp byte ptr [GameHook::damageReceivedMultiplierNoDamage_toggle], 1
 		je no_damage
 		jmp check2
@@ -1730,17 +1807,20 @@ static __declspec(naked) void DamageReceivedMultiplierDetour(void) {
 		jmp retcode
 
 		damage_mult:
-		movss [damageMultXmm0Backup], xmm0
+		sub esp, 4
+		movss [esp], xmm0 // backup xmm0
 		movd xmm0, ecx
 		cvtdq2ps xmm0, xmm0
 		mulss xmm0, [GameHook::incoming_damage_mult]
 		cvttss2si ecx, xmm0
-		movss xmm0, [damageMultXmm0Backup]
+		movss xmm0, [esp] // restore xmm0
+		add esp, 4
 
 		originalcode:
 		sub eax, ecx
 		mov [esi+0x00093508], eax
 		retcode:
+		popfd
 		jmp dword ptr [damageReceivedMultiplier_jmp_ret]
 	}
 }
@@ -1751,14 +1831,17 @@ bool GameHook::customCameraDistance_toggle = false;
 float GameHook::customCameraDistance = 10.0f;
 static __declspec(naked) void CustomCameraDistanceDetour(void) {
 	_asm {
+		pushfd
 		cmp byte ptr [GameHook::customCameraDistance_toggle], 0
 		je originalcode
 
 		fld dword ptr [GameHook::customCameraDistance]
-		jmp dword ptr [customCameraDistance_jmp_ret]
+		jmp retcode
 
 		originalcode:
 		fld dword ptr [edi+0x00000B50]
+		retcode:
+		popfd
 		jmp dword ptr [customCameraDistance_jmp_ret]
 	}
 }
@@ -1770,6 +1853,7 @@ int GameHook::haloDisplayValue = 0;
 uintptr_t haloDisplayAddress = 0x5BB57B0;
 static __declspec(naked) void HaloDisplayDetour(void) {
 	_asm {
+		pushfd
 		cmp byte ptr [GameHook::haloDisplay_toggle], 0
 		je originalcode
 
@@ -1782,6 +1866,7 @@ static __declspec(naked) void HaloDisplayDetour(void) {
 		mov esi, [haloDisplayAddress] // i still hate this
 		mov [esi], eax
 		pop esi
+		popfd
 		jmp dword ptr [haloDisplay_jmp_ret]
 	}
 }
@@ -1803,6 +1888,7 @@ static std::unique_ptr<FunctionHook> moveIDSwapHook;
 static uintptr_t moveIDSwap_jmp_ret = NULL;
 static __declspec(naked) void MoveIDSwapDetour(void) { // player in ecx
 	_asm {
+		pushfd
 		cmp byte ptr [GameHook::moveIDSwaps_toggle], 0
 		je originalcode
 
@@ -1832,6 +1918,7 @@ static __declspec(naked) void MoveIDSwapDetour(void) { // player in ecx
 		originalcode:
 		mov [ecx+0x0000034C], edx
 		retcode:
+		popfd
 		jmp dword ptr [moveIDSwap_jmp_ret]
 	}
 }
@@ -1853,6 +1940,7 @@ static std::unique_ptr<FunctionHook> punchStringIDSwapHook;
 static uintptr_t punchStringIDSwap_jmp_ret = NULL;
 static __declspec(naked) void PunchStringIDSwapDetour(void) {
 	_asm {
+		pushfd
 		cmp byte ptr [GameHook::stringSwaps_toggle], 0
 		je originalcode
 
@@ -1883,6 +1971,7 @@ static __declspec(naked) void PunchStringIDSwapDetour(void) {
 		originalcode:
 		mov [esi+0x00095C64], edx
 		retcode:
+		popfd
 		jmp dword ptr [punchStringIDSwap_jmp_ret]
 	}
 }
@@ -4006,6 +4095,7 @@ void GameHook::Setup3dShapes() {
 	static uintptr_t matrixAddress = 0xF2DCE0;
 	// ImGui::InputScalar("matrixAddr", ImGuiDataType_U64, &matrixAddress, NULL, NULL, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
 	viewProj = *(Matrix4x4*)matrixAddress;
+	WorldVisualizer::SetViewProjectionMatrix(viewProj);
 }
 
 bool GameHook::drawPlayerBones_toggle = false;
@@ -4024,7 +4114,6 @@ void GameHook::Draw3dShapes() {
         ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar |
         ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoBringToFrontOnFocus);
     WorldVisualizer::SetDrawList(ImGui::GetWindowDrawList());
-    WorldVisualizer::SetViewProjectionMatrix(viewProj);
 
     if (GameHook::drawPlayerBones_toggle) {
         Matrix3x3 playerRot = WorldVisualizer::CreateRotationMatrix(player->rot.x, player->rot.y, player->rot.z);
@@ -4095,6 +4184,38 @@ void GameHook::Draw3dShapes() {
 				selectedBoneIndex = -1;
 			}
 		}
+		if (selectedBone) {
+			ImGui::Begin("Bone Offsets", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize);
+			ImGui::Text("Bone index: #%d ptr: %p id: #%d", selectedBoneIndex, (void*)selectedBone, selectedBone->boneID);
+			ImGui::Separator();
+			ImGui::DragFloat("Offset X", &selectedBone->offset.x, 0.01f, NULL, NULL, "%.2f");
+			ImGui::DragFloat("Offset Y", &selectedBone->offset.y, 0.01f, NULL, NULL, "%.2f");
+			ImGui::DragFloat("Offset Z", &selectedBone->offset.z, 0.01f, NULL, NULL, "%.2f");
+
+			ImGui::Spacing();
+			ImGui::Separator();
+
+			if (!allBones.empty()) {
+				if (ImGui::SliderInt("Bone", &selectedBoneIndex, 0, (int)allBones.size() - 1)) {
+					selectedBone = allBones[selectedBoneIndex];
+				}
+			}
+
+			ImGui::Spacing();
+
+			if (ImGui::Button("Reset Offsets")) {
+				selectedBone->offset.x = 0.0f;
+				selectedBone->offset.y = 0.0f;
+				selectedBone->offset.z = 0.0f;
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Deselect")) {
+				selectedBone = nullptr;
+				selectedBoneIndex = -1;
+			}
+
+			ImGui::End();
+		}
     }
 
     if (GameHook::drawHitboxes_toggle) {
@@ -4105,76 +4226,6 @@ void GameHook::Draw3dShapes() {
     }
 
     ImGui::End();
-
-	if (selectedBone) {
-		ImGui::Begin("Bone Offsets", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize);
-		ImGui::Text("Bone index: #%d ptr: %p id: #%d", selectedBoneIndex, (void*)selectedBone, selectedBone->boneID);
-		ImGui::Separator();
-		ImGui::DragFloat("Offset X", &selectedBone->offset.x, 0.01f, NULL, NULL, "%.2f");
-		ImGui::DragFloat("Offset Y", &selectedBone->offset.y, 0.01f, NULL, NULL, "%.2f");
-		ImGui::DragFloat("Offset Z", &selectedBone->offset.z, 0.01f, NULL, NULL, "%.2f");
-
-		ImGui::Spacing();
-		ImGui::Separator();
-
-		if (!allBones.empty()) {
-			if (ImGui::SliderInt("Bone", &selectedBoneIndex, 0, (int)allBones.size() - 1)) {
-				selectedBone = allBones[selectedBoneIndex];
-			}
-		}
-
-		ImGui::Spacing();
-
-		if (ImGui::Button("Reset Offsets")) {
-			selectedBone->offset.x = 0.0f;
-			selectedBone->offset.y = 0.0f;
-			selectedBone->offset.z = 0.0f;
-		}
-		ImGui::SameLine();
-		if (ImGui::Button("Deselect")) {
-			selectedBone = nullptr;
-			selectedBoneIndex = -1;
-		}
-
-		ImGui::End();
-	}
-}
-
-bool GameHook::drawFlyingStats_toggle = false;
-void GameHook::DrawFlyingStats() {
-	if (!GameHook::drawFlyingStats_toggle) { return; }
-	LocalPlayer* player = GameHook::GetLocalPlayer();
-
-	if (player) {
-		float fontSize = ImGui::GetFontSize();
-		static ImVec2 playerScreenPos;
-		WorldVisualizer::WorldToScreen(player->pos, playerScreenPos);
-		ImGui::Begin("FlyingPlayerStats", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar);
-		ImGui::SetWindowPos(playerScreenPos);
-		ImGui::SetNextItemWidth(fontSize * 9.0f);
-		ImGui::InputFloat3("Pos##FlyingPlayerXYZPosInputFloat", &player->pos.x, "%.1f");
-		ImGui::PushItemWidth(fontSize * 3.0f);
-		ImGui::InputInt("Move ID##FlyingPlayerMoveIDInputInt", &player->moveID, NULL, NULL);
-		ImGui::InputInt("String ID##FlyingPlayerStringIDInputInt", &player->stringID, NULL, NULL);
-		// ImGui::InputFloat("iframes##FlyingPlayerIframesInputFloat", &player->iFramesRemaining, NULL, NULL, "%.0f");
-		ImGui::PopItemWidth();
-		ImGui::End();
-
-		Enemy* enemy = *(Enemy**)GameHook::enemyLockedOnAddress;
-		if (enemy) {
-			static ImVec2 enemyScreenPos;
-			WorldVisualizer::WorldToScreen(enemy->pos, enemyScreenPos);
-			ImGui::Begin("FlyingEnemyStats", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar);
-			ImGui::SetWindowPos(enemyScreenPos);
-			ImGui::SetNextItemWidth(fontSize * 9.0f);
-			ImGui::InputFloat3("Pos##FlyingEnemyXYZPosInputFloat", &enemy->pos.x, "%.1f");
-			ImGui::PushItemWidth(fontSize * 3.0f);
-			ImGui::SliderInt("HP##FlyingEnemyHPInputInt", &enemy->hp, 0, enemy->hpMax);
-			ImGui::InputInt("Move ID##FlyingEnemyMoveIDInputInt", &enemy->moveID, 0, 0);
-			ImGui::PopItemWidth();
-			ImGui::End();
-		}
-	}
 }
 
 void GameHook::EasySpawnEntityFromHotkey(int enemyID, int variant, int spawnModifier) {
@@ -4248,8 +4299,8 @@ bool install_hook_absolute(uintptr_t location, std::unique_ptr<FunctionHook>& ho
 }
 
 void GameHook::InitializeDetours(void) {
-	std::random_device rd;
-	GameHook::rng.seed(rd() ^ (unsigned)time(NULL));
+	static std::random_device bayoHookRandomDevice;
+	GameHook::rng.seed(bayoHookRandomDevice() ^ (unsigned)time(NULL));
 	InitSwapRules();
 
 	install_hook_absolute(0xC78100, uptimeFixHook, &UptimeFixDetour, &uptimeFix_jmp_ret, 6);
@@ -4268,7 +4319,7 @@ void GameHook::InitializeDetours(void) {
 	install_hook_absolute(0x41837E, getHitboxHook, &GetHitboxDetour, &getHitbox_jmp_ret, 8);
 	install_hook_absolute(0x4572BA, enemyHPHook, &EnemyHPDetour, &enemyHP_jmp_ret, 6);
 	install_hook_absolute(0x9E1808, witchTimeHook, &WitchTimeMultiplierDetour, &witchTimeMultiplier_jmp_ret, 6);
-	install_hook_absolute(0x8BCE4C, infMagicHook, &InfMagicDetour, &infMagic_jmp_ret, 8);
+	install_hook_absolute(0x8BCE4C, infMagicHook, &InfMagicDetour, &infMagic_jmp_ret, 8); // happens without this 
 	install_hook_absolute(0x4572B2, damageDealtMultiplierHook, &DamageDealtMultiplierDetour, &damageDealtMultiplier_jmp_ret, 8);
 	install_hook_absolute(0x9D4327, damageReceivedMultiplierHook, &DamageReceivedMultiplierDetour, &damageReceivedMultiplier_jmp_ret, 8);
 	install_hook_absolute(0xA941FA, customCameraDistanceHook, &CustomCameraDistanceDetour, &customCameraDistance_jmp_ret, 6);
@@ -4282,6 +4333,8 @@ void GameHook::InitializeDetours(void) {
 	install_hook_absolute(0x41C8B5, initialAngelSlayerFloorHook, &InitialAngelSlayerFloorDetour, &initialAngelSlayerFloor_jmp_ret, 10);
 	install_hook_absolute(0x419262, pvpHook1, &PvpDetour1, &pvp_jmp_ret1, 6);
 	install_hook_absolute(0x8BA9C7, pvpHook2, &PvpDetour2, &pvp_jmp_ret2, 8);
+	install_hook_absolute(0x49A47B, pvpHook3, &PvpDetour3, &pvp_jmp_ret3, 6);
+	install_hook_absolute(0x49A7CB, pvpHook4, &PvpDetour4, &pvp_jmp_ret4, 6);
 	install_hook_absolute(0x5819BB, customEffectColoursHook, &CustomEffectColoursDetour, &customEffectColours_jmp_ret, 32);
 	install_hook_absolute(0x95ABD3, cancellableAfterBurnerHook, &CancellableAfterBurnerDetour, &cancellableAfterBurner_jmp_ret, 6);
 	install_hook_absolute(0x952142, cancellableFallingKickHook, &CancellableFallingKickDetour, &cancellableFallingKick_jmp_ret, 5);
@@ -4293,7 +4346,7 @@ void GameHook::InitializeDetours(void) {
 	install_hook_absolute(0x513C1E, disableSlowmoHook, &DisableSlowmoDetour, &disableSlowmo_jmp_ret, 5);
 	install_hook_absolute(0x9E93B9, lowerDivekickHook, &LowerDivekickDetour, &lowerDivekick_jmp_ret, 7);
 	install_hook_absolute(0x94CAAF, dualAfterBurnerHook, &DualAfterBurnerDetour, &dualAfterBurner_jmp_ret, 5);
-	// install_hook_absolute(0xC798A7, getMotNameHook, &GetMotNameDetour, &getMotName_jmp_ret, 6);
+	//install_hook_absolute(0xC798A7, getMotNameHook, &GetMotNameDetour, &getMotName_jmp_ret, 6);
 	//install_hook_absolute(0x6222D0, loadReplaceHook, &LoadReplaceDetour, &loadReplace_jmp_ret, 6);
 	install_hook_absolute(0x4CCCA0, longerPillowTalkChargeHook, &LongerPillowTalkChargeDetour, &longerPillowTalkCharge_jmp_ret, 6);
 	install_hook_absolute(0x8EF527, alwaysWitchTimeHook, &AlwaysWitchTimeDetour, &alwaysWitchTime_jmp_ret, 8);
@@ -4392,7 +4445,7 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	SixtyFpsCutscenes(sixtyFpsCutscenes_toggle);
 	/*memPatch_toggle = cfg.get<bool>("memPatch_toggle").value_or(false);
 	MemPatch(memPatch_toggle);*/
-	drawFlyingStats_toggle = cfg.get<bool>("drawFlyingStats_toggle").value_or(false);
+	drawStats_toggle = cfg.get<bool>("drawStats_toggle").value_or(false);
 	showMessages_toggle = cfg.get<bool>("showMessages_toggle").value_or(true);
 	damageReceivedMultiplierNoDamage_toggle = cfg.get<bool>("damageReceivedMultiplierNoDamage_toggle").value_or(false);
 	infJumps_toggle = cfg.get<bool>("infJumps_toggle").value_or(false);
@@ -4665,7 +4718,7 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	}
 
 	cfg.set<bool>("drawPlayerBones_toggle", drawPlayerBones_toggle);
-	cfg.set<bool>("drawFlyingStats_toggle", drawFlyingStats_toggle);
+	cfg.set<bool>("drawStats_toggle", drawStats_toggle);
 	cfg.set<bool>("allowSettingThirdAccessory_toggle", allowSettingThirdAccessory_toggle);
 
 	cfg.set<bool>("moveIDSwaps_toggle", moveIDSwaps_toggle);
