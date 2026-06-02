@@ -240,6 +240,8 @@ public:
 	static int lastSeenAtkConverted;
 	static int atkTest;
 	static int atkTestReplacement;
+	static bool cameraSelect_toggle;
+	static int cameraSelect_newCameraType;
 	static bool pvpDamageRemaps_toggle;
 	static int initialAngelSlayerFloor;
 	static bool openMenuPause_toggle;

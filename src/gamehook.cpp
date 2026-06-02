@@ -1559,6 +1559,28 @@ static __declspec(naked) void PvpDetour4(void) {
 	}
 }
 
+bool GameHook::cameraSelect_toggle = false;
+static std::unique_ptr<FunctionHook> cameraSelectHook;
+static uintptr_t cameraSelect_jmp_ret = NULL;
+int GameHook::cameraSelect_newCameraType = 0;
+// exclude locking on to self with movement or attacks
+static __declspec(naked) void CameraSelectDetour(void) {
+	_asm {
+		pushfd // add 4 to esp
+		cmp byte ptr [GameHook::cameraSelect_toggle], 0
+		je originalcode
+
+		mov eax, [GameHook::cameraSelect_newCameraType]
+		jmp retcode
+
+		originalcode:
+		mov eax, [ebx+0x00000CF0]
+		retcode:
+		popfd
+		jmp dword ptr [cameraSelect_jmp_ret]
+	}
+}
+
 static std::unique_ptr<FunctionHook> initialAngelSlayerFloorHook;
 static uintptr_t initialAngelSlayerFloor_jmp_ret = NULL;
 int GameHook::initialAngelSlayerFloor = 0;
@@ -4335,6 +4357,7 @@ void GameHook::InitializeDetours(void) {
 	install_hook_absolute(0x8BA9C7, pvpHook2, &PvpDetour2, &pvp_jmp_ret2, 8);
 	install_hook_absolute(0x49A47B, pvpHook3, &PvpDetour3, &pvp_jmp_ret3, 6);
 	install_hook_absolute(0x49A7CB, pvpHook4, &PvpDetour4, &pvp_jmp_ret4, 6);
+	install_hook_absolute(0xAA657B, cameraSelectHook, &CameraSelectDetour, &cameraSelect_jmp_ret, 6);
 	install_hook_absolute(0x5819BB, customEffectColoursHook, &CustomEffectColoursDetour, &customEffectColours_jmp_ret, 32);
 	install_hook_absolute(0x95ABD3, cancellableAfterBurnerHook, &CancellableAfterBurnerDetour, &cancellableAfterBurner_jmp_ret, 6);
 	install_hook_absolute(0x952142, cancellableFallingKickHook, &CancellableFallingKickDetour, &cancellableFallingKick_jmp_ret, 5);
@@ -4516,6 +4539,8 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	TauntWithTimeBracelet(tauntWithTimeBracelet_toggle);
 
 	// detours
+	cameraSelect_toggle = cfg.get<bool>("cameraSelect_toggle").value_or(false);
+	cameraSelect_newCameraType = cfg.get<int>("cameraSelect_newCameraType").value_or(0);
 	drawHitboxes_toggle = cfg.get<bool>("drawHitboxes_toggle").value_or(false);
 	openMenuPause_toggle = cfg.get<bool>("openMenuPause_toggle").value_or(false);
 	enemyHPNoDamage_toggle = cfg.get<bool>("enemyHPNoDamage_toggle").value_or(false);
@@ -4671,6 +4696,8 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("longerBufferWindows_toggle", longerBufferWindows_toggle);
 
 	// detours
+	cfg.set<bool>("cameraSelect_toggle", cameraSelect_toggle);
+	cfg.set<int>("cameraSelect_newCameraType", cameraSelect_newCameraType);
 	cfg.set<bool>("drawHitboxes_toggle", drawHitboxes_toggle);
 	cfg.set<bool>("openMenuPause_toggle", openMenuPause_toggle);
 	cfg.set<bool>("enemyHPNoDamage_toggle", enemyHPNoDamage_toggle);

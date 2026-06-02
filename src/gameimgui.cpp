@@ -831,6 +831,32 @@ void GameHook::GameImGui(void) {
             }
             ImGui::EndGroup();
 
+            ImGui::BeginGroup();
+            ImGui::Checkbox("Force Camera Type", &GameHook::cameraSelect_toggle);
+            help_marker("I should label these\n34, 35, 52 and 53 crash so will be skipped over");
+            if (GameHook::cameraSelect_toggle) {
+                ImGui::Indent();
+                ImGui::PushItemWidth(inputItemWidth);
+                if (ImGui::InputInt("##CameraTypeInputInt", &GameHook::cameraSelect_newCameraType, 1, 10)) {
+                    switch (GameHook::cameraSelect_newCameraType) {
+                        case 34:
+                        case 35:
+                            GameHook::cameraSelect_newCameraType = 36;
+						    break;
+                        case 52:
+                        case 53:
+							GameHook::cameraSelect_newCameraType = 54;
+                            break;
+                    }
+                    if (GameHook::cameraSelect_newCameraType > 69) {
+                        GameHook::cameraSelect_newCameraType = 69;
+					}
+                }
+                ImGui::PopItemWidth();
+				ImGui::Unindent();
+            }
+            ImGui::EndGroup();
+
             tabHeight += ImGui::GetCursorPosY();
             ImGui::EndChild();
             ImGui::EndTabItem();
