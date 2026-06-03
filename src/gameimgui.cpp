@@ -1137,7 +1137,9 @@ void GameHook::GameImGui(void) {
             }
             help_marker("Load Mission Select instead of Angel Attack. You will miss out on Halos and items.");
 
-            ImGui::Checkbox("Skip Intro Logos", &GameHook::skipIntroLogos_toggle);
+            if (ImGui::Checkbox("Skip Intro Logos", &GameHook::skipIntroLogos_toggle)) {
+                GameHook::SkipIntroLogos(GameHook::skipIntroLogos_toggle);
+            }
             help_marker("Skip the PlatinumGames / SEGA intro logos on startup");
 
             if (ImGui::Checkbox("60 FPS Cutscenes", &GameHook::sixtyFpsCutscenes_toggle)) {

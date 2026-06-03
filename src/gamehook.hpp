@@ -323,6 +323,7 @@ public:
 	static float saveStates_SavedPlayerXYZPos[3];
 
 	static bool skipIntroLogos_toggle;
+	static void SkipIntroLogos(bool enabled);
 #endif
 	// addresses
 	static uintptr_t playerPointerAddress;
