@@ -321,6 +321,8 @@ public:
 	static float saveStates_SavedEnemyXYZPos[3];
 	static int saveStates_SavedPlayerMoveID;
 	static float saveStates_SavedPlayerXYZPos[3];
+
+	static bool skipIntroLogos_toggle;
 #endif
 	// addresses
 	static uintptr_t playerPointerAddress;

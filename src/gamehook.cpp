@@ -267,6 +267,26 @@ void GameHook::SixtyFpsCutscenes(bool enabled) {
 	}
 }
 
+//Bayonetta.exe + 59BE2 - E8 E9 58 80 00 - call Bayonetta.sub_C5F4D0
+//Bayonetta.exe + 59BE7 - 6A 01 - push 01 { 1 }
+bool GameHook::skipIntroLogos_toggle = false;
+static std::unique_ptr<FunctionHook> skipIntroLogosHook;
+static uintptr_t skipIntroLogos_jmp_ret = NULL;
+static uintptr_t skipIntroLogos_jmp = 0x459C83;
+static uintptr_t skipIntroLogos_callAddr = 0xC5F4D0;
+static __declspec(naked) void SkipIntroLogosDetour(void) {
+	_asm {
+		//call dword ptr [skipIntroLogos_callAddr] ; sub_C5F4D0 == Hw::Task::Sleep(1);
+		cmp byte ptr[GameHook::skipIntroLogos_toggle], 0
+		je originalcode
+		add esp, 4
+		jmp dword ptr[skipIntroLogos_jmp]
+
+		originalcode:
+			jmp dword ptr[skipIntroLogos_jmp_ret]
+	}
+}
+
 /*bool GameHook::memPatch_toggle = true;
 void GameHook::MemPatch(bool enabled) {
 	if (enabled) {
@@ -4383,6 +4403,7 @@ void GameHook::InitializeDetours(void) {
 	install_hook_absolute(0x9F5AF0, pl0012Hook, &pl0012Detour, NULL, 0);
 	install_hook_absolute(0x9FC890, pl0031Hook, &pl0031Detour, NULL, 0);
 	install_hook_absolute(0xA17420, pl004cHook, &pl004cDetour, NULL, 0);
+	install_hook_absolute(0x59BE2, skipIntroLogosHook, &SkipIntroLogosDetour, &skipIntroLogos_jmp_ret, 5);
 #endif
 }
 
@@ -4531,6 +4552,7 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	SkipAngelAttack(skipAngelAttack_toggle);
 	skipMapScene_toggle = cfg.get<bool>("skipMapScene_toggle").value_or(false);
 	SkipMapScene(skipMapScene_toggle);
+	skipIntroLogos_toggle = cfg.get<bool>("skipIntroLogos_toggle").value_or(false);
 	unbanClimaxBrace_toggle = cfg.get<bool>("unbanClimaxBrace_toggle").value_or(false);
 	UnbanClimaxBrace(unbanClimaxBrace_toggle);
 	longerBufferWindows_toggle = cfg.get<bool>("longerBufferWindows_toggle").value_or(false);
@@ -4692,6 +4714,7 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("noHitstop_toggle", noHitstop_toggle);
 	cfg.set<bool>("skipAngelAttack_toggle", skipAngelAttack_toggle);
 	cfg.set<bool>("skipMapScene_toggle", skipMapScene_toggle);
+	cfg.set<bool>("skipIntroLogos_toggle", skipIntroLogos_toggle);
 	cfg.set<bool>("unbanClimaxBrace_toggle", unbanClimaxBrace_toggle);
 	cfg.set<bool>("longerBufferWindows_toggle", longerBufferWindows_toggle);
 
