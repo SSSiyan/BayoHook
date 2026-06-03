@@ -4403,7 +4403,7 @@ void GameHook::InitializeDetours(void) {
 	install_hook_absolute(0x9F5AF0, pl0012Hook, &pl0012Detour, NULL, 0);
 	install_hook_absolute(0x9FC890, pl0031Hook, &pl0031Detour, NULL, 0);
 	install_hook_absolute(0xA17420, pl004cHook, &pl004cDetour, NULL, 0);
-	install_hook_absolute(0x59BE2, skipIntroLogosHook, &SkipIntroLogosDetour, &skipIntroLogos_jmp_ret, 5);
+	install_hook_absolute(0x459BE2, skipIntroLogosHook, &SkipIntroLogosDetour, &skipIntroLogos_jmp_ret, 5);
 #endif
 }
 
