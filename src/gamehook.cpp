@@ -186,6 +186,50 @@ static __declspec(naked) void movssXmm3DeltaSpeed2(void) {
 	}
 }
 
+// Bayonetta.exe + 1A1DE5 - 01 5E 20 - add[esi + 20], ebx
+// Bayonetta.exe+1A1DE8 - 81 7E 20 66 03 00 00 - cmp[esi+20],00000366 { 870 }
+static std::unique_ptr<FunctionHook> fixIntroMoviesTimerHook;
+static uintptr_t fixIntroMoviesTimer_jmp_ret = NULL;
+
+static float introTimerAccumulator = 0.0f;
+
+static int __stdcall GetFramerateCorrectedIncrement(
+    float* accumulator,
+    int originalIncrement)
+{
+    *accumulator += originalIncrement * GameHook::deltaSpeed;
+
+    int increment = (int)(*accumulator);
+
+    *accumulator -= increment;
+
+    return increment;
+}
+
+static __declspec(naked) void FixIntroMoviesTimerDetour(void) {
+	_asm {
+		push eax
+		push ecx
+		push edx
+
+		push ebx                               // originalIncrement (2nd arg, pushed first)
+		push offset introTimerAccumulator      // accumulator ptr   (1st arg, pushed last)
+		call GetFramerateCorrectedIncrement
+		// __stdcall: ret 8 cleans both args
+
+		pop edx
+		pop ecx
+
+		mov ebx, eax // store the corrected increment in ebx for the original code to use
+		pop eax
+
+		// original instructions
+		add [esi + 0x20], ebx
+		cmp dword ptr [esi + 0x20], 870
+		jmp dword ptr [fixIntroMoviesTimer_jmp_ret]
+	}
+}
+
 bool GameHook::linkGameToDelta_toggle;
 void GameHook::LinkGameToDelta(bool enabled) {
 	if (enabled) {
@@ -197,6 +241,9 @@ void GameHook::LinkGameToDelta(bool enabled) {
 		GameHook::_patch((char*)(0x9CDA09), (char*)movssXmm0DeltaSpeed1, 8); // parry
 		GameHook::_patch((char*)(0x8BD6BC), (char*)movssXmm2DeltaSpeed1, 8); // bat within / perfect parry / panther + bird double tap timer
 		GameHook::_patch((char*)(0x651989), (char*)"\x90\x90", 2); // afterburner kick knockback magnitude check
+		if (!fixIntroMoviesTimerHook || !fixIntroMoviesTimerHook->is_valid()) {
+			install_hook_absolute(0x5A1DE5, fixIntroMoviesTimerHook, &FixIntroMoviesTimerDetour, &fixIntroMoviesTimer_jmp_ret, 10);
+		}
 		// find shooting with legs camera sens
 		// find menu speed
 		// find whatever's wrong with hitboxes
@@ -211,7 +258,10 @@ void GameHook::LinkGameToDelta(bool enabled) {
 		GameHook::_patch((char*)(0x9CDA09), (char*)"\xF3\x0F\x10\x05\xF8\xD6\xD9\x00", 8); // parry // movss xmm0,[Bayonetta.exe+99D6F8] (1.0f)
 		GameHook::_patch((char*)(0x8BD6BC), (char*)"\xF3\x0F\x10\x15\xF8\xD6\xD9\x00", 8); // bat within / perfect parry / panther + bird double tap timer // movss xmm2,[Bayonetta.exe+99D6F8] (1.0f)
 		GameHook::_patch((char*)(0x651989), (char*)"\x76\x48", 2); // afterburner kick knockback magnitude check
+		fixIntroMoviesTimerHook.reset();
+
 	}
+	linkGameToDelta_toggle = enabled;
 }
 
 bool GameHook::autoQTE_toggle = false;
