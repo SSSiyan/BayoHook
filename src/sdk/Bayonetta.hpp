@@ -1,5 +1,13 @@
 #pragma once
 #include <cstdint> // uintptr_t
+#include "libmem++/libmem.hpp" // unique_ptr
+#include "../utils/FunctionHook.hpp"
+
+struct HookContext {
+    std::unique_ptr<FunctionHook> hook = nullptr;
+    uintptr_t jmp_ret = NULL;
+    bool enabled = false;
+};
 
 struct Vec3 {
     float x; // 0x0
@@ -340,6 +348,11 @@ struct EntitySpawnArg2 {
     char char_9f = 0;             // 0x9F
     float float_A0 = 1.0f;        // 0xA0
     char pad_A4[0x20*4]{};        // 0xA4
+};
+
+struct HitboxSnapshot {
+    Vec3 pos;
+    float radius;
 };
 
 struct AreaIDName {

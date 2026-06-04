@@ -3,8 +3,8 @@
 #include <TlHelp32.h>
 #include <string>
 
-#include "../utils/config.hpp"
-#include "libmem++/libmem.hpp"
+#include "../utils/config.hpp" // save+load
+#include "libmem++/libmem.hpp" // unique_ptr
 #include "MinHook/include/MinHook.h"
 #include "../utils/FunctionHook.hpp"
 #include "../utils/Input.hpp"
@@ -26,31 +26,17 @@
 
 class GameHook {
 public:
-	static float deltaTime;
-	static float deltaSpeed;
-	static float deltaSpeed2;
-	static float deltaSpeed3;
-	static std::mt19937 rng;
-	// patches
-	static bool focusPatch_toggle;
-	static void FocusPatch(bool enabled);
-
-	static bool disableClicking_toggle;
-	static void DisableClicking(bool enabled);
-
-	static bool disableTutorials_toggle;
-	static void DisableTutorials(bool enabled);
-
-	// static bool forceSaveFile;
-	// static int forcedFileNum;
-
+#ifdef SPEEDRUN_BUILD
+	static float badgeScaleBase;
+	static constexpr float badgeThicknessBase = 2.0f;
+	static bool badgeDisplay_toggle;
+	static bool badgeLines_toggle;
+	static int badgeCorner;
+	static void RenderBadge();
+#endif
 #ifndef SPEEDRUN_BUILD
-	static utility::Input g_input;
-	static std::vector<std::unique_ptr<utility::Hotkey>> g_hotkeys;
-	// hotkeys
-	static utility::Hotkey* hk_toggle_menu;
+	// non-speedrun
 	//static utility::Hotkey* pad_hk_toggle_menu;
-
 	static utility::Hotkey* hk_enemy_no_damage;
 	static utility::Hotkey* hk_player_no_damage;
 	static utility::Hotkey* hk_enemy_one_hit_kill;
@@ -87,6 +73,7 @@ public:
 	static utility::Hotkey* hk_spawn_jeanne_formal;
 	static utility::Hotkey* hk_spawn_bayonetta;
 
+	// patches (non-speedrun)
 	static bool forceCutsceneFace_toggle;
 	static void ForceCutsceneFace(bool enabled);
 
@@ -211,22 +198,8 @@ public:
 
 	static bool unbanClimaxBrace_toggle;
 	static void UnbanClimaxBrace(bool enabled);
-#endif
-	// detour values
-	static bool uptimeFix_toggle;
-	static constexpr INT64 rebase_interval = 60;
-	static bool longerBufferWindows_toggle;
-	static bool inputIcons_toggle;
-	static int inputIconsValue;
-	static bool enable_scroll_transitions;
-	static float windowScalingFactor;
-	static float bayoHookFontSize;
-	static bool showComboUI_toggle;
-	static bool testComboUI_toggle;
-	static float comboUI_X;
-	static float comboUI_Y;
-	static bool randomizeCostume_toggle;
-#ifndef SPEEDRUN_BUILD
+
+	// detours (non-speedrun)
 	// static bool animationScrub_toggle;
 	// static float currentAnimationScrub;
 	// static float currentAnimationEndFrame;
@@ -300,11 +273,11 @@ public:
 	static int stringIDSwapDesiredStrings[];
 
 	static bool comboMaker_toggle;
-    static const int maxComboMakers = 5;
-    static bool comboMaker_toggles[];
-    static int comboMakerMoveIDs[];
-    static int comboMakerMoveParts[];
-    static int comboMakerStringIDs[];
+	static const int maxComboMakers = 5;
+	static bool comboMaker_toggles[];
+	static int comboMakerMoveIDs[];
+	static int comboMakerMoveParts[];
+	static int comboMakerStringIDs[];
 
 	static bool customWeave_toggle;
 	static const int customWeaveCount = 20;
@@ -322,20 +295,8 @@ public:
 	static int saveStates_SavedPlayerMoveID;
 	static float saveStates_SavedPlayerXYZPos[3];
 
-	static bool skipIntroLogos_toggle;
-	static void SkipIntroLogos(bool enabled);
-#endif
-	// addresses
-	static uintptr_t playerPointerAddress;
-	static uintptr_t player1PointerAddress;
-	static uintptr_t player2PointerAddress;
-	static uintptr_t enemyLockedOnAddress;
-	static uintptr_t comboMultiplierAddress;
-	static uintptr_t comboPointsAddress;
-	static uintptr_t currentCostumeAddress;
-	static uintptr_t gameTimeAddress;
-	static uintptr_t areaJumpAddress;
-#ifndef SPEEDRUN_BUILD
+	static std::mt19937 rng;
+
 	static uintptr_t angelSlayerFloorAddress;
 	static uintptr_t halosAddress;
 	static uintptr_t chaptersPlayedAddress;
@@ -349,36 +310,9 @@ public:
 	static uintptr_t WeaponA2Address;
 	static uintptr_t WeaponB1Address;
 	static uintptr_t WeaponB2Address;
-#endif
-	// imgui
-	static void GameImGui(void);
-	static void GameTick(void);
-	static void ImGuiStyle(void);
-	static void help_marker(const char* desc);
-	static void FlagCheckbox(const char* label, uint32_t& flags, uint32_t flag);
-	static inline void under_line(const ImColor& col);
-	static ImFont* bayoHookFont;
-	static float windowWidth;
-	static float inputItemWidth;
-	static float sameLineWidth;
-	static void BackgroundImGui(void);
-	// tick
-	static bool showMessages_toggle;
-	static bool forceHairColour_toggle;
-	static Vec3 desiredHairColourRGB;
-	static float desiredHairColourMult;
-	static bool forceCostume;
-	static int tempCostume;
-#ifdef SPEEDRUN_BUILD
-	static float badgeScaleBase;
-	static constexpr float badgeThicknessBase = 2.0f;
-	static bool badgeDisplay_toggle;
-	static bool badgeLines_toggle;
-	static int badgeCorner;
-	static void RenderBadge();
-#endif
-#ifndef SPEEDRUN_BUILD
+
 	static bool drawHitboxes_toggle;
+	static std::vector<HitboxSnapshot> hitDataList;
 	static bool drawPlayerBones_toggle;
 	static BayoBone* selectedBone;
 	static int selectedBoneIndex;
@@ -387,6 +321,7 @@ public:
 	static bool drawStats_toggle;
 	static void DrawStats();
 
+	static Matrix4x4 viewProj;
 	static void Setup3dShapes();
 	static void SpawnEntity(EntitySpawn&);
 	static void EasySpawnEntityFromHotkey(int enemyID, int variant, int spawnModifier);
@@ -400,8 +335,79 @@ public:
 	static void WeaponSwapCaller(void);
 	static void SaveStates_SaveState();
 	static void SaveStates_LoadState();
-
 #endif
+	// both speedrun and non speedrun
+	// detours
+	//static bool uptimeFix_toggle;
+	static void __cdecl GameTimerRebase();
+	static HookContext uptimeFix;
+	static void UptimeFix(bool enabled);
+	static constexpr INT64 rebase_interval = 60;
+	static bool longerBufferWindows_toggle;
+	static bool inputIcons_toggle;
+	static int inputIconsValue;
+	static bool enable_scroll_transitions;
+	static float windowScalingFactor;
+	static float bayoHookFontSize;
+	static bool showComboUI_toggle;
+	static bool testComboUI_toggle;
+	static float comboUI_X;
+	static float comboUI_Y;
+	static bool randomizeCostume_toggle;
+
+	// patches
+	static bool focusPatch_toggle;
+	static void FocusPatch(bool enabled);
+
+	static bool disableClicking_toggle;
+	static void DisableClicking(bool enabled);
+
+	static bool disableTutorials_toggle;
+	static void DisableTutorials(bool enabled);
+
+	static utility::Input g_input;
+	static std::vector<std::unique_ptr<utility::Hotkey>> g_hotkeys;
+	static utility::Hotkey* hk_toggle_menu;
+	// static bool forceSaveFile;
+	// static int forcedFileNum;
+
+	// addresses
+	static uintptr_t playerPointerAddress;
+	static uintptr_t player1PointerAddress;
+	static uintptr_t player2PointerAddress;
+	static uintptr_t enemyLockedOnAddress;
+	static uintptr_t comboMultiplierAddress;
+	static uintptr_t comboPointsAddress;
+	static uintptr_t currentCostumeAddress;
+	static uintptr_t gameTimeAddress;
+	static uintptr_t areaJumpAddress;
+
+	// system
+	static float deltaTime;
+	static float deltaSpeed;
+	static float deltaSpeed2;
+	static float deltaSpeed3;
+
+	// imgui
+	static void GameImGui(void);
+	static void GameTick(void);
+	static void ImGuiStyle(void);
+	static void help_marker(const char* desc);
+	static void FlagCheckbox(const char* label, uint32_t& flags, uint32_t flag);
+	static inline void under_line(const ImColor& col);
+	static ImFont* bayoHookFont;
+	static float windowWidth;
+	static float inputItemWidth;
+	static float sameLineWidth;
+	static void BackgroundImGui(void);
+
+	// tick
+	static bool showMessages_toggle;
+	static bool forceHairColour_toggle;
+	static Vec3 desiredHairColourRGB;
+	static float desiredHairColourMult;
+	static bool forceCostume;
+	static int tempCostume;
 
 	// dev functions
 	static LocalPlayer* GetLocalPlayer();
@@ -423,9 +429,16 @@ public:
 
 	static void _patch(char* dst, char* src, int size);
 	static void _nop(char* dst, unsigned int size);
+	static bool install_hook_absolute(uintptr_t location, std::unique_ptr<FunctionHook>& hook, void* detour, uintptr_t* ret, ptrdiff_t next_instruction_offset);
+	static void ToggleHook(bool enabled, HookContext& ctx);
 	static void InitializeDetours();
-	static void onConfigLoad(const utils::Config& cfg);
-	static void onConfigSave(utils::Config& cfg);
+	static void LoadPatches(const utils::Config& cfg);
+	static void LoadDetours(const utils::Config& cfg);
+	static void LoadSystem(const utils::Config& cfg);
+
+	static void SavePatches(utils::Config& cfg);
+	static void SaveDetours(utils::Config& cfg);
+	static void SaveSystem(utils::Config& cfg);
 
 	static inline const char* cfgString{ "../bayo_hook.cfg" };
 	static inline utils::Config cfg{ "bayo_hook.cfg" };

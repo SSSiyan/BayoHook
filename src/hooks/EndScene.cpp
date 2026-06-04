@@ -1,6 +1,6 @@
 #include <pch.h>
 #include <base.h>
-#include "gamehook.hpp"
+#include "GameHook.hpp"
 #include <array>
 #include "misc/FontRoboto.cpp"
 
@@ -158,7 +158,9 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice) {
 		ImGui::GetStyle().ScaleAllSizes(y_factor * dpi);
 
         GameHook::InitializeDetours();
-		GameHook::onConfigLoad(GameHook::cfg);
+		GameHook::LoadPatches(GameHook::cfg);
+		GameHook::LoadDetours(GameHook::cfg);
+		GameHook::LoadSystem(GameHook::cfg);
 	}
 
 	if (!Data::InitImGui) return Data::oEndScene(pDevice);

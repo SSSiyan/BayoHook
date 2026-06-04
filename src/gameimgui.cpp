@@ -1,8 +1,213 @@
 ﻿#include <base.h>
-#include "gamehook.hpp"
+#include "GameHook.hpp"
 #include "LicenseStrings.hpp"
 #include <array>
 #include <chrono>
+#include "WorldVisualizer.hpp"
+
+#ifndef SPEEDRUN_BUILD
+
+Matrix4x4 GameHook::viewProj;
+void GameHook::Setup3dShapes() {
+    static uintptr_t matrixAddress = 0xF2DCE0;
+    // ImGui::InputScalar("matrixAddr", ImGuiDataType_U64, &matrixAddress, NULL, NULL, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+    GameHook::viewProj = *(Matrix4x4*)matrixAddress;
+    WorldVisualizer::SetViewProjectionMatrix(GameHook::viewProj);
+}
+
+bool GameHook::drawPlayerBones_toggle = false;
+bool GameHook::drawHitboxes_toggle = false;
+BayoBone* GameHook::selectedBone = nullptr;
+int GameHook::selectedBoneIndex = -1;
+void GameHook::Draw3dShapes() {
+    LocalPlayer* player = GetLocalPlayer();
+    if (!player) { return; }
+
+	std::vector<BayoBone*> allBones;
+
+    ImGui::SetNextWindowPos(ImVec2(0, 0));
+    ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
+    ImGui::Begin("WorldViz", nullptr,
+        ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar |
+        ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoBringToFrontOnFocus);
+    WorldVisualizer::SetDrawList(ImGui::GetWindowDrawList());
+
+    if (GameHook::drawPlayerBones_toggle) {
+        Matrix3x3 playerRot = WorldVisualizer::CreateRotationMatrix(player->rot.x, player->rot.y, player->rot.z);
+        ImVec2 mousePos = ImGui::GetIO().MousePos;
+        bool mouseClicked = ImGui::GetIO().MouseClicked[0];
+        float closestDist = 12.0f;
+        BayoBone* hoveredBone = nullptr;
+        int hoveredIndex = -1;
+
+
+        if (player->bayoSkeleton) {
+            BayoBone* b = player->bayoSkeleton->prevBone;
+            while (b) {
+                allBones.push_back(b);
+                b = b->prevBone;
+            }
+            std::reverse(allBones.begin(), allBones.end());
+        }
+        
+        BayoBone* b = player->bayoSkeleton;
+        while (b) {
+            allBones.push_back(b);
+            b = b->nextBone;
+        }
+
+        for (int i = 0; i < (int)allBones.size(); i++) {
+            BayoBone* bone = allBones[i];
+            bool isSelected = (bone == selectedBone);
+
+			ImU32 color;
+			if (isSelected) {
+				color = IM_COL32(255, 255, 0, 255);
+			}
+			else {
+				color = IM_COL32(0, 0, 255, 255);
+			}
+
+            WorldVisualizer::DrawWorldSphere(bone->pos, 0.01f, color, 32, 1.0f, &playerRot);
+
+            ImVec2 screenPos;
+            if (WorldVisualizer::WorldToScreen(bone->pos, screenPos)) {
+                float dx = screenPos.x - mousePos.x;
+                float dy = screenPos.y - mousePos.y;
+                float dist = sqrtf(dx * dx + dy * dy);
+                if (dist < closestDist) {
+                    closestDist = dist;
+                    hoveredBone = bone;
+                    hoveredIndex = i;
+                }
+            }
+        }
+
+        if (hoveredBone && hoveredBone != selectedBone) {
+            WorldVisualizer::DrawWorldSphere(hoveredBone->pos, 0.015f, IM_COL32(0, 255, 255, 255), 32, 1.5f, &playerRot);
+        }
+
+		if (mouseClicked && hoveredBone) {
+			if (hoveredBone == selectedBone) {
+				selectedBone = nullptr;
+			}
+			else {
+				selectedBone = hoveredBone;
+			}
+			if (selectedBone) {
+				selectedBoneIndex = hoveredIndex;
+			}
+			else {
+				selectedBoneIndex = -1;
+			}
+		}
+		if (selectedBone) {
+			ImGui::Begin("Bone Offsets", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize);
+			ImGui::Text("Bone index: #%d ptr: %p id: #%d", selectedBoneIndex, (void*)selectedBone, selectedBone->boneID);
+			ImGui::Separator();
+			ImGui::DragFloat("Offset X", &selectedBone->offset.x, 0.01f, NULL, NULL, "%.2f");
+			ImGui::DragFloat("Offset Y", &selectedBone->offset.y, 0.01f, NULL, NULL, "%.2f");
+			ImGui::DragFloat("Offset Z", &selectedBone->offset.z, 0.01f, NULL, NULL, "%.2f");
+
+			ImGui::Spacing();
+			ImGui::Separator();
+
+			if (!allBones.empty()) {
+				if (ImGui::SliderInt("Bone", &selectedBoneIndex, 0, (int)allBones.size() - 1)) {
+					selectedBone = allBones[selectedBoneIndex];
+				}
+			}
+
+			ImGui::Spacing();
+
+			if (ImGui::Button("Reset Offsets")) {
+				selectedBone->offset.x = 0.0f;
+				selectedBone->offset.y = 0.0f;
+				selectedBone->offset.z = 0.0f;
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Deselect")) {
+				selectedBone = nullptr;
+				selectedBoneIndex = -1;
+			}
+
+			ImGui::End();
+		}
+    }
+
+    if (GameHook::drawHitboxes_toggle) {
+        for (const HitboxSnapshot& snapshot : GameHook::hitDataList) {
+            WorldVisualizer::DrawWorldSphere(snapshot.pos, snapshot.radius, IM_COL32(255, 0, 0, 255), 32, 1.0f);
+        }
+        GameHook::hitDataList.clear();
+    }
+
+    ImGui::End();
+}
+
+void GameHook::RenderMessages(float deltaTime) {
+    activeMessages.erase(
+        std::remove_if(activeMessages.begin(), activeMessages.end(),
+            [](const HotkeyMessage& m) { return m.timeRemaining <= 0.0f; }),
+        activeMessages.end()
+    );
+
+    if (activeMessages.empty()) return;
+
+    ImGuiIO& io = ImGui::GetIO();
+    ImVec2 windowPos(io.DisplaySize.x - 20.0f, 20.0f);
+    ImGui::SetNextWindowPos(windowPos, ImGuiCond_Always, ImVec2(1.0f, 0.0f));
+    ImGui::SetNextWindowBgAlpha(0.6f);
+    ImGui::SetNextWindowSize(ImVec2(0, 0));
+
+    static ImGuiWindowFlags flags =
+        ImGuiWindowFlags_NoDecoration |
+        ImGuiWindowFlags_NoInputs |
+        ImGuiWindowFlags_NoNav |
+        ImGuiWindowFlags_NoMove |
+        ImGuiWindowFlags_NoSavedSettings |
+        ImGuiWindowFlags_NoBringToFrontOnFocus |
+        ImGuiWindowFlags_AlwaysAutoResize;
+
+    if (ImGui::Begin("##hotkey_overlay", nullptr, flags)) {
+		for (auto& msg : activeMessages) {
+			float alpha = (std::min)(1.0f, msg.timeRemaining / 0.5f);
+
+			static ImVec4 color;
+			if (!msg.enabled.has_value())
+				color = ImVec4(1.0f, 1.0f, 1.0f, alpha); // n/a
+			else if (msg.enabled.value())
+				color = ImVec4(0.4f, 1.0f, 0.4f, alpha); // green = on
+			else
+				color = ImVec4(1.0f, 0.4f, 0.4f, alpha); // red = off
+
+			ImGui::PushStyleColor(ImGuiCol_Text, color);
+
+			if (msg.enabled.has_value())
+				ImGui::Text("%s %s", msg.text.c_str(), msg.enabled.value() ? " [ON]" : " [OFF]");
+			else
+				ImGui::Text("%s", msg.text.c_str());
+
+			ImGui::PopStyleColor();
+
+			msg.timeRemaining -= deltaTime;
+		}
+    }
+    ImGui::End();
+}
+
+std::vector<GameHook::HotkeyMessage> GameHook::activeMessages;
+void GameHook::DisplayMessageText(const char* text, std::optional<bool> enabled) {
+	static float duration = 2.0f;
+	for (auto& msg : activeMessages) {
+		if (msg.text == text) {
+			msg.enabled = enabled;
+			msg.timeRemaining = duration;
+			return;
+		}
+	}
+	activeMessages.push_back({ text, enabled, duration });
+}
 
 bool GameHook::drawStats_toggle = false;
 void GameHook::DrawStats() {
@@ -279,6 +484,10 @@ static void DrawEnemySwapper() {
     }
 }
 
+#endif
+
+// both speedrun and non speedrun
+
 bool GameHook::forceHairColour_toggle = false;
 Vec3 GameHook::desiredHairColourRGB = { 1.0f, 1.0f, 1.0f };
 float GameHook::desiredHairColourMult = 1.0f;
@@ -522,7 +731,9 @@ static void DrawUptimeFix() {
 #ifdef SPEEDRUN_BUILD
     ImGui::BeginDisabled();
 #endif
-    ImGui::Checkbox("Uptime Fix", &GameHook::uptimeFix_toggle);
+    if (ImGui::Checkbox("Uptime Fix", &GameHook::uptimeFix.enabled)) {
+		GameHook::UptimeFix(GameHook::uptimeFix.enabled);
+    }
 #ifdef SPEEDRUN_BUILD
     ImGui::EndDisabled();
 #endif
@@ -656,7 +867,8 @@ void GameHook::GameImGui(void) {
     maxUIHeight = ImGui::GetIO().DisplaySize.y * 0.9f;
 
     if (ImGui::Button("Save Config")) {
-        GameHook::onConfigSave(GameHook::cfg);
+        GameHook::SavePatches(GameHook::cfg);
+        GameHook::SaveDetours(GameHook::cfg);
     }
 
     ImGui::SameLine();
@@ -1136,11 +1348,6 @@ void GameHook::GameImGui(void) {
                 GameHook::SkipMapScene(skipMapScene_toggle);
             }
             help_marker("Load Mission Select instead of Angel Attack. You will miss out on Halos and items.");
-
-            if (ImGui::Checkbox("Skip Intro Logos", &GameHook::skipIntroLogos_toggle)) {
-                GameHook::SkipIntroLogos(GameHook::skipIntroLogos_toggle);
-            }
-            help_marker("Skip the PlatinumGames / SEGA intro logos on startup");
 
             if (ImGui::Checkbox("60 FPS Cutscenes", &GameHook::sixtyFpsCutscenes_toggle)) {
                 GameHook::SixtyFpsCutscenes(GameHook::sixtyFpsCutscenes_toggle);
