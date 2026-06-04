@@ -103,6 +103,9 @@ int  GameHook::comboMakerStringIDs[maxComboMakers]{};
 
 #endif
 
+// forward declarations
+bool install_hook_absolute(uintptr_t location, std::unique_ptr<FunctionHook>& hook, void* detour, uintptr_t* ret, ptrdiff_t next_instruction_offset = 0);
+
 // patches
 bool GameHook::focusPatch_toggle = false;
 void GameHook::FocusPatch(bool enabled) {
@@ -265,6 +268,30 @@ void GameHook::SixtyFpsCutscenes(bool enabled) {
 		GameHook::_patch((char*)(0x45B4A7), (char*)"\x74\x28", 2); // jz
 		GameHook::_patch((char*)(0x45B4BA), (char*)"\x74", 1); // jz
 	}
+}
+
+//Bayonetta.exe + 59BE2 - E8 E9 58 80 00 - call Bayonetta.sub_C5F4D0
+//Bayonetta.exe + 59BE7 - 6A 01 - push 01 { 1 }
+bool GameHook::skipIntroLogos_toggle = false;
+static std::unique_ptr<FunctionHook> skipIntroLogosHook;
+static uintptr_t skipIntroLogos_jmp = 0x459C83;
+static __declspec(naked) void SkipIntroLogosDetour(void) {
+	_asm {
+		add esp, 4
+		jmp dword ptr[skipIntroLogos_jmp]
+	}
+}
+
+void GameHook::SkipIntroLogos(bool enabled) {
+	if (enabled) {
+		if (!skipIntroLogosHook || !skipIntroLogosHook->is_valid()) {
+			install_hook_absolute(0x459BE2, skipIntroLogosHook, &SkipIntroLogosDetour, NULL, 0);
+		}
+	}
+	else {
+		skipIntroLogosHook.reset();
+	}
+	skipIntroLogos_toggle = enabled;
 }
 
 /*bool GameHook::memPatch_toggle = true;
@@ -4300,7 +4327,7 @@ void GameHook::_nop(char* dst, unsigned int size) {
 	VirtualProtect(dst, size, oldprotect, &oldprotect);
 }
 
-bool install_hook_absolute(uintptr_t location, std::unique_ptr<FunctionHook>& hook, void* detour, uintptr_t* ret, ptrdiff_t next_instruction_offset = 0) {
+bool install_hook_absolute(uintptr_t location, std::unique_ptr<FunctionHook>& hook, void* detour, uintptr_t* ret, ptrdiff_t next_instruction_offset) {
 	//assert(!hook);
 	hook = std::make_unique<FunctionHook>(location, detour);
 	if (!hook->create()) {
@@ -4531,6 +4558,7 @@ void GameHook::onConfigLoad(const utils::Config& cfg) {
 	SkipAngelAttack(skipAngelAttack_toggle);
 	skipMapScene_toggle = cfg.get<bool>("skipMapScene_toggle").value_or(false);
 	SkipMapScene(skipMapScene_toggle);
+	SkipIntroLogos(cfg.get<bool>("skipIntroLogos_toggle").value_or(false));
 	unbanClimaxBrace_toggle = cfg.get<bool>("unbanClimaxBrace_toggle").value_or(false);
 	UnbanClimaxBrace(unbanClimaxBrace_toggle);
 	longerBufferWindows_toggle = cfg.get<bool>("longerBufferWindows_toggle").value_or(false);
@@ -4692,6 +4720,7 @@ void GameHook::onConfigSave(utils::Config& cfg) {
 	cfg.set<bool>("noHitstop_toggle", noHitstop_toggle);
 	cfg.set<bool>("skipAngelAttack_toggle", skipAngelAttack_toggle);
 	cfg.set<bool>("skipMapScene_toggle", skipMapScene_toggle);
+	cfg.set<bool>("skipIntroLogos_toggle", skipIntroLogos_toggle);
 	cfg.set<bool>("unbanClimaxBrace_toggle", unbanClimaxBrace_toggle);
 	cfg.set<bool>("longerBufferWindows_toggle", longerBufferWindows_toggle);
 
