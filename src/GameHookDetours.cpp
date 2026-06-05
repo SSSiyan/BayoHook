@@ -3343,11 +3343,6 @@ void GameHook::SaveDetours(utils::Config& cfg) {
 }
 
 void GameHook::LoadDetours(const utils::Config& cfg) {
-#ifndef SPEEDRUN_BUILD 
-	forceSummoningClothes_toggle = cfg.get<bool>("forceSummoningClothes_toggle").value_or(false);
-	saveStatesHotkeys_toggle = cfg.get<bool>("saveStatesHotkeys_toggle").value_or(false);
-	//loadReplace_toggle = cfg.get<bool>("loadReplace_toggle").value_or(false);
-#endif
 	// always
 	uptimeFix_toggle = cfg.get<bool>("uptimeFix_toggle").value_or(false);
 	GameHook::InitHook("uptimeFix", 0xC78100, &UptimeFixDetour, 6, GameHook::uptimeFix);
@@ -3370,7 +3365,13 @@ void GameHook::LoadDetours(const utils::Config& cfg) {
 	GameHook::InitHook("linkGameToDelta_fpsSkateSpeed1", 0x8F2EB6, &FpsSkateSpeed1Detour, 8, GameHook::fpsSkateSpeed1);
 	GameHook::InitHook("linkGameToDelta_fpsSkateSpeed2", 0x8E72B3, &FpsSkateSpeed2Detour, 8, GameHook::fpsSkateSpeed2);
 
+	static std::random_device bayoHookRandomDevice;
+	GameHook::rng.seed(bayoHookRandomDevice() ^ (unsigned)time(NULL));
 #ifndef SPEEDRUN_BUILD
+	forceSummoningClothes_toggle = cfg.get<bool>("forceSummoningClothes_toggle").value_or(false);
+	saveStatesHotkeys_toggle = cfg.get<bool>("saveStatesHotkeys_toggle").value_or(false);
+	//loadReplace_toggle = cfg.get<bool>("loadReplace_toggle").value_or(false);
+
 	drawHitboxes_toggle = cfg.get<bool>("drawHitboxes_toggle").value_or(false);
 	GameHook::InitHook("getHitbox", 0x41837E, &GetHitboxDetour, 8, GameHook::getHitbox);
 
@@ -3510,10 +3511,7 @@ void GameHook::LoadDetours(const utils::Config& cfg) {
 	GameHook::InitHook("pl0012", 0x9F5AF0, &pl0012Detour, 0, GameHook::pl0012);
 	GameHook::InitHook("pl0031", 0x9FC890, &pl0031Detour, 0, GameHook::pl0031);
 	GameHook::InitHook("pl004c", 0xA17420, &pl004cDetour, 0, GameHook::pl004c);
-#endif
-	static std::random_device bayoHookRandomDevice;
-	GameHook::rng.seed(bayoHookRandomDevice() ^ (unsigned)time(NULL));
 	InitSwapRules();
-
+#endif
 	GameHook::UpdateHooks();
 }

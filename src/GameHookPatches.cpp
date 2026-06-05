@@ -1,105 +1,6 @@
 #include "GameHook.hpp"
 
-bool GameHook::focusPatch_toggle = false;
-void GameHook::FocusPatch(bool enabled) {
-	if (enabled) {
-		GameHook::_patch((char*)(0x49E519), (char*)"\xEB\x17", 2); // disable pausing tabbed out
-		GameHook::_patch((char*)(0x411DB8), (char*)"\xE9\x82\x00", 3); // enable inputs tabbed out
-	}
-	else {
-		GameHook::_patch((char*)(0x49E519), (char*)"\x75\x17", 2);
-		GameHook::_patch((char*)(0x411DB8), (char*)"\x0F\x85\x81", 3);
-	}
-}
-
-bool GameHook::disableClicking_toggle = false;
-void GameHook::DisableClicking(bool enabled) {
-	if (enabled)
-		GameHook::_nop((char*)(0xC75747), 3);
-	else
-		GameHook::_patch((char*)(0xC75747), (char*)"\x89\x70\x04", 3);
-}
-
-bool GameHook::disableTutorials_toggle = false;
-void GameHook::DisableTutorials(bool enabled) {
-	if (enabled) {
-		GameHook::_patch((char*)(0xB47532), (char*)"\xEB", 1); // jmp Bayonetta.exe+747532
-	}
-	else {
-		GameHook::_patch((char*)(0xB47532), (char*)"\x75", 1); // jne Bayonetta.exe+747532
-	}
-}
-
-bool GameHook::disableFpsLimiter_toggle = false;
-void GameHook::DisableFpsLimiter(bool enabled) {
-	if (enabled) {
-		GameHook::_patch((char*)(0xC54340), (char*)"\xC3", 1); // retn 
-		GameHook::_patch((char*)(0xC54430), (char*)"\xC3", 1); // retn 
-		GameHook::_patch((char*)(0x49E25D), (char*)"\x90\xE9", 2); // jmp
-		// GameHook::_patch((char*)(0xC5450A), (char*)"\x90\x90\x90\x90\x90\x90\x90\x90", 8); // nop
-	}
-	else {
-		GameHook::_patch((char*)(0xC54340), (char*)"\xF3", 1); // movss
-		GameHook::_patch((char*)(0xC54430), (char*)"\xF3", 1); // movss
-		GameHook::_patch((char*)(0x49E25D), (char*)"\x0F\x84", 2); // jz
-		// GameHook::_patch((char*)(0xC5450A), (char*)"\xF3\x0F\x58\x05\xB8\x99\xDA\x00", 8); // addss xmm0,[Bayonetta.exe+9A99B8] (16.68f)
-	}
-}
-
-static __declspec(naked) void fldDeltaSpeed1(void) {
-	_asm {
-		fld dword ptr [GameHook::deltaSpeed]
-	}
-}
-static __declspec(naked) void movssXmm0DeltaSpeed1(void) {
-	_asm {
-		movss xmm0, [GameHook::deltaSpeed]
-	}
-}
-static __declspec(naked) void movssXmm1DeltaSpeed3(void) {
-	_asm {
-		movss xmm1, [GameHook::deltaSpeed3]
-	}
-}
-static __declspec(naked) void movssXmm2DeltaSpeed1(void) {
-	_asm {
-		movss xmm2, [GameHook::deltaSpeed]
-	}
-}
-static __declspec(naked) void movssXmm3DeltaSpeed2(void) {
-	_asm {
-		movss xmm3, [GameHook::deltaSpeed2]
-	}
-}
-
-bool GameHook::linkGameToDelta_toggle;
-void GameHook::LinkGameToDelta(bool enabled) {
-	if (enabled) {
-		GameHook::_patch((char*)(0x513974), (char*)fldDeltaSpeed1, 6); // Bird (and prob more, verify by noping - bird became invisible)
-		GameHook::_patch((char*)(0xA95BD1), (char*)movssXmm0DeltaSpeed1, 8); // Camera
-		GameHook::_patch((char*)(0xA9401A), (char*)movssXmm3DeltaSpeed2, 8); // Camera rot
-		GameHook::_patch((char*)(0xA9402E), (char*)movssXmm1DeltaSpeed3, 8); // Camera rot panther
-		GameHook::_patch((char*)(0xA93FDE), (char*)movssXmm0DeltaSpeed1, 8); // Camera rot jump
-		GameHook::_patch((char*)(0x9CDA09), (char*)movssXmm0DeltaSpeed1, 8); // parry
-		GameHook::_patch((char*)(0x8BD6BC), (char*)movssXmm2DeltaSpeed1, 8); // bat within / perfect parry / panther + bird double tap timer
-		GameHook::_patch((char*)(0x651989), (char*)"\x90\x90", 2); // afterburner kick knockback magnitude check
-		// find shooting with legs camera sens
-		// find menu speed
-		// find whatever's wrong with hitboxes
-		// find cutscene speed
-	}
-	else {
-		GameHook::_patch((char*)(0x513974), (char*)"\xD9\x05\x88\x65\xEF\x00", 6); // Bird // fld dword ptr [Bayonetta.exe+AF6588] (1.0f)
-		GameHook::_patch((char*)(0xA95BD1), (char*)"\xF3\x0F\x10\x05\x88\x65\xEF\x00", 8); // Camera // movss xmm0,[Bayonetta.exe+AF6588] (1.0f)
-		GameHook::_patch((char*)(0xA9401A), (char*)"\xF3\x0F\x10\x1D\xF4\x0B\xDA\x00", 8); // Camera rot // movss xmm3,[Bayonetta.exe+AF6588] (2.0f)
-		GameHook::_patch((char*)(0xA9402E), (char*)"\xF3\x0F\x10\x0D\x9C\xD7\xD9\x00", 8); // Camera rot panther // movss xmm1,[Bayonetta.exe+AF6588] (3.0f)
-		GameHook::_patch((char*)(0xA93FDE), (char*)"\xF3\x0F\x10\x05\xF8\xD6\xD9\x00", 8); // Camera rot jump // movss xmm0,[Bayonetta.exe+99D6F8] (1.0f)
-		GameHook::_patch((char*)(0x9CDA09), (char*)"\xF3\x0F\x10\x05\xF8\xD6\xD9\x00", 8); // parry // movss xmm0,[Bayonetta.exe+99D6F8] (1.0f)
-		GameHook::_patch((char*)(0x8BD6BC), (char*)"\xF3\x0F\x10\x15\xF8\xD6\xD9\x00", 8); // bat within / perfect parry / panther + bird double tap timer // movss xmm2,[Bayonetta.exe+99D6F8] (1.0f)
-		GameHook::_patch((char*)(0x651989), (char*)"\x76\x48", 2); // afterburner kick knockback magnitude check
-	}
-}
-
+#ifndef SPEEDRUN_BUILD
 bool GameHook::autoQTE_toggle = false;
 void GameHook::AutoQTE(bool enabled) {
 	if (enabled) {
@@ -524,6 +425,109 @@ void GameHook::FreezeDifficulty(bool enabled) {
 	}
 	else {
 		GameHook::_patch((char*)(0x5018C4), (char*)"\x89\x81\xD0\x06\x00\x00", 6); // mov [ecx+000006D0],eax
+	}
+}
+
+#endif
+
+// both speedrun and non speedrun
+bool GameHook::focusPatch_toggle = false;
+void GameHook::FocusPatch(bool enabled) {
+	if (enabled) {
+		GameHook::_patch((char*)(0x49E519), (char*)"\xEB\x17", 2); // disable pausing tabbed out
+		GameHook::_patch((char*)(0x411DB8), (char*)"\xE9\x82\x00", 3); // enable inputs tabbed out
+	}
+	else {
+		GameHook::_patch((char*)(0x49E519), (char*)"\x75\x17", 2);
+		GameHook::_patch((char*)(0x411DB8), (char*)"\x0F\x85\x81", 3);
+	}
+}
+
+bool GameHook::disableClicking_toggle = false;
+void GameHook::DisableClicking(bool enabled) {
+	if (enabled)
+		GameHook::_nop((char*)(0xC75747), 3);
+	else
+		GameHook::_patch((char*)(0xC75747), (char*)"\x89\x70\x04", 3);
+}
+
+bool GameHook::disableTutorials_toggle = false;
+void GameHook::DisableTutorials(bool enabled) {
+	if (enabled) {
+		GameHook::_patch((char*)(0xB47532), (char*)"\xEB", 1); // jmp Bayonetta.exe+747532
+	}
+	else {
+		GameHook::_patch((char*)(0xB47532), (char*)"\x75", 1); // jne Bayonetta.exe+747532
+	}
+}
+
+bool GameHook::disableFpsLimiter_toggle = false;
+void GameHook::DisableFpsLimiter(bool enabled) {
+	if (enabled) {
+		GameHook::_patch((char*)(0xC54340), (char*)"\xC3", 1); // retn 
+		GameHook::_patch((char*)(0xC54430), (char*)"\xC3", 1); // retn 
+		GameHook::_patch((char*)(0x49E25D), (char*)"\x90\xE9", 2); // jmp
+		// GameHook::_patch((char*)(0xC5450A), (char*)"\x90\x90\x90\x90\x90\x90\x90\x90", 8); // nop
+	}
+	else {
+		GameHook::_patch((char*)(0xC54340), (char*)"\xF3", 1); // movss
+		GameHook::_patch((char*)(0xC54430), (char*)"\xF3", 1); // movss
+		GameHook::_patch((char*)(0x49E25D), (char*)"\x0F\x84", 2); // jz
+		// GameHook::_patch((char*)(0xC5450A), (char*)"\xF3\x0F\x58\x05\xB8\x99\xDA\x00", 8); // addss xmm0,[Bayonetta.exe+9A99B8] (16.68f)
+	}
+}
+
+static __declspec(naked) void fldDeltaSpeed1(void) {
+	_asm {
+		fld dword ptr[GameHook::deltaSpeed]
+	}
+}
+static __declspec(naked) void movssXmm0DeltaSpeed1(void) {
+	_asm {
+		movss xmm0, [GameHook::deltaSpeed]
+	}
+}
+static __declspec(naked) void movssXmm1DeltaSpeed3(void) {
+	_asm {
+		movss xmm1, [GameHook::deltaSpeed3]
+	}
+}
+static __declspec(naked) void movssXmm2DeltaSpeed1(void) {
+	_asm {
+		movss xmm2, [GameHook::deltaSpeed]
+	}
+}
+static __declspec(naked) void movssXmm3DeltaSpeed2(void) {
+	_asm {
+		movss xmm3, [GameHook::deltaSpeed2]
+	}
+}
+
+bool GameHook::linkGameToDelta_toggle;
+void GameHook::LinkGameToDelta(bool enabled) {
+	if (enabled) {
+		GameHook::_patch((char*)(0x513974), (char*)fldDeltaSpeed1, 6); // Bird (and prob more, verify by noping - bird became invisible)
+		GameHook::_patch((char*)(0xA95BD1), (char*)movssXmm0DeltaSpeed1, 8); // Camera
+		GameHook::_patch((char*)(0xA9401A), (char*)movssXmm3DeltaSpeed2, 8); // Camera rot
+		GameHook::_patch((char*)(0xA9402E), (char*)movssXmm1DeltaSpeed3, 8); // Camera rot panther
+		GameHook::_patch((char*)(0xA93FDE), (char*)movssXmm0DeltaSpeed1, 8); // Camera rot jump
+		GameHook::_patch((char*)(0x9CDA09), (char*)movssXmm0DeltaSpeed1, 8); // parry
+		GameHook::_patch((char*)(0x8BD6BC), (char*)movssXmm2DeltaSpeed1, 8); // bat within / perfect parry / panther + bird double tap timer
+		GameHook::_patch((char*)(0x651989), (char*)"\x90\x90", 2); // afterburner kick knockback magnitude check
+		// find shooting with legs camera sens
+		// find menu speed
+		// find whatever's wrong with hitboxes
+		// find cutscene speed
+	}
+	else {
+		GameHook::_patch((char*)(0x513974), (char*)"\xD9\x05\x88\x65\xEF\x00", 6); // Bird // fld dword ptr [Bayonetta.exe+AF6588] (1.0f)
+		GameHook::_patch((char*)(0xA95BD1), (char*)"\xF3\x0F\x10\x05\x88\x65\xEF\x00", 8); // Camera // movss xmm0,[Bayonetta.exe+AF6588] (1.0f)
+		GameHook::_patch((char*)(0xA9401A), (char*)"\xF3\x0F\x10\x1D\xF4\x0B\xDA\x00", 8); // Camera rot // movss xmm3,[Bayonetta.exe+AF6588] (2.0f)
+		GameHook::_patch((char*)(0xA9402E), (char*)"\xF3\x0F\x10\x0D\x9C\xD7\xD9\x00", 8); // Camera rot panther // movss xmm1,[Bayonetta.exe+AF6588] (3.0f)
+		GameHook::_patch((char*)(0xA93FDE), (char*)"\xF3\x0F\x10\x05\xF8\xD6\xD9\x00", 8); // Camera rot jump // movss xmm0,[Bayonetta.exe+99D6F8] (1.0f)
+		GameHook::_patch((char*)(0x9CDA09), (char*)"\xF3\x0F\x10\x05\xF8\xD6\xD9\x00", 8); // parry // movss xmm0,[Bayonetta.exe+99D6F8] (1.0f)
+		GameHook::_patch((char*)(0x8BD6BC), (char*)"\xF3\x0F\x10\x15\xF8\xD6\xD9\x00", 8); // bat within / perfect parry / panther + bird double tap timer // movss xmm2,[Bayonetta.exe+99D6F8] (1.0f)
+		GameHook::_patch((char*)(0x651989), (char*)"\x76\x48", 2); // afterburner kick knockback magnitude check
 	}
 }
 

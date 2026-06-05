@@ -2469,7 +2469,9 @@ void GameHook::BackgroundImGui(void) {
 #ifdef SPEEDRUN_BUILD
     if (badgeDisplay_toggle) { RenderBadge(); }
 #endif
+#ifndef SPEEDRUN_BUILD
     if (showMessages_toggle) {
         GameHook::RenderMessages(ImGui::GetIO().DeltaTime);
     }
+#endif
 }

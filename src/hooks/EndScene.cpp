@@ -36,7 +36,7 @@ static void HotkeyStuff() {
 		GameHook::DisableClicking(GameHook::disableClicking_toggle);
 		GameHook::UpdateHooks();
 	}
-
+#ifndef SPEEDRUN_BUILD
 	if (GameHook::hk_enemy_no_damage->check(GameHook::g_input)) {
 		GameHook::enemyHPNoDamage_toggle = !GameHook::enemyHPNoDamage_toggle;
 		GameHook::DisableKilling(GameHook::enemyHPNoDamage_toggle);
@@ -97,10 +97,13 @@ static void HotkeyStuff() {
 		}
 	}
 
+#endif
+
 	DWORD foregroundPid = 0;
 	HWND hwnd = GetForegroundWindow();
 	GetWindowThreadProcessId(hwnd, &foregroundPid);
 	if (foregroundPid == GetCurrentProcessId()) {
+#ifndef SPEEDRUN_BUILD
 		if (GameHook::hk_save_state->check(GameHook::g_input) && GameHook::saveStatesHotkeys_toggle) GameHook::SaveStates_SaveState();
 		if (GameHook::hk_load_state->check(GameHook::g_input) && GameHook::saveStatesHotkeys_toggle) GameHook::SaveStates_LoadState();
 		if (GameHook::hk_spawn_affinity_spear->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x20000, 1, 0);
@@ -127,6 +130,7 @@ static void HotkeyStuff() {
 		if (GameHook::hk_spawn_balder->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x20500, 0, 0);
 		if (GameHook::hk_spawn_jeanne_formal->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x21002, 0, 0);
 		if (GameHook::hk_spawn_bayonetta->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x21003, 0, 0);
+#endif
 		GameHook::g_input.update();
 	}
 }
@@ -184,8 +188,8 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice) {
 		ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus |
 		ImGuiWindowFlags_NoBackground);
 
-#ifndef SPEEDRUN_BUILD
 	HotkeyStuff();
+#ifndef SPEEDRUN_BUILD
 	UpdateGameSpeed();
 	/*if (GameHook::linkGameToDelta_toggle) {
 		SetGameSpeed();

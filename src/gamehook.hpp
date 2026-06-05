@@ -15,7 +15,7 @@
 #define IM_PI 3.14159265358979323846f
 #endif
 
-//#define SPEEDRUN_BUILD
+// #define SPEEDRUN_BUILD
 
 #define BAYOHOOK_VERSION "2.0.3 PRE RELEASE"
 #ifndef SPEEDRUN_BUILD
@@ -214,9 +214,6 @@ public:
 	static bool runWithGuns_toggle;
 	static void RunWithGuns(bool enabled);
 
-	static bool disableFpsLimiter_toggle;
-	static void DisableFpsLimiter(bool enabled);
-
 	static bool autoQTE_toggle;
 	static void AutoQTE(bool enabled);
 
@@ -358,8 +355,6 @@ public:
 	static int saveStates_SavedPlayerMoveID;
 	static float saveStates_SavedPlayerXYZPos[3];
 
-	static std::mt19937 rng;
-
 	static uintptr_t angelSlayerFloorAddress;
 	static uintptr_t halosAddress;
 	static uintptr_t chaptersPlayedAddress;
@@ -400,6 +395,10 @@ public:
 #endif
 	// both speedrun and non speedrun
 	static void UpdateHooks();
+	static std::mt19937 rng;
+
+	static bool disableFpsLimiter_toggle;
+	static void DisableFpsLimiter(bool enabled);
 
 	static bool uptimeFix_toggle;
 	static HookContext uptimeFix;

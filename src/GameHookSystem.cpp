@@ -22,6 +22,7 @@ std::mt19937 GameHook::rng;
 std::vector<std::unique_ptr<utility::Hotkey>> GameHook::g_hotkeys;
 utility::Hotkey* GameHook::hk_toggle_menu;
 //utility::Hotkey* GameHook::pad_hk_toggle_menu;
+#ifndef SPEEDRUN_BUILD
 utility::Hotkey* GameHook::hk_enemy_no_damage;
 utility::Hotkey* GameHook::hk_player_no_damage;
 utility::Hotkey* GameHook::hk_enemy_one_hit_kill;
@@ -56,6 +57,7 @@ utility::Hotkey* GameHook::hk_spawn_fortitudo;
 utility::Hotkey* GameHook::hk_spawn_balder;
 utility::Hotkey* GameHook::hk_spawn_jeanne_formal;
 utility::Hotkey* GameHook::hk_spawn_bayonetta;
+#endif
 
 // bool GameHook::forceSaveFile = false;
 // int GameHook::forcedFileNum = 99;
@@ -134,49 +136,6 @@ void __cdecl GameHook::GameTimerRebase() {
 	}
 }
 
-// int GameHook::saveStates_SavedEnemyMovePart = 0;
-// float GameHook::saveStates_SavedEnemyAnimFrame = 0.0f;
-bool GameHook::saveStatesHotkeys_toggle = false;
-int GameHook::saveStates_SavedEnemyMoveID = 0;
-float GameHook::saveStates_SavedEnemyXYZPos[3];
-int GameHook::saveStates_SavedPlayerMoveID = 0;
-float GameHook::saveStates_SavedPlayerXYZPos[3];
-void GameHook::SaveStates_SaveState() {
-	uintptr_t* enemy_ptr = (uintptr_t*)GameHook::enemyLockedOnAddress;
-	uintptr_t enemy_base = *enemy_ptr;
-	if (enemy_base) {
-		// GameHook::saveStates_SavedEnemyAnimFrame = *(float*)(enemy_base + 0x3E4);
-		GameHook::saveStates_SavedEnemyMoveID = *(int*)(enemy_base + 0x34C);
-		// GameHook::saveStates_SavedEnemyMovePart = *(int*)(enemy_base + 0x350);
-		GameHook::saveStates_SavedEnemyXYZPos[0] = *(float*)(enemy_base + 0xD0);
-		GameHook::saveStates_SavedEnemyXYZPos[1] = *(float*)(enemy_base + 0xD4);
-		GameHook::saveStates_SavedEnemyXYZPos[2] = *(float*)(enemy_base + 0xD8);
-	}
-}
-void GameHook::SaveStates_LoadState() {
-	uintptr_t* enemy_ptr = (uintptr_t*)GameHook::enemyLockedOnAddress;
-	uintptr_t enemy_base = *enemy_ptr;
-	if (enemy_base) {
-		// *(float*)(enemy_base + 0x3E4) = GameHook::saveStates_SavedEnemyAnimFrame;
-		*(int*)(enemy_base + 0x34C) = GameHook::saveStates_SavedEnemyMoveID;
-		*(int*)(enemy_base + 0x350) = 0; // cancel current anim
-		*(float*)(enemy_base + 0xD0) = GameHook::saveStates_SavedEnemyXYZPos[0];
-		*(float*)(enemy_base + 0xD4) = GameHook::saveStates_SavedEnemyXYZPos[1];
-		*(float*)(enemy_base + 0xD8) = GameHook::saveStates_SavedEnemyXYZPos[2];
-	}
-}
-
-void GameHook::WeaponSwapCaller(void) {
-	static uintptr_t weaponSwapCallAddress = 0xC43ED0;
-	__asm {
-		pushad
-		pushfd
-		call weaponSwapCallAddress
-		popfd
-		popad
-	}
-}
-
 LocalPlayer* GameHook::GetLocalPlayer() {
 	if (LocalPlayer* player = *(LocalPlayer**)GameHook::playerPointerAddress)
 		return player;
@@ -240,7 +199,50 @@ void GameHook::SpawnEntity(EntitySpawn& entitySpawn) {
     spawnEntity((uintptr_t*)ecxAddr, entitySpawn.entityID, &entitySpawn.settings, entitySpawn.unkn);
 }
 
-#if 0
+// int GameHook::saveStates_SavedEnemyMovePart = 0;
+// float GameHook::saveStates_SavedEnemyAnimFrame = 0.0f;
+bool GameHook::saveStatesHotkeys_toggle = false;
+int GameHook::saveStates_SavedEnemyMoveID = 0;
+float GameHook::saveStates_SavedEnemyXYZPos[3];
+int GameHook::saveStates_SavedPlayerMoveID = 0;
+float GameHook::saveStates_SavedPlayerXYZPos[3];
+void GameHook::SaveStates_SaveState() {
+	uintptr_t* enemy_ptr = (uintptr_t*)GameHook::enemyLockedOnAddress;
+	uintptr_t enemy_base = *enemy_ptr;
+	if (enemy_base) {
+		// GameHook::saveStates_SavedEnemyAnimFrame = *(float*)(enemy_base + 0x3E4);
+		GameHook::saveStates_SavedEnemyMoveID = *(int*)(enemy_base + 0x34C);
+		// GameHook::saveStates_SavedEnemyMovePart = *(int*)(enemy_base + 0x350);
+		GameHook::saveStates_SavedEnemyXYZPos[0] = *(float*)(enemy_base + 0xD0);
+		GameHook::saveStates_SavedEnemyXYZPos[1] = *(float*)(enemy_base + 0xD4);
+		GameHook::saveStates_SavedEnemyXYZPos[2] = *(float*)(enemy_base + 0xD8);
+	}
+}
+void GameHook::SaveStates_LoadState() {
+	uintptr_t* enemy_ptr = (uintptr_t*)GameHook::enemyLockedOnAddress;
+	uintptr_t enemy_base = *enemy_ptr;
+	if (enemy_base) {
+		// *(float*)(enemy_base + 0x3E4) = GameHook::saveStates_SavedEnemyAnimFrame;
+		*(int*)(enemy_base + 0x34C) = GameHook::saveStates_SavedEnemyMoveID;
+		*(int*)(enemy_base + 0x350) = 0; // cancel current anim
+		*(float*)(enemy_base + 0xD0) = GameHook::saveStates_SavedEnemyXYZPos[0];
+		*(float*)(enemy_base + 0xD4) = GameHook::saveStates_SavedEnemyXYZPos[1];
+		*(float*)(enemy_base + 0xD8) = GameHook::saveStates_SavedEnemyXYZPos[2];
+	}
+}
+
+void GameHook::WeaponSwapCaller(void) {
+	static uintptr_t weaponSwapCallAddress = 0xC43ED0;
+	__asm {
+		pushad
+		pushfd
+		call weaponSwapCallAddress
+		popfd
+		popad
+	}
+}
+
+/*
 static uintptr_t getMotName_playerTestAddress = NULL;
 static uintptr_t getMotName_weaponTestAddress = NULL;
 char GameHook::getMotName_playerMotString[0x128]{};
@@ -311,7 +313,7 @@ static __declspec(naked) void GetMotNameDetour(void) {
 		jmp dword ptr [getMotName.jmp_ret]
 	}
 }
-#endif
+*/
 
 #endif
 
