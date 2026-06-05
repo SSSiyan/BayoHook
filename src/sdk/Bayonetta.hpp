@@ -6,8 +6,7 @@
 struct HookContext {
     std::unique_ptr<FunctionHook> hook = nullptr;
     uintptr_t jmp_ret = NULL;
-    bool enabled = false;
-};
+};  
 
 struct Vec3 {
     float x; // 0x0

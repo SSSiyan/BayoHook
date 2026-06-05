@@ -28,6 +28,9 @@ FunctionHook::~FunctionHook() {
 }
 
 bool FunctionHook::create() {
+    if (m_enabled)
+        return true;
+
     if (m_target == 0 || m_destination == 0 || m_original == 0) {
         return false;
     }
@@ -38,32 +41,38 @@ bool FunctionHook::create() {
         m_target = 0;
         return false;
     }
+    m_enabled = true;
     return true;
 }
 
 bool FunctionHook::disable() {
+    if (!m_enabled)
+        return true;
+
 	if (!m_original) {
 		return true;
 	}
 	if (MH_DisableHook((LPVOID)m_target) != MH_OK) {
 		return false;
 	}
+    m_enabled = false;
 	return true;
 }
 
 bool FunctionHook::remove() {
     // Don't try to remove invalid hooks.
-    if (m_original == 0) {
+    if (m_original == 0)
         return true;
+
+    if (m_enabled) {
+        if (MH_DisableHook((LPVOID)m_target) != MH_OK)
+            return false;
     }
 
-    // Disable then remove the hook.
-    if (MH_DisableHook((LPVOID)m_target) != MH_OK ||
-        MH_RemoveHook((LPVOID)m_target) != MH_OK) {
+    if (MH_RemoveHook((LPVOID)m_target) != MH_OK)
         return false;
-    }
 
-    // Invalidate the members.
+    m_enabled = false;
     m_target = 0;
     m_destination = 0;
     m_original = 0;

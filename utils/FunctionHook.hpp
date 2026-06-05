@@ -20,6 +20,10 @@ public:
     bool remove();
     bool disable();
 
+    bool is_enabled() const {
+        return m_enabled;
+    }
+
     auto get_original() const {
         return m_original;
     }
@@ -40,4 +44,6 @@ private:
     uintptr_t m_target{ 0 };
     uintptr_t m_destination{ 0 };
     uintptr_t m_original{ 0 };
+
+    bool m_enabled{ false };
 };

@@ -1,5 +1,4 @@
 #include "GameHook.hpp"
-#include <base.h> // for Data::ShowMenu
 
 bool GameHook::focusPatch_toggle = false;
 void GameHook::FocusPatch(bool enabled) {
@@ -405,7 +404,7 @@ void GameHook::InfDivekick(bool enabled) {
 	}
 }
 
-bool GameHook::tauntWithTimeBracelet_toggle = false;
+// bool GameHook::tauntWithTimeBracelet_toggle = false; // defined in Detours.cpp
 void GameHook::TauntWithTimeBracelet(bool enabled) {
 	if (enabled) {
 		GameHook::_nop((char*)(0x9E74CF), 2);
@@ -540,6 +539,7 @@ void GameHook::SavePatches(utils::Config& cfg) {
 	cfg.set<bool>("disableDaze_toggle", disableDaze_toggle);
 	cfg.set<bool>("forceCutsceneFace_toggle", forceCutsceneFace_toggle);
 	cfg.set<bool>("runWithGuns_toggle", runWithGuns_toggle);
+	// cfg.set<bool>("noClip_toggle", noClip_toggle);
 	cfg.set<bool>("forceDaze_toggle", forceDaze_toggle);
 	cfg.set<bool>("freezeTimer_toggle", freezeTimer_toggle);
 	cfg.set<bool>("disableAfterBurnerBounce_toggle", disableAfterBurnerBounce_toggle);
@@ -599,6 +599,8 @@ void GameHook::LoadPatches(const utils::Config& cfg) {
 	ForceCutsceneFace(forceCutsceneFace_toggle);
 	runWithGuns_toggle = cfg.get<bool>("runWithGuns_toggle").value_or(false);
 	RunWithGuns(runWithGuns_toggle);
+	// noClip_toggle = cfg.get<bool>("noClip_toggle").value_or(false);
+	// NoClip(noClip_toggle);
 	forceDaze_toggle = cfg.get<bool>("forceDaze_toggle").value_or(false);
 	ForceDaze(forceDaze_toggle);
 	freezeTimer_toggle = cfg.get<bool>("freezeTimer_toggle").value_or(false);

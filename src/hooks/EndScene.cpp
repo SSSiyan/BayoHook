@@ -34,6 +34,7 @@ static void HotkeyStuff() {
 		ImGui::GetIO().MouseDrawCursor = Base::Data::ShowMenu;
 		GameHook::disableClicking_toggle = Base::Data::ShowMenu;
 		GameHook::DisableClicking(GameHook::disableClicking_toggle);
+		GameHook::UpdateHooks();
 	}
 
 	if (GameHook::hk_enemy_no_damage->check(GameHook::g_input)) {
@@ -44,10 +45,12 @@ static void HotkeyStuff() {
 			GameHook::DisplayMessageText("Enemy One Hit Kill", false);
 		}
 		GameHook::DisplayMessageText("Enemy Takes No Damage", GameHook::enemyHPNoDamage_toggle);
+		GameHook::UpdateHooks();
 	}
 	if (GameHook::hk_player_no_damage->check(GameHook::g_input)) {
 		GameHook::damageReceivedMultiplierNoDamage_toggle = !GameHook::damageReceivedMultiplierNoDamage_toggle;
 		GameHook::DisplayMessageText("Player Takes No Damage", GameHook::damageReceivedMultiplierNoDamage_toggle);
+		GameHook::UpdateHooks();
 	}
 	if (GameHook::hk_enemy_one_hit_kill->check(GameHook::g_input)) {
 		GameHook::enemyHPOneHitKill_toggle = !GameHook::enemyHPOneHitKill_toggle;
@@ -57,27 +60,32 @@ static void HotkeyStuff() {
 			GameHook::DisplayMessageText("Enemy Takes No Damage", false);
 		}
 		GameHook::DisplayMessageText("Enemy One Hit Kill", GameHook::enemyHPOneHitKill_toggle);
+		GameHook::UpdateHooks();
 	}
 	if (GameHook::hk_inf_jumps->check(GameHook::g_input)) {
 		GameHook::infJumps_toggle = !GameHook::infJumps_toggle;
 		GameHook::InfJumps(GameHook::infJumps_toggle);
 		GameHook::DisplayMessageText("Infinite Jumps", GameHook::infJumps_toggle);
+		GameHook::UpdateHooks();
 	}
 	if (GameHook::hk_no_clip->check(GameHook::g_input)) {
 		GameHook::noClip_toggle = !GameHook::noClip_toggle;
 		GameHook::NoClip(GameHook::noClip_toggle);
 		GameHook::DisplayMessageText("No Clip", GameHook::noClip_toggle);
+		GameHook::UpdateHooks();
 	}
 	if (GameHook::hk_force_summoning_clothes->check(GameHook::g_input)) {
 		GameHook::forceSummoningClothes_toggle = !GameHook::forceSummoningClothes_toggle;
 		GameHook::ForceSummoningClothes(GameHook::forceSummoningClothes_toggle);
 		GameHook::DisplayMessageText("Force Summoning Clothes", GameHook::forceSummoningClothes_toggle);
+		GameHook::UpdateHooks();
 	}
 	if (GameHook::hk_end_current_fight->check(GameHook::g_input)) {
 		if (GameHook::GetLocalPlayer()) {
 			*(int*)0x51ADE44 = 0x10000000;
 			GameHook::DisplayMessageText("End Current Fight");
 			GameHook::current_fight_timer = 5;
+			GameHook::UpdateHooks();
 		}
 	}
 	if (GameHook::current_fight_timer > 0) {
@@ -85,6 +93,7 @@ static void HotkeyStuff() {
 		if (GameHook::current_fight_timer <= 0) {
 			GameHook::current_fight_timer = 0;
 			*(int*)0x51ADE44 = 0;
+			GameHook::UpdateHooks();
 		}
 	}
 
@@ -157,7 +166,6 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice) {
 		GameHook::bayoHookFont = io.Fonts->AddFontFromMemoryCompressedBase85TTF(roboto_medium_compressed_data_base85);
 		ImGui::GetStyle().ScaleAllSizes(y_factor * dpi);
 
-        GameHook::InitializeDetours();
 		GameHook::LoadPatches(GameHook::cfg);
 		GameHook::LoadDetours(GameHook::cfg);
 		GameHook::LoadSystem(GameHook::cfg);

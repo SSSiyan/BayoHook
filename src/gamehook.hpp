@@ -35,7 +35,141 @@ public:
 	static void RenderBadge();
 #endif
 #ifndef SPEEDRUN_BUILD
-	// non-speedrun
+	static bool drawHitboxes_toggle;
+	static HookContext getHitbox;
+
+	static bool enemyHPNoDamage_toggle;
+	static bool enemyHPOneHitKill_toggle;
+	static HookContext enemyHP;
+
+	static bool witchTimeMultiplier_toggle;
+	static float witchTimeMultiplier_value;
+	static HookContext witchTimeMultiplier;
+
+	static bool damageDealtMultiplier_toggle;
+	static float damageDealtMultiplierMult;
+	static HookContext damageDealtMultiplier;
+
+	static bool damageReceivedMultiplierNoDamage_toggle;
+	static bool damageReceivedMultiplier_toggle;
+	static float incoming_damage_mult;
+	static HookContext damageReceivedMultiplier;
+
+	static bool infMagic_toggle;
+	static HookContext infMagic;
+
+	static bool customCameraDistance_toggle;
+	static float customCameraDistance_value;
+	static HookContext customCameraDistance;
+
+	static bool haloDisplay_toggle;
+	static int haloDisplayValue;
+	static HookContext haloDisplay;
+
+	static bool moveIDSwap_toggle; // if this is true, toggle all 5 hooks
+	static const int maxMoveIDSwaps = 5;
+	static bool moveIDSwap_toggles[];
+	static int moveIDSwapSourceMoves[];
+	static int moveIDSwapSwappedMoves[];
+	static HookContext moveIDSwap;
+	static HookContext punchStringIDSwap;
+	static HookContext latePunchStringIDSwap;
+	static HookContext kickStringIDSwap;
+	static HookContext lateKickStringIDSwap;
+
+	static bool easierMash_toggle;
+	static HookContext easierMash;
+
+	static int initialAngelSlayerFloor_value; // if this is >0, enable hook
+	static HookContext initialAngelSlayerFloor;
+
+	static bool pvp_toggle; // if this is true, enable all 4 hooks
+	static bool pvpDamageRemaps_toggle; // this is used inside hooks, does not toggle hooks
+	static int lastSeenAtk;
+	static int lastSeenAtkConverted;
+	static int atkTest;
+	static int atkTestReplacement;
+	static HookContext pvp1;
+	static HookContext pvp2;
+	static HookContext pvp3;
+	static HookContext pvp4;
+
+	static bool cameraSelect_toggle;
+	static int cameraSelect_newCameraType;
+	static HookContext cameraSelect;
+
+	static bool customEffectColours_toggle; // if either of these is true, toggle the hook
+	static bool identifyEffects_toggle; // if either of these is true, toggle the hook
+	static int customEffectColoursRestrictionID;
+	static ImColor effectCol[10];
+	static std::vector<int> seenEffectIDs;
+	static HookContext customEffectColours;
+
+	static bool cancellableAfterBurner_toggle;
+	static HookContext cancellableAfterBurner;
+
+	static bool cancellableFallingKick_toggle; // if this is true, toggle both hooks
+	static HookContext cancellableFallingKick;
+	static HookContext cancellableFallingKickDurga;
+
+	static bool turbo_toggle; // if either of these bools are true, toggle the hook
+	static bool openMenuPause_toggle;
+	static float turboValue;
+	static float turboZero;
+	static HookContext turbo;
+
+	static bool altTeleInput_toggle; // if this is enabled, enable altTeleInput, tauntWithTimeBraceletA and tauntWithTimeBraceletB
+	static HookContext altTeleInput;
+	static bool tauntWithTimeBracelet_toggle; // if this is toggled, enable tauntWithTimeBraceletA and tauntWithTimeBraceletB
+	static void TauntWithTimeBracelet(bool enabled);
+	static HookContext tauntWithTimeBraceletA;
+	static HookContext tauntWithTimeBraceletB;
+
+	static bool disableSlowmo_toggle;
+	static HookContext disableSlowmo;
+
+	static bool lowerDivekick_toggle;
+	static HookContext lowerDivekick;
+
+	static bool dualAfterBurner_toggle;
+	static HookContext dualAfterBurner;
+
+	static bool longerPillowTalkCharge_toggle;
+	static HookContext longerPillowTalkCharge;
+
+	static bool alwaysWitchTime_toggle;
+	static HookContext alwaysWitchTime;
+
+	static bool customWeaves_toggle; // only use this toggle for customWeaves
+	static const int customWeaveCount = 20;
+	static bool customWeave_toggles[];
+	static int customWeaveArray[];
+	static int customWeaveMoveIDArray[];
+	static HookContext customWeaves;
+
+	static bool omnicancelTele_toggle;
+	static HookContext omnicancelTele;
+
+	static bool randomizeSpawns_toggle; // if any of these 3 are true, toggle the hook
+	static bool viewEntitySpawns_toggle;
+	static bool swapSpawns_toggle;
+	static HookContext viewEntitySpawns;
+
+	static bool teleportComboAction_toggle;
+	static HookContext teleportComboAction;
+
+	static HookContext fixThirdAccessory;
+
+	static bool thirdAccessoryMenu_toggle;
+	static HookContext thirdAccessoryMenu;
+
+	// static HookContext animationScrub; // unused
+
+	// these have no toggle and are always enabled
+	static HookContext pl0012;
+	static HookContext pl0031;
+	static HookContext pl004c;
+
 	//static utility::Hotkey* pad_hk_toggle_menu;
 	static utility::Hotkey* hk_enemy_no_damage;
 	static utility::Hotkey* hk_player_no_damage;
@@ -82,9 +216,6 @@ public:
 
 	static bool disableFpsLimiter_toggle;
 	static void DisableFpsLimiter(bool enabled);
-
-	static bool linkGameToDelta_toggle;
-	static void LinkGameToDelta(bool enabled);
 
 	static bool autoQTE_toggle;
 	static void AutoQTE(bool enabled);
@@ -172,9 +303,6 @@ public:
 	static bool freezeDifficulty_toggle;
 	static void FreezeDifficulty(bool enabled);
 
-	static bool tauntWithTimeBracelet_toggle;
-	static void TauntWithTimeBracelet(bool enabled);
-
 	static bool hideHalos_toggle;
 	static void HideHalos(bool enabled);
 
@@ -199,74 +327,17 @@ public:
 	static bool unbanClimaxBrace_toggle;
 	static void UnbanClimaxBrace(bool enabled);
 
-	// detours (non-speedrun)
-	// static bool animationScrub_toggle;
 	// static float currentAnimationScrub;
 	// static float currentAnimationEndFrame;
-	static bool customEffectColours_toggle;
-	static int customEffectColoursRestrictionID;
-	static ImColor effectCol[10];
-	static bool identifyEffects_toggle;
-	static std::vector<int> seenEffectIDs;
-	static bool pvp_toggle;
-	static int lastSeenAtk;
-	static int lastSeenAtkConverted;
-	static int atkTest;
-	static int atkTestReplacement;
-	static bool cameraSelect_toggle;
-	static int cameraSelect_newCameraType;
-	static bool pvpDamageRemaps_toggle;
-	static int initialAngelSlayerFloor;
-	static bool openMenuPause_toggle;
-	static bool witchTimeMultiplier_toggle;
-	static float witchTimeMultiplier;
-	static bool enemyHPNoDamage_toggle;
-	static bool enemyHPOneHitKill_toggle;
-	static bool infMagic_toggle;
+
 	static float infMagic_value;
-	static bool allowSettingThirdAccessory_toggle;
-	static bool easierMash_toggle;
-	static bool cancellableAfterBurner_toggle;
-	static bool cancellableFallingKick_toggle;
-	static bool turbo_toggle;
-	static float turboValue;
-	static float turboCutscene;
-	static bool turboCutscene_toggle;
-	static float turboZero;
-	static bool altTeleInput_toggle;
-	static bool teleportComboAction_toggle;
-	static bool disableSlowmo_toggle;
-	static bool lowerDivekick_toggle;
-	static bool dualAfterBurner_toggle;
-	// static bool loadReplace_toggle;
-	static bool longerPillowTalkCharge_toggle;
-	static bool alwaysWitchTime_toggle;
-	static bool omnicancelTele_toggle;
-	static bool viewEntitySpawns_toggle;
-	static bool randomizeSpawns_toggle;
+
 	static std::vector<SwapRule> swapRules;
-	static bool swapSpawns_toggle;
 	static void DisplayRecentlySpawnedEntitiesInImGui();
 
-	static bool damageDealtMultiplier_toggle;
-	static float damageDealtMultiplierMult;
+	static bool saveStatesHotkeys_toggle;
 
-	static bool damageReceivedMultiplierNoDamage_toggle;
-	static bool damageReceivedMultiplier_toggle;
-	static float incoming_damage_mult;
-
-	static bool customCameraDistance_toggle;
-	static float customCameraDistance;
-	static bool haloDisplay_toggle;
-	static int haloDisplayValue;
-
-	static bool moveIDSwaps_toggle;
-	static const int maxMoveIDSwaps = 5;
-	static bool moveIDSwap_toggles[];
-	static int moveIDSwapSourceMoves[];
-	static int moveIDSwapSwappedMoves[];
-
-	static bool stringSwaps_toggle;
+	static bool stringSwap_toggle;
 	static const int maxStringSwaps = 5;
 	static bool stringIDSwap_toggles[];
 	static int stringIDSwapSourceStrings[];
@@ -279,17 +350,9 @@ public:
 	static int comboMakerMoveParts[];
 	static int comboMakerStringIDs[];
 
-	static bool customWeave_toggle;
-	static const int customWeaveCount = 20;
-	static bool customWeaves_toggles[];
-	static int customWeaveArray[];
-	static int customWeaveMoveIDArray[];
-
-	static bool getMotName_toggle;
 	static char getMotName_weaponMotString[0x128];
 	static char getMotName_playerMotString[0x128];
 
-	static bool saveStatesHotkeys_toggle;
 	static int saveStates_SavedEnemyMoveID;
 	static float saveStates_SavedEnemyXYZPos[3];
 	static int saveStates_SavedPlayerMoveID;
@@ -311,7 +374,6 @@ public:
 	static uintptr_t WeaponB1Address;
 	static uintptr_t WeaponB2Address;
 
-	static bool drawHitboxes_toggle;
 	static std::vector<HitboxSnapshot> hitDataList;
 	static bool drawPlayerBones_toggle;
 	static BayoBone* selectedBone;
@@ -337,15 +399,32 @@ public:
 	static void SaveStates_LoadState();
 #endif
 	// both speedrun and non speedrun
-	// detours
-	//static bool uptimeFix_toggle;
-	static void __cdecl GameTimerRebase();
+	static void UpdateHooks();
+
+	static bool uptimeFix_toggle;
 	static HookContext uptimeFix;
-	static void UptimeFix(bool enabled);
-	static constexpr INT64 rebase_interval = 60;
-	static bool longerBufferWindows_toggle;
+
 	static bool inputIcons_toggle;
 	static int inputIconsValue;
+	static HookContext inputIcons;
+
+	static bool randomizeCostume_toggle;
+	static HookContext randomizeCostume;
+
+	static bool linkGameToDelta_toggle; // if this is true, toggle all 7 hooks
+	static bool longerBufferWindows_toggle; // if this is true, toggle punchBufferFrames, kickBufferFrames, dodgeBufferFrames and gunBufferFrames
+	static void LinkGameToDelta(bool enabled);
+	static HookContext punchBufferFrames;
+	static HookContext kickBufferFrames;
+	static HookContext dodgeBufferFrames;
+	static HookContext gunBufferFrames;
+	static HookContext controllerCameraSens;
+	static HookContext fpsSkateSpeed1;
+	static HookContext fpsSkateSpeed2;
+
+	// detours
+	static void __cdecl GameTimerRebase();
+	static constexpr INT64 rebase_interval = 60;
 	static bool enable_scroll_transitions;
 	static float windowScalingFactor;
 	static float bayoHookFontSize;
@@ -353,7 +432,6 @@ public:
 	static bool testComboUI_toggle;
 	static float comboUI_X;
 	static float comboUI_Y;
-	static bool randomizeCostume_toggle;
 
 	// patches
 	static bool focusPatch_toggle;
@@ -430,8 +508,12 @@ public:
 	static void _patch(char* dst, char* src, int size);
 	static void _nop(char* dst, unsigned int size);
 	static bool install_hook_absolute(uintptr_t location, std::unique_ptr<FunctionHook>& hook, void* detour, uintptr_t* ret, ptrdiff_t next_instruction_offset);
-	static void ToggleHook(bool enabled, HookContext& ctx);
-	static void InitializeDetours();
+
+	static void InitHook(const char* name, uintptr_t addr, void* detour, int size, HookContext& ctx);
+
+	static void ToggleHook(HookContext& ctx, bool enabled);
+	static void ToggleHook(HookContext& ctx, std::initializer_list<bool> conditions);
+
 	static void LoadPatches(const utils::Config& cfg);
 	static void LoadDetours(const utils::Config& cfg);
 	static void LoadSystem(const utils::Config& cfg);

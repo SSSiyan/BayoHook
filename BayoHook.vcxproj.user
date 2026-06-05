@@ -3,4 +3,9 @@
   <PropertyGroup>
     <ShowAllFiles>true</ShowAllFiles>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LocalDebuggerCommand>G:\SteamLibrary\steamapps\common\Bayonetta\Bayonetta.exe</LocalDebuggerCommand>
+    <LocalDebuggerWorkingDirectory>G:\SteamLibrary\steamapps\common\Bayonetta</LocalDebuggerWorkingDirectory>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+  </PropertyGroup>
 </Project>

@@ -1,6 +1,5 @@
 #include "GameHook.hpp"
-#include <base.h> // for Data::ShowMenu
-// system
+
 float GameHook::deltaTime = 0.0f;
 float GameHook::deltaSpeed = 0.0f;
 float GameHook::deltaSpeed2 = 0.0f;
@@ -242,9 +241,6 @@ void GameHook::SpawnEntity(EntitySpawn& entitySpawn) {
 }
 
 #if 0
-static std::unique_ptr<FunctionHook> getMotNameHook;
-static uintptr_t getMotName_jmp_ret = NULL;
-bool GameHook::getMotName_toggle = false;
 static uintptr_t getMotName_playerTestAddress = NULL;
 static uintptr_t getMotName_weaponTestAddress = NULL;
 char GameHook::getMotName_playerMotString[0x128]{};
@@ -312,7 +308,7 @@ static __declspec(naked) void GetMotNameDetour(void) {
 		mov al, [edi]
 		xor esi, esi
 		mov ebp, ecx
-		jmp dword ptr [getMotName_jmp_ret]
+		jmp dword ptr [getMotName.jmp_ret]
 	}
 }
 #endif
@@ -354,19 +350,34 @@ bool GameHook::install_hook_absolute(uintptr_t location, std::unique_ptr<Functio
 	return true;
 }
 
-void GameHook::ToggleHook(bool enabled, HookContext& ctx) {
+void GameHook::InitHook(const char* name, uintptr_t addr, void* detour, int size, HookContext& ctx) {
+	ctx.jmp_ret = size ? addr + size : 0;
+	ctx.hook = std::make_unique<FunctionHook>(addr, detour);
+}
+
+void GameHook::ToggleHook(HookContext& ctx, bool enabled) {
 	if (!ctx.hook || !ctx.hook->is_valid())
 		return;
 
-	// if (ctx.enabled == enabled)
-		// return;
+	if (ctx.hook->is_enabled() == enabled)
+		return;
 
 	if (enabled)
-		ctx.hook->create();   // MH_EnableHook
+		ctx.hook->create();
 	else
-		ctx.hook->disable();  // MH_DisableHook
+		ctx.hook->disable();
+}
 
-	ctx.enabled = enabled;
+void GameHook::ToggleHook(HookContext& ctx, std::initializer_list<bool> conditions) {
+	bool enabled = false;
+	for (bool condition : conditions) {
+		if (condition) {
+			enabled = true;
+			break;
+		}
+	}
+
+	ToggleHook(ctx, enabled);
 }
 
 void GameHook::SaveSystem(utils::Config& cfg) {
@@ -379,6 +390,13 @@ void GameHook::SaveSystem(utils::Config& cfg) {
 	cfg.set<bool>("inputIcons_toggle", inputIcons_toggle);
 	cfg.set<int>("inputIconsValue", inputIconsValue);
 	cfg.set<bool>("drawPlayerBones_toggle", drawPlayerBones_toggle);
+	cfg.set<bool>("comboMaker_toggle", comboMaker_toggle);
+	for (int i = 0; i < maxComboMakers; ++i) {
+		cfg.set<bool>(("comboMaker_toggles[" + std::to_string(i) + "]").c_str(), comboMaker_toggles[i]);
+		cfg.set<int>(("comboMakerMoveIDs[" + std::to_string(i) + "]").c_str(), comboMakerMoveIDs[i]);
+		cfg.set<int>(("comboMakerMoveParts[" + std::to_string(i) + "]").c_str(), comboMakerMoveParts[i]);
+		cfg.set<int>(("comboMakerStringIDs[" + std::to_string(i) + "]").c_str(), comboMakerStringIDs[i]);
+	}
 #endif
 	// both speedrun and non speedrun
 	for (auto& hk : GameHook::g_hotkeys)
@@ -443,6 +461,15 @@ void GameHook::LoadSystem(const utils::Config& cfg) {
 	hk_spawn_balder = g_hotkeys.emplace_back(utility::create_keyboard_hotkey({ VK_LSHIFT, VK_F10 }, "Spawn Balder", "hk_spawn_balder")).get();
 	hk_spawn_jeanne_formal = g_hotkeys.emplace_back(utility::create_keyboard_hotkey({ VK_LSHIFT, VK_F11 }, "Spawn Jeanne", "hk_spawn_jeanne")).get();
 	hk_spawn_bayonetta = g_hotkeys.emplace_back(utility::create_keyboard_hotkey({ VK_LSHIFT, VK_F12 }, "Spawn Bayonetta", "hk_spawn_bayonetta")).get();
+
+	comboMaker_toggle = cfg.get<bool>("comboMaker_toggle").value_or(false);
+	for (int i = 0; i < maxComboMakers; ++i) {
+		comboMaker_toggles[i] = cfg.get<bool>(std::string("comboMaker_toggles[") + std::to_string(i) + "]").value_or(false);
+		comboMakerMoveIDs[i] = cfg.get<int>(std::string("comboMakerMoveIDs[") + std::to_string(i) + "]").value_or(-1);
+		comboMakerMoveParts[i] = cfg.get<int>(std::string("comboMakerMoveParts[") + std::to_string(i) + "]").value_or(-1);
+		comboMakerStringIDs[i] = cfg.get<int>(std::string("comboMakerStringIDs[") + std::to_string(i) + "]").value_or(-1);
+	}
+
 #endif
 	hk_toggle_menu = g_hotkeys.emplace_back(utility::create_keyboard_hotkey({ VK_DELETE }, "Toggle Menu", "hk_toggle_menu")).get();
 	for (auto& hk : GameHook::g_hotkeys)

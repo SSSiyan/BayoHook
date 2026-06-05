@@ -2,23 +2,172 @@
 #include <base.h> // for Data::ShowMenu
 
 HookContext GameHook::uptimeFix;
-void GameHook::UptimeFix(bool enabled) {
-	GameHook::ToggleHook(enabled, uptimeFix);
+HookContext GameHook::inputIcons;
+HookContext GameHook::randomizeCostume;
+
+// fps stuff
+HookContext GameHook::punchBufferFrames;
+HookContext GameHook::kickBufferFrames;
+HookContext GameHook::dodgeBufferFrames;
+HookContext GameHook::gunBufferFrames;
+HookContext GameHook::controllerCameraSens;
+HookContext GameHook::fpsSkateSpeed1;
+HookContext GameHook::fpsSkateSpeed2;
+
+#ifndef SPEEDRUN_BUILD
+HookContext GameHook::getHitbox;
+HookContext GameHook::enemyHP;
+HookContext GameHook::witchTimeMultiplier;
+HookContext GameHook::infMagic;
+HookContext GameHook::damageDealtMultiplier;
+HookContext GameHook::damageReceivedMultiplier;
+HookContext GameHook::customCameraDistance;
+HookContext GameHook::haloDisplay;
+HookContext GameHook::moveIDSwap;
+HookContext GameHook::punchStringIDSwap;
+HookContext GameHook::latePunchStringIDSwap;
+HookContext GameHook::kickStringIDSwap;
+HookContext GameHook::lateKickStringIDSwap;
+HookContext GameHook::easierMash;
+HookContext GameHook::initialAngelSlayerFloor;
+HookContext GameHook::pvp1;
+HookContext GameHook::pvp2;
+HookContext GameHook::pvp3;
+HookContext GameHook::pvp4;
+HookContext GameHook::cameraSelect;
+HookContext GameHook::customEffectColours;
+HookContext GameHook::cancellableAfterBurner;
+HookContext GameHook::cancellableFallingKick;
+HookContext GameHook::cancellableFallingKickDurga;
+HookContext GameHook::turbo;
+HookContext GameHook::altTeleInput;
+HookContext GameHook::tauntWithTimeBraceletA;
+HookContext GameHook::tauntWithTimeBraceletB;
+HookContext GameHook::disableSlowmo;
+HookContext GameHook::lowerDivekick;
+HookContext GameHook::dualAfterBurner;
+HookContext GameHook::longerPillowTalkCharge;
+HookContext GameHook::alwaysWitchTime;
+HookContext GameHook::customWeaves;
+HookContext GameHook::omnicancelTele;
+HookContext GameHook::viewEntitySpawns;
+HookContext GameHook::teleportComboAction;
+HookContext GameHook::fixThirdAccessory;
+HookContext GameHook::thirdAccessoryMenu;
+// HookContext GameHook::animationScrub;
+HookContext GameHook::pl0012;
+HookContext GameHook::pl0031;
+HookContext GameHook::pl004c;
+#endif
+
+// instead of the mindbend of figuring this out multiple times, just do it once and call refresh() on all of them every time we toggle via load, hotkey and checkbox
+void GameHook::UpdateHooks() {
+	GameHook::ToggleHook(GameHook::uptimeFix, GameHook::uptimeFix_toggle);
+	GameHook::ToggleHook(GameHook::inputIcons, GameHook::inputIcons_toggle);
+	GameHook::ToggleHook(GameHook::randomizeCostume, GameHook::randomizeCostume_toggle);
+
+	GameHook::ToggleHook(GameHook::punchBufferFrames, { GameHook::linkGameToDelta_toggle, GameHook::longerBufferWindows_toggle });
+	GameHook::ToggleHook(GameHook::kickBufferFrames, { GameHook::linkGameToDelta_toggle, GameHook::longerBufferWindows_toggle });
+	GameHook::ToggleHook(GameHook::dodgeBufferFrames, { GameHook::linkGameToDelta_toggle, GameHook::longerBufferWindows_toggle });
+	GameHook::ToggleHook(GameHook::gunBufferFrames, { GameHook::linkGameToDelta_toggle, GameHook::longerBufferWindows_toggle });
+	GameHook::ToggleHook(GameHook::controllerCameraSens, GameHook::linkGameToDelta_toggle);
+	GameHook::ToggleHook(GameHook::fpsSkateSpeed1, GameHook::linkGameToDelta_toggle);
+	GameHook::ToggleHook(GameHook::fpsSkateSpeed2, GameHook::linkGameToDelta_toggle);
+
+#ifndef SPEEDRUN_BUILD
+	GameHook::ToggleHook(GameHook::getHitbox, GameHook::drawHitboxes_toggle);
+
+	GameHook::ToggleHook(GameHook::enemyHP, { GameHook::enemyHPNoDamage_toggle, GameHook::enemyHPOneHitKill_toggle });
+
+	GameHook::ToggleHook(GameHook::witchTimeMultiplier, GameHook::witchTimeMultiplier_toggle);
+	GameHook::ToggleHook(GameHook::damageDealtMultiplier, GameHook::damageDealtMultiplier_toggle);
+
+	GameHook::ToggleHook(GameHook::damageReceivedMultiplier, {
+		GameHook::damageReceivedMultiplier_toggle, 
+		GameHook::damageReceivedMultiplierNoDamage_toggle
+	});
+
+	GameHook::ToggleHook(GameHook::infMagic, true); // entity spawns are done through this too so lets just leave it enabled
+	GameHook::ToggleHook(GameHook::customCameraDistance, GameHook::customCameraDistance_toggle);
+	GameHook::ToggleHook(GameHook::haloDisplay, GameHook::haloDisplay_toggle);
+
+	GameHook::ToggleHook(GameHook::moveIDSwap, GameHook::moveIDSwap_toggle);
+	GameHook::ToggleHook(GameHook::punchStringIDSwap, GameHook::moveIDSwap_toggle);
+	GameHook::ToggleHook(GameHook::latePunchStringIDSwap, GameHook::moveIDSwap_toggle);
+	GameHook::ToggleHook(GameHook::kickStringIDSwap, GameHook::moveIDSwap_toggle);
+	GameHook::ToggleHook(GameHook::lateKickStringIDSwap, GameHook::moveIDSwap_toggle);
+
+	GameHook::ToggleHook(GameHook::easierMash, GameHook::easierMash_toggle);
+
+	GameHook::ToggleHook(GameHook::initialAngelSlayerFloor, GameHook::initialAngelSlayerFloor_value > 0);
+
+	GameHook::ToggleHook(GameHook::pvp1, GameHook::pvp_toggle);
+	GameHook::ToggleHook(GameHook::pvp2, GameHook::pvp_toggle);
+	GameHook::ToggleHook(GameHook::pvp3, GameHook::pvp_toggle);
+	GameHook::ToggleHook(GameHook::pvp4, GameHook::pvp_toggle);
+
+	GameHook::ToggleHook(GameHook::cameraSelect, GameHook::cameraSelect_toggle);
+
+	GameHook::ToggleHook(GameHook::customEffectColours, {
+		GameHook::customEffectColours_toggle,
+		GameHook::identifyEffects_toggle
+	});
+
+	GameHook::ToggleHook(GameHook::cancellableAfterBurner, GameHook::cancellableAfterBurner_toggle);
+
+	GameHook::ToggleHook(GameHook::cancellableFallingKick, GameHook::cancellableFallingKick_toggle);
+	GameHook::ToggleHook(GameHook::cancellableFallingKickDurga, GameHook::cancellableFallingKick_toggle);
+
+	GameHook::ToggleHook(GameHook::turbo, { GameHook::turbo_toggle, GameHook::openMenuPause_toggle });
+
+	GameHook::ToggleHook(GameHook::altTeleInput, GameHook::altTeleInput_toggle);
+
+	GameHook::ToggleHook(GameHook::tauntWithTimeBraceletA, {
+		GameHook::altTeleInput_toggle,
+		GameHook::tauntWithTimeBracelet_toggle
+	});
+
+	GameHook::ToggleHook(GameHook::tauntWithTimeBraceletB, {
+		GameHook::altTeleInput_toggle,
+		GameHook::tauntWithTimeBracelet_toggle
+	});
+
+	GameHook::ToggleHook(GameHook::disableSlowmo, GameHook::disableSlowmo_toggle);
+	GameHook::ToggleHook(GameHook::lowerDivekick, GameHook::lowerDivekick_toggle);
+	GameHook::ToggleHook(GameHook::dualAfterBurner, GameHook::dualAfterBurner_toggle);
+	GameHook::ToggleHook(GameHook::longerPillowTalkCharge, GameHook::longerPillowTalkCharge_toggle);
+	GameHook::ToggleHook(GameHook::alwaysWitchTime, GameHook::alwaysWitchTime_toggle);
+	GameHook::ToggleHook(GameHook::customWeaves, GameHook::customWeaves_toggle);
+	GameHook::ToggleHook(GameHook::omnicancelTele, GameHook::omnicancelTele_toggle);
+
+	GameHook::ToggleHook(GameHook::viewEntitySpawns, {
+		GameHook::randomizeSpawns_toggle,
+		GameHook::viewEntitySpawns_toggle,
+		GameHook::swapSpawns_toggle
+	});
+
+	GameHook::ToggleHook(GameHook::teleportComboAction, GameHook::teleportComboAction_toggle);
+	GameHook::ToggleHook(GameHook::fixThirdAccessory, GameHook::thirdAccessoryMenu_toggle);
+	GameHook::ToggleHook(GameHook::thirdAccessoryMenu, GameHook::thirdAccessoryMenu_toggle);
+
+	GameHook::ToggleHook(GameHook::pl0012, true);
+	GameHook::ToggleHook(GameHook::pl0031, true);
+	GameHook::ToggleHook(GameHook::pl004c, true);
+#endif
 }
-// bool GameHook::uptimeFix_toggle = false;
-// static std::unique_ptr<FunctionHook> uptimeFixHook;
-// static uintptr_t uptimeFix_jmp_ret = NULL;
+
+bool GameHook::uptimeFix_toggle = false;
 static __declspec(naked) void UptimeFixDetour() {
 	__asm {
 		pushfd
-		// cmp byte ptr [GameHook::uptimeFix_toggle], 0
-		// je originalCode
+		cmp byte ptr [GameHook::uptimeFix_toggle], 0
+		je originalCode
 
 		pushad
 		call GameHook::GameTimerRebase
 		popad
 
-		// originalCode:
+		originalCode:
 		popfd
 		sub esp, 8
 		lea eax, ds:[esp]
@@ -27,8 +176,6 @@ static __declspec(naked) void UptimeFixDetour() {
 }
 
 bool GameHook::longerBufferWindows_toggle = false;
-static std::unique_ptr<FunctionHook> punchBufferFramesHook;
-static uintptr_t punchBufferFrames_jmp_ret = NULL;
 static __declspec(naked) void PunchBufferFramesDetour(void) {
 	_asm {
 		pushfd
@@ -51,12 +198,10 @@ static __declspec(naked) void PunchBufferFramesDetour(void) {
 		add ecx, ecx
 		retcode:
 		popfd
-		jmp dword ptr [punchBufferFrames_jmp_ret]
+		jmp dword ptr [GameHook::punchBufferFrames.jmp_ret]
 	}
 }
 
-static std::unique_ptr<FunctionHook> kickBufferFramesHook;
-static uintptr_t kickBufferFrames_jmp_ret = NULL;
 static __declspec(naked) void KickBufferFramesDetour(void) {
 	_asm {
 		pushfd
@@ -79,12 +224,10 @@ static __declspec(naked) void KickBufferFramesDetour(void) {
 		add edx, edx
 		retcode:
 		popfd
-		jmp dword ptr [kickBufferFrames_jmp_ret]
+		jmp dword ptr [GameHook::kickBufferFrames.jmp_ret]
 	}
 }
 
-static std::unique_ptr<FunctionHook> dodgeBufferFramesHook;
-static uintptr_t dodgeBufferFrames_jmp_ret = NULL;
 static __declspec(naked) void DodgeBufferFramesDetour(void) {
 	_asm {
 		pushfd
@@ -107,12 +250,10 @@ static __declspec(naked) void DodgeBufferFramesDetour(void) {
 		add eax, eax
 		retcode:
 		popfd
-		jmp dword ptr [dodgeBufferFrames_jmp_ret]
+		jmp dword ptr [GameHook::dodgeBufferFrames.jmp_ret]
 	}
 }
 
-static std::unique_ptr<FunctionHook> gunBufferFramesHook;
-static uintptr_t gunBufferFrames_jmp_ret = NULL;
 static __declspec(naked) void GunBufferFramesDetour(void) {
 	_asm {
 		pushfd
@@ -135,12 +276,10 @@ static __declspec(naked) void GunBufferFramesDetour(void) {
 		add ecx, ecx
 		retcode:
 		popfd
-		jmp dword ptr [gunBufferFrames_jmp_ret]
+		jmp dword ptr [GameHook::gunBufferFrames.jmp_ret]
 	}
 }
 
-static std::unique_ptr<FunctionHook> controllerCameraSensHook;
-static uintptr_t controllerCameraSens_jmp_ret = NULL;
 static __declspec(naked) void ControllerCameraSensDetour(void) {
 	_asm {
 		pushfd
@@ -154,12 +293,10 @@ static __declspec(naked) void ControllerCameraSensDetour(void) {
 
 		retcode:
 		popfd
-		jmp dword ptr [controllerCameraSens_jmp_ret]
+		jmp dword ptr [GameHook::controllerCameraSens.jmp_ret]
 	}
 }
 
-static std::unique_ptr<FunctionHook> fpsSkateSpeed1Hook;
-static uintptr_t fpsSkateSpeed1_jmp_ret = NULL;
 static __declspec(naked) void FpsSkateSpeed1Detour(void) {
 	_asm {
 		pushfd
@@ -172,12 +309,10 @@ static __declspec(naked) void FpsSkateSpeed1Detour(void) {
 
 		retcode:
 		popfd
-		jmp dword ptr [fpsSkateSpeed1_jmp_ret]
+		jmp dword ptr [GameHook::fpsSkateSpeed1.jmp_ret]
 	}
 }
 
-static std::unique_ptr<FunctionHook> fpsSkateSpeed2Hook;
-static uintptr_t fpsSkateSpeed2_jmp_ret = NULL;
 static __declspec(naked) void FpsSkateSpeed2Detour(void) {
 	_asm {
 		pushfd
@@ -190,12 +325,10 @@ static __declspec(naked) void FpsSkateSpeed2Detour(void) {
 
 		retcode:
 		popfd
-		jmp dword ptr [fpsSkateSpeed2_jmp_ret]
+		jmp dword ptr [GameHook::fpsSkateSpeed2.jmp_ret]
 	}
 }
 
-static std::unique_ptr<FunctionHook> inputIconsHook;
-static uintptr_t inputIcons_jmp_ret = NULL;
 bool GameHook::inputIcons_toggle = false;
 int GameHook::inputIconsValue = 0; // 0 keyboard, 1 gamepad
 static __declspec(naked) void InputIconsDetour(void) {
@@ -210,7 +343,7 @@ static __declspec(naked) void InputIconsDetour(void) {
 		popfd
 		cmp dword ptr [ebx+0x000003E8], 00
 		mov [ebx+0x00000CA8], eax
-		jmp dword ptr [inputIcons_jmp_ret]
+		jmp dword ptr [GameHook::inputIcons.jmp_ret]
 	}
 }
 
@@ -221,9 +354,7 @@ int RandomizeCostume(int currentCostume) {
 	return dist(GameHook::rng);
 }
 
-static std::unique_ptr<FunctionHook> randomizeCostumeHook;
 bool GameHook::randomizeCostume_toggle = false;
-static uintptr_t randomizeCostume_jmp_ret = NULL;
 static __declspec(naked) void RandomizeCostumeDetour(void) {
 	_asm {
 		cmp byte ptr [GameHook::randomizeCostume_toggle], 0
@@ -238,7 +369,7 @@ static __declspec(naked) void RandomizeCostumeDetour(void) {
 
 		originalcode:
 		mov eax, 00000001
-		jmp dword ptr [randomizeCostume_jmp_ret]
+		jmp dword ptr [GameHook::randomizeCostume.jmp_ret]
 	}
 }
 
@@ -246,8 +377,6 @@ static __declspec(naked) void RandomizeCostumeDetour(void) {
 #ifndef SPEEDRUN_BUILD
 #include <mutex>
 static std::mutex g_EffectIDsMutex;
-
-bool GameHook::identifyEffects_toggle = false;
 std::vector<int> GameHook::seenEffectIDs;
 static void RegisterEffectID(int id) {
 	std::lock_guard<std::mutex> lock(g_EffectIDsMutex);
@@ -275,14 +404,10 @@ static ImColor* GetAppropriateEffectColour(int id) {
 	return nullptr;
 }
 
-ImColor GameHook::effectCol[10]{ ImColor(0.0f, 0.6f, 1.0f, 1.0f), ImColor(1.0f, 1.0f, 1.0f, 1.0f) };
-
-int GameHook::customEffectColoursRestrictionID = 0x1e;
+bool GameHook::identifyEffects_toggle = false;
 bool GameHook::customEffectColours_toggle = false;
-
-static std::unique_ptr<FunctionHook> customEffectColoursHook;
-static uintptr_t customEffectColours_jmp_ret = NULL;
-
+ImColor GameHook::effectCol[10]{ ImColor(0.0f, 0.6f, 1.0f, 1.0f), ImColor(1.0f, 1.0f, 1.0f, 1.0f) };
+int GameHook::customEffectColoursRestrictionID = 0x1e;
 static __declspec(naked) void CustomEffectColoursDetour() {
 	_asm {
 		cmp byte ptr [GameHook::identifyEffects_toggle], 0
@@ -312,7 +437,7 @@ static __declspec(naked) void CustomEffectColoursDetour() {
 		mov ecx, dword ptr [eax+0xC]
 		mov dword ptr [esi+0x324], ecx
 		popad
-		jmp dword ptr [customEffectColours_jmp_ret]
+		jmp dword ptr [GameHook::customEffectColours.jmp_ret]
 
 	no_custom_colour:
 		popad
@@ -326,14 +451,11 @@ static __declspec(naked) void CustomEffectColoursDetour() {
 		mov dword ptr [esi+0x320], eax
 		mov eax, dword ptr [edi+0xD4]
 		mov dword ptr [esi+0x324], eax
-		jmp dword ptr [customEffectColours_jmp_ret]
+		jmp dword ptr [GameHook::customEffectColours.jmp_ret]
 	}
 }
 
 #if 0
-static std::unique_ptr<FunctionHook> animationScrubHook;
-static uintptr_t animationScrub_jmp_ret = NULL;
-bool GameHook::animationScrub_toggle = false;
 float GameHook::currentAnimationScrub = 0.0f;
 float GameHook::currentAnimationEndFrame = 0.0f;
 static __declspec(naked) void AnimationScrubDetour(void) {
@@ -362,7 +484,7 @@ static __declspec(naked) void AnimationScrubDetour(void) {
 		addss xmm0, xmm3
 		contcode:
 		movss [esi+0x14], xmm0
-		jmp dword ptr [animationScrub_jmp_ret]
+		jmp dword ptr [GameHook::animationScrub.jmp_ret]
 	}
 }
 #endif
@@ -718,11 +840,9 @@ static int GetPvpReaction(int atkType) {
 	}
 }
 
-bool GameHook::pvp_toggle = false;
-static std::unique_ptr<FunctionHook> pvpHook1;
-static uintptr_t pvp_jmp_ret1 = NULL;
 // change players to be able to damage both players and enemies via forcing enum ATHIT_TARGET to ATHIT_TARGET_PLEM
 // you could also just patch the push @ 009D13EF
+bool GameHook::pvp_toggle = false;
 static __declspec(naked) void PvpDetour1(void) {
 	_asm {
 		cmp byte ptr [GameHook::pvp_toggle], 0
@@ -774,15 +894,13 @@ static __declspec(naked) void PvpDetour1(void) {
 		mov eax, [esi+0x10]
 	cont:
 		cmp eax, 4
-		jmp dword ptr [pvp_jmp_ret1]
+		jmp dword ptr [GameHook::pvp1.jmp_ret]
 	}
 }
 
 int GameHook::lastSeenAtk = 0;
 int GameHook::lastSeenAtkConverted = 0;
 bool GameHook::pvpDamageRemaps_toggle = true;
-static std::unique_ptr<FunctionHook> pvpHook2;
-static uintptr_t pvp_jmp_ret2 = NULL;
 // change damage reactions for pvp
 static __declspec(naked) void PvpDetour2(void) { // func is only called when a player is hit
 	_asm { // p2 hit = p2 in edi+60, esi, 
@@ -835,12 +953,10 @@ static __declspec(naked) void PvpDetour2(void) { // func is only called when a p
 		add eax, 0xFFFFFEB5 // 0x14b
 		retcode:
 		popfd
-		jmp dword ptr [pvp_jmp_ret2]
+		jmp dword ptr [GameHook::pvp2.jmp_ret]
 	}
 }
 
-static std::unique_ptr<FunctionHook> pvpHook3;
-static uintptr_t pvp_jmp_ret3 = NULL;
 static constexpr uintptr_t pvp_jmp_out3 = 0x49A65B;
 // exclude locking on to self with lock on
 static __declspec(naked) void PvpDetour3(void) {
@@ -856,7 +972,7 @@ static __declspec(naked) void PvpDetour3(void) {
 		mov edx, [ecx+0x00000378]
 		// retcode:
 		popfd
-		jmp dword ptr [pvp_jmp_ret3]
+		jmp dword ptr [GameHook::pvp3.jmp_ret]
 
 		jmpout:
 		popfd
@@ -864,8 +980,6 @@ static __declspec(naked) void PvpDetour3(void) {
 	}
 }
 
-static std::unique_ptr<FunctionHook> pvpHook4;
-static uintptr_t pvp_jmp_ret4 = NULL;
 static constexpr uintptr_t pvp_jmp_out4 = 0x49A998;
 // exclude locking on to self with movement or attacks
 static __declspec(naked) void PvpDetour4(void) {
@@ -881,7 +995,7 @@ static __declspec(naked) void PvpDetour4(void) {
 		mov edx, [ecx+0x00000378]
 		// retcode:
 		popfd
-		jmp dword ptr [pvp_jmp_ret4]
+		jmp dword ptr [GameHook::pvp4.jmp_ret]
 
 		jmpout:
 		popfd
@@ -890,8 +1004,6 @@ static __declspec(naked) void PvpDetour4(void) {
 }
 
 bool GameHook::cameraSelect_toggle = false;
-static std::unique_ptr<FunctionHook> cameraSelectHook;
-static uintptr_t cameraSelect_jmp_ret = NULL;
 int GameHook::cameraSelect_newCameraType = 0;
 // exclude locking on to self with movement or attacks
 static __declspec(naked) void CameraSelectDetour(void) {
@@ -907,36 +1019,31 @@ static __declspec(naked) void CameraSelectDetour(void) {
 		mov eax, [ebx+0x00000CF0]
 		retcode:
 		popfd
-		jmp dword ptr [cameraSelect_jmp_ret]
+		jmp dword ptr [GameHook::cameraSelect.jmp_ret]
 	}
 }
 
-static std::unique_ptr<FunctionHook> initialAngelSlayerFloorHook;
-static uintptr_t initialAngelSlayerFloor_jmp_ret = NULL;
-int GameHook::initialAngelSlayerFloor = 0;
+int GameHook::initialAngelSlayerFloor_value = 0;
 static __declspec(naked) void InitialAngelSlayerFloorDetour(void) {
 	_asm {
 		push eax
 		push esi
 		mov eax, [GameHook::angelSlayerFloorAddress]
-		mov esi, [GameHook::initialAngelSlayerFloor]
+		mov esi, [GameHook::initialAngelSlayerFloor_value]
 		mov [eax], esi
 		pop esi
 		pop eax
-		jmp dword ptr[initialAngelSlayerFloor_jmp_ret]
+		jmp dword ptr[GameHook::initialAngelSlayerFloor.jmp_ret]
 	}
 }
 
 
 std::vector<HitboxSnapshot> GameHook::hitDataList;
-
 static void AddHitDataPtr(void* ptr) {
 	auto* hitData = (hitbox*)(ptr);
 	GameHook::hitDataList.push_back({ hitData->pos, hitData->scale });
 }
 
-static std::unique_ptr<FunctionHook> getHitboxHook;
-static uintptr_t getHitbox_jmp_ret = NULL;
 static __declspec(naked) void GetHitboxDetour(void) {
 	_asm {
 		pushfd
@@ -956,18 +1063,14 @@ static __declspec(naked) void GetHitboxDetour(void) {
 		originalcode:
 		popfd
 		addss xmm0, [ebx+0x00000100]
-		jmp dword ptr [getHitbox_jmp_ret]
+		jmp dword ptr [GameHook::getHitbox.jmp_ret]
 	}
 }
 
-static std::unique_ptr<FunctionHook> turboHook;
-static uintptr_t turbo_jmp_ret = NULL;
+bool GameHook::turbo_toggle = false;
 bool GameHook::openMenuPause_toggle = false;
 float GameHook::turboZero = 0.0f;
-bool GameHook::turbo_toggle = false;
 float GameHook::turboValue = 1.0f;
-bool GameHook::turboCutscene_toggle = false;
-float GameHook::turboCutscene = 5.0f;
 static __declspec(naked) void TurboHookDetour(void) {
 	_asm {
 		pushfd
@@ -993,31 +1096,15 @@ static __declspec(naked) void TurboHookDetour(void) {
 		mulss xmm0, [GameHook::deltaSpeed]
 		jmp originalcode
 
-		/*cutscenecheck:
-		cmp byte ptr [GameHook::turboCutscene_toggle], 1
-		jne turbocheck
-		push eax
-		mov eax, [GameHook::playerPointerAddress]
-		mov eax, [eax]
-		test eax, eax
-		je popcode
-		cmp byte ptr [eax+0x?], 1 // inCutscene
-		pop eax
-		jne turbocheck
-		// in cutscene
-		mulss xmm0, [GameHook::turboCutscene]*/
-
 		//popcode:
 		//pop eax
 		originalcode:
 		popfd
 		movss [edi+0x44], xmm0
-		jmp dword ptr[turbo_jmp_ret]
+		jmp dword ptr[GameHook::turbo.jmp_ret]
 	}
 }
 
-static std::unique_ptr<FunctionHook> enemyHPHook;
-static uintptr_t enemyHP_jmp_ret = NULL;
 bool GameHook::enemyHPNoDamage_toggle = false;
 bool GameHook::enemyHPOneHitKill_toggle = false;
 static __declspec(naked) void EnemyHPDetour(void) {
@@ -1043,15 +1130,13 @@ static __declspec(naked) void EnemyHPDetour(void) {
 		mov [esi+0x000006B4], eax
 		retcode:
 		popfd
-		jmp dword ptr [enemyHP_jmp_ret]
+		jmp dword ptr [GameHook::enemyHP.jmp_ret]
 		// this hides test eax,eax in CE but it is still there
 	}
 }
 
-static std::unique_ptr<FunctionHook> witchTimeHook;
-static uintptr_t witchTimeMultiplier_jmp_ret = NULL;
 bool GameHook::witchTimeMultiplier_toggle = false;
-float GameHook::witchTimeMultiplier = 1.0f;
+float GameHook::witchTimeMultiplier_value = 1.0f;
 static __declspec(naked) void WitchTimeMultiplierDetour(void) {
 	_asm {
 		pushfd
@@ -1059,14 +1144,14 @@ static __declspec(naked) void WitchTimeMultiplierDetour(void) {
 		je originalcode
 
 		fmul dword ptr [esi+0x00095D68] // might be game speed or something? 1 by default
-		fdiv dword ptr [GameHook::witchTimeMultiplier]
+		fdiv dword ptr [GameHook::witchTimeMultiplier_value]
 		jmp retcode
 
 		originalcode:
 		fmul dword ptr [esi+0x00095D68]
 		retcode:
 		popfd
-		jmp dword ptr [witchTimeMultiplier_jmp_ret]
+		jmp dword ptr [GameHook::witchTimeMultiplier.jmp_ret]
 	}
 }
 
@@ -1081,8 +1166,6 @@ void GameHook::CallFromGameThread() {
 	}
 }
 
-std::unique_ptr<FunctionHook> infMagicHook;
-uintptr_t infMagic_jmp_ret = NULL;
 bool GameHook::infMagic_toggle = false;
 float GameHook::infMagic_value = 1200.0f;
 static __declspec(naked) void InfMagicDetour(void) {
@@ -1104,12 +1187,10 @@ static __declspec(naked) void InfMagicDetour(void) {
 		movss xmm0, [eax]
 		pop eax
 		popfd
-		jmp dword ptr [infMagic_jmp_ret]
+		jmp dword ptr [GameHook::infMagic.jmp_ret]
 	}
 }
 
-static std::unique_ptr<FunctionHook> damageDealtMultiplierHook;
-static uintptr_t damageDealtMultiplier_jmp_ret = NULL;
 bool GameHook::damageDealtMultiplier_toggle = false;
 float GameHook::damageDealtMultiplierMult = 1.0f;
 static __declspec(naked) void DamageDealtMultiplierDetour(void) {
@@ -1131,12 +1212,10 @@ static __declspec(naked) void DamageDealtMultiplierDetour(void) {
 		sub eax, edi
 		mov [GameHook::haloDisplayValue], eax // after damage subtraction
 		popfd
-		jmp dword ptr [damageDealtMultiplier_jmp_ret]
+		jmp dword ptr [GameHook::damageDealtMultiplier.jmp_ret]
 	}
 }
 
-static std::unique_ptr<FunctionHook> damageReceivedMultiplierHook;
-static uintptr_t damageReceivedMultiplier_jmp_ret = NULL;
 bool GameHook::damageReceivedMultiplierNoDamage_toggle = false;
 bool GameHook::damageReceivedMultiplier_toggle = false;
 float GameHook::incoming_damage_mult = 1.0f;
@@ -1170,33 +1249,29 @@ static __declspec(naked) void DamageReceivedMultiplierDetour(void) {
 		mov [esi+0x00093508], eax
 		retcode:
 		popfd
-		jmp dword ptr [damageReceivedMultiplier_jmp_ret]
+		jmp dword ptr [GameHook::damageReceivedMultiplier.jmp_ret]
 	}
 }
 
-static std::unique_ptr<FunctionHook> customCameraDistanceHook;
-static uintptr_t customCameraDistance_jmp_ret = NULL;
 bool GameHook::customCameraDistance_toggle = false;
-float GameHook::customCameraDistance = 10.0f;
+float GameHook::customCameraDistance_value = 10.0f;
 static __declspec(naked) void CustomCameraDistanceDetour(void) {
 	_asm {
 		pushfd
 		cmp byte ptr [GameHook::customCameraDistance_toggle], 0
 		je originalcode
 
-		fld dword ptr [GameHook::customCameraDistance]
+		fld dword ptr [GameHook::customCameraDistance_value]
 		jmp retcode
 
 		originalcode:
 		fld dword ptr [edi+0x00000B50]
 		retcode:
 		popfd
-		jmp dword ptr [customCameraDistance_jmp_ret]
+		jmp dword ptr [GameHook::customCameraDistance.jmp_ret]
 	}
 }
 
-static std::unique_ptr<FunctionHook> haloDisplayHook;
-static uintptr_t haloDisplay_jmp_ret = NULL;
 bool GameHook::haloDisplay_toggle = false;
 int GameHook::haloDisplayValue = 0;
 uintptr_t haloDisplayAddress = 0x5BB57B0;
@@ -1216,11 +1291,11 @@ static __declspec(naked) void HaloDisplayDetour(void) {
 		mov [esi], eax
 		pop esi
 		popfd
-		jmp dword ptr [haloDisplay_jmp_ret]
+		jmp dword ptr [GameHook::haloDisplay.jmp_ret]
 	}
 }
 
-bool GameHook::moveIDSwaps_toggle = false;
+bool GameHook::moveIDSwap_toggle = false;
 bool GameHook::moveIDSwap_toggles[maxMoveIDSwaps]{};
 int GameHook::moveIDSwapSourceMoves[maxMoveIDSwaps]{};
 int GameHook::moveIDSwapSwappedMoves[maxMoveIDSwaps]{};
@@ -1233,12 +1308,10 @@ int __stdcall GetSwappedMoveID(int nextMoveID) {
     return -1;
 }
 
-static std::unique_ptr<FunctionHook> moveIDSwapHook;
-static uintptr_t moveIDSwap_jmp_ret = NULL;
 static __declspec(naked) void MoveIDSwapDetour(void) { // player in ecx
 	_asm {
 		pushfd
-		cmp byte ptr [GameHook::moveIDSwaps_toggle], 0
+		cmp byte ptr [GameHook::moveIDSwap_toggle], 0
 		je originalcode
 
 		push eax
@@ -1268,11 +1341,11 @@ static __declspec(naked) void MoveIDSwapDetour(void) { // player in ecx
 		mov [ecx+0x0000034C], edx
 		retcode:
 		popfd
-		jmp dword ptr [moveIDSwap_jmp_ret]
+		jmp dword ptr [GameHook::moveIDSwap.jmp_ret]
 	}
 }
 
-bool GameHook::stringSwaps_toggle = false;
+bool GameHook::stringSwap_toggle = false;
 bool GameHook::stringIDSwap_toggles[maxStringSwaps];
 int  GameHook::stringIDSwapSourceStrings[maxStringSwaps];
 int  GameHook::stringIDSwapDesiredStrings[maxStringSwaps];
@@ -1285,12 +1358,10 @@ int __stdcall GetSwappedStringID(int nextStringID) {
     return -1;
 }
 
-static std::unique_ptr<FunctionHook> punchStringIDSwapHook;
-static uintptr_t punchStringIDSwap_jmp_ret = NULL;
 static __declspec(naked) void PunchStringIDSwapDetour(void) {
 	_asm {
 		pushfd
-		cmp byte ptr [GameHook::stringSwaps_toggle], 0
+		cmp byte ptr [GameHook::stringSwap_toggle], 0
 		je originalcode
 
 		push eax
@@ -1321,15 +1392,13 @@ static __declspec(naked) void PunchStringIDSwapDetour(void) {
 		mov [esi+0x00095C64], edx
 		retcode:
 		popfd
-		jmp dword ptr [punchStringIDSwap_jmp_ret]
+		jmp dword ptr [GameHook::punchStringIDSwap.jmp_ret]
 	}
 }
 
-static std::unique_ptr<FunctionHook> latePunchStringIDSwapHook;
-static uintptr_t latePunchStringIDSwap_jmp_ret = NULL;
 static __declspec(naked) void LatePunchStringIDSwapDetour(void) {
 	_asm {
-		cmp byte ptr [GameHook::stringSwaps_toggle], 0
+		cmp byte ptr [GameHook::stringSwap_toggle], 0
 		je originalcode
 
 		push eax
@@ -1358,15 +1427,13 @@ static __declspec(naked) void LatePunchStringIDSwapDetour(void) {
 		originalcode:
 		mov [esi+0x00095C64], eax
 		retcode:
-		jmp dword ptr [latePunchStringIDSwap_jmp_ret]
+		jmp dword ptr [GameHook::latePunchStringIDSwap.jmp_ret]
 	}
 }
 
-static std::unique_ptr<FunctionHook> kickStringIDSwapHook;
-static uintptr_t kickStringIDSwap_jmp_ret = NULL;
 static __declspec(naked) void KickStringIDSwapDetour(void) {
 	_asm {
-		cmp byte ptr [GameHook::stringSwaps_toggle], 0
+		cmp byte ptr [GameHook::stringSwap_toggle], 0
 		je originalcode
 
 		push eax
@@ -1395,15 +1462,13 @@ static __declspec(naked) void KickStringIDSwapDetour(void) {
 		originalcode:
 		mov [esi+0x00095C64], edx
 		retcode:
-		jmp dword ptr [kickStringIDSwap_jmp_ret]
+		jmp dword ptr [GameHook::kickStringIDSwap.jmp_ret]
 	}
 }
 
-static std::unique_ptr<FunctionHook> lateKickStringIDSwapHook;
-static uintptr_t lateKickStringIDSwap_jmp_ret = NULL;
 static __declspec(naked) void LateKickStringIDSwapDetour(void) {
 	_asm {
-		cmp byte ptr [GameHook::stringSwaps_toggle], 0
+		cmp byte ptr [GameHook::stringSwap_toggle], 0
 		je originalcode
 
 		push eax
@@ -1432,12 +1497,10 @@ static __declspec(naked) void LateKickStringIDSwapDetour(void) {
 		originalcode:
 		mov [esi+0x00095C64], ecx
 		retcode:
-		jmp dword ptr [lateKickStringIDSwap_jmp_ret]
+		jmp dword ptr [GameHook::lateKickStringIDSwap.jmp_ret]
 	}
 }
 
-static std::unique_ptr<FunctionHook> easierMashHook;
-static uintptr_t easierMash_jmp_ret = NULL;
 bool GameHook::easierMash_toggle = false;
 static __declspec(naked) void EasierMashDetour(void) {
 	_asm {
@@ -1448,12 +1511,10 @@ static __declspec(naked) void EasierMashDetour(void) {
 
 		originalcode:
 		divss xmm0, [esi+0x30]
-		jmp dword ptr [easierMash_jmp_ret]
+		jmp dword ptr [GameHook::easierMash.jmp_ret]
 	}
 }
 
-static std::unique_ptr<FunctionHook> cancellableAfterBurnerHook;
-static uintptr_t cancellableAfterBurner_jmp_ret = NULL;
 bool GameHook::cancellableAfterBurner_toggle = false;
 static uintptr_t cancellableMovesCall = 0x9E85E0;
 static __declspec(naked) void CancellableAfterBurnerDetour(void) {
@@ -1468,12 +1529,10 @@ static __declspec(naked) void CancellableAfterBurnerDetour(void) {
 
 		originalcode:
 		cmp [esi+0x00000350], ebx
-		jmp dword ptr [cancellableAfterBurner_jmp_ret]
+		jmp dword ptr [GameHook::cancellableAfterBurner.jmp_ret]
 	}
 }
 
-static std::unique_ptr<FunctionHook> cancellableFallingKickHook;
-static uintptr_t cancellableFallingKick_jmp_ret = NULL;
 bool GameHook::cancellableFallingKick_toggle = false;
 static uintptr_t CancellableFallingKickDefaultCall = 0x433220;
 static __declspec(naked) void CancellableFallingKickDetour(void) {
@@ -1488,12 +1547,10 @@ static __declspec(naked) void CancellableFallingKickDetour(void) {
 
 		originalcode:
 		call dword ptr [CancellableFallingKickDefaultCall]
-		jmp dword ptr [cancellableFallingKick_jmp_ret]
+		jmp dword ptr [GameHook::cancellableFallingKick.jmp_ret]
 	}
 }
 
-static std::unique_ptr<FunctionHook> cancellableFallingKickDurgaHook;
-static uintptr_t cancellableFallingKickDurga_jmp_ret = NULL;
 static __declspec(naked) void CancellableFallingKickDurgaDetour(void) {
 	_asm {
 		cmp byte ptr [GameHook::cancellableFallingKick_toggle], 0
@@ -1508,15 +1565,13 @@ static __declspec(naked) void CancellableFallingKickDurgaDetour(void) {
 
 		originalcode:
 		movss xmm0, [esi+0x000006F4]
-		jmp dword ptr [cancellableFallingKickDurga_jmp_ret]
+		jmp dword ptr [GameHook::cancellableFallingKickDurga.jmp_ret]
 	}
 }
 
-static std::unique_ptr<FunctionHook> altTeleInputHook;
-static uintptr_t altTeleInput_jmp_ret = NULL;
+bool GameHook::altTeleInput_toggle = false;
 static uintptr_t altTeleInput_jmp_jle = 0x8BE5AC;
 static uintptr_t altTeleInput_jmp_je = 0x8BE5B6;
-bool GameHook::altTeleInput_toggle = false;
 static int altTeleInput = 0x400; // dpad down = 0x4, taunt = 0x400
 static __declspec(naked) void AltTeleInputDetour(void) {
 	_asm {
@@ -1532,7 +1587,7 @@ static __declspec(naked) void AltTeleInputDetour(void) {
 
 		teleport:
 		mov dword ptr [ebx+0x0009399C], 0x00000001
-		jmp dword ptr [altTeleInput_jmp_ret]
+		jmp dword ptr [GameHook::altTeleInput.jmp_ret]
 
 		originalcode:
 		test [ebx+0x00094B48], eax
@@ -1542,7 +1597,7 @@ static __declspec(naked) void AltTeleInputDetour(void) {
 		cmp byte ptr [GameHook::omnicancelTele_toggle], 1 // don't take 4 orbs if omnicancel is active!
 		je teleport
 		mov dword ptr [ebx+0x0009399C], 0x0000000A // frames mashed
-		jmp dword ptr [altTeleInput_jmp_ret] // Bayonetta.exe+4BE5A2, accept teleport
+		jmp dword ptr [GameHook::altTeleInput.jmp_ret] // Bayonetta.exe+4BE5A2, accept teleport
 
 		jmp_jle:
 		jmp dword ptr [altTeleInput_jmp_jle]
@@ -1552,9 +1607,8 @@ static __declspec(naked) void AltTeleInputDetour(void) {
 	}
 }
 
-static std::unique_ptr<FunctionHook> tauntWithTimeBracelet2Hook; // tap taunt
-static uintptr_t tauntWithTimeBracelet2_jmp_ret = NULL;
-static __declspec(naked) void TauntWithTimeBracelet2Detour(void) {
+bool GameHook::tauntWithTimeBracelet_toggle = false;
+static __declspec(naked) void TauntWithTimeBraceletADetour(void) {
 	_asm {
 		cmp byte ptr [GameHook::tauntWithTimeBracelet_toggle], 1
 		je cheatcode
@@ -1567,13 +1621,11 @@ static __declspec(naked) void TauntWithTimeBracelet2Detour(void) {
 
 		originalcode:
 		test [esi+0x00094B4C], eax
-		jmp [tauntWithTimeBracelet2_jmp_ret]
+		jmp dword ptr [GameHook::tauntWithTimeBraceletA.jmp_ret]
 	}
 }
 
-static std::unique_ptr<FunctionHook> tauntWithTimeBracelet3Hook; // hold taunt
-static uintptr_t tauntWithTimeBracelet3_jmp_ret = NULL;
-static __declspec(naked) void TauntWithTimeBracelet3Detour(void) {
+static __declspec(naked) void TauntWithTimeBraceletBDetour(void) {
 	_asm {
 		cmp byte ptr [GameHook::tauntWithTimeBracelet_toggle], 1
 		je cheatcode
@@ -1586,32 +1638,28 @@ static __declspec(naked) void TauntWithTimeBracelet3Detour(void) {
 
 		originalcode:
 		test [ebx+0x00094B44], eax
-		jmp [tauntWithTimeBracelet3_jmp_ret]
+		jmp dword ptr [GameHook::tauntWithTimeBraceletB.jmp_ret]
 	}
 }
 
-static std::unique_ptr<FunctionHook> disableSlowmoHook;
-static uintptr_t disableSlowmo_jmp_ret = NULL;
-static float disableSlowmoDefaultSpeed = 1.0f;
 bool GameHook::disableSlowmo_toggle = false;
+static float disableSlowmoDefaultSpeed = 1.0f;
 static __declspec(naked) void DisableSlowmoDetour(void) {
 	_asm {
 		cmp byte ptr [GameHook::disableSlowmo_toggle], 0
 		je originalcode
 
 		movss xmm0, [disableSlowmoDefaultSpeed]
-		jmp dword ptr [disableSlowmo_jmp_ret]
+		jmp dword ptr [GameHook::disableSlowmo.jmp_ret]
 
 		originalcode:
 		movss xmm0, [ecx+0x38]
-		jmp dword ptr [disableSlowmo_jmp_ret]
+		jmp dword ptr [GameHook::disableSlowmo.jmp_ret]
 	}
 }
 
-static std::unique_ptr<FunctionHook> lowerDivekickHook;
-static uintptr_t lowerDivekick_jmp_ret = NULL;
-static float lowerDivekickTime = 7.0f;
 bool GameHook::lowerDivekick_toggle = false;
+static float lowerDivekickTime = 7.0f;
 static __declspec(naked) void LowerDivekickDetour(void) {
 	_asm {
 		cmp byte ptr [GameHook::lowerDivekick_toggle], 0
@@ -1620,16 +1668,14 @@ static __declspec(naked) void LowerDivekickDetour(void) {
 		movss xmm0, [lowerDivekickTime]
 		comiss xmm0, [esi+0x00093594]
 		xorps xmm0, xmm0 // restore xmm0
-		jmp dword ptr [lowerDivekick_jmp_ret]
+		jmp dword ptr [GameHook::lowerDivekick.jmp_ret]
 
 		originalcode:
 		comiss xmm0, [esi+0x00093594]
-		jmp dword ptr [lowerDivekick_jmp_ret]
+		jmp dword ptr [GameHook::lowerDivekick.jmp_ret]
 	}
 }
 
-static std::unique_ptr<FunctionHook> dualAfterBurnerHook;
-static uintptr_t dualAfterBurner_jmp_ret = NULL;
 bool GameHook::dualAfterBurner_toggle = false;
 static uintptr_t dualAfterBurnerCall = 0x9E33D0;
 static __declspec(naked) void DualAfterBurnerDetour(void) {
@@ -1655,12 +1701,11 @@ static __declspec(naked) void DualAfterBurnerDetour(void) {
 		call dword ptr [dualAfterBurnerCall]
 
 		jmpcode:
-		jmp dword ptr [dualAfterBurner_jmp_ret]
+		jmp dword ptr [GameHook::dualAfterBurner.jmp_ret]
 	}
 }
 
-/*static std::unique_ptr<FunctionHook> loadReplaceHook;
-static uintptr_t loadReplace_jmp_ret = NULL;
+/*
 bool GameHook::loadReplace_toggle = false;
 static __declspec(naked) void LoadReplaceDetour(void) {
 	_asm {
@@ -1679,12 +1724,10 @@ static __declspec(naked) void LoadReplaceDetour(void) {
 		originalcode:
 		mov ecx, [eax+0x08]
 		call edx
-		jmp dword ptr [loadReplace_jmp_ret]
+		jmp dword ptr [GameHook::loadReplace.jmp_ret]
 	}
 }*/
 
-static std::unique_ptr<FunctionHook> longerPillowTalkChargeHook;
-static uintptr_t longerPillowTalkCharge_jmp_ret = NULL;
 bool GameHook::longerPillowTalkCharge_toggle = false;
 static float longerPillowTalkChargeMult = 2.0f;
 static __declspec(naked) void LongerPillowTalkChargeDetour(void) {
@@ -1694,16 +1737,14 @@ static __declspec(naked) void LongerPillowTalkChargeDetour(void) {
 
 		movss xmm0, [esp+0x04]
 		mulss xmm0, [longerPillowTalkChargeMult]
-		jmp dword ptr [longerPillowTalkCharge_jmp_ret]
+		jmp dword ptr [GameHook::longerPillowTalkCharge.jmp_ret]
 
 		originalcode:
 		movss xmm0, [esp+0x04] // from [00DA0DE8]
-		jmp dword ptr [longerPillowTalkCharge_jmp_ret]
+		jmp dword ptr [GameHook::longerPillowTalkCharge.jmp_ret]
 	}
 }
 
-static std::unique_ptr<FunctionHook> alwaysWitchTimeHook;
-static uintptr_t alwaysWitchTime_jmp_ret = NULL;
 bool GameHook::alwaysWitchTime_toggle = false;
 float alwaysWitchTimeTimer = 120.0f;
 static __declspec(naked) void AlwaysWitchTimeDetour(void) {
@@ -1712,34 +1753,32 @@ static __declspec(naked) void AlwaysWitchTimeDetour(void) {
 		je originalcode
 
 		movss xmm1, [alwaysWitchTimeTimer]
-		jmp dword ptr [alwaysWitchTime_jmp_ret]
+		jmp dword ptr [GameHook::alwaysWitchTime.jmp_ret]
 
 		originalcode:
 		movss xmm1, [esi+0x00000704]
-		jmp dword ptr [alwaysWitchTime_jmp_ret]
+		jmp dword ptr [GameHook::alwaysWitchTime.jmp_ret]
 	}
 }
 
 int __stdcall GetCustomWeave(LocalPlayer* player) {
     int moveID = player->moveID;
     for (int i = 0; i < GameHook::customWeaveCount; ++i) {
-        if (GameHook::customWeaves_toggles[i] && GameHook::customWeaveMoveIDArray[i] == moveID) {
+        if (GameHook::customWeave_toggles[i] && GameHook::customWeaveMoveIDArray[i] == moveID) {
             return GameHook::customWeaveArray[i];
         }
     }
     return -1;
 }
 
-bool GameHook::customWeave_toggle = false;
-bool GameHook::customWeaves_toggles[customWeaveCount]{};
+bool GameHook::customWeaves_toggle = false;
+bool GameHook::customWeave_toggles[customWeaveCount]{};
 int GameHook::customWeaveArray[customWeaveCount]{};
 int GameHook::customWeaveMoveIDArray[customWeaveCount]{};
-static std::unique_ptr<FunctionHook> customWeavesHook;
-static uintptr_t customWeaves_jmp_ret = NULL;
 static __declspec(naked) void CustomWeavesDetour(void) { // player in esi
 	_asm {
-		// cmp byte ptr [GameHook::customWeaves_toggle], 0
-		// je originalcode
+		cmp byte ptr [GameHook::customWeaves_toggle], 0
+		je originalcode
 
 		push eax // +4
 		push ecx // +8
@@ -1754,16 +1793,14 @@ static __declspec(naked) void CustomWeavesDetour(void) { // player in esi
 		pop ecx
 		pop eax
 
-	// originalcode:
+	originalcode:
 		push ebx
 		push ebp
 		mov ebp, [esp+0x0C]
-		jmp dword ptr [customWeaves_jmp_ret]
+		jmp dword ptr [GameHook::customWeaves.jmp_ret]
 	}
 }
 
-static std::unique_ptr<FunctionHook> omnicancelTeleHook;
-static uintptr_t omnicancelTele_jmp_ret = NULL;
 bool GameHook::omnicancelTele_toggle = false;
 static uintptr_t omnicancelTele_call = 0x009E6FA0;
 static uintptr_t omnicancelTele_ogcode = 0x05A97ED0;
@@ -1795,7 +1832,7 @@ static __declspec(naked) void OmnicancelTeleDetour(void) { // player in ebx
 		push 0x0B
 		mov ecx, [omnicancelTele_ogcode]
 		// mov ecx, [ecx]
-		jmp dword ptr [omnicancelTele_jmp_ret]
+		jmp dword ptr [GameHook::omnicancelTele.jmp_ret]
 	}
 }
 
@@ -1824,7 +1861,6 @@ static void LogEntitySpawn(int ID, int unkn, int optionalStructUsed, int structU
 		structSpawnModifier
 	});
 }
-
 
 void GameHook::DisplayRecentlySpawnedEntitiesInImGui() {
 	if (ImGui::Button("Clear"))
@@ -1929,11 +1965,9 @@ static void InitSwapRules() {
 	}
 }
 
-static std::unique_ptr<FunctionHook> viewEntitySpawnsHook;
-static uintptr_t viewEntitySpawns_jmp_ret = NULL;
-bool GameHook::viewEntitySpawns_toggle = false;
 bool GameHook::randomizeSpawns_toggle = false;
 bool GameHook::swapSpawns_toggle = false;
+bool GameHook::viewEntitySpawns_toggle = false;
 static __declspec(naked) void ViewEntitySpawnsDetour(void) {
 	__asm {
 		pushfd
@@ -2063,12 +2097,10 @@ static __declspec(naked) void ViewEntitySpawnsDetour(void) {
 		popfd
 		mov eax, [esp+0x0C]
 		mov edx, [esp+0x08]
-		jmp dword ptr [viewEntitySpawns_jmp_ret]
+		jmp dword ptr [GameHook::viewEntitySpawns.jmp_ret]
 	}
 }
 
-static std::unique_ptr<FunctionHook> teleportComboActionHook;
-static uintptr_t teleportComboAction_jmp_ret = NULL;
 bool GameHook::teleportComboAction_toggle = false;
 static __declspec(naked) void TeleportComboActionDetour(void) { // player in ebx
 	_asm {
@@ -2079,19 +2111,17 @@ static __declspec(naked) void TeleportComboActionDetour(void) { // player in ebx
 
 		originalcode:
 		mov eax, [esi+0x00000350]
-		jmp dword ptr [teleportComboAction_jmp_ret]
-	}
+		jmp dword ptr [GameHook::teleportComboAction.jmp_ret]
+	}	
 }
 
-static std::unique_ptr<FunctionHook> thirdAccessoryMenuHook;
-static uintptr_t thirdAccessoryMenu_jmp_ret = NULL;
+bool GameHook::thirdAccessoryMenu_toggle = false;
 static uintptr_t thirdAccessoryMenu_jmp_alt = 0xB1E0DC;
 static uintptr_t thirdAccessoryMenuRightCall = 0xB28850;
 static uintptr_t thirdAccessoryMenuLeftCall = 0xB28880;
-bool GameHook::allowSettingThirdAccessory_toggle = false;
 static __declspec(naked) void ThirdAccessoryMenuDetour(void) {
 	_asm {
-		cmp dword ptr [GameHook::allowSettingThirdAccessory_toggle], 1
+		cmp dword ptr [GameHook::thirdAccessoryMenu_toggle], 1
 		jne originalcode
 
 		push 01
@@ -2152,13 +2182,11 @@ static __declspec(naked) void ThirdAccessoryMenuDetour(void) {
 		push 01
 		mov ecx,esi
 		call dword ptr [thirdAccessoryMenuRightCall]
-		jmp thirdAccessoryMenu_jmp_ret
+		jmp dword ptr [GameHook::thirdAccessoryMenu.jmp_ret]
 	}
 }
 
 // accessories that use held y+b break without this
-static std::unique_ptr<FunctionHook> fixThirdAccessoryHook;
-static uintptr_t fixThirdAccessory_jmp_ret = NULL;
 static uintptr_t fixThirdAccessoryCall = 0x4332F0;
 static __declspec(naked) void FixThirdAccessoryDetour(void) { // player in ebx
 	_asm {
@@ -2176,7 +2204,7 @@ static __declspec(naked) void FixThirdAccessoryDetour(void) { // player in ebx
 		originalcode:
 			add esp, 8
 			mov ebp, eax
-			jmp dword ptr [fixThirdAccessory_jmp_ret]
+			jmp dword ptr [GameHook::fixThirdAccessory.jmp_ret]
 	}
 }
 
@@ -3229,88 +3257,20 @@ static __declspec(naked) void pl004cDetour(void) {
 
 #endif
 
-void GameHook::InitializeDetours(void) {
-#ifndef SPEEDRUN_BUILD 
-	install_hook_absolute(0x41837E, getHitboxHook, &GetHitboxDetour, &getHitbox_jmp_ret, 8);
-	install_hook_absolute(0x4572BA, enemyHPHook, &EnemyHPDetour, &enemyHP_jmp_ret, 6);
-	install_hook_absolute(0x9E1808, witchTimeHook, &WitchTimeMultiplierDetour, &witchTimeMultiplier_jmp_ret, 6);
-	install_hook_absolute(0x8BCE4C, infMagicHook, &InfMagicDetour, &infMagic_jmp_ret, 8); // happens without this 
-	install_hook_absolute(0x4572B2, damageDealtMultiplierHook, &DamageDealtMultiplierDetour, &damageDealtMultiplier_jmp_ret, 8);
-	install_hook_absolute(0x9D4327, damageReceivedMultiplierHook, &DamageReceivedMultiplierDetour, &damageReceivedMultiplier_jmp_ret, 8);
-	install_hook_absolute(0xA941FA, customCameraDistanceHook, &CustomCameraDistanceDetour, &customCameraDistance_jmp_ret, 6);
-	install_hook_absolute(0x4250F7, haloDisplayHook, &HaloDisplayDetour, &haloDisplay_jmp_ret, 5);
-	install_hook_absolute(0x4BD053, moveIDSwapHook, &MoveIDSwapDetour, &moveIDSwap_jmp_ret, 6);
-	install_hook_absolute(0x8D2A82, punchStringIDSwapHook, &PunchStringIDSwapDetour, &punchStringIDSwap_jmp_ret, 6); //
-	install_hook_absolute(0x8D2AC4, latePunchStringIDSwapHook, &LatePunchStringIDSwapDetour, &latePunchStringIDSwap_jmp_ret, 6);
-	install_hook_absolute(0x8D2AE5, kickStringIDSwapHook, &KickStringIDSwapDetour, &kickStringIDSwap_jmp_ret, 6);
-	install_hook_absolute(0x8D2AA3, lateKickStringIDSwapHook, &LateKickStringIDSwapDetour, &lateKickStringIDSwap_jmp_ret, 6); //
-	install_hook_absolute(0x4A8EFF, easierMashHook, &EasierMashDetour, &easierMash_jmp_ret, 5);
-	install_hook_absolute(0x41C8B5, initialAngelSlayerFloorHook, &InitialAngelSlayerFloorDetour, &initialAngelSlayerFloor_jmp_ret, 10);
-	install_hook_absolute(0x419262, pvpHook1, &PvpDetour1, &pvp_jmp_ret1, 6);
-	install_hook_absolute(0x8BA9C7, pvpHook2, &PvpDetour2, &pvp_jmp_ret2, 8);
-	install_hook_absolute(0x49A47B, pvpHook3, &PvpDetour3, &pvp_jmp_ret3, 6);
-	install_hook_absolute(0x49A7CB, pvpHook4, &PvpDetour4, &pvp_jmp_ret4, 6);
-	install_hook_absolute(0xAA657B, cameraSelectHook, &CameraSelectDetour, &cameraSelect_jmp_ret, 6);
-	install_hook_absolute(0x5819BB, customEffectColoursHook, &CustomEffectColoursDetour, &customEffectColours_jmp_ret, 32);
-	install_hook_absolute(0x95ABD3, cancellableAfterBurnerHook, &CancellableAfterBurnerDetour, &cancellableAfterBurner_jmp_ret, 6);
-	install_hook_absolute(0x952142, cancellableFallingKickHook, &CancellableFallingKickDetour, &cancellableFallingKick_jmp_ret, 5);
-	install_hook_absolute(0x920C44, cancellableFallingKickDurgaHook, &CancellableFallingKickDurgaDetour, &cancellableFallingKickDurga_jmp_ret, 8);
-	install_hook_absolute(0x513FC7, turboHook, &TurboHookDetour, &turbo_jmp_ret, 5);
-	install_hook_absolute(0x8BE592, altTeleInputHook, &AltTeleInputDetour, &altTeleInput_jmp_ret, 26);
-	install_hook_absolute(0x9E751A, tauntWithTimeBracelet2Hook, &TauntWithTimeBracelet2Detour, &tauntWithTimeBracelet2_jmp_ret, 6);
-	install_hook_absolute(0x8BE5C2, tauntWithTimeBracelet3Hook, &TauntWithTimeBracelet3Detour, &tauntWithTimeBracelet3_jmp_ret, 6);
-	install_hook_absolute(0x513C1E, disableSlowmoHook, &DisableSlowmoDetour, &disableSlowmo_jmp_ret, 5);
-	install_hook_absolute(0x9E93B9, lowerDivekickHook, &LowerDivekickDetour, &lowerDivekick_jmp_ret, 7);
-	install_hook_absolute(0x94CAAF, dualAfterBurnerHook, &DualAfterBurnerDetour, &dualAfterBurner_jmp_ret, 5);
-	//install_hook_absolute(0xC798A7, getMotNameHook, &GetMotNameDetour, &getMotName_jmp_ret, 6);
-	//install_hook_absolute(0x6222D0, loadReplaceHook, &LoadReplaceDetour, &loadReplace_jmp_ret, 6);
-	install_hook_absolute(0x4CCCA0, longerPillowTalkChargeHook, &LongerPillowTalkChargeDetour, &longerPillowTalkCharge_jmp_ret, 6);
-	install_hook_absolute(0x8EF527, alwaysWitchTimeHook, &AlwaysWitchTimeDetour, &alwaysWitchTime_jmp_ret, 8);
-	install_hook_absolute(0x87F270, customWeavesHook, &CustomWeavesDetour, &customWeaves_jmp_ret, 6);
-	install_hook_absolute(0x8BE5B6, omnicancelTeleHook, &OmnicancelTeleDetour, &omnicancelTele_jmp_ret, 7);
-	install_hook_absolute(0x510450, viewEntitySpawnsHook, &ViewEntitySpawnsDetour, &viewEntitySpawns_jmp_ret, 8);
-	install_hook_absolute(0x9A0020, teleportComboActionHook, &TeleportComboActionDetour, &teleportComboAction_jmp_ret, 6);
-	install_hook_absolute(0x97ED07, fixThirdAccessoryHook, &FixThirdAccessoryDetour, &fixThirdAccessory_jmp_ret, 5);
-	install_hook_absolute(0xB1E0AC, thirdAccessoryMenuHook, &ThirdAccessoryMenuDetour, &thirdAccessoryMenu_jmp_ret, 9);
-	// install_hook_absolute(0x4AB55B, animationScrubHook, &AnimationScrubDetour, &animationScrub_jmp_ret, 9);
-	install_hook_absolute(0x9F5AF0, pl0012Hook, &pl0012Detour, NULL, 0);
-	install_hook_absolute(0x9FC890, pl0031Hook, &pl0031Detour, NULL, 0);
-	install_hook_absolute(0xA17420, pl004cHook, &pl004cDetour, NULL, 0);
-#endif
-	// both speedrun and non speedrun
-	//install_hook_absolute(0xC78100, uptimeFixHook, &UptimeFixDetour, &uptimeFix_jmp_ret, 6);
-	uintptr_t uptimeFixAddr = 0xC78100;
-	uptimeFix.hook = std::make_unique<FunctionHook>(uptimeFixAddr, &UptimeFixDetour);
-	uptimeFix.jmp_ret = uptimeFixAddr + 6;
-	//uptimeFix.enabled = false;
-
-	install_hook_absolute(0x411CD4, inputIconsHook, &InputIconsDetour, &inputIcons_jmp_ret, 13);
-	install_hook_absolute(0x4FC4EF, randomizeCostumeHook, &RandomizeCostumeDetour, &randomizeCostume_jmp_ret, 5);
-	// fps stuff
-	install_hook_absolute(0x8BE2B6, punchBufferFramesHook, &PunchBufferFramesDetour, &punchBufferFrames_jmp_ret, 6);
-	install_hook_absolute(0x8BE387, kickBufferFramesHook, &KickBufferFramesDetour, &kickBufferFrames_jmp_ret, 6);
-	install_hook_absolute(0x8BE471, dodgeBufferFramesHook, &DodgeBufferFramesDetour, &dodgeBufferFrames_jmp_ret, 6);
-	install_hook_absolute(0x8BE55B, gunBufferFramesHook, &GunBufferFramesDetour, &gunBufferFrames_jmp_ret, 6);
-	install_hook_absolute(0xA8FBB1, controllerCameraSensHook, &ControllerCameraSensDetour, &controllerCameraSens_jmp_ret, 8);
-	install_hook_absolute(0x8F2EB6, fpsSkateSpeed1Hook, &FpsSkateSpeed1Detour, &fpsSkateSpeed1_jmp_ret, 8);
-	install_hook_absolute(0x8E72B3, fpsSkateSpeed2Hook, &FpsSkateSpeed2Detour, &fpsSkateSpeed2_jmp_ret, 8);
-	// fps stuff over
-	static std::random_device bayoHookRandomDevice;
-	GameHook::rng.seed(bayoHookRandomDevice() ^ (unsigned)time(NULL));
-	InitSwapRules();
-}
-
 void GameHook::SaveDetours(utils::Config& cfg) {
 #ifndef SPEEDRUN_BUILD
 	cfg.set<bool>("damageReceivedMultiplierNoDamage_toggle", damageReceivedMultiplierNoDamage_toggle);
+	cfg.set<bool>("inputIcons_toggle", inputIcons_toggle);
+	cfg.set<int>("inputIconsValue", inputIconsValue);
 	cfg.set<bool>("randomizeCostume_toggle", randomizeCostume_toggle);
 	cfg.set<bool>("cameraSelect_toggle", cameraSelect_toggle);
 	cfg.set<int>("cameraSelect_newCameraType", cameraSelect_newCameraType);
 	cfg.set<bool>("drawHitboxes_toggle", drawHitboxes_toggle);
 	cfg.set<bool>("openMenuPause_toggle", openMenuPause_toggle);
+	cfg.set<bool>("enemyHPNoDamage_toggle", enemyHPNoDamage_toggle);
 	cfg.set<bool>("enemyHPOneHitKill_toggle", enemyHPOneHitKill_toggle);
 	cfg.set<bool>("witchTimeMultiplier_toggle", witchTimeMultiplier_toggle);
-	cfg.set<float>("witchTimeMultiplier", witchTimeMultiplier);
+	cfg.set<float>("witchTimeMultiplier_value", witchTimeMultiplier_value);
 	cfg.set<bool>("infMagic_toggle", infMagic_toggle);
 	cfg.set<float>("infMagic_value", infMagic_value);
 	cfg.set<bool>("damageDealtMultiplier_toggle", damageDealtMultiplier_toggle);
@@ -3318,17 +3278,18 @@ void GameHook::SaveDetours(utils::Config& cfg) {
 	cfg.set<bool>("damageReceivedMultiplier_toggle", damageReceivedMultiplier_toggle);
 	cfg.set<float>("incoming_damage_mult", incoming_damage_mult);
 	cfg.set<bool>("customCameraDistance_toggle", customCameraDistance_toggle);
-	cfg.set<float>("customCameraDistance", customCameraDistance);
+	cfg.set<float>("customCameraDistance_value", customCameraDistance_value);
 	cfg.set<bool>("forceSummoningClothes_toggle", forceSummoningClothes_toggle);
 	cfg.set<bool>("haloDisplay_toggle", haloDisplay_toggle);
 	cfg.set<bool>("easierMash_toggle", easierMash_toggle);
-	cfg.set<int>("initialAngelSlayerFloor", initialAngelSlayerFloor);
+	cfg.set<int>("initialAngelSlayerFloor_value", initialAngelSlayerFloor_value);
 	cfg.set<bool>("cancellableAfterBurner_toggle", cancellableAfterBurner_toggle);
 	cfg.set<bool>("cancellableFallingKick_toggle", cancellableFallingKick_toggle);
 	cfg.set<bool>("turbo_toggle", turbo_toggle);
 	cfg.set<float>("turboValue", turboValue);
 	cfg.set<bool>("altTeleInput_toggle", altTeleInput_toggle);
 	cfg.set<bool>("teleportComboAction_toggle", teleportComboAction_toggle);
+	cfg.set<bool>("tauntWithTimeBracelet_toggle", tauntWithTimeBracelet_toggle);
 	cfg.set<bool>("disableSlowmo_toggle", disableSlowmo_toggle);
 	cfg.set<bool>("lowerDivekick_toggle", lowerDivekick_toggle);
 	cfg.set<bool>("dualAfterBurner_toggle", dualAfterBurner_toggle);
@@ -3338,6 +3299,7 @@ void GameHook::SaveDetours(utils::Config& cfg) {
 	cfg.set<bool>("saveStatesHotkeys_toggle", saveStatesHotkeys_toggle);
 	cfg.set<bool>("omnicancelTele_toggle", omnicancelTele_toggle);
 	cfg.set<bool>("randomizeSpawns_toggle", randomizeSpawns_toggle);
+	cfg.set<bool>("linkGameToDelta_toggle", linkGameToDelta_toggle);
 	cfg.set<bool>("longerBufferWindows_toggle", longerBufferWindows_toggle);
 
 	cfg.set<bool>("swapSpawns_toggle", swapSpawns_toggle);
@@ -3351,86 +3313,89 @@ void GameHook::SaveDetours(utils::Config& cfg) {
 		cfg.set<int>(keyModifier, rule.spawnModifier);
 	}
 
-	cfg.set<bool>("allowSettingThirdAccessory_toggle", allowSettingThirdAccessory_toggle);
+	cfg.set<bool>("thirdAccessoryMenu_toggle", thirdAccessoryMenu_toggle);
 
-	cfg.set<bool>("moveIDSwaps_toggle", moveIDSwaps_toggle);
+	cfg.set<bool>("moveIDSwap_toggle", moveIDSwap_toggle);
 	for (int i = 0; i < maxMoveIDSwaps; ++i) {
 		cfg.set<bool>(("moveIDSwap_toggles[" + std::to_string(i) + "]").c_str(), moveIDSwap_toggles[i]);
 		cfg.set<int>(("moveIDSwapSourceMoves[" + std::to_string(i) + "]").c_str(), moveIDSwapSourceMoves[i]);
 		cfg.set<int>(("moveIDSwapSwappedMoves[" + std::to_string(i) + "]").c_str(), moveIDSwapSwappedMoves[i]);
 	}
 
-	cfg.set<bool>("stringSwaps_toggle", stringSwaps_toggle);
+	cfg.set<bool>("stringSwap_toggle", stringSwap_toggle);
 	for (int i = 0; i < maxStringSwaps; ++i) {
 		cfg.set<bool>(("stringIDSwap_toggles[" + std::to_string(i) + "]").c_str(), stringIDSwap_toggles[i]);
 		cfg.set<int>(("stringIDSwapSourceStrings[" + std::to_string(i) + "]").c_str(), stringIDSwapSourceStrings[i]);
 		cfg.set<int>(("stringIDSwapDesiredStrings[" + std::to_string(i) + "]").c_str(), stringIDSwapDesiredStrings[i]);
 	}
 
-	cfg.set<bool>("comboMaker_toggle", comboMaker_toggle);
-	for (int i = 0; i < maxComboMakers; ++i) {
-		cfg.set<bool>(("comboMaker_toggles[" + std::to_string(i) + "]").c_str(), comboMaker_toggles[i]);
-		cfg.set<int>(("comboMakerMoveIDs[" + std::to_string(i) + "]").c_str(), comboMakerMoveIDs[i]);
-		cfg.set<int>(("comboMakerMoveParts[" + std::to_string(i) + "]").c_str(), comboMakerMoveParts[i]);
-		cfg.set<int>(("comboMakerStringIDs[" + std::to_string(i) + "]").c_str(), comboMakerStringIDs[i]);
-	}
-
-	cfg.set<bool>("customWeave_toggle", customWeave_toggle);
+	cfg.set<bool>("customWeaves_toggle", customWeaves_toggle);
 	for (int i = 0; i < customWeaveCount; ++i) {
-		cfg.set<bool>(("customWeaves_toggles[" + std::to_string(i) + "]").c_str(), customWeaves_toggles[i]);
+		cfg.set<bool>(("customWeave_toggles[" + std::to_string(i) + "]").c_str(), customWeave_toggles[i]);
 		cfg.set<int>(("customWeaveMoveIDArray[" + std::to_string(i) + "]").c_str(), customWeaveMoveIDArray[i]);
 		cfg.set<int>(("customWeaveArray[" + std::to_string(i) + "]").c_str(), customWeaveArray[i]);
 	}
 
 #endif
 	// both speedrun and non speedrun
-	// cfg.set<bool>("uptimeFix_toggle", uptimeFix_toggle);
+	cfg.set<bool>("uptimeFix_toggle", uptimeFix_toggle);
 	cfg.save(GameHook::cfgString);
 }
 
 void GameHook::LoadDetours(const utils::Config& cfg) {
-	// both speedrun and non speedrun
-	// uptimeFix_toggle = cfg.get<bool>("uptimeFix_toggle").value_or(false);
 #ifndef SPEEDRUN_BUILD 
-	// detours
-	damageReceivedMultiplierNoDamage_toggle = cfg.get<bool>("damageReceivedMultiplierNoDamage_toggle").value_or(false);
+	forceSummoningClothes_toggle = cfg.get<bool>("forceSummoningClothes_toggle").value_or(false);
+	saveStatesHotkeys_toggle = cfg.get<bool>("saveStatesHotkeys_toggle").value_or(false);
+	//loadReplace_toggle = cfg.get<bool>("loadReplace_toggle").value_or(false);
+#endif
+	// always
+	uptimeFix_toggle = cfg.get<bool>("uptimeFix_toggle").value_or(false);
+	GameHook::InitHook("uptimeFix", 0xC78100, &UptimeFixDetour, 6, GameHook::uptimeFix);
+
+	inputIcons_toggle = cfg.get<bool>("inputIcons_toggle").value_or(false);
+	inputIconsValue = cfg.get<bool>("inputIconsValue").value_or(false);
+	GameHook::InitHook("inputIcons", 0x411CD4, &InputIconsDetour, 13, GameHook::inputIcons);
+
 	randomizeCostume_toggle = cfg.get<bool>("randomizeCostume_toggle").value_or(false);
-	cameraSelect_toggle = cfg.get<bool>("cameraSelect_toggle").value_or(false);
-	cameraSelect_newCameraType = cfg.get<int>("cameraSelect_newCameraType").value_or(0);
+	GameHook::InitHook("randomizeCostume", 0x4FC4EF, &RandomizeCostumeDetour, 5, GameHook::randomizeCostume);
+	
+	// fps
+	linkGameToDelta_toggle = cfg.get<bool>("linkGameToDelta_toggle").value_or(false);
+	longerBufferWindows_toggle = cfg.get<bool>("longerBufferWindows_toggle").value_or(false);
+	GameHook::InitHook("linkGameToDelta_punchBufferFrames", 0x8BE2B6, &PunchBufferFramesDetour, 6, GameHook::punchBufferFrames);
+	GameHook::InitHook("linkGameToDelta_kickBufferFrames", 0x8BE387, &KickBufferFramesDetour, 6, GameHook::kickBufferFrames);
+	GameHook::InitHook("linkGameToDelta_dodgeBufferFrames", 0x8BE471, &DodgeBufferFramesDetour, 6, GameHook::dodgeBufferFrames);
+	GameHook::InitHook("linkGameToDelta_gunBufferFrames", 0x8BE55B, &GunBufferFramesDetour, 6, GameHook::gunBufferFrames);
+	GameHook::InitHook("linkGameToDelta_controllerCameraSens", 0xA8FBB1, &ControllerCameraSensDetour, 8, GameHook::controllerCameraSens);
+	GameHook::InitHook("linkGameToDelta_fpsSkateSpeed1", 0x8F2EB6, &FpsSkateSpeed1Detour, 8, GameHook::fpsSkateSpeed1);
+	GameHook::InitHook("linkGameToDelta_fpsSkateSpeed2", 0x8E72B3, &FpsSkateSpeed2Detour, 8, GameHook::fpsSkateSpeed2);
+
+#ifndef SPEEDRUN_BUILD
 	drawHitboxes_toggle = cfg.get<bool>("drawHitboxes_toggle").value_or(false);
-	openMenuPause_toggle = cfg.get<bool>("openMenuPause_toggle").value_or(false);
+	GameHook::InitHook("getHitbox", 0x41837E, &GetHitboxDetour, 8, GameHook::getHitbox);
+
+	enemyHPNoDamage_toggle = cfg.get<bool>("enemyHPNoDamage_toggle").value_or(false);
 	enemyHPOneHitKill_toggle = cfg.get<bool>("enemyHPOneHitKill_toggle").value_or(false);
-	witchTimeMultiplier_toggle = cfg.get<bool>("witchTimeMultiplier_toggle").value_or(false);
-	witchTimeMultiplier = cfg.get<float>("witchTimeMultiplier").value_or(1.0f);
-	infMagic_toggle = cfg.get<bool>("infMagic_toggle").value_or(false);
-	infMagic_value = cfg.get<float>("infMagic_value").value_or(1200.0f);
+	GameHook::InitHook("enemyHP", 0x4572BA, &EnemyHPDetour, 6, GameHook::enemyHP);
+
 	damageDealtMultiplier_toggle = cfg.get<bool>("damageDealtMultiplier_toggle").value_or(false);
 	damageDealtMultiplierMult = cfg.get<float>("damageDealtMultiplierMult").value_or(1.0f);
-	damageReceivedMultiplier_toggle = cfg.get<bool>("damageReceivedMultiplier_toggle").value_or(false);
-	incoming_damage_mult = cfg.get<float>("incoming_damage_mult").value_or(1.0f);
-	customCameraDistance_toggle = cfg.get<bool>("customCameraDistance_toggle").value_or(false);
-	customCameraDistance = cfg.get<float>("customCameraDistance").value_or(10.0f);
-	forceSummoningClothes_toggle = cfg.get<bool>("forceSummoningClothes_toggle").value_or(false);
-	haloDisplay_toggle = cfg.get<bool>("haloDisplay_toggle").value_or(false);
-	easierMash_toggle = cfg.get<bool>("easierMash_toggle").value_or(false);
-	initialAngelSlayerFloor = cfg.get<int>("initialAngelSlayerFloor").value_or(0);
-	cancellableAfterBurner_toggle = cfg.get<bool>("cancellableAfterBurner_toggle").value_or(false);
-	cancellableFallingKick_toggle = cfg.get<bool>("cancellableFallingKick_toggle").value_or(false);
-	turbo_toggle = cfg.get<bool>("turbo_toggle").value_or(false);
-	turboValue = cfg.get<float>("turboValue").value_or(1.0f);
-	altTeleInput_toggle = cfg.get<bool>("altTeleInput_toggle").value_or(false);
-	teleportComboAction_toggle = cfg.get<bool>("teleportComboAction_toggle").value_or(false);
-	disableSlowmo_toggle = cfg.get<bool>("disableSlowmo_toggle").value_or(false);
-	lowerDivekick_toggle = cfg.get<bool>("lowerDivekick_toggle").value_or(false);
-	dualAfterBurner_toggle = cfg.get<bool>("dualAfterBurner_toggle").value_or(false);
-	//loadReplace_toggle = cfg.get<bool>("loadReplace_toggle").value_or(false);
-	longerPillowTalkCharge_toggle = cfg.get<bool>("longerPillowTalkCharge_toggle").value_or(false);
-	alwaysWitchTime_toggle = cfg.get<bool>("alwaysWitchTime_toggle").value_or(false);
-	saveStatesHotkeys_toggle = cfg.get<bool>("saveStatesHotkeys_toggle").value_or(false);
-	omnicancelTele_toggle = cfg.get<bool>("omnicancelTele_toggle").value_or(false);
-	randomizeSpawns_toggle = cfg.get<bool>("randomizeSpawns_toggle").value_or(false);
-	longerBufferWindows_toggle = cfg.get<bool>("longerBufferWindows_toggle").value_or(false);
+	GameHook::InitHook("damageDealtMultiplier", 0x4572B2, &DamageDealtMultiplierDetour, 8, GameHook::damageDealtMultiplier);
 
+	incoming_damage_mult = cfg.get<float>("incoming_damage_mult").value_or(1.0f);
+	damageReceivedMultiplier_toggle = cfg.get<bool>("damageReceivedMultiplier_toggle").value_or(false);
+	damageReceivedMultiplierNoDamage_toggle = cfg.get<bool>("damageReceivedMultiplierNoDamage_toggle").value_or(false);
+	GameHook::InitHook("damageReceivedMultiplier", 0x9D4327, &DamageReceivedMultiplierDetour, 8, GameHook::damageReceivedMultiplier);
+
+	witchTimeMultiplier_toggle = cfg.get<bool>("witchTimeMultiplier_toggle").value_or(false);
+	witchTimeMultiplier_value = cfg.get<float>("witchTimeMultiplier_value").value_or(1.0f);
+	GameHook::InitHook("witchTimeMultiplier", 0x9E1808, &WitchTimeMultiplierDetour, 6, GameHook::witchTimeMultiplier);
+
+	infMagic_toggle = cfg.get<bool>("infMagic_toggle").value_or(false);
+	infMagic_value = cfg.get<float>("infMagic_value").value_or(1200.0f);
+	GameHook::InitHook("infMagic", 0x8BCE4C, &InfMagicDetour, 8, GameHook::infMagic);
+
+	randomizeSpawns_toggle = cfg.get<bool>("randomizeSpawns_toggle").value_or(false);
 	swapSpawns_toggle = cfg.get<bool>("swapSpawns_toggle").value_or(false);
 	for (int i = 0; i < (int)swapRules.size(); i++) {
 		auto& rule = swapRules[i];
@@ -3443,37 +3408,112 @@ void GameHook::LoadDetours(const utils::Config& cfg) {
 		if (rule.targetIndex < 0 || rule.targetIndex >= (int)spawnTypes.size())
 			rule.targetIndex = rule.sourceIndex;
 	}
+	GameHook::InitHook("viewEntitySpawns", 0x510450, &ViewEntitySpawnsDetour, 8, GameHook::viewEntitySpawns);
 
-	allowSettingThirdAccessory_toggle = cfg.get<bool>("allowSettingThirdAccessory_toggle").value_or(false);
+	customCameraDistance_toggle = cfg.get<bool>("customCameraDistance_toggle").value_or(false);
+	customCameraDistance_value = cfg.get<float>("customCameraDistance_value").value_or(10.0f);
+	GameHook::InitHook("customCameraDistance", 0xA941FA, &CustomCameraDistanceDetour, 6, GameHook::customCameraDistance);
 
-	moveIDSwaps_toggle = cfg.get<bool>("moveIDSwaps_toggle").value_or(false);
+	haloDisplay_toggle = cfg.get<bool>("haloDisplay_toggle").value_or(false);
+	GameHook::InitHook("haloDisplay", 0x4250F7, &HaloDisplayDetour, 5, GameHook::haloDisplay);
+
+	moveIDSwap_toggle = cfg.get<bool>("moveIDSwap_toggle").value_or(false);
 	for (int i = 0; i < maxMoveIDSwaps; ++i) {
 		moveIDSwap_toggles[i] = cfg.get<bool>(std::string("moveIDSwap_toggles[") + std::to_string(i) + "]").value_or(false);
 		moveIDSwapSourceMoves[i] = cfg.get<int>(std::string("moveIDSwapSourceMoves[") + std::to_string(i) + "]").value_or(-1);
 		moveIDSwapSwappedMoves[i] = cfg.get<int>(std::string("moveIDSwapSwappedMoves[") + std::to_string(i) + "]").value_or(-1);
 	}
+	GameHook::InitHook("moveIDSwap", 0x4BD053, &MoveIDSwapDetour, 6, GameHook::moveIDSwap);
 
-	stringSwaps_toggle = cfg.get<bool>("stringSwaps_toggle").value_or(false);
+	customWeaves_toggle = cfg.get<bool>("customWeaves_toggle").value_or(false);
+	for (int i = 0; i < customWeaveCount; ++i) {
+		customWeave_toggles[i] = cfg.get<bool>(std::string("customWeave_toggles[") + std::to_string(i) + "]").value_or(false);
+		customWeaveMoveIDArray[i] = cfg.get<int>(std::string("customWeaveMoveIDArray[") + std::to_string(i) + "]").value_or(-1);
+		customWeaveArray[i] = cfg.get<int>(std::string("customWeaveArray[") + std::to_string(i) + "]").value_or(-1);
+	}
+	GameHook::InitHook("customWeaves", 0x87F270, &CustomWeavesDetour, 6, GameHook::customWeaves);
+
+	stringSwap_toggle = cfg.get<bool>("stringSwap_toggle").value_or(false);
 	for (int i = 0; i < maxStringSwaps; ++i) {
 		stringIDSwap_toggles[i] = cfg.get<bool>(std::string("stringIDSwap_toggles[") + std::to_string(i) + "]").value_or(false);
 		stringIDSwapSourceStrings[i] = cfg.get<int>(std::string("stringIDSwapSourceStrings[") + std::to_string(i) + "]").value_or(-1);
 		stringIDSwapDesiredStrings[i] = cfg.get<int>(std::string("stringIDSwapDesiredStrings[") + std::to_string(i) + "]").value_or(-1);
 	}
+	GameHook::InitHook("punchStringIDSwap", 0x8D2A82, &PunchStringIDSwapDetour, 6, GameHook::punchStringIDSwap);
+	GameHook::InitHook("latePunchStringIDSwap", 0x8D2AC4, &LatePunchStringIDSwapDetour, 6, GameHook::latePunchStringIDSwap);
+	GameHook::InitHook("kickStringIDSwap", 0x8D2AE5, &KickStringIDSwapDetour, 6, GameHook::kickStringIDSwap);
+	GameHook::InitHook("lateKickStringIDSwap", 0x8D2AA3, &LateKickStringIDSwapDetour, 6, GameHook::lateKickStringIDSwap);
 
-	comboMaker_toggle = cfg.get<bool>("comboMaker_toggle").value_or(false);
-	for (int i = 0; i < maxComboMakers; ++i) {
-		comboMaker_toggles[i] = cfg.get<bool>(std::string("comboMaker_toggles[") + std::to_string(i) + "]").value_or(false);
-		comboMakerMoveIDs[i] = cfg.get<int>(std::string("comboMakerMoveIDs[") + std::to_string(i) + "]").value_or(-1);
-		comboMakerMoveParts[i] = cfg.get<int>(std::string("comboMakerMoveParts[") + std::to_string(i) + "]").value_or(-1);
-		comboMakerStringIDs[i] = cfg.get<int>(std::string("comboMakerStringIDs[") + std::to_string(i) + "]").value_or(-1);
-	}
+	easierMash_toggle = cfg.get<bool>("easierMash_toggle").value_or(false);
+	GameHook::InitHook("easierMash", 0x4A8EFF, &EasierMashDetour, 5, GameHook::easierMash);
 
-	customWeave_toggle = cfg.get<bool>("customWeave_toggle").value_or(false);
-	for (int i = 0; i < customWeaveCount; ++i) {
-		customWeaves_toggles[i] = cfg.get<bool>(std::string("customWeaves_toggles[") + std::to_string(i) + "]").value_or(false);
-		customWeaveMoveIDArray[i] = cfg.get<int>(std::string("customWeaveMoveIDArray[") + std::to_string(i) + "]").value_or(-1);
-		customWeaveArray[i] = cfg.get<int>(std::string("customWeaveArray[") + std::to_string(i) + "]").value_or(-1);
-	}
+	initialAngelSlayerFloor_value = cfg.get<int>("initialAngelSlayerFloor_value").value_or(0);
+	GameHook::InitHook("initialAngelSlayerFloor", 0x41C8B5, &InitialAngelSlayerFloorDetour, 10, GameHook::initialAngelSlayerFloor);
 
+	pvp_toggle = cfg.get<bool>("pvp_toggle").value_or(false);
+	GameHook::InitHook("pvp_1", 0x419262, &PvpDetour1, 6, GameHook::pvp1);
+	GameHook::InitHook("pvp_2", 0x8BA9C7, &PvpDetour2, 8, GameHook::pvp2);
+	GameHook::InitHook("pvp_3", 0x49A47B, &PvpDetour3, 6, GameHook::pvp3);
+	GameHook::InitHook("pvp_4", 0x49A7CB, &PvpDetour4, 6, GameHook::pvp4);
+
+	cameraSelect_toggle = cfg.get<bool>("cameraSelect_toggle").value_or(false);
+	cameraSelect_newCameraType = cfg.get<int>("cameraSelect_newCameraType").value_or(0);
+	GameHook::InitHook("cameraSelect", 0xAA657B, &CameraSelectDetour, 6, GameHook::cameraSelect);
+
+	customEffectColours_toggle = cfg.get<bool>("customEffectColours_toggle").value_or(false);
+	GameHook::InitHook("customEffectColours", 0x5819BB, &CustomEffectColoursDetour, 32, GameHook::customEffectColours);
+
+	cancellableAfterBurner_toggle = cfg.get<bool>("cancellableAfterBurner_toggle").value_or(false);
+	GameHook::InitHook("cancellableAfterBurner", 0x95ABD3, &CancellableAfterBurnerDetour, 6, GameHook::cancellableAfterBurner);
+
+	cancellableFallingKick_toggle = cfg.get<bool>("cancellableFallingKick_toggle").value_or(false);
+	GameHook::InitHook("cancellableFallingKick", 0x952142, &CancellableFallingKickDetour, 5, GameHook::cancellableFallingKick);
+	GameHook::InitHook("cancellableFallingKickDurga", 0x920C44, &CancellableFallingKickDurgaDetour, 8, GameHook::cancellableFallingKickDurga);
+
+	openMenuPause_toggle = cfg.get<bool>("openMenuPause_toggle").value_or(false);
+	turbo_toggle = cfg.get<bool>("turbo_toggle").value_or(false);
+	turboValue = cfg.get<float>("turboValue").value_or(1.0f);
+	GameHook::InitHook("turbo", 0x513FC7, &TurboHookDetour, 5, GameHook::turbo);
+
+	altTeleInput_toggle = cfg.get<bool>("altTeleInput_toggle").value_or(false);
+	GameHook::InitHook("altTeleInput", 0x8BE592, &AltTeleInputDetour, 26, GameHook::altTeleInput);
+
+	tauntWithTimeBracelet_toggle = cfg.get<bool>("tauntWithTimeBracelet_toggle").value_or(false);
+	GameHook::InitHook("tauntWithTimeBraceletA", 0x9E751A, &TauntWithTimeBraceletADetour, 6, GameHook::tauntWithTimeBraceletA);
+	GameHook::InitHook("tauntWithTimeBraceletB", 0x8BE5C2, &TauntWithTimeBraceletBDetour, 6, GameHook::tauntWithTimeBraceletB);
+
+	disableSlowmo_toggle = cfg.get<bool>("disableSlowmo_toggle").value_or(false);
+	GameHook::InitHook("disableSlowmo", 0x513C1E, &DisableSlowmoDetour, 5, GameHook::disableSlowmo);
+
+	lowerDivekick_toggle = cfg.get<bool>("lowerDivekick_toggle").value_or(false);
+	GameHook::InitHook("lowerDivekick", 0x9E93B9, &LowerDivekickDetour, 7, GameHook::lowerDivekick);
+
+	dualAfterBurner_toggle = cfg.get<bool>("dualAfterBurner_toggle").value_or(false);
+	GameHook::InitHook("dualAfterBurner", 0x94CAAF, &DualAfterBurnerDetour, 5, GameHook::dualAfterBurner);
+
+	longerPillowTalkCharge_toggle = cfg.get<bool>("longerPillowTalkCharge_toggle").value_or(false);
+	GameHook::InitHook("longerPillowTalkCharge", 0x4CCCA0, &LongerPillowTalkChargeDetour, 6, GameHook::longerPillowTalkCharge);
+
+	alwaysWitchTime_toggle = cfg.get<bool>("alwaysWitchTime_toggle").value_or(false);
+	GameHook::InitHook("alwaysWitchTime", 0x8EF527, &AlwaysWitchTimeDetour, 8, GameHook::alwaysWitchTime);
+
+	omnicancelTele_toggle = cfg.get<bool>("omnicancelTele_toggle").value_or(false);
+	GameHook::InitHook("omnicancelTele", 0x8BE5B6, &OmnicancelTeleDetour, 7, GameHook::omnicancelTele);
+
+	teleportComboAction_toggle = cfg.get<bool>("teleportComboAction_toggle").value_or(false);
+	GameHook::InitHook("teleportComboAction", 0x9A0020, &TeleportComboActionDetour, 6, GameHook::teleportComboAction);
+
+	thirdAccessoryMenu_toggle = cfg.get<bool>("thirdAccessoryMenu_toggle").value_or(false);
+	GameHook::InitHook("fixThirdAccessory", 0x97ED07, &FixThirdAccessoryDetour, 5, GameHook::fixThirdAccessory);
+	GameHook::InitHook("thirdAccessoryMenu", 0xB1E0AC, &ThirdAccessoryMenuDetour, 9, GameHook::thirdAccessoryMenu);
+
+	GameHook::InitHook("pl0012", 0x9F5AF0, &pl0012Detour, 0, GameHook::pl0012);
+	GameHook::InitHook("pl0031", 0x9FC890, &pl0031Detour, 0, GameHook::pl0031);
+	GameHook::InitHook("pl004c", 0xA17420, &pl004cDetour, 0, GameHook::pl004c);
 #endif
+	static std::random_device bayoHookRandomDevice;
+	GameHook::rng.seed(bayoHookRandomDevice() ^ (unsigned)time(NULL));
+	InitSwapRules();
+
+	GameHook::UpdateHooks();
 }

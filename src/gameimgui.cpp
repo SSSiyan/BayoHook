@@ -303,7 +303,9 @@ void GameHook::DrawStats() {
 }
 
 static void DrawEnemySwapper() {
-    ImGui::Checkbox("Enemy Swapper", &GameHook::swapSpawns_toggle);
+    if (ImGui::Checkbox("Enemy Swapper", &GameHook::swapSpawns_toggle)) {
+        GameHook::ToggleHook(GameHook::viewEntitySpawns,{ GameHook::randomizeSpawns_toggle, GameHook::swapSpawns_toggle, GameHook::viewEntitySpawns_toggle});
+    }
     GameHook::help_marker("If you find an enemy that does not swap, its because the game used a variant I don't have listed here. Let me know and I'll add it."
         "\nIf you want to help, spawn the enemy again and check \"Log Spawns\" on the \"Extras\" tab and let me know what the variant was\n\n"
         "\"Spawn Modifier\" seems to be able to mean a few different things - sometimes spawn animation, sometimes difficulty.\n"
@@ -731,8 +733,7 @@ static void DrawUptimeFix() {
 #ifdef SPEEDRUN_BUILD
     ImGui::BeginDisabled();
 #endif
-    if (ImGui::Checkbox("Uptime Fix", &GameHook::uptimeFix.enabled)) {
-		GameHook::UptimeFix(GameHook::uptimeFix.enabled);
+    if (ImGui::Checkbox("Uptime Fix", &GameHook::uptimeFix_toggle)) {
     }
 #ifdef SPEEDRUN_BUILD
     ImGui::EndDisabled();
@@ -760,18 +761,18 @@ static void DrawUptimeFix() {
 static void DrawAngelSlayer() {
     ImGui::SeparatorText("Angel Slayer");
     ImGui::SetNextItemWidth(GameHook::inputItemWidth);
-    int displayInitialAngelSlayerFloor = GameHook::initialAngelSlayerFloor + 1;
+    int displayInitialAngelSlayerFloor = GameHook::initialAngelSlayerFloor_value + 1;
     if (ImGui::InputInt("Initial Floor##InputInt", &displayInitialAngelSlayerFloor, 1, 10)) {
         if (displayInitialAngelSlayerFloor < 1) { displayInitialAngelSlayerFloor = 1; };
-        GameHook::initialAngelSlayerFloor = displayInitialAngelSlayerFloor - 1;
+        GameHook::initialAngelSlayerFloor_value = displayInitialAngelSlayerFloor - 1;
     }
     GameHook::help_marker("Set before starting Angel Slayer");
     ImGui::SameLine(GameHook::sameLineWidth);
     ImGui::SetNextItemWidth(GameHook::inputItemWidth);
-    int displayAngelSlayerFloorValue = *(int*)GameHook::angelSlayerFloorAddress + 1;
-    if (ImGui::InputInt("Current Floor##InputInt", &displayAngelSlayerFloorValue, 1, 10)) {
-        if (displayAngelSlayerFloorValue < 1) { displayAngelSlayerFloorValue = 1; };
-        *(int*)GameHook::angelSlayerFloorAddress = displayAngelSlayerFloorValue - 1;
+    int initialAngelSlayerFloor_value = *(int*)GameHook::angelSlayerFloorAddress + 1;
+    if (ImGui::InputInt("Current Floor##InputInt", &initialAngelSlayerFloor_value, 1, 10)) {
+        if (initialAngelSlayerFloor_value < 1) { initialAngelSlayerFloor_value = 1; };
+        *(int*)GameHook::angelSlayerFloorAddress = initialAngelSlayerFloor_value - 1;
     }
     GameHook::help_marker("Set before entering a portal");
 }
@@ -785,9 +786,7 @@ static void DrawFPSUnlock() {
     }
     GameHook::help_marker("If Bayonetta has been open for a long time you will experience small stutters. This option disables the built in FPS limiter so you can use an external limiter instead, which circumvents the issue");
 
-    if (ImGui::Checkbox("Link Game Logic To Delta Time", &GameHook::linkGameToDelta_toggle)) {
-        GameHook::LinkGameToDelta(GameHook::linkGameToDelta_toggle);
-    }
+    ImGui::Checkbox("Link Game Logic To Delta Time", &GameHook::linkGameToDelta_toggle);
     GameHook::help_marker("This is broken atm but when I figure this out we'll all be playing Bayo at 244hz without breaking everything, surely");
 #endif
 }
@@ -870,6 +869,8 @@ void GameHook::GameImGui(void) {
         GameHook::SavePatches(GameHook::cfg);
         GameHook::SaveDetours(GameHook::cfg);
     }
+
+    GameHook::UpdateHooks(); // check detour toggle bools every frame the ui is shown
 
     ImGui::SameLine();
     float fps = ImGui::GetIO().Framerate;
@@ -1037,7 +1038,7 @@ void GameHook::GameImGui(void) {
             if (GameHook::customCameraDistance_toggle) {
                 ImGui::Indent();
                 ImGui::PushItemWidth(inputItemWidth);
-                ImGui::InputFloat("##CustomCameraDistanceInputFloat", &GameHook::customCameraDistance, 0.1f, 1, "%.1f");
+                ImGui::InputFloat("##CustomCameraDistanceInputFloat", &GameHook::customCameraDistance_value, 0.1f, 1, "%.1f");
                 ImGui::PopItemWidth();
                 ImGui::Unindent();
             }
@@ -1186,7 +1187,11 @@ void GameHook::GameImGui(void) {
             ImGui::SameLine();
             help_marker("Umbran spear will refresh your offset timer");
 
-            ImGui::Checkbox("Longer Buffer Windows", &GameHook::longerBufferWindows_toggle);
+            if (ImGui::Checkbox("Longer Buffer Windows", &GameHook::longerBufferWindows_toggle)) {
+				ToggleHook(GameHook::punchBufferFrames, { GameHook::longerBufferWindows_toggle, GameHook::linkGameToDelta_toggle });
+                ToggleHook(GameHook::kickBufferFrames, { GameHook::longerBufferWindows_toggle, GameHook::linkGameToDelta_toggle });
+                ToggleHook(GameHook::dodgeBufferFrames, { GameHook::longerBufferWindows_toggle, GameHook::linkGameToDelta_toggle });
+            }
             ImGui::SameLine();
             help_marker("Double the number of buffer frames avaialble for punch, kick, dodge, shoot");
 
@@ -1220,7 +1225,7 @@ void GameHook::GameImGui(void) {
             if (GameHook::witchTimeMultiplier_toggle) {
                 ImGui::Indent();
                 ImGui::PushItemWidth(inputItemWidth);
-                ImGui::InputFloat("##WitchTimeMultiplier", &GameHook::witchTimeMultiplier, 0.1f, 1.0f, "%.1f");
+                ImGui::InputFloat("##WitchTimeMultiplier", &GameHook::witchTimeMultiplier_value, 0.1f, 1.0f, "%.1f");
                 ImGui::PopItemWidth();
                 ImGui::Unindent();
             }
@@ -1384,7 +1389,9 @@ void GameHook::GameImGui(void) {
             help_marker("Does not auto complete torture attacks (because then you'd do it on every enemy you stand next to)");
 
             ImGui::BeginGroup();
-            ImGui::Checkbox("Force Input Type", &GameHook::inputIcons_toggle);
+            if (ImGui::Checkbox("Force Input Type", &GameHook::inputIcons_toggle)) {
+                GameHook::ToggleHook(GameHook::inputIcons, GameHook::inputIcons_toggle);
+            }
             help_marker("Force the game to display either keyboard/mouse or gamepad input icons. Disallows certain inputs (such as mouse movement) when forcing gamepad");
             if (GameHook::inputIcons_toggle) {
                 ImGui::Indent();
@@ -1401,7 +1408,7 @@ void GameHook::GameImGui(void) {
                 GameHook::DisableTutorials(disableTutorials_toggle);
             }
 
-            ImGui::Checkbox("Alow setting third accessory", &allowSettingThirdAccessory_toggle);
+            ImGui::Checkbox("Allow setting third accessory", &thirdAccessoryMenu_toggle);
             help_marker("When setting an accessory in the menu, press down to access the third slot");
 
 			ImGui::SeparatorText("BayoHook");
@@ -1438,12 +1445,12 @@ void GameHook::GameImGui(void) {
 
             ImGui::SeparatorText("Custom Combo Routes");
 
-            ImGui::Checkbox("Move ID Swaps", &moveIDSwaps_toggle);
+            ImGui::Checkbox("Move ID Swaps", &moveIDSwap_toggle);
             help_marker("Replace one move with another\n"
                 "Do the move you want to replace, pause mid anim, type your current moveID in the first box\n"
                 "Do the move you want to see, pause mid anim, type your current moveID in the second box\n"
                 "Don't forget to save once you're done for next boot!");
-            if (GameHook::moveIDSwaps_toggle) {
+            if (GameHook::moveIDSwap_toggle) {
                 LocalPlayer* player = GetLocalPlayer();
                 if (player) {
                     ImGui::Text("Current Move ID:");
@@ -1505,16 +1512,16 @@ void GameHook::GameImGui(void) {
 
             ImGui::Separator();
 
-            ImGui::Checkbox("Weave Swaps", &GameHook::customWeave_toggle);
+            ImGui::Checkbox("Weave Swaps", &GameHook::customWeaves_toggle);
             help_marker("Replace one weave with another");
-            if (GameHook::customWeave_toggle) {
+            if (GameHook::customWeaves_toggle) {
                 LocalPlayer* player = GetLocalPlayer();
                 if (player) {
                     ImGui::Text("Current Move ID:");
                     ImGui::Combo("##PlayerMoveIDComboInWeaveSwaps", &player->moveID, moveIDNames, IM_ARRAYSIZE(moveIDNames));
                     for (int i = 0; i < customWeaveCount; ++i) {
-                        ImGui::Checkbox(("Custom Weave[" + std::to_string(i + 1) + "]").c_str(), &customWeaves_toggles[i]);
-                        if (customWeaves_toggles[i]) {
+                        ImGui::Checkbox(("Custom Weave[" + std::to_string(i + 1) + "]").c_str(), &customWeave_toggles[i]);
+                        if (customWeave_toggles[i]) {
                             ImGui::PushItemWidth(inputItemWidth);
                             ImGui::Text("If Move ID ==");
                             ImGui::SameLine();
@@ -1536,9 +1543,9 @@ void GameHook::GameImGui(void) {
 
             ImGui::Separator();
 
-            ImGui::Checkbox("String Swaps", &GameHook::stringSwaps_toggle);
+            ImGui::Checkbox("String Swaps", &GameHook::stringSwap_toggle);
             help_marker("Replace one string with another");
-            if (GameHook::stringSwaps_toggle) {
+            if (GameHook::stringSwap_toggle) {
                 LocalPlayer* player = GetLocalPlayer();
                 if (player) {
                     ImGui::Text("Current String ID: %i", player->stringID);
@@ -1657,7 +1664,11 @@ void GameHook::GameImGui(void) {
                 ImGui::EndGroup();
             }
 
-            ImGui::Checkbox("Friendly Fire", &GameHook::pvp_toggle); // outside of if() so people can still disable it when no p2 spawned
+            if (ImGui::Checkbox("Friendly Fire", &GameHook::pvp_toggle)) { // outside of if() so people can still disable it when no p2 spawned
+                GameHook::ToggleHook(pvp1, GameHook::pvp_toggle);
+                GameHook::ToggleHook(pvp2, GameHook::pvp_toggle);
+                GameHook::ToggleHook(pvp3, GameHook::pvp_toggle);
+            }
             help_marker("How to PVP:\n- Spawn Player 2\n- Register both players as enemies\n- Tick \"Enable Friendly Fire\"\n"
                 "Friendly fire can be used outside of PVP to make co-op a little more entertaining");
 
