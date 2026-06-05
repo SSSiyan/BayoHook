@@ -112,12 +112,6 @@ public:
 	static HookContext cancellableFallingKick;
 	static HookContext cancellableFallingKickDurga;
 
-	static bool turbo_toggle; // if either of these bools are true, toggle the hook
-	static bool openMenuPause_toggle;
-	static float turboValue;
-	static float turboZero;
-	static HookContext turbo;
-
 	static bool altTeleInput_toggle; // if this is enabled, enable altTeleInput, tauntWithTimeBraceletA and tauntWithTimeBraceletB
 	static HookContext altTeleInput;
 	static bool tauntWithTimeBracelet_toggle; // if this is toggled, enable tauntWithTimeBraceletA and tauntWithTimeBraceletB
@@ -421,7 +415,12 @@ public:
 	static HookContext fpsSkateSpeed1;
 	static HookContext fpsSkateSpeed2;
 
-	// detours
+	static bool turbo_toggle; // if either of these bools are true, toggle the hook
+	static bool openMenuPause_toggle;
+	static float turboValue;
+	static float turboZero;
+	static HookContext turbo;
+
 	static void __cdecl GameTimerRebase();
 	static constexpr INT64 rebase_interval = 60;
 	static bool enable_scroll_transitions;

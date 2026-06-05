@@ -303,9 +303,7 @@ void GameHook::DrawStats() {
 }
 
 static void DrawEnemySwapper() {
-    if (ImGui::Checkbox("Enemy Swapper", &GameHook::swapSpawns_toggle)) {
-        GameHook::ToggleHook(GameHook::viewEntitySpawns,{ GameHook::randomizeSpawns_toggle, GameHook::swapSpawns_toggle, GameHook::viewEntitySpawns_toggle});
-    }
+    ImGui::Checkbox("Enemy Swapper", &GameHook::swapSpawns_toggle);
     GameHook::help_marker("If you find an enemy that does not swap, its because the game used a variant I don't have listed here. Let me know and I'll add it."
         "\nIf you want to help, spawn the enemy again and check \"Log Spawns\" on the \"Extras\" tab and let me know what the variant was\n\n"
         "\"Spawn Modifier\" seems to be able to mean a few different things - sometimes spawn animation, sometimes difficulty.\n"
@@ -779,18 +777,6 @@ static void DrawAngelSlayer() {
 
 #endif
 
-static void DrawFPSUnlock() {
-#ifndef SPEEDRUN_BUILD
-    if (ImGui::Checkbox("Unlock FPS", &GameHook::disableFpsLimiter_toggle)) {
-        GameHook::DisableFpsLimiter(GameHook::disableFpsLimiter_toggle);
-    }
-    GameHook::help_marker("If Bayonetta has been open for a long time you will experience small stutters. This option disables the built in FPS limiter so you can use an external limiter instead, which circumvents the issue");
-
-    ImGui::Checkbox("Link Game Logic To Delta Time", &GameHook::linkGameToDelta_toggle);
-    GameHook::help_marker("This is broken atm but when I figure this out we'll all be playing Bayo at 244hz without breaking everything, surely");
-#endif
-}
-
 static void DrawGlamour() {
     ImGui::SeparatorText("Glamour");
     ImGui::BeginGroup();
@@ -1187,11 +1173,7 @@ void GameHook::GameImGui(void) {
             ImGui::SameLine();
             help_marker("Umbran spear will refresh your offset timer");
 
-            if (ImGui::Checkbox("Longer Buffer Windows", &GameHook::longerBufferWindows_toggle)) {
-				ToggleHook(GameHook::punchBufferFrames, { GameHook::longerBufferWindows_toggle, GameHook::linkGameToDelta_toggle });
-                ToggleHook(GameHook::kickBufferFrames, { GameHook::longerBufferWindows_toggle, GameHook::linkGameToDelta_toggle });
-                ToggleHook(GameHook::dodgeBufferFrames, { GameHook::longerBufferWindows_toggle, GameHook::linkGameToDelta_toggle });
-            }
+            ImGui::Checkbox("Longer Buffer Windows", &GameHook::longerBufferWindows_toggle);
             ImGui::SameLine();
             help_marker("Double the number of buffer frames avaialble for punch, kick, dodge, shoot");
 
@@ -1389,9 +1371,7 @@ void GameHook::GameImGui(void) {
             help_marker("Does not auto complete torture attacks (because then you'd do it on every enemy you stand next to)");
 
             ImGui::BeginGroup();
-            if (ImGui::Checkbox("Force Input Type", &GameHook::inputIcons_toggle)) {
-                GameHook::ToggleHook(GameHook::inputIcons, GameHook::inputIcons_toggle);
-            }
+            ImGui::Checkbox("Force Input Type", &GameHook::inputIcons_toggle);
             help_marker("Force the game to display either keyboard/mouse or gamepad input icons. Disallows certain inputs (such as mouse movement) when forcing gamepad");
             if (GameHook::inputIcons_toggle) {
                 ImGui::Indent();
@@ -1427,7 +1407,6 @@ void GameHook::GameImGui(void) {
             ImGui::SeparatorText("FPS");
 
             DrawUptimeFix();
-            DrawFPSUnlock();
 
             tabHeight += ImGui::GetCursorPosY();
             ImGui::EndChild();
@@ -1664,11 +1643,7 @@ void GameHook::GameImGui(void) {
                 ImGui::EndGroup();
             }
 
-            if (ImGui::Checkbox("Friendly Fire", &GameHook::pvp_toggle)) { // outside of if() so people can still disable it when no p2 spawned
-                GameHook::ToggleHook(pvp1, GameHook::pvp_toggle);
-                GameHook::ToggleHook(pvp2, GameHook::pvp_toggle);
-                GameHook::ToggleHook(pvp3, GameHook::pvp_toggle);
-            }
+            ImGui::Checkbox("Friendly Fire", &GameHook::pvp_toggle); // outside of if() so people can still disable it when no p2 spawned
             help_marker("How to PVP:\n- Spawn Player 2\n- Register both players as enemies\n- Tick \"Enable Friendly Fire\"\n"
                 "Friendly fire can be used outside of PVP to make co-op a little more entertaining");
 
@@ -2114,7 +2089,15 @@ void GameHook::GameImGui(void) {
 
             ImGui::SeparatorText("Other");
 
-            // DrawFPSUnlock();
+            if (ImGui::Checkbox("Unlock FPS", &GameHook::disableFpsLimiter_toggle)) {
+                GameHook::DisableFpsLimiter(GameHook::disableFpsLimiter_toggle);
+            }
+            help_marker("These options are very much run unsafe and are here to demonstrate progress");
+
+            if (ImGui::Checkbox("Link Game Logic To Delta Time", &GameHook::linkGameToDelta_toggle)) {
+                GameHook::LinkGameToDelta(GameHook::linkGameToDelta_toggle);
+            }
+            help_marker("These options are very much run unsafe and are here to demonstrate progress");
 
             if (ImGui::Checkbox("Focus Patch", &GameHook::focusPatch_toggle)) {
                 GameHook::FocusPatch(GameHook::focusPatch_toggle);
@@ -2179,6 +2162,18 @@ void GameHook::GameImGui(void) {
             // the squiggles are to make the frame unique.
             // - Red will never have jumps
             // - Purple (the player) may have jumps if the game sets your orientation or despawns you.
+
+            tabHeight += ImGui::GetCursorPosY();
+            ImGui::EndChild();
+            ImGui::EndTabItem();
+        }
+
+        if (ImGui::BeginTabItem("Hotkeys")) {
+            ImGui::BeginChild("HotkeysChild");
+
+            ImGui::SeparatorText("Don't forget to hit Save Config after setting these!");
+            for (auto& hotkey : g_hotkeys)
+                hotkey->draw(g_input);
 
             tabHeight += ImGui::GetCursorPosY();
             ImGui::EndChild();

@@ -662,6 +662,10 @@ void GameHook::LoadPatches(const utils::Config& cfg) {
 	tauntWithTimeBracelet_toggle = cfg.get<bool>("tauntWithTimeBracelet_toggle").value_or(false);
 	TauntWithTimeBracelet(tauntWithTimeBracelet_toggle);
 #endif
+#ifdef SPEEDRUN_BUILD
+	disableTutorials_toggle = true;
+	DisableTutorials(disableTutorials_toggle);
+#endif
 	// both speedrun and non speedrun
 	focusPatch_toggle = cfg.get<bool>("focusPatch_toggle").value_or(false);
 	FocusPatch(focusPatch_toggle);

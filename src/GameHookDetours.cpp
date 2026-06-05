@@ -6,6 +6,7 @@ HookContext GameHook::inputIcons;
 HookContext GameHook::randomizeCostume;
 
 // fps stuff
+HookContext GameHook::turbo;
 HookContext GameHook::punchBufferFrames;
 HookContext GameHook::kickBufferFrames;
 HookContext GameHook::dodgeBufferFrames;
@@ -39,7 +40,6 @@ HookContext GameHook::customEffectColours;
 HookContext GameHook::cancellableAfterBurner;
 HookContext GameHook::cancellableFallingKick;
 HookContext GameHook::cancellableFallingKickDurga;
-HookContext GameHook::turbo;
 HookContext GameHook::altTeleInput;
 HookContext GameHook::tauntWithTimeBraceletA;
 HookContext GameHook::tauntWithTimeBraceletB;
@@ -66,6 +66,7 @@ void GameHook::UpdateHooks() {
 	GameHook::ToggleHook(GameHook::inputIcons, GameHook::inputIcons_toggle);
 	GameHook::ToggleHook(GameHook::randomizeCostume, GameHook::randomizeCostume_toggle);
 
+	GameHook::ToggleHook(GameHook::turbo, { GameHook::turbo_toggle, GameHook::openMenuPause_toggle });
 	GameHook::ToggleHook(GameHook::punchBufferFrames, { GameHook::linkGameToDelta_toggle, GameHook::longerBufferWindows_toggle });
 	GameHook::ToggleHook(GameHook::kickBufferFrames, { GameHook::linkGameToDelta_toggle, GameHook::longerBufferWindows_toggle });
 	GameHook::ToggleHook(GameHook::dodgeBufferFrames, { GameHook::linkGameToDelta_toggle, GameHook::longerBufferWindows_toggle });
@@ -117,8 +118,6 @@ void GameHook::UpdateHooks() {
 
 	GameHook::ToggleHook(GameHook::cancellableFallingKick, GameHook::cancellableFallingKick_toggle);
 	GameHook::ToggleHook(GameHook::cancellableFallingKickDurga, GameHook::cancellableFallingKick_toggle);
-
-	GameHook::ToggleHook(GameHook::turbo, { GameHook::turbo_toggle, GameHook::openMenuPause_toggle });
 
 	GameHook::ToggleHook(GameHook::altTeleInput, GameHook::altTeleInput_toggle);
 
@@ -373,6 +372,45 @@ static __declspec(naked) void RandomizeCostumeDetour(void) {
 	}
 }
 
+bool GameHook::turbo_toggle = false;
+bool GameHook::openMenuPause_toggle = false;
+float GameHook::turboZero = 0.0f;
+float GameHook::turboValue = 1.0f;
+static __declspec(naked) void TurboHookDetour(void) {
+	_asm {
+		pushfd
+#ifndef SPEEDRUN_BUILD
+		cmp byte ptr [GameHook::openMenuPause_toggle], 1
+		je zerospeed
+		jmp turbocheck
+
+		zerospeed:
+		cmp byte ptr [Base::Data::ShowMenu], 0
+		je turbocheck
+		movss xmm0, [GameHook::turboZero]
+		jmp originalcode
+
+		turbocheck:
+		cmp byte ptr [GameHook::turbo_toggle], 0
+		je fpscheck
+		mulss xmm0, [GameHook::turboValue]
+		jmp fpscheck
+
+		fpscheck:
+#endif
+		cmp byte ptr [GameHook::linkGameToDelta_toggle], 0
+		je originalcode
+		mulss xmm0, [GameHook::deltaSpeed]
+		jmp originalcode
+
+		//popcode:
+		//pop eax
+		originalcode:
+		popfd
+		movss [edi+0x44], xmm0
+		jmp dword ptr [GameHook::turbo.jmp_ret]
+	}
+}
 
 #ifndef SPEEDRUN_BUILD
 #include <mutex>
@@ -1064,44 +1102,6 @@ static __declspec(naked) void GetHitboxDetour(void) {
 		popfd
 		addss xmm0, [ebx+0x00000100]
 		jmp dword ptr [GameHook::getHitbox.jmp_ret]
-	}
-}
-
-bool GameHook::turbo_toggle = false;
-bool GameHook::openMenuPause_toggle = false;
-float GameHook::turboZero = 0.0f;
-float GameHook::turboValue = 1.0f;
-static __declspec(naked) void TurboHookDetour(void) {
-	_asm {
-		pushfd
-		cmp byte ptr [GameHook::openMenuPause_toggle], 1
-		je zerospeed
-		jmp turbocheck
-
-		zerospeed:
-		cmp byte ptr [Base::Data::ShowMenu], 0
-		je turbocheck
-		movss xmm0, [GameHook::turboZero]
-		jmp originalcode
-
-		turbocheck:
-		cmp byte ptr [GameHook::turbo_toggle], 0
-		je fpscheck
-		mulss xmm0, [GameHook::turboValue]
-		jmp fpscheck
-
-		fpscheck:
-		cmp byte ptr [GameHook::linkGameToDelta_toggle], 0
-		je originalcode
-		mulss xmm0, [GameHook::deltaSpeed]
-		jmp originalcode
-
-		//popcode:
-		//pop eax
-		originalcode:
-		popfd
-		movss [edi+0x44], xmm0
-		jmp dword ptr[GameHook::turbo.jmp_ret]
 	}
 }
 
@@ -3259,10 +3259,8 @@ static __declspec(naked) void pl004cDetour(void) {
 
 void GameHook::SaveDetours(utils::Config& cfg) {
 #ifndef SPEEDRUN_BUILD
+	cfg.set<bool>("uptimeFix_toggle", uptimeFix_toggle);
 	cfg.set<bool>("damageReceivedMultiplierNoDamage_toggle", damageReceivedMultiplierNoDamage_toggle);
-	cfg.set<bool>("inputIcons_toggle", inputIcons_toggle);
-	cfg.set<int>("inputIconsValue", inputIconsValue);
-	cfg.set<bool>("randomizeCostume_toggle", randomizeCostume_toggle);
 	cfg.set<bool>("cameraSelect_toggle", cameraSelect_toggle);
 	cfg.set<int>("cameraSelect_newCameraType", cameraSelect_newCameraType);
 	cfg.set<bool>("drawHitboxes_toggle", drawHitboxes_toggle);
@@ -3299,7 +3297,6 @@ void GameHook::SaveDetours(utils::Config& cfg) {
 	cfg.set<bool>("saveStatesHotkeys_toggle", saveStatesHotkeys_toggle);
 	cfg.set<bool>("omnicancelTele_toggle", omnicancelTele_toggle);
 	cfg.set<bool>("randomizeSpawns_toggle", randomizeSpawns_toggle);
-	cfg.set<bool>("linkGameToDelta_toggle", linkGameToDelta_toggle);
 	cfg.set<bool>("longerBufferWindows_toggle", longerBufferWindows_toggle);
 
 	cfg.set<bool>("swapSpawns_toggle", swapSpawns_toggle);
@@ -3338,23 +3335,30 @@ void GameHook::SaveDetours(utils::Config& cfg) {
 
 #endif
 	// both speedrun and non speedrun
-	cfg.set<bool>("uptimeFix_toggle", uptimeFix_toggle);
+	cfg.set<bool>("linkGameToDelta_toggle", linkGameToDelta_toggle);
+	cfg.set<bool>("inputIcons_toggle", inputIcons_toggle);
+	cfg.set<int>("inputIconsValue", inputIconsValue);
+	cfg.set<bool>("randomizeCostume_toggle", randomizeCostume_toggle);
 	cfg.save(GameHook::cfgString);
 }
 
 void GameHook::LoadDetours(const utils::Config& cfg) {
-	// always
+#ifdef SPEEDRUN_BUILD
+	uptimeFix_toggle = true; // forced
+#endif
+#ifndef SPEEDRUN_BUILD
 	uptimeFix_toggle = cfg.get<bool>("uptimeFix_toggle").value_or(false);
+#endif
+	// always
 	GameHook::InitHook("uptimeFix", 0xC78100, &UptimeFixDetour, 6, GameHook::uptimeFix);
 
 	inputIcons_toggle = cfg.get<bool>("inputIcons_toggle").value_or(false);
-	inputIconsValue = cfg.get<bool>("inputIconsValue").value_or(false);
+	inputIconsValue = cfg.get<int>("inputIconsValue").value_or(0);
 	GameHook::InitHook("inputIcons", 0x411CD4, &InputIconsDetour, 13, GameHook::inputIcons);
 
 	randomizeCostume_toggle = cfg.get<bool>("randomizeCostume_toggle").value_or(false);
 	GameHook::InitHook("randomizeCostume", 0x4FC4EF, &RandomizeCostumeDetour, 5, GameHook::randomizeCostume);
 	
-	// fps
 	linkGameToDelta_toggle = cfg.get<bool>("linkGameToDelta_toggle").value_or(false);
 	longerBufferWindows_toggle = cfg.get<bool>("longerBufferWindows_toggle").value_or(false);
 	GameHook::InitHook("linkGameToDelta_punchBufferFrames", 0x8BE2B6, &PunchBufferFramesDetour, 6, GameHook::punchBufferFrames);
@@ -3364,6 +3368,11 @@ void GameHook::LoadDetours(const utils::Config& cfg) {
 	GameHook::InitHook("linkGameToDelta_controllerCameraSens", 0xA8FBB1, &ControllerCameraSensDetour, 8, GameHook::controllerCameraSens);
 	GameHook::InitHook("linkGameToDelta_fpsSkateSpeed1", 0x8F2EB6, &FpsSkateSpeed1Detour, 8, GameHook::fpsSkateSpeed1);
 	GameHook::InitHook("linkGameToDelta_fpsSkateSpeed2", 0x8E72B3, &FpsSkateSpeed2Detour, 8, GameHook::fpsSkateSpeed2);
+
+	openMenuPause_toggle = cfg.get<bool>("openMenuPause_toggle").value_or(false);
+	turbo_toggle = cfg.get<bool>("turbo_toggle").value_or(false);
+	turboValue = cfg.get<float>("turboValue").value_or(1.0f);
+	GameHook::InitHook("turbo", 0x513FC7, &TurboHookDetour, 5, GameHook::turbo);
 
 	static std::random_device bayoHookRandomDevice;
 	GameHook::rng.seed(bayoHookRandomDevice() ^ (unsigned)time(NULL));
@@ -3470,11 +3479,6 @@ void GameHook::LoadDetours(const utils::Config& cfg) {
 	cancellableFallingKick_toggle = cfg.get<bool>("cancellableFallingKick_toggle").value_or(false);
 	GameHook::InitHook("cancellableFallingKick", 0x952142, &CancellableFallingKickDetour, 5, GameHook::cancellableFallingKick);
 	GameHook::InitHook("cancellableFallingKickDurga", 0x920C44, &CancellableFallingKickDurgaDetour, 8, GameHook::cancellableFallingKickDurga);
-
-	openMenuPause_toggle = cfg.get<bool>("openMenuPause_toggle").value_or(false);
-	turbo_toggle = cfg.get<bool>("turbo_toggle").value_or(false);
-	turboValue = cfg.get<float>("turboValue").value_or(1.0f);
-	GameHook::InitHook("turbo", 0x513FC7, &TurboHookDetour, 5, GameHook::turbo);
 
 	altTeleInput_toggle = cfg.get<bool>("altTeleInput_toggle").value_or(false);
 	GameHook::InitHook("altTeleInput", 0x8BE592, &AltTeleInputDetour, 26, GameHook::altTeleInput);
