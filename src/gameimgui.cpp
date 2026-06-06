@@ -1408,6 +1408,16 @@ void GameHook::GameImGui(void) {
 
             DrawUptimeFix();
 
+            if (ImGui::Checkbox("Unlock FPS", &GameHook::disableFpsLimiter_toggle)) {
+                GameHook::DisableFpsLimiter(GameHook::disableFpsLimiter_toggle);
+            }
+            help_marker("These options are very much run unsafe and are here to demonstrate progress");
+
+            if (ImGui::Checkbox("Link Game Logic To Delta Time", &GameHook::linkGameToDelta_toggle)) {
+                GameHook::LinkGameToDelta(GameHook::linkGameToDelta_toggle);
+            }
+            help_marker("These options are very much run unsafe and are here to demonstrate progress");
+
             tabHeight += ImGui::GetCursorPosY();
             ImGui::EndChild();
             ImGui::EndTabItem();
