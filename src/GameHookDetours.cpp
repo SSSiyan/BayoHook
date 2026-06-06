@@ -14,6 +14,7 @@ HookContext GameHook::gunBufferFrames;
 HookContext GameHook::controllerCameraSens;
 HookContext GameHook::fpsSkateSpeed1;
 HookContext GameHook::fpsSkateSpeed2;
+HookContext GameHook::fixIntroMoviesTimer;
 
 #ifndef SPEEDRUN_BUILD
 HookContext GameHook::getHitbox;
@@ -74,6 +75,7 @@ void GameHook::UpdateHooks() {
 	GameHook::ToggleHook(GameHook::controllerCameraSens, GameHook::linkGameToDelta_toggle);
 	GameHook::ToggleHook(GameHook::fpsSkateSpeed1, GameHook::linkGameToDelta_toggle);
 	GameHook::ToggleHook(GameHook::fpsSkateSpeed2, GameHook::linkGameToDelta_toggle);
+	GameHook::ToggleHook(GameHook::fixIntroMoviesTimer, GameHook::linkGameToDelta_toggle);
 
 #ifndef SPEEDRUN_BUILD
 	GameHook::ToggleHook(GameHook::getHitbox, GameHook::drawHitboxes_toggle);
@@ -409,6 +411,48 @@ static __declspec(naked) void TurboHookDetour(void) {
 		popfd
 		movss [edi+0x44], xmm0
 		jmp dword ptr [GameHook::turbo.jmp_ret]
+	}
+}
+
+// Bayonetta.exe + 1A1DE5 - 01 5E 20 - add[esi + 20], ebx
+// Bayonetta.exe+1A1DE8 - 81 7E 20 66 03 00 00 - cmp[esi+20],00000366 { 870 }
+// Intro Movies Timer - scales the increment with deltaSpeed so the timer doesn't run too fast at higher framerates
+static float introTimerAccumulator = 0.0f;
+
+static int __stdcall GetFramerateCorrectedIncrement(
+    float* accumulator,
+    int originalIncrement)
+{
+    *accumulator += originalIncrement * GameHook::deltaSpeed;
+
+    int increment = (int)(*accumulator);
+
+    *accumulator -= increment;
+
+    return increment;
+}
+
+static __declspec(naked) void FixIntroMoviesTimerDetour(void) {
+	_asm {
+		push eax
+		push ecx
+		push edx
+
+		push ebx                               // originalIncrement (2nd arg, pushed first)
+		push offset introTimerAccumulator      // accumulator ptr   (1st arg, pushed last)
+		call GetFramerateCorrectedIncrement
+		// __stdcall: ret 8 cleans both args
+
+		pop edx
+		pop ecx
+
+		mov ebx, eax // store the corrected increment in ebx for the original code to use
+		pop eax
+
+		// original instructions
+		add [esi + 0x20], ebx
+		cmp dword ptr [esi + 0x20], 870
+		jmp dword ptr [GameHook::fixIntroMoviesTimer.jmp_ret]
 	}
 }
 
@@ -3368,6 +3412,7 @@ void GameHook::LoadDetours(const utils::Config& cfg) {
 	GameHook::InitHook("linkGameToDelta_controllerCameraSens", 0xA8FBB1, &ControllerCameraSensDetour, 8, GameHook::controllerCameraSens);
 	GameHook::InitHook("linkGameToDelta_fpsSkateSpeed1", 0x8F2EB6, &FpsSkateSpeed1Detour, 8, GameHook::fpsSkateSpeed1);
 	GameHook::InitHook("linkGameToDelta_fpsSkateSpeed2", 0x8E72B3, &FpsSkateSpeed2Detour, 8, GameHook::fpsSkateSpeed2);
+	GameHook::InitHook("linkGameToDelta_fixIntroMoviesTimer", 0x5A1DE5, &FixIntroMoviesTimerDetour, 10, GameHook::fixIntroMoviesTimer);
 
 	openMenuPause_toggle = cfg.get<bool>("openMenuPause_toggle").value_or(false);
 	turbo_toggle = cfg.get<bool>("turbo_toggle").value_or(false);

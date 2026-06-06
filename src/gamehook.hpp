@@ -414,6 +414,7 @@ public:
 	static HookContext controllerCameraSens;
 	static HookContext fpsSkateSpeed1;
 	static HookContext fpsSkateSpeed2;
+	static HookContext fixIntroMoviesTimer;
 
 	static bool turbo_toggle; // if either of these bools are true, toggle the hook
 	static bool openMenuPause_toggle;
