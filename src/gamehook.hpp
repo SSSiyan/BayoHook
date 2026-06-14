@@ -353,6 +353,7 @@ public:
 	static uintptr_t halosAddress;
 	static uintptr_t chaptersPlayedAddress;
 	static uintptr_t playerMagicAddress;
+	static uintptr_t playerMagicUpgradesAddress;
 	static uintptr_t currentCharacterAddress;
 	static uintptr_t thirdAccessoryAddress;
 	static uintptr_t hudDisplayAddress;

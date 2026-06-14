@@ -861,7 +861,7 @@ struct EntityInfo {
     int id;
 };
 
-static const EntityInfo knownEntities[] = {
+static const EntityInfo allKnownEntities[] = {
     {"Player Bayonetta", 0x10000}, // v0 = Moves, v2 = Doesn't Move
     {"Player Bayonetta Panther Within", 0x10001},
     {"Player Bayonetta Crow Within", 0x10002},
@@ -892,6 +892,7 @@ static const EntityInfo knownEntities[] = {
     {"Little Cereza", 0x10045},
     {"Dead Bayonetta", 0x10046},
     {"Luka Scarf", 0x10048},
+    {"Rodin NPC (T-Pose)", 0x10048},
     {"Jeanne Sleeve Hair", 0x1004C},
     {"Nude Jeanne", 0x1004E},
     {"Detached Spot", 0x200B7},
@@ -1055,6 +1056,7 @@ static const EntityInfo knownEntities[] = {
     {"Low-poly Angel Hitting the Floor", 0x501C4},
     {"Crystal Witch Statue Reforming", 0x50228},
     {"Crystal Sage Statue", 0x50229},
+    {"Rodin Drinks Shelf", 0x5022C},
     {"R666 Bridge", 0x50340},
     {"R666 Road", 0x50388},
     {"Father Rodin Floor", 0x5F000},
@@ -1081,8 +1083,89 @@ static const EntityInfo knownEntities[] = {
     {"Barrel", 0xC0301},
 };
 
-static const char* GetEntityName(int id) {
-    for (const auto& e : knownEntities) {
+static const EntityInfo relevantEntities[] = {
+    {"Player Bayonetta", 0x10000}, // v0 = Moves, v2 = Doesn't Move
+    {"Player Jeanne", 0x10020},
+    {"Player Bayonetta P.E. A", 0x10025},
+    {"Player Bayonetta P.E. B", 0x10026},
+    {"Player Bayonetta P.E. C", 0x10027},
+    {"Player Bayonetta d'Arc", 0x1002b},
+    {"Player Bayonetta Umbra", 0x1002c},
+    {"Player Bayonetta Various A", 0x1002d},
+    {"Player Bayonetta Various B", 0x1002e},
+    {"Player Bayonetta Various C", 0x1002f},
+    {"Player Bayonetta Old", 0x10030},
+    {"Player Jeanne P.E. A", 0x10061},
+    {"Player Jeanne P.E. B", 0x10061},
+    {"Player Jeanne P.E. C", 0x10062},
+    {"Player Jeanne Formal B", 0x10064},
+    {"Player Jeanne Old", 0x10066},
+    {"Player Jeanne Umbra", 0x10067},
+    {"Player Jeanne Various A", 0x10068},
+    {"Player Jeanne Various B", 0x10069},
+    {"Player Jeanne Various C", 0x1006A},
+    {"Player Jeanne Komachi A", 0x1006E},
+    {"Player Jeanne Komachi B", 0x10070},
+    {"Player Jeanne Komachi C", 0x10072},
+    {"Player Jeanne Nun", 0x10074},
+    {"Player Jeanne Queen", 0x10075},
+    {"Player Bayonetta Komachi A", 0x10083},
+    {"Player Bayonetta Komachi B", 0x10085},
+    {"Player Bayonetta Komachi C", 0x10087},
+    {"Player Bayonetta Nun", 0x10089},
+    {"Player Bayonetta Witch", 0x1008a},
+    {"Affinity/Applaud", 0x20000},// Affinity: v1 = Spear, v2 = Trumpet, v8 = Hourglass, v9 = Mace, Applaud: v4 = Spear, v5 = Greatsword, v6 = Bow, v7 = Key
+    {"Affinity (Spear) (Fire) / Ardor (Sword) (Fire)", 0x20001},
+    {"Affinity (Laser)", 0x20002},
+    {"Ardor", 0x20004}, // 0 = sword, 1 = axe, 2 = key
+    {"Affinity/Applaud Invisible Base", 0x20006},
+    {"Affinity (Axe) (Fire)", 0x20007},
+    {"Affinity (Angel Attack)", 0x20008},
+    {"Affinity (T-Pose)", 0x20009},
+    {"Affinity Dummy Dat (w/Animations)", 0x2000E},
+    {"Decoration", 0x20010},
+    {"Dear", 0x20011},
+    {"Dear & Decorations", 0x20012},
+    {"Inspired (No HP Bar)", 0x20020},
+    {"Inspired (Invisible)", 0x20021},
+    {"Inspired (Green)", 0x20022},
+    {"Enchant", 0x20030},
+    {"Grace", 0x20040},
+    {"Glory", 0x20041},
+    {"Gracious", 0x20042},
+    {"Glorious", 0x20043},
+    {"Fearless", 0x20050},
+    {"Fairness", 0x20051},
+    {"Harmony", 0x20060},
+    {"Beloved", 0x20070},
+    {"Beloved (Larger)", 0x20071},
+    {"Beloved (Invisible)", 0x20072},
+    {"Brave", 0x20073},
+    {"Beloved (Silver)", 0x20074},
+    {"Beloved (Silver Invisible?)", 0x20076},
+    {"Beloved w/Mask", 0x20078},
+    {"Joy", 0x20080},
+    {"Golem", 0x20090},
+    {"Kinship", 0x200A0},
+    {"Fortitudo (Green)", 0x200B0},
+    {"Temperantia", 0x200C0},
+    {"Lustitia", 0x200D0},
+    {"Sapentia (Vertical)", 0x200E0},
+    {"Fortitudo", 0x20100},
+    {"Temperantia 2", 0x20200},
+    {"Temperantia 3", 0x2020D},
+    {"Sapentia", 0x20400},
+    {"Balder", 0x20500},
+    {"Father Rodin (Unkillable)", 0x20510},
+    {"Jeanne Enemy Default", 0x21000},
+    {"Jeanne Enemy Old", 0x21001},
+    {"Jeanne Enemy Formal A", 0x21002},
+    {"Bayo Enemy", 0x21003},
+    {"Joy Fake (Unkillable)", 0x21010},
+};
+
+static const char* GetAllKnownEntityName(int id) {
+    for (const auto& e : allKnownEntities) {
         if (e.id == id)
             return e.name;
     }

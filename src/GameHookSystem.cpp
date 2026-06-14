@@ -80,6 +80,7 @@ uintptr_t GameHook::angelSlayerFloorAddress = 0x509E87C;
 uintptr_t GameHook::halosAddress = 0x5AA74B4;
 uintptr_t GameHook::chaptersPlayedAddress = 0x5AA736C;
 uintptr_t GameHook::playerMagicAddress = 0x5AA74AC;
+uintptr_t GameHook::playerMagicUpgradesAddress = 0x5AA74B0;
 uintptr_t GameHook::currentCharacterAddress = 0x5AA7484;
 uintptr_t GameHook::thirdAccessoryAddress = 0x5AA7468;
 uintptr_t GameHook::hudDisplayAddress = 0xF2B714;

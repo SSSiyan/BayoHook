@@ -221,14 +221,18 @@ void GameHook::DrawStats() {
             ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.0f, io.DisplaySize.y * 1.0f), ImGuiCond_Once, ImVec2(0.0f, 1.0f));
             ImGui::Begin("Player 1##NotFlyingPlayerBegin", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoScrollbar);
             ImGui::PushItemWidth(fontSize * 12.0f);
-            ImGui::SliderInt("HP##NotFlyingPlayer1HPInputInt", &player1->hp, 0, player1->hpMax);
+            if (ImGui::SliderInt("HP##NotFlyingPlayer1HPInputInt", &player1->hpUnk, 0, player1->hpMax)) {
+                player1->hp = player1->hpUnk;
+            }
             ImGui::PopItemWidth();
             ImGui::End();
 
             ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 1.0f, io.DisplaySize.y * 1.0f), ImGuiCond_Once, ImVec2(1.0f, 1.0f));
             ImGui::Begin("Player 2##NotFlyingPlayerBegin", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoScrollbar);
             ImGui::PushItemWidth(fontSize * 12.0f);
-            ImGui::SliderInt("HP##NotFlyingPlayer2HPInputInt", &player2->hp, 0, player2->hpMax);
+            if (ImGui::SliderInt("HP##NotFlyingPlayer2HPInputInt", &player2->hpUnk, 0, player2->hpMax)) {
+                player2->hp = player2->hpUnk;
+            }
             ImGui::PopItemWidth();
             ImGui::End();
         }
@@ -241,8 +245,12 @@ void GameHook::DrawStats() {
             ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.0f, io.DisplaySize.y * 1.0f), ImGuiCond_Once, ImVec2(0.0f, 1.0f));
             ImGui::Begin("Player##NotFlyingPlayerBegin", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoScrollbar);
             ImGui::PushItemWidth(fontSize * 9.0f);
-            ImGui::DragFloat3("Pos##NotFlyingPlayerXYZPosInputFloat", &player->pos.x, 0.5f, 0.0f, 0.0f, "%.1f");
-            ImGui::SliderInt("HP##NotFlyingEnemyHPInputInt", &player->hp, 0, player->hpMax);
+            ImGui::DragFloat3("Pos##NotFlyingPlayerXYZPosDragFloat", &player->pos.x, 0.5f, 0.0f, 0.0f, "%.1f");
+            if (ImGui::SliderInt("HP##NotFlyingPlayerHPSliderInt", &player->hpUnk, 0, player->hpMax)) {
+                player->hp = player->hpUnk;
+            }
+            float playerMaxMp = (float)(*(int*)playerMagicUpgradesAddress * 50.0f); // from Bayonetta.exe+1024E2
+            ImGui::SliderFloat("MP##NotFlyingPlayerMPSliderFloat", (float*)playerMagicAddress, 0, playerMaxMp);
             ImGui::PopItemWidth();
             ImGui::PushItemWidth(fontSize * 3.0f);
             ImGui::SliderFloat("AnimFrame##NotFlyingPlayerAnimationFrameSliderFloat", &player->animFrame, 0.0f, player->animFrameMax, "%.0f");
@@ -257,8 +265,8 @@ void GameHook::DrawStats() {
                 ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 1.0f, io.DisplaySize.y * 1.0f), ImGuiCond_Once, ImVec2(1.0f, 1.0f));
                 ImGui::Begin("Locked On Entity##NotFlyingEnemyBegin", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoScrollbar);
                 ImGui::PushItemWidth(fontSize * 9.0f);
-                ImGui::DragFloat3("Pos##NotFlyingEnemyXYZPosInputFloat", &enemy->pos.x, 0.5f, 0.0f, 0.0f, "%.1f");
-                ImGui::SliderInt("HP##NotFlyingEnemyHPInputInt", &enemy->hp, 0, enemy->hpMax);
+                ImGui::DragFloat3("Pos##NotFlyingEnemyXYZPosDragFloat", &enemy->pos.x, 0.5f, 0.0f, 0.0f, "%.1f");
+                ImGui::SliderInt("HP##NotFlyingEnemyHPSliderInt", &enemy->hp, 0, enemy->hpMax);
                 ImGui::InputScalar("ID##NotFlyingEnemyIDInputInt", ImGuiDataType_S32, &enemy->id, 0, 0, "%x", ImGuiInputTextFlags_CharsHexadecimal);
                 ImGui::PopItemWidth();
                 ImGui::PushItemWidth(fontSize * 3.0f);
@@ -1428,8 +1436,8 @@ void GameHook::GameImGui(void) {
 
             ImGui::SeparatorText("Debug Drawing");
 
+			ImGui::Checkbox("Draw Stats", &GameHook::drawStats_toggle);
             ImGui::Checkbox("Draw Player Bones (WIP)", &GameHook::drawPlayerBones_toggle);
-			ImGui::Checkbox("Draw Stats (WIP)", &GameHook::drawStats_toggle);
             ImGui::Checkbox("Draw Hitboxes (WIP)", &GameHook::drawHitboxes_toggle);
 
             ImGui::SeparatorText("Custom Combo Routes");
@@ -1668,36 +1676,47 @@ void GameHook::GameImGui(void) {
 
             // entity spawn stuff
             {
-                const int knownEntityCount = sizeof(knownEntities) / sizeof(knownEntities[0]);
-                static std::string enemyDisplayNames[knownEntityCount];
+                const int knownEntityCount = sizeof(allKnownEntities) / sizeof(allKnownEntities[0]);
+                static std::string sAllDisplayNames[knownEntityCount];
+
+                const int relevantEntityCount = sizeof(relevantEntities) / sizeof(relevantEntities[0]);
+                static std::string sRelevantDisplayNames[relevantEntityCount];
+
                 static bool initialized = false;
 
                 if (!initialized) {
                     for (int i = 0; i < knownEntityCount; i++) {
                         char buffer[64];
-                        snprintf(buffer, sizeof(buffer), "0x%08X - %s", knownEntities[i].id, knownEntities[i].name);
-                        enemyDisplayNames[i] = buffer;
+                        snprintf(buffer, sizeof(buffer), "0x%08X - %s", allKnownEntities[i].id, allKnownEntities[i].name);
+                        sAllDisplayNames[i] = buffer;
+                    }
+
+                    for (int i = 0; i < relevantEntityCount; i++) {
+                        char buffer[64];
+                        snprintf(buffer, sizeof(buffer), "0x%08X - %s", relevantEntities[i].id, relevantEntities[i].name);
+                        sRelevantDisplayNames[i] = buffer;
                     }
                     initialized = true;
                 }
 
-                const char* displayNames[knownEntityCount];
+                const char* allDisplayNames[knownEntityCount];
                 for (int i = 0; i < knownEntityCount; i++) {
-                    displayNames[i] = enemyDisplayNames[i].c_str();
+                    allDisplayNames[i] = sAllDisplayNames[i].c_str();
                 }
 
-                const char* enemyNames[knownEntityCount];
-                for (int i = 0; i < knownEntityCount; i++) {
-                    enemyNames[i] = knownEntities[i].name;
+                const char* relevantDisplayNames[relevantEntityCount];
+                for (int i = 0; i < relevantEntityCount; i++) {
+                    relevantDisplayNames[i] = sRelevantDisplayNames[i].c_str();
                 }
 
                 ImGui::SeparatorText("Entity Spawning");
-                static int selectedEnemy = 50;
+                static int selectedKnownEntity = 50;
+                static int selectedRelevantEntity = 50;
 
                 if (ImGui::CollapsingHeader("Detailed Custom Spawn Settings")) {
                     static constexpr int step = 1;
-                    if (ImGui::Combo("Known Entity IDs", &selectedEnemy, displayNames, knownEntityCount)) {
-                        GameHook::guiEntitySpawn.entityID = knownEntities[selectedEnemy].id;
+                    if (ImGui::Combo("Known Entity IDs", &selectedKnownEntity, allDisplayNames, knownEntityCount)) {
+                        GameHook::guiEntitySpawn.entityID = allKnownEntities[selectedKnownEntity].id;
                     }
                     ImGui::SameLine();
                     help_marker("This just autofills the previous field if you want to pick from a dictionary of IDs we already know");
@@ -1765,9 +1784,10 @@ void GameHook::GameImGui(void) {
                     ImGui::SetNextItemWidth(inputItemWidth);
                     ImGui::InputScalar("ID##EntityIDSimplified", ImGuiDataType_S32, &guiEntitySpawn.entityID, &step, 0, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
                     ImGui::SameLine();
-                    if (ImGui::Combo("ID##Easy", &selectedEnemy, displayNames, knownEntityCount)) {
-                        GameHook::guiEntitySpawn.entityID = knownEntities[selectedEnemy].id;
+                    if (ImGui::Combo("ID##Easy", &selectedRelevantEntity, relevantDisplayNames, relevantEntityCount)) {
+                        GameHook::guiEntitySpawn.entityID = relevantEntities[selectedRelevantEntity].id;
                     }
+                    help_marker("This only includes relevant spawns. If you want to find props etc, look in the \"Detailed\" dropdown");
 
                     ImGui::PushItemWidth(inputItemWidth);
                     ImGui::InputScalar("Variant##Easy", ImGuiDataType_S32, &guiEntitySpawn.settings.int_4_Variant, &step, &step, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
@@ -1881,8 +1901,11 @@ void GameHook::GameImGui(void) {
                         player->pos = { 0.0f, 0.0f, 0.0f };
                     }
                     ImGui::PushItemWidth(inputItemWidth);
-                    ImGui::SliderInt("HP##PlayerHPDamageInputInt", &player->hp, 0, player->hpMax);
-                    ImGui::InputFloat("MP##PlayerMPInputFloat", &playerMagicValue, 1, 100, "%.0f");
+                    if (ImGui::SliderInt("HP##PlayerHPDamageInputInt", &player->hpUnk, 0, player->hpMax)) {
+                        player->hp = player->hpUnk;
+                    }
+                    float playerMaxMp = (float)(*(int*)playerMagicUpgradesAddress * 50.0f); // from Bayonetta.exe+1024E2
+                    ImGui::SliderFloat("MP##NotFlyingPlayerMPSliderFloat", (float*)playerMagicAddress, 0, playerMaxMp);
                     ImGui::InputFloat("Remaining Witch Time Duration##PlayerRemainingWitchTimeDurationInputFloat", &player->witchTimeDuration, 10, 100, "%.0f");
                     ImGui::InputFloat("Remaining Invinciblity##PlayerRemainingInvinciblityInputFloat", &player->iFramesRemaining, 10, 100, "%.0f");
                     ImGui::SliderFloat("Animation Frame##PlayerAnimationFrameInputFloat", &player->animFrame, 0, player->animFrameMax, "%.0f");

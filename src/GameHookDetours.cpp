@@ -1919,7 +1919,7 @@ void GameHook::DisplayRecentlySpawnedEntitiesInImGui() {
 		ImGui::PushItemWidth(inputItemWidth);
 		ImGui::InputInt("Has Optional Struct", &s.optionalStructUsed);
 		ImGui::InputScalar("ID", ImGuiDataType_S32, &s.ID, NULL, NULL, "%8X");
-		const char* name = GetEntityName(s.ID);
+		const char* name = GetAllKnownEntityName(s.ID);
 		if (name) {
 			ImGui::SameLine();
 			ImGui::TextColored(ImVec4(0.4f, 0.8f, 0.4f, 1.0f), "%s", name);
