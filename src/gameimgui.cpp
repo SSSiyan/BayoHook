@@ -612,7 +612,7 @@ static void DrawCredits() {
 
     ImGui::SeparatorText("Made By");
 
-    static std::array<ImGuiURL, 13> links1{
+    static std::array<ImGuiURL, 14> links1{
         ImGuiURL { "SSSiyan", "https://twitter.com/sssiyan" },
         ImGuiURL { "GarudaKK", "https://www.youtube.com/@GarudaPSN" },
         ImGuiURL { "Kerilk", "https://github.com/Kerilk" },
@@ -626,6 +626,7 @@ static void DrawCredits() {
         ImGuiURL { "Fool Arcana", "https://gamebanana.com/members/2795442" },
         ImGuiURL { "DniweTamp", "https://github.com/DniweTamp" },
         ImGuiURL { "Frouk", "https://github.com/Frouk3" },
+        ImGuiURL { "Rikan", "https://x.com/madziIodarp" },
     };
     for (auto& link : links1) {
         link.draw();
