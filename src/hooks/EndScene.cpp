@@ -73,6 +73,9 @@ static void HotkeyStuff() {
 		GameHook::UpdateHooks();
 	}
 	if (GameHook::hk_force_summoning_clothes->check(GameHook::g_input)) {
+		GameHook::disableSummoningClothes_toggle = false;
+		GameHook::DisableSummoningClothes(GameHook::disableSummoningClothes_toggle);
+
 		GameHook::forceSummoningClothes_toggle = !GameHook::forceSummoningClothes_toggle;
 		GameHook::ForceSummoningClothes(GameHook::forceSummoningClothes_toggle);
 		GameHook::DisplayMessageText("Force Summoning Clothes", GameHook::forceSummoningClothes_toggle);

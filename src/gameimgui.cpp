@@ -832,9 +832,19 @@ static void DrawGlamour() {
 #ifndef SPEEDRUN_BUILD
     ImGui::SameLine(GameHook::sameLineWidth);
     if (ImGui::Checkbox("Force Summoning Clothes##SummoningClothesToggle", &GameHook::forceSummoningClothes_toggle)) {
+        GameHook::disableSummoningClothes_toggle = false;
+        GameHook::DisableSummoningClothes(GameHook::disableSummoningClothes_toggle);
+
         GameHook::ForceSummoningClothes(GameHook::forceSummoningClothes_toggle);
     }
     GameHook::help_marker("Only works on outfits that have this function");
+
+    if (ImGui::Checkbox("Disable Summoning Clothes##SummoningClothesToggle", &GameHook::disableSummoningClothes_toggle)) {
+        GameHook::forceSummoningClothes_toggle = false;
+        GameHook::ForceSummoningClothes(GameHook::forceSummoningClothes_toggle);
+
+        GameHook::DisableSummoningClothes(GameHook::disableSummoningClothes_toggle);
+    }
 #endif
 }
 

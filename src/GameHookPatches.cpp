@@ -169,7 +169,17 @@ void GameHook::ForceSummoningClothes(bool enabled) {
 		GameHook::_nop((char*)(0x8B6BD2), 2);
 	}
 	else {
-		GameHook::_patch((char*)(0x8B6BD2), (char*)"\x74\x0A", 2); // je 
+		GameHook::_patch((char*)(0x8B6BD2), (char*)"\x74\x0A", 2); // je
+	}
+}
+
+bool GameHook::disableSummoningClothes_toggle = false;
+void GameHook::DisableSummoningClothes(bool enabled) {
+	if (enabled) {
+		GameHook::_patch((char*)(0x8B6CCA), (char*)"\xeb\x0f", 2); // jmp
+	}
+	else {
+		GameHook::_patch((char*)(0x8B6CCA), (char*)"\x74\x0f", 2); // je
 	}
 }
 
@@ -572,6 +582,8 @@ void GameHook::SavePatches(utils::Config& cfg) {
 	cfg.set<bool>("skipMapScene_toggle", skipMapScene_toggle);
 	cfg.set<bool>("unbanClimaxBrace_toggle", unbanClimaxBrace_toggle);
 	cfg.set<bool>("tauntWithTimeBracelet_toggle", tauntWithTimeBracelet_toggle);
+	cfg.set<bool>("forceSummoningClothes_toggle", forceSummoningClothes_toggle);
+	cfg.set<bool>("disableSummoningClothes_toggle", disableSummoningClothes_toggle);
 #endif
 	// both speedrun and non speedrun
 	cfg.set<bool>("disableFpsLimiter_toggle", disableFpsLimiter_toggle);
@@ -661,6 +673,10 @@ void GameHook::LoadPatches(const utils::Config& cfg) {
 	UnbanClimaxBrace(unbanClimaxBrace_toggle);
 	tauntWithTimeBracelet_toggle = cfg.get<bool>("tauntWithTimeBracelet_toggle").value_or(false);
 	TauntWithTimeBracelet(tauntWithTimeBracelet_toggle);
+	forceSummoningClothes_toggle = cfg.get<bool>("forceSummoningClothes_toggle").value_or(false);
+	ForceSummoningClothes(forceSummoningClothes_toggle);
+	disableSummoningClothes_toggle = cfg.get<bool>("disableSummoningClothes_toggle").value_or(false);
+	DisableSummoningClothes(disableSummoningClothes_toggle);
 #endif
 #ifdef SPEEDRUN_BUILD
 	disableTutorials_toggle = true;

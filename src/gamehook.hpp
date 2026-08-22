@@ -246,6 +246,9 @@ public:
 	static bool forceSummoningClothes_toggle;
 	static void ForceSummoningClothes(bool enabled);
 
+	static bool disableSummoningClothes_toggle;
+	static void DisableSummoningClothes(bool enabled);
+
 	static bool disableLockOnDodge_toggle;
 	static void DisableLockOnDodge(bool enabled);
 

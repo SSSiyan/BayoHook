@@ -3321,7 +3321,6 @@ void GameHook::SaveDetours(utils::Config& cfg) {
 	cfg.set<float>("incoming_damage_mult", incoming_damage_mult);
 	cfg.set<bool>("customCameraDistance_toggle", customCameraDistance_toggle);
 	cfg.set<float>("customCameraDistance_value", customCameraDistance_value);
-	cfg.set<bool>("forceSummoningClothes_toggle", forceSummoningClothes_toggle);
 	cfg.set<bool>("haloDisplay_toggle", haloDisplay_toggle);
 	cfg.set<bool>("easierMash_toggle", easierMash_toggle);
 	cfg.set<int>("initialAngelSlayerFloor_value", initialAngelSlayerFloor_value);
@@ -3422,7 +3421,6 @@ void GameHook::LoadDetours(const utils::Config& cfg) {
 	static std::random_device bayoHookRandomDevice;
 	GameHook::rng.seed(bayoHookRandomDevice() ^ (unsigned)time(NULL));
 #ifndef SPEEDRUN_BUILD
-	forceSummoningClothes_toggle = cfg.get<bool>("forceSummoningClothes_toggle").value_or(false);
 	saveStatesHotkeys_toggle = cfg.get<bool>("saveStatesHotkeys_toggle").value_or(false);
 	//loadReplace_toggle = cfg.get<bool>("loadReplace_toggle").value_or(false);
 
