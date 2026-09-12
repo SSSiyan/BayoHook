@@ -1,0 +1,3 @@
+[submodule "SafeHook"]
+	path = SafeHook
+	url = https://github.com/Frouk3/SafeHook.git
