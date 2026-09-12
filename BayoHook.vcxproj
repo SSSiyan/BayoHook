@@ -135,6 +135,7 @@
     <ClCompile Include="include\minhook\src\hook.c" />
     <ClCompile Include="include\minhook\src\trampoline.c" />
     <ClCompile Include="src\base.cpp" />
+    <ClCompile Include="src\FreeCamera.cpp" />
     <ClCompile Include="src\GameHookPatches.cpp" />
     <ClCompile Include="src\GameHookDetours.cpp" />
     <ClCompile Include="src\GameHookSystem.cpp" />
@@ -149,6 +150,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="src\WorldVisualizer.cpp" />
+    <ClInclude Include="src\FreeCamera.h" />
     <ClInclude Include="src\hooks\XInputHook.hpp" />
     <ClInclude Include="src\WorldVisualizer.hpp" />
     <ClCompile Include="utils\Address.cpp" />

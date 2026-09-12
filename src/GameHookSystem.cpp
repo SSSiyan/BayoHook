@@ -1,4 +1,5 @@
 #include "GameHook.hpp"
+#include "FreeCamera.h"
 
 float GameHook::deltaTime = 0.0f;
 float GameHook::deltaSpeed = 0.0f;

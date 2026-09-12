@@ -3,6 +3,7 @@
 #include "GameHook.hpp"
 #include <array>
 #include "misc/FontRoboto.cpp"
+#include "../FreeCamera.h"
 
 static void UpdateGameSpeed() {
 	static LARGE_INTEGER s_lastQPC = {};
@@ -174,6 +175,8 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice) {
 		GameHook::LoadPatches(GameHook::cfg);
 		GameHook::LoadDetours(GameHook::cfg);
 		GameHook::LoadSystem(GameHook::cfg);
+		FreeCamera::get().Load(GameHook::cfg);
+		FreeCamera::get().Init();
 	}
 
 	if (!Data::InitImGui) return Data::oEndScene(pDevice);
