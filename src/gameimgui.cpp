@@ -715,6 +715,7 @@ static void DrawFreeCameraFeature()
     if (ImGui::BeginPopup(""))
     {
 		ImGui::Checkbox("Use Mouse for looking", &FreeCamera::get().m_bUseMouseForLook);
+        GameHook::help_marker("Will not work if \"Force Input Type\" in the System tab is set to Gamepad");
 		ImGui::DragFloat("Move Speed", &FreeCamera::get().m_fSpeed, 0.1f, 0.1f, 100.0f);
 		ImGui::DragFloat("Look Speed", &FreeCamera::get().m_fLookSpeed, 0.01f, 0.01f, 10.0f);
         ImGui::DragFloat("Look Pitch Speed", &FreeCamera::get().m_fLookPitchSpeed, 0.01f, 0.01f, 10.f);
