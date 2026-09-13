@@ -723,6 +723,9 @@ static void DrawFreeCameraFeature()
 
 		for (int i = 0; i < FreeCamera::CTRL_MAX; i++)
 		{
+            if (FreeCamera::get().m_bUseMouseForLook && i >= FreeCamera::CTRL_LOOK_LEFT && i <= FreeCamera::CTRL_LOOK_DOWN) // possibly we won't need to have a rebinds for these controls, we are using mouse
+                continue;                                                                                                   // also assuming that the order of the controls are as is
+
 			ImGui::PushID(i);
             KeyRebindKeyLayout(GetControlsName(i), FreeCamera::get().m_Controls[i]);
 			ImGui::PopID();
