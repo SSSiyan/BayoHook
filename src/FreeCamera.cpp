@@ -314,7 +314,6 @@ void FreeCamera::Init()
 	{
 		SafeHook::WriteMemory<unsigned char>(0xA95E2E, 0x75);
 		SafeHook::WriteMemoryRaw(0xA95E1F, (const void*)"\xE8\x1C\x59\x01\x00", 5);
-		SafeHook::WriteMemory<unsigned char>(0x433D00, 0x56);
 		SafeHook::WriteMemoryRaw(0x4AD510, (const void*)"\x51\x56\x8B\xF1\x83\x7E", 6);
 
 		if (m_bToggle && m_bCutscenePaused)
@@ -329,9 +328,6 @@ void FreeCamera::Init()
 		}
 
 		m_bToggle = false;
-
-		SafeHook::WriteMemory<unsigned char>(0xA95E2E, m_bToggle ? 0xEB : 0x75);
-
 		m_bCutscenePaused = false;
 	}
 	else
