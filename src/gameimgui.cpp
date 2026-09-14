@@ -4,6 +4,7 @@
 #include <array>
 #include <chrono>
 #include "WorldVisualizer.hpp"
+#include "FreeCamera.h"
 
 #ifndef SPEEDRUN_BUILD
 
@@ -492,6 +493,250 @@ static void DrawEnemySwapper() {
     }
 }
 
+static bool KeyRebindKeyLayout(const char* label, int& key)
+{
+    bool value_changed = false;
+
+	auto GetKeyName = [](int vk) -> std::string
+	{
+		if (vk == 0) return "None";
+		
+        char buffer[64] = {0};
+		unsigned int scancode = MapVirtualKeyA(vk, MAPVK_VK_TO_VSC);
+
+        switch (vk)
+        {
+            case VK_LEFT: case VK_UP: case VK_RIGHT: case VK_DOWN:
+            case VK_RCONTROL: case VK_RMENU:
+            case VK_LWIN: case VK_RWIN: case VK_APPS:
+            case VK_PRIOR: case VK_NEXT:
+            case VK_END: case VK_HOME:
+            case VK_INSERT: case VK_DELETE:
+            case VK_DIVIDE:
+            case VK_NUMLOCK:
+                scancode |= KF_EXTENDED;
+                break;
+            default:
+                break;
+        }
+
+		if (GetKeyNameTextA(scancode << 16, buffer, sizeof(buffer)) != 0)
+			return std::string(buffer);
+		else
+			return "Unknown";
+	};
+
+    ImGui::PushID(label);
+
+    ImGui::TextUnformatted(label);
+    ImGui::SameLine();
+    if (ImGui::Button(GetKeyName(key).c_str()))
+        ImGui::OpenPopup("");
+
+    if (ImGui::BeginPopup(""))
+    {
+        struct KeyDef { int vk; const char* text; float w; };
+
+        static const std::vector<std::vector<KeyDef>> layout = {
+            // Function Row + Nav Cluster + Empty Numpad Header (23.0u total)
+            {
+                {VK_ESCAPE, "Esc", 1.0f}, {0, "", 1.0f},
+                {VK_F1, "F1", 1.0f}, {VK_F2, "F2", 1.0f}, {VK_F3, "F3", 1.0f}, {VK_F4, "F4", 1.0f}, {0, "", 0.5f},
+                {VK_F5, "F5", 1.0f}, {VK_F6, "F6", 1.0f}, {VK_F7, "F7", 1.0f}, {VK_F8, "F8", 1.0f}, {0, "", 0.5f},
+                {VK_F9, "F9", 1.0f}, {VK_F10, "F10", 1.0f}, {VK_F11, "F11", 1.0f}, {VK_F12, "F12", 1.0f}, {0, "", 0.5f},
+                {VK_SNAPSHOT, "Prt", 1.0f}, {VK_SCROLL, "Scr", 1.0f}, {VK_PAUSE, "Pau", 1.0f}, {0, "", 0.5f},
+                {0, "", 4.0f}
+            },
+            // Number Row + Nav + Numpad Control Row
+            {
+                {VK_OEM_3, "`", 1.0f}, {'1', "1", 1.0f}, {'2', "2", 1.0f}, {'3', "3", 1.0f},
+                {'4', "4", 1.0f}, {'5', "5", 1.0f}, {'6', "6", 1.0f}, {'7', "7", 1.0f},
+                {'8', "8", 1.0f}, {'9', "9", 1.0f}, {'0', "0", 1.0f}, {VK_OEM_MINUS, "-", 1.0f},
+                {VK_OEM_PLUS, "=", 1.0f}, {VK_BACK, "Bksp", 2.0f}, {0, "", 0.5f},
+                {VK_INSERT, "Ins", 1.0f}, {VK_HOME, "Home", 1.0f}, {VK_PRIOR, "PgUp", 1.0f}, {0, "", 0.5f},
+                {VK_NUMLOCK, "Num", 1.0f}, {VK_DIVIDE, "/", 1.0f}, {VK_MULTIPLY, "*", 1.0f}, {VK_SUBTRACT, "-", 1.0f}
+            },
+            // QWERTY Row + Nav + Numpad Top
+            {
+                {VK_TAB, "Tab", 1.5f}, {'Q', "Q", 1.0f}, {'W', "W", 1.0f}, {'E', "E", 1.0f},
+                {'R', "R", 1.0f}, {'T', "T", 1.0f}, {'Y', "Y", 1.0f}, {'U', "U", 1.0f},
+                {'I', "I", 1.0f}, {'O', "O", 1.0f}, {'P', "P", 1.0f}, {VK_OEM_4, "[", 1.0f},
+                {VK_OEM_6, "]", 1.0f}, {VK_OEM_5, "\\", 1.5f}, {0, "", 0.5f},
+                {VK_DELETE, "Del", 1.0f}, {VK_END, "End", 1.0f}, {VK_NEXT, "PgDn", 1.0f}, {0, "", 0.5f},
+                {VK_NUMPAD7, "7", 1.0f}, {VK_NUMPAD8, "8", 1.0f}, {VK_NUMPAD9, "9", 1.0f}, {VK_ADD, "+", 1.0f}
+            },
+            // Home Row + Numpad Middle
+            {
+                {VK_CAPITAL, "Caps", 1.75f}, {'A', "A", 1.0f}, {'S', "S", 1.0f}, {'D', "D", 1.0f},
+                {'F', "F", 1.0f}, {'G', "G", 1.0f}, {'H', "H", 1.0f}, {'J', "J", 1.0f},
+                {'K', "K", 1.0f}, {'L', "L", 1.0f}, {VK_OEM_1, ";", 1.0f}, {VK_OEM_7, "'", 1.0f},
+                {VK_RETURN, "Enter", 2.25f}, {0, "", 4.0f},
+                {VK_NUMPAD4, "4", 1.0f}, {VK_NUMPAD5, "5", 1.0f}, {VK_NUMPAD6, "6", 1.0f}, {0, "", 1.0f}
+            },
+            // Shift Row + Up Arrow + Numpad Bottom
+            {
+                {VK_LSHIFT, "Shift", 2.25f}, {'Z', "Z", 1.0f}, {'X', "X", 1.0f}, {'C', "C", 1.0f},
+                {'V', "V", 1.0f}, {'B', "B", 1.0f}, {'N', "N", 1.0f}, {'M', "M", 1.0f},
+                {VK_OEM_COMMA, "<", 1.0f}, {VK_OEM_PERIOD, ">", 1.0f}, {VK_OEM_2, "/", 1.0f},
+                {VK_RSHIFT, "Shift", 2.75f}, {0, "", 1.5f},
+                {VK_UP, "^", 1.0f}, {0, "", 1.5f},
+                {VK_NUMPAD1, "1", 1.0f}, {VK_NUMPAD2, "2", 1.0f}, {VK_NUMPAD3, "3", 1.0f}, {VK_RETURN, "Ent", 1.0f}
+            },
+            // Modifier Row + Directional Arrows + Numpad Zero/Decimal
+            {
+                {VK_LCONTROL, "Ctrl", 1.25f}, {VK_LWIN, "Win", 1.25f}, {VK_LMENU, "Alt", 1.25f},
+                {VK_SPACE, "Space", 6.25f},
+                {VK_RMENU, "Alt", 1.25f}, {VK_RWIN, "Win", 1.25f}, {VK_APPS, "Menu", 1.25f}, {VK_RCONTROL, "Ctrl", 1.25f},
+                {0, "", 0.5f},
+                {VK_LEFT, "<", 1.0f}, {VK_DOWN, "v", 1.0f}, {VK_RIGHT, ">", 1.0f}, {0, "", 0.5f},
+                {VK_NUMPAD0, "0", 2.0f}, {VK_DECIMAL, ".", 1.0f}, {0, "", 1.0f}
+            }
+        };
+
+        const float baseSize = 36.0f;
+        const float spacing = 4.0f;
+
+        // Helper to query friendly Windows key name
+        auto GetVkName = GetKeyName;
+
+        // Label and status header
+        ImGui::Text("%s: ", label);
+        ImGui::SameLine();
+        if (key != 0)
+        {
+            ImGui::TextColored(ImVec4(0.35f, 0.75f, 1.0f, 1.0f), "[%s]", GetVkName(key).c_str());
+        }
+        else
+        {
+            ImGui::TextDisabled("[Unbound]");
+        }
+
+        ImGui::Spacing();
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(spacing, spacing));
+
+        // Render interactive keys
+        for (const auto& row : layout)
+        {
+            for (size_t i = 0; i < row.size(); ++i)
+            {
+                if (i > 0) ImGui::SameLine();
+
+                const auto& kd = row[i];
+                bool isSelected = (key == kd.vk);
+
+                if (isSelected)
+                {
+                    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.55f, 0.9f, 1.0f));
+                    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3f, 0.65f, 1.0f, 1.0f));
+                }
+                else
+                {
+                    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.18f, 0.18f, 0.20f, 1.0f));
+                    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.28f, 0.28f, 0.32f, 1.0f));
+                }
+
+                float keyWidth = (baseSize * kd.w) + (spacing * (kd.w - 1.0f));
+
+                if (kd.vk == 0)
+                {
+                    ImGui::Dummy(ImVec2(keyWidth, baseSize));
+                    ImGui::PopStyleColor(2);
+                    continue;
+                }
+
+                ImGui::PushID(kd.vk);
+                if (ImGui::Button(kd.text, ImVec2(keyWidth, baseSize)))
+                {
+                    if (key != kd.vk)
+                    {
+                        key = kd.vk;
+                        value_changed = true;
+                    }
+                }
+
+                if (ImGui::IsItemHovered())
+                {
+                    ImGui::BeginTooltip();
+                    ImGui::Text("Key: %s (0x%X)", GetVkName(kd.vk).c_str(), kd.vk);
+                    if (isSelected)
+                    {
+                        ImGui::TextColored(ImVec4(0.35f, 0.75f, 1.0f, 1.0f), "Currently Assigned");
+                    }
+                    ImGui::EndTooltip();
+                }
+
+                ImGui::PopID();
+                ImGui::PopStyleColor(2);
+            }
+        }
+
+        ImGui::PopStyleVar();
+        ImGui::EndPopup();
+    }
+    ImGui::PopID();
+
+    return value_changed;
+}
+
+static void DrawFreeCameraFeature()
+{
+	auto GetControlsName = [](int index) -> const char*
+	{
+		switch (index)
+		{
+			case FreeCamera::CTRL_FORWARD: return "Move Forward";
+			case FreeCamera::CTRL_BACKWARD: return "Move Backward";
+			case FreeCamera::CTRL_LEFT: return "Move Left";
+			case FreeCamera::CTRL_RIGHT: return "Move Right";
+			case FreeCamera::CTRL_MOVE_UP: return "Move Up";
+			case FreeCamera::CTRL_MOVE_DOWN: return "Move Down";
+			case FreeCamera::CTRL_TURBO_MOVE: return "Turbo Speed";
+			case FreeCamera::CTRL_LOOK_UP: return "Look Up";
+			case FreeCamera::CTRL_LOOK_DOWN: return "Look Down";
+			case FreeCamera::CTRL_LOOK_LEFT: return "Look Left";
+			case FreeCamera::CTRL_LOOK_RIGHT: return "Look Right";
+			case FreeCamera::CTRL_CUTSCENE_PAUSE: return "Pause";
+			case FreeCamera::CTRL_TOGGLE: return "Toggle Free Camera";
+			case FreeCamera::CTRL_FOV_DOWN: return "FOV Down";
+			case FreeCamera::CTRL_FOV_UP: return "FOV Up";
+			default: return "Unknown Control";
+		}
+
+		return "Unknown Control";
+	};
+
+    ImGui::PushID("##FREE_CAMERA");
+    if (ImGui::Checkbox("Free Camera", &FreeCamera::get().m_bEnabled))
+        FreeCamera::get().Init();
+    ImGui::SameLine();
+    if (ImGui::Button("..."))
+        ImGui::OpenPopup("");
+    
+    if (ImGui::BeginPopup(""))
+    {
+		ImGui::Checkbox("Use Mouse for looking", &FreeCamera::get().m_bUseMouseForLook);
+        GameHook::help_marker("Will not work if \"Force Input Type\" in the System tab is set to Gamepad");
+		ImGui::DragFloat("Move Speed", &FreeCamera::get().m_fSpeed, 0.1f, 0.1f, 100.0f);
+		ImGui::DragFloat("Look Speed", &FreeCamera::get().m_fLookSpeed, 0.01f, 0.01f, 10.0f);
+        ImGui::DragFloat("Look Pitch Speed", &FreeCamera::get().m_fLookPitchSpeed, 0.01f, 0.01f, 10.f);
+		ImGui::DragFloat("Turbo Speed", &FreeCamera::get().m_fTurboSpeed, 0.1f, 0.1f, 100.0f);
+
+		for (int i = 0; i < FreeCamera::CTRL_MAX; i++)
+		{
+            if (FreeCamera::get().m_bUseMouseForLook && i >= FreeCamera::CTRL_LOOK_LEFT && i <= FreeCamera::CTRL_LOOK_DOWN) // possibly we won't need to have a rebinds for these controls, we are using mouse
+                continue;                                                                                                   // also assuming that the order of the controls are as is
+
+			ImGui::PushID(i);
+            KeyRebindKeyLayout(GetControlsName(i), FreeCamera::get().m_Controls[i]);
+			ImGui::PopID();
+		}
+
+        ImGui::EndPopup();
+    }
+    
+    ImGui::PopID();
+}
+
 #endif
 
 // both speedrun and non speedrun
@@ -873,6 +1118,8 @@ void GameHook::GameImGui(void) {
     if (ImGui::Button("Save Config")) {
         GameHook::SavePatches(GameHook::cfg);
         GameHook::SaveDetours(GameHook::cfg);
+
+        FreeCamera::get().Save(GameHook::cfg);
     }
 
     GameHook::UpdateHooks(); // check detour toggle bools every frame the ui is shown
@@ -1578,6 +1825,10 @@ void GameHook::GameImGui(void) {
             }
 
             ImGui::SeparatorText("Other");
+
+            DrawFreeCameraFeature();
+
+            ImGui::Separator();
 
             if (ImGui::Checkbox("Multiplayer Camera Patch", &GameHook::multiplayerPatch_toggle)) {
                 GameHook::MultiplayerPatch(GameHook::multiplayerPatch_toggle);
