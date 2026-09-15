@@ -94,10 +94,12 @@ void GameHook::ForceCutsceneFace(bool enabled) {
 bool GameHook::runWithGuns_toggle = false;
 void GameHook::RunWithGuns(bool enabled) {
 	if (enabled) {
-		GameHook::_patch((char*)(0x8E9D39), (char*)"\x90\x90\x90\x90\x90\x90", 6); // nop 6
+		GameHook::_patch((char*)(0x8E9D39), (char*)"\x90\x90\x90\x90\x90\x90", 6); // nop 6 // run
+		GameHook::_patch((char*)(0x8EB0B0), (char*)"\x90\x90\x90\x90\x90\x90", 6); // nop 6 // taunt
 	}
 	else {
-		GameHook::_patch((char*)(0x8E9D39), (char*)"\x89\xBE\xBC\x6D\x09\x00", 6); // mov [esi+00096DBC],edi
+		GameHook::_patch((char*)(0x8E9D39), (char*)"\x89\xBE\xBC\x6D\x09\x00", 6); // mov [esi+00096DBC],edi // run
+		GameHook::_patch((char*)(0x8EB0B0), (char*)"\x89\x8E\xBC\x6D\x09\x00", 6); // mov [esi+00096DBC],edi // taunt
 	}
 }
 
@@ -180,6 +182,26 @@ void GameHook::DisableSummoningClothes(bool enabled) {
 	}
 	else {
 		GameHook::_patch((char*)(0x8B6CCA), (char*)"\x74\x0f", 2); // je
+	}
+}
+
+bool GameHook::disableSeriousHair_toggle = false;
+void GameHook::DisableSeriousHair(bool enabled) {
+	if (enabled) {
+		GameHook::_patch((char*)(0x8C1A96), (char*)"\xeb\x15", 2); // jmp
+	}
+	else {
+		GameHook::_patch((char*)(0x8C1A96), (char*)"\x74\x15", 2); // je
+	}
+}
+
+bool GameHook::forceSeriousHair_toggle = false;
+void GameHook::ForceSeriousHair(bool enabled) {
+	if (enabled) {
+		GameHook::_patch((char*)(0x8C1A96), (char*)"\x90\x90", 2); // jmp
+	}
+	else {
+		GameHook::_patch((char*)(0x8C1A96), (char*)"\x74\x15", 2); // je
 	}
 }
 

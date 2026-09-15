@@ -1090,6 +1090,22 @@ static void DrawGlamour() {
 
         GameHook::DisableSummoningClothes(GameHook::disableSummoningClothes_toggle);
     }
+
+    if (ImGui::Checkbox("Force Serious Hair##SeriousHairToggle", &GameHook::forceSeriousHair_toggle)) {
+        GameHook::disableSeriousHair_toggle = false;
+        GameHook::DisableSeriousHair(GameHook::disableSeriousHair_toggle);
+
+        GameHook::ForceSeriousHair(GameHook::forceSeriousHair_toggle);
+    }
+    GameHook::help_marker("Requires reloading character hair via a stage transition or putting on/taking off the climax brace");
+    ImGui::SameLine(GameHook::sameLineWidth);
+    if (ImGui::Checkbox("Disable Serious Hair##SeriousHairToggle", &GameHook::disableSeriousHair_toggle)) {
+        GameHook::forceSeriousHair_toggle = false;
+        GameHook::ForceSeriousHair(GameHook::forceSeriousHair_toggle);
+
+        GameHook::DisableSeriousHair(GameHook::disableSeriousHair_toggle);
+    }
+    GameHook::help_marker("Requires reloading character hair via a stage transition or putting on/taking off the climax brace");
 #endif
 }
 
@@ -1517,10 +1533,10 @@ void GameHook::GameImGui(void) {
 
             ImGui::SameLine(sameLineWidth);
 
-            if (ImGui::Checkbox("Run With Guns", &GameHook::runWithGuns_toggle)) {
+            if (ImGui::Checkbox("Run / Taunt With Guns", &GameHook::runWithGuns_toggle)) {
                 GameHook::RunWithGuns(GameHook::runWithGuns_toggle);
             }
-            help_marker("Stop your guns disappearing when you run");
+            help_marker("Stop your guns disappearing when you run or taunt");
 
             tabHeight += ImGui::GetCursorPosY();
             ImGui::EndChild();
@@ -1531,7 +1547,7 @@ void GameHook::GameImGui(void) {
             ImGui::BeginChild("EnvironmentChild");
 
             DrawAreaJump();
-
+            
             DrawAngelSlayer();
 
             ImGui::SeparatorText("Enemy Spawner");

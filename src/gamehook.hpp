@@ -249,6 +249,12 @@ public:
 	static bool disableSummoningClothes_toggle;
 	static void DisableSummoningClothes(bool enabled);
 
+	static bool disableSeriousHair_toggle;
+	static void DisableSeriousHair(bool enabled);
+
+	static bool forceSeriousHair_toggle;
+	static void ForceSeriousHair(bool enabled);
+
 	static bool disableLockOnDodge_toggle;
 	static void DisableLockOnDodge(bool enabled);
 
