@@ -95,10 +95,18 @@ bool GameHook::runWithGuns_toggle = false;
 void GameHook::RunWithGuns(bool enabled) {
 	if (enabled) {
 		GameHook::_patch((char*)(0x8E9D39), (char*)"\x90\x90\x90\x90\x90\x90", 6); // nop 6 // run
-		GameHook::_patch((char*)(0x8EB0B0), (char*)"\x90\x90\x90\x90\x90\x90", 6); // nop 6 // taunt
 	}
 	else {
 		GameHook::_patch((char*)(0x8E9D39), (char*)"\x89\xBE\xBC\x6D\x09\x00", 6); // mov [esi+00096DBC],edi // run
+	}
+}
+
+bool GameHook::tauntWithGuns_toggle = false;
+void GameHook::TauntWithGuns(bool enabled) {
+	if (enabled) {
+		GameHook::_patch((char*)(0x8EB0B0), (char*)"\x90\x90\x90\x90\x90\x90", 6); // nop 6 // taunt
+	}
+	else {
 		GameHook::_patch((char*)(0x8EB0B0), (char*)"\x89\x8E\xBC\x6D\x09\x00", 6); // mov [esi+00096DBC],edi // taunt
 	}
 }
@@ -188,10 +196,10 @@ void GameHook::DisableSummoningClothes(bool enabled) {
 bool GameHook::disableSeriousHair_toggle = false;
 void GameHook::DisableSeriousHair(bool enabled) {
 	if (enabled) {
-		GameHook::_patch((char*)(0x8C1A96), (char*)"\xeb\x15", 2); // jmp
+		GameHook::_patch((char*)(0x8C1BD3), (char*)"\xeb\x13", 2); // jmp
 	}
 	else {
-		GameHook::_patch((char*)(0x8C1A96), (char*)"\x74\x15", 2); // je
+		GameHook::_patch((char*)(0x8C1BD3), (char*)"\x74\x13", 2); // je
 	}
 }
 
@@ -428,6 +436,16 @@ void GameHook::UnbanClimaxBrace(bool enabled) {
 	}
 }
 
+bool GameHook::noMagicAura_toggle = false;
+void GameHook::NoMagicAura(bool enabled) {
+	if (enabled) {
+		GameHook::_patch((char*)(0x9D5020), (char*)"\xeb\x05", 2); // 
+	}
+	else {
+		GameHook::_patch((char*)(0x9D5020), (char*)"\x74\x05", 2); // 
+	}
+}
+
 bool GameHook::parryOffset_toggle = false;
 void GameHook::ParryOffset(bool enabled) {
 	if (enabled) {
@@ -575,6 +593,7 @@ void GameHook::SavePatches(utils::Config& cfg) {
 	cfg.set<bool>("disableDaze_toggle", disableDaze_toggle);
 	cfg.set<bool>("forceCutsceneFace_toggle", forceCutsceneFace_toggle);
 	cfg.set<bool>("runWithGuns_toggle", runWithGuns_toggle);
+	cfg.set<bool>("tauntWithGuns_toggle", tauntWithGuns_toggle);
 	// cfg.set<bool>("noClip_toggle", noClip_toggle);
 	cfg.set<bool>("forceDaze_toggle", forceDaze_toggle);
 	cfg.set<bool>("freezeTimer_toggle", freezeTimer_toggle);
@@ -603,6 +622,7 @@ void GameHook::SavePatches(utils::Config& cfg) {
 	cfg.set<bool>("skipAngelAttack_toggle", skipAngelAttack_toggle);
 	cfg.set<bool>("skipMapScene_toggle", skipMapScene_toggle);
 	cfg.set<bool>("unbanClimaxBrace_toggle", unbanClimaxBrace_toggle);
+	cfg.set<bool>("noMagicAura_toggle", noMagicAura_toggle);
 	cfg.set<bool>("tauntWithTimeBracelet_toggle", tauntWithTimeBracelet_toggle);
 	cfg.set<bool>("forceSummoningClothes_toggle", forceSummoningClothes_toggle);
 	cfg.set<bool>("disableSummoningClothes_toggle", disableSummoningClothes_toggle);
@@ -637,6 +657,8 @@ void GameHook::LoadPatches(const utils::Config& cfg) {
 	ForceCutsceneFace(forceCutsceneFace_toggle);
 	runWithGuns_toggle = cfg.get<bool>("runWithGuns_toggle").value_or(false);
 	RunWithGuns(runWithGuns_toggle);
+	tauntWithGuns_toggle = cfg.get<bool>("tauntWithGuns_toggle").value_or(false);
+	TauntWithGuns(tauntWithGuns_toggle);
 	// noClip_toggle = cfg.get<bool>("noClip_toggle").value_or(false);
 	// NoClip(noClip_toggle);
 	forceDaze_toggle = cfg.get<bool>("forceDaze_toggle").value_or(false);
@@ -693,6 +715,8 @@ void GameHook::LoadPatches(const utils::Config& cfg) {
 	SkipMapScene(skipMapScene_toggle);
 	unbanClimaxBrace_toggle = cfg.get<bool>("unbanClimaxBrace_toggle").value_or(false);
 	UnbanClimaxBrace(unbanClimaxBrace_toggle);
+	noMagicAura_toggle = cfg.get<bool>("noMagicAura_toggle").value_or(false);
+	NoMagicAura(noMagicAura_toggle);
 	tauntWithTimeBracelet_toggle = cfg.get<bool>("tauntWithTimeBracelet_toggle").value_or(false);
 	TauntWithTimeBracelet(tauntWithTimeBracelet_toggle);
 	forceSummoningClothes_toggle = cfg.get<bool>("forceSummoningClothes_toggle").value_or(false);

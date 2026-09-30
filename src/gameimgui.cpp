@@ -16,15 +16,28 @@ void GameHook::Setup3dShapes() {
     WorldVisualizer::SetViewProjectionMatrix(GameHook::viewProj);
 }
 
+bool GameHook::drawClothColliders_toggle = false;
 bool GameHook::drawPlayerBones_toggle = false;
 bool GameHook::drawHitboxes_toggle = false;
 BayoBone* GameHook::selectedBone = nullptr;
 int GameHook::selectedBoneIndex = -1;
+
+static Vec3 BoneWorldPos(const BayoBone* b) {
+    return Vec3{ b->m_WorldMatrix.m[3][0], b->m_WorldMatrix.m[3][1], b->m_WorldMatrix.m[3][2] };
+}
+
+static bool GetBonePoint(void* entity, int16_t boneID, const Vec3& localOffset, Vec3& outWorld) {
+    if (!entity) return false;
+    if (boneID < 0) return false;
+    BayoBone* bone = GameHook::cModel_GetPartsPtr(entity, boneID);
+    if (!bone) return false;
+    outWorld = BoneWorldPos(bone);
+    return true;
+}
+
 void GameHook::Draw3dShapes() {
     LocalPlayer* player = GetLocalPlayer();
     if (!player) { return; }
-
-	std::vector<BayoBone*> allBones;
 
     ImGui::SetNextWindowPos(ImVec2(0, 0));
     ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
@@ -39,101 +52,91 @@ void GameHook::Draw3dShapes() {
         bool mouseClicked = ImGui::GetIO().MouseClicked[0];
         float closestDist = 12.0f;
         BayoBone* hoveredBone = nullptr;
-        int hoveredIndex = -1;
+        int hoveredID = -1;
 
+        selectedBone = GameHook::cModel_GetPartsPtr(player, selectedBoneIndex);
 
-        if (player->bayoSkeleton) {
-            BayoBone* b = player->bayoSkeleton->prevBone;
-            while (b) {
-                allBones.push_back(b);
-                b = b->prevBone;
+        for (int id = 0; id < player->partsNoMax; id++) {
+            BayoBone* bone = GameHook::cModel_GetPartsPtr(player, id);
+            if (!bone) continue;
+
+            Vec3 bonePos = BoneWorldPos(bone);
+            bool isSelected = (id == selectedBoneIndex);
+
+            ImU32 color;
+            if (isSelected) {
+                color = IM_COL32(255, 255, 0, 255);
             }
-            std::reverse(allBones.begin(), allBones.end());
-        }
-        
-        BayoBone* b = player->bayoSkeleton;
-        while (b) {
-            allBones.push_back(b);
-            b = b->nextBone;
-        }
+            else {
+                color = IM_COL32(0, 0, 255, 255);
+            }
 
-        for (int i = 0; i < (int)allBones.size(); i++) {
-            BayoBone* bone = allBones[i];
-            bool isSelected = (bone == selectedBone);
-
-			ImU32 color;
-			if (isSelected) {
-				color = IM_COL32(255, 255, 0, 255);
-			}
-			else {
-				color = IM_COL32(0, 0, 255, 255);
-			}
-
-            WorldVisualizer::DrawWorldSphere(bone->pos, 0.01f, color, 32, 1.0f, &playerRot);
+            WorldVisualizer::DrawWorldSphere(bonePos, 0.01f, color, 32, 1.0f, &playerRot);
 
             ImVec2 screenPos;
-            if (WorldVisualizer::WorldToScreen(bone->pos, screenPos)) {
+            if (WorldVisualizer::WorldToScreen(bonePos, screenPos)) {
                 float dx = screenPos.x - mousePos.x;
                 float dy = screenPos.y - mousePos.y;
                 float dist = sqrtf(dx * dx + dy * dy);
                 if (dist < closestDist) {
                     closestDist = dist;
                     hoveredBone = bone;
-                    hoveredIndex = i;
+                    hoveredID = id;
                 }
             }
         }
 
-        if (hoveredBone && hoveredBone != selectedBone) {
-            WorldVisualizer::DrawWorldSphere(hoveredBone->pos, 0.015f, IM_COL32(0, 255, 255, 255), 32, 1.5f, &playerRot);
+        if (hoveredBone && hoveredID != selectedBoneIndex) {
+            WorldVisualizer::DrawWorldSphere(BoneWorldPos(hoveredBone), 0.015f, IM_COL32(0, 255, 255, 255), 32, 1.5f, &playerRot);
         }
 
-		if (mouseClicked && hoveredBone) {
-			if (hoveredBone == selectedBone) {
-				selectedBone = nullptr;
-			}
-			else {
-				selectedBone = hoveredBone;
-			}
-			if (selectedBone) {
-				selectedBoneIndex = hoveredIndex;
-			}
-			else {
-				selectedBoneIndex = -1;
-			}
-		}
-		if (selectedBone) {
-			ImGui::Begin("Bone Offsets", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize);
-			ImGui::Text("Bone index: #%d ptr: %p id: #%d", selectedBoneIndex, (void*)selectedBone, selectedBone->boneID);
-			ImGui::Separator();
-			ImGui::DragFloat("Offset X", &selectedBone->offset.x, 0.01f, NULL, NULL, "%.2f");
-			ImGui::DragFloat("Offset Y", &selectedBone->offset.y, 0.01f, NULL, NULL, "%.2f");
-			ImGui::DragFloat("Offset Z", &selectedBone->offset.z, 0.01f, NULL, NULL, "%.2f");
+        if (mouseClicked && hoveredBone) {
+            if (hoveredID == selectedBoneIndex) {
+                selectedBoneIndex = -1;
+                selectedBone = nullptr;
+            }
+            else {
+                selectedBoneIndex = hoveredID;
+                selectedBone = hoveredBone;
+            }
+        }
 
-			ImGui::Spacing();
-			ImGui::Separator();
+        if (selectedBoneIndex >= 0) {
+            ImGui::Begin("Bone Offsets", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize);
+            ImGui::Text("Bone ID: #%d ptr: %p", selectedBoneIndex, (void*)selectedBone);
+            ImGui::Separator();
 
-			if (!allBones.empty()) {
-				if (ImGui::SliderInt("Bone", &selectedBoneIndex, 0, (int)allBones.size() - 1)) {
-					selectedBone = allBones[selectedBoneIndex];
-				}
-			}
+            if (selectedBone) {
+                ImGui::DragFloat("Offset X", &selectedBone->m_Trans.x, 0.01f, 0.0f, 0.0f, "%.2f");
+                ImGui::DragFloat("Offset Y", &selectedBone->m_Trans.y, 0.01f, 0.0f, 0.0f, "%.2f");
+                ImGui::DragFloat("Offset Z", &selectedBone->m_Trans.z, 0.01f, 0.0f, 0.0f, "%.2f");
+            }
+            else {
+                ImGui::TextUnformatted("No bone with this ID");
+            }
 
-			ImGui::Spacing();
+            ImGui::Spacing();
+            ImGui::Separator();
 
-			if (ImGui::Button("Reset Offsets")) {
-				selectedBone->offset.x = 0.0f;
-				selectedBone->offset.y = 0.0f;
-				selectedBone->offset.z = 0.0f;
-			}
-			ImGui::SameLine();
-			if (ImGui::Button("Deselect")) {
-				selectedBone = nullptr;
-				selectedBoneIndex = -1;
-			}
+            if (ImGui::SliderInt("Bone ID", &selectedBoneIndex, 0, player->partsNoMax - 1)) {
+                selectedBone = GameHook::cModel_GetPartsPtr(player, selectedBoneIndex);
+            }
 
-			ImGui::End();
-		}
+            ImGui::Spacing();
+
+            if (selectedBone && ImGui::Button("Zero Offsets")) {
+                selectedBone->m_Trans.x = 0.0f;
+                selectedBone->m_Trans.y = 0.0f;
+                selectedBone->m_Trans.z = 0.0f;
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Deselect")) {
+                selectedBone = nullptr;
+                selectedBoneIndex = -1;
+            }
+
+            ImGui::End();
+        }
     }
 
     if (GameHook::drawHitboxes_toggle) {
@@ -143,16 +146,34 @@ void GameHook::Draw3dShapes() {
         GameHook::hitDataList.clear();
     }
 
+    if (GameHook::drawClothColliders_toggle) {
+        std::vector<clothColliderSnapshot> snapshots;
+        {
+            std::lock_guard<std::mutex> lock(GameHook::clothColliderMutex);
+            snapshots.swap(GameHook::clothColliderDataList);
+        }
+
+        for (const clothColliderSnapshot& snapshot : snapshots) {
+            Vec3 vec1, vec2;
+
+            if (!GetBonePoint(/*snapshot.entity*/player, snapshot.p1, snapshot.offset1, vec1))
+                continue;
+
+            if (!GetBonePoint(/*snapshot.entity*/player, snapshot.p2, snapshot.offset2, vec2))
+                continue;
+
+            const float weight = std::clamp(snapshot.weight, 0.0f, 1.0f);
+            const Vec3 center = vec1 + (vec2 - vec1) * weight;
+
+            WorldVisualizer::DrawWorldSphere(center, snapshot.radius, IM_COL32(255, 255, 0, 255), 16, 0.25f);
+        }
+    }
+
     ImGui::End();
 }
 
 void GameHook::RenderMessages(float deltaTime) {
-    activeMessages.erase(
-        std::remove_if(activeMessages.begin(), activeMessages.end(),
-            [](const HotkeyMessage& m) { return m.timeRemaining <= 0.0f; }),
-        activeMessages.end()
-    );
-
+    activeMessages.erase(std::remove_if(activeMessages.begin(), activeMessages.end(), [](const HotkeyMessage& m) { return m.timeRemaining <= 0.0f; }), activeMessages.end());
     if (activeMessages.empty()) return;
 
     ImGuiIO& io = ImGui::GetIO();
@@ -771,10 +792,10 @@ void GameHook::GameTick(void) { // also called while the menu isn't open
                 }
             }
         }
-        if (GameHook::drawStats_toggle || GameHook::pvp_toggle || GameHook::drawPlayerBones_toggle || GameHook::drawHitboxes_toggle) {
+        if (GameHook::drawStats_toggle || GameHook::pvp_toggle || GameHook::drawPlayerBones_toggle || GameHook::drawHitboxes_toggle || GameHook::drawClothColliders_toggle) {
             Setup3dShapes();
         }
-        if (GameHook::drawPlayerBones_toggle || GameHook::drawHitboxes_toggle) {
+        if (GameHook::drawPlayerBones_toggle || GameHook::drawHitboxes_toggle || GameHook::drawClothColliders_toggle) {
             Draw3dShapes();
         }
         if (GameHook::drawStats_toggle || GameHook::pvp_toggle) {
@@ -1533,10 +1554,23 @@ void GameHook::GameImGui(void) {
 
             ImGui::SameLine(sameLineWidth);
 
-            if (ImGui::Checkbox("Run / Taunt With Guns", &GameHook::runWithGuns_toggle)) {
+            if (ImGui::Checkbox("Disable Magic Aura", &GameHook::noMagicAura_toggle)) {
+                GameHook::NoMagicAura(noMagicAura_toggle);
+            }
+            ImGui::SameLine();
+            help_marker("Disables the purple aura that covers your character while you have enough Magic to Torture Attack");
+
+            if (ImGui::Checkbox("Run With Guns", &GameHook::runWithGuns_toggle)) {
                 GameHook::RunWithGuns(GameHook::runWithGuns_toggle);
             }
-            help_marker("Stop your guns disappearing when you run or taunt");
+            help_marker("Stop your guns disappearing when you run");
+
+            ImGui::SameLine(sameLineWidth);
+
+            if (ImGui::Checkbox("Taunt With Guns", &GameHook::tauntWithGuns_toggle)) {
+                GameHook::TauntWithGuns(GameHook::tauntWithGuns_toggle);
+            }
+            help_marker("Stop your guns disappearing when you taunt");
 
             tabHeight += ImGui::GetCursorPosY();
             ImGui::EndChild();
@@ -1713,6 +1747,7 @@ void GameHook::GameImGui(void) {
 			ImGui::Checkbox("Draw Stats", &GameHook::drawStats_toggle);
             ImGui::Checkbox("Draw Player Bones (WIP)", &GameHook::drawPlayerBones_toggle);
             ImGui::Checkbox("Draw Hitboxes (WIP)", &GameHook::drawHitboxes_toggle);
+            ImGui::Checkbox("Draw Cloth Colliders (WIP)", &GameHook::drawClothColliders_toggle);
 
             ImGui::SeparatorText("Custom Combo Routes");
 

@@ -11,6 +11,7 @@
 #include "imgui/imgui.h"
 #include "sdk/Bayonetta.hpp"
 #include <random> // for random costume
+#include <mutex>
 #ifndef IM_PI
 #define IM_PI 3.14159265358979323846f
 #endif
@@ -37,6 +38,10 @@ public:
 #ifndef SPEEDRUN_BUILD
 	static bool drawHitboxes_toggle;
 	static HookContext getHitbox;
+
+	static bool drawClothColliders_toggle;
+	static HookContext getClothCollider;
+	static std::mutex clothColliderMutex;
 
 	static bool enemyHPNoDamage_toggle;
 	static bool enemyHPOneHitKill_toggle;
@@ -203,6 +208,9 @@ public:
 	static bool runWithGuns_toggle;
 	static void RunWithGuns(bool enabled);
 
+	static bool tauntWithGuns_toggle;
+	static void TauntWithGuns(bool enabled);
+
 	static bool autoQTE_toggle;
 	static void AutoQTE(bool enabled);
 
@@ -322,6 +330,9 @@ public:
 	static bool unbanClimaxBrace_toggle;
 	static void UnbanClimaxBrace(bool enabled);
 
+	static bool noMagicAura_toggle;
+	static void NoMagicAura(bool enabled);
+
 	// static float currentAnimationScrub;
 	// static float currentAnimationEndFrame;
 
@@ -369,6 +380,7 @@ public:
 	static uintptr_t WeaponB2Address;
 
 	static std::vector<HitboxSnapshot> hitDataList;
+	static std::vector<clothColliderSnapshot> clothColliderDataList;
 	static bool drawPlayerBones_toggle;
 	static BayoBone* selectedBone;
 	static int selectedBoneIndex;
@@ -512,7 +524,9 @@ public:
 	static std::vector<GameHook::HotkeyMessage> activeMessages;
 
 	typedef void(__thiscall* AreaJumpFunc)(uintptr_t ecx, int stage, int part, int spawn);
+	typedef BayoBone*(__thiscall* GetPartsFunc)(void* entity, int part);
 	static void AreaJump(int stage, int part, int spawn);
+	static BayoBone* cModel_GetPartsPtr(void* entity, int part);
 
 	static void _patch(char* dst, char* src, int size);
 	static void _nop(char* dst, unsigned int size);

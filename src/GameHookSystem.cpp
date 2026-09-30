@@ -166,6 +166,12 @@ void GameHook::AreaJump(int stage, int part, int spawn) {
 	areaJump(ecx, stage, part, spawn);
 }
 
+BayoBone* GameHook::cModel_GetPartsPtr(void* entity, int part) {
+	uintptr_t getPartsAddr = 0x4A4060; // getPartsPtr
+	GetPartsFunc getParts = (GetPartsFunc)getPartsAddr;
+	return getParts(entity, part);
+}
+
 #ifndef SPEEDRUN_BUILD
 
 void GameHook::EasySpawnEntityFromHotkey(int enemyID, int variant, int spawnModifier) {

@@ -50,6 +50,50 @@ struct Vec3 {
     }
 };
 
+struct Vec4 {
+    float x; // 0x0
+    float y; // 0x4
+    float z; // 0x8
+    float w; // 0xC
+
+    Vec4 operator+(const Vec4& other) const {
+        return { x + other.x, y + other.y, z + other.z, w + other.w };
+    }
+
+    Vec4 operator-(const Vec4& other) const {
+        return { x - other.x, y - other.y, z - other.z, w - other.w };
+    }
+
+    Vec4 operator*(float scalar) const {
+        return { x * scalar, y * scalar, z * scalar, w * scalar };
+    }
+
+    Vec4 operator/(float scalar) const {
+        return { x / scalar, y / scalar, z / scalar, w / scalar };
+    }
+
+    Vec4& operator+=(const Vec4& other) {
+        x += other.x; y += other.y; z += other.z; w += other.w;
+        return *this;
+    }
+
+    Vec4& operator-=(const Vec4& other) {
+        x -= other.x; y -= other.y; z -= other.z; w -= other.w;
+        return *this;
+    }
+
+    Vec4& operator*=(float scalar) {
+        x *= scalar; y *= scalar; z *= scalar; w *= scalar;
+        return *this;
+    }
+
+    Vec4& operator/=(float scalar) {
+        x /= scalar; y /= scalar; z /= scalar; w /= scalar;
+        return *this;
+    }
+};
+static_assert(sizeof(Vec4) == 0x10);
+
 struct Matrix4x4 {
     float m[4][4];
 
@@ -111,24 +155,28 @@ struct BayoLimb {
 static_assert(sizeof(BayoLimb) == 0x190);
 
 #pragma pack(push, 1)
-struct BayoBone {
-    char pad_0[0x30];      // 0x00
-    Vec3 pos;              // 0x30
-    char pad_3C[0x84];     // 0x3C
-    Vec3 offset;           // 0xC0
-    char pad_CC[0x14];     // 0xCC
-    Vec3 scale;            // 0xE0
-    char pad_EC[0x1C];     // 0xEC
-    int boneID;            // 0x108
-    int unknID;            // 0x10C
-    BayoBone* prevBone;    // 0x110
-    BayoBone* nextBone;    // 0x114
-}; // Size: 0x118
+struct BayoBone { // cParts
+    Matrix4x4  m_WorldMatrix;    // 0x00
+    Matrix4x4  m_LocalMatrix;    // 0x40
+    Matrix4x4  m_WorldMatrixOld; // 0x80
+    Vec4       m_Trans;          // 0xC0  (was "offset")
+    Vec4       m_Rot;            // 0xD0
+    Vec4       m_Scale;          // 0xE0
+    Vec4       m_WorldScale;     // 0xF0
+    float      m_WorldRotY;      // 0x100
+    Matrix4x4* m_pMulMtx;        // 0x104
+    int        m_PartsNo;        // 0x108 (was "boneID")
+    int        m_RotOrder;       // 0x10C
+    BayoBone*  m_pPartsParent;   // 0x110 (was "prevBone")
+    BayoBone*  m_pPartsList;     // 0x114 (was "nextBone")
+    uint32_t   m_PartsFlag;      // 0x118
+    uint32_t   _padd;            // 0x11C
+}; // Size: 0x120
 #pragma pack(pop)
-static_assert(sizeof(BayoBone) == 0x118);
+static_assert(sizeof(BayoBone) == 0x120);
 
 #pragma pack(push, 1)
-struct hitbox { // this is the seq files
+struct hitbox { // seq files
     char pad_0x0[0x30];
     Vec3 pos; // 0x30
     // 0x28 = when it starts?
@@ -142,6 +190,36 @@ struct hitbox { // this is the seq files
 }; // Size: 0x60
 #pragma pack(pop)
 static_assert(sizeof(hitbox) == 0x60);
+
+struct HitboxSnapshot {
+    Vec3 pos;
+    float radius;
+};
+
+#pragma pack(push, 1)
+struct clothCollider { // clh files
+    int16_t p1; // 0x0 // bone id 1
+    int16_t p2; // 0x2 // bone id 2
+    float weight; // 0x4 // on a scale from 0.0 to 1.0, how close should the sphere be to bone 1 or to bone 2
+    float radius; // 0x8
+	Vec3 offset1; // 0xC // offset from bone root???
+    Vec3 offset2; // 0x18 // apparently always 0.0
+}; // Size: 0x24
+#pragma pack(pop)
+static_assert(sizeof(clothCollider) == 0x24);
+
+#pragma pack(push, 1)
+struct clothColliderSnapshot { // clh files
+    int16_t p1; // 0x0 // bone id 1
+    int16_t p2; // 0x2 // bone id 2
+    float weight; // 0x4 // on a scale from 0.0 to 1.0, how close should the sphere be to bone 1 or to bone 2
+    float radius; // 0x8
+	Vec3 offset1; // 0xC // offset from bone root???
+    Vec3 offset2; // 0x18 // apparently always 0.0
+    void* entity; // x024
+}; // Size: 0x24
+#pragma pack(pop)
+static_assert(sizeof(clothColliderSnapshot) == 0x28);
 
 #pragma pack(push, 1)
 struct Enemy {
@@ -176,8 +254,14 @@ struct LocalPlayer {
     char pad_dc[0x4];
     Vec3 rot; // 0xe0
     char pad_ec[0x4];
-    Vec3 scale; // 0xf0
-    char pad_fc[0x218];
+    Vec3 scale; // 0x0f0
+    char pad_fc[0xEC]; // 0x0FC
+    int meshCount; // 0x1E8
+    char pad_1ec[0x44]; // 0x1EC
+    int partsNum; // 0x230
+    int partsNoMax; // 0x234
+    int m_pIndexPartsPtrArray; // 0x238
+    char pad_23c[0xD8]; // 0x23C
     float camHeight; // 0x314
     char pad_318[0xc];
     float alpha; // 0x324
@@ -347,11 +431,6 @@ struct EntitySpawnArg2 {
     char char_9f = 0;             // 0x9F
     float float_A0 = 1.0f;        // 0xA0
     char pad_A4[0x20*4]{};        // 0xA4
-};
-
-struct HitboxSnapshot {
-    Vec3 pos;
-    float radius;
 };
 
 struct AreaIDName {

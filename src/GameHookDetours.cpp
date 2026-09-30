@@ -18,6 +18,7 @@ HookContext GameHook::fixIntroMoviesTimer;
 
 #ifndef SPEEDRUN_BUILD
 HookContext GameHook::getHitbox;
+HookContext GameHook::getClothCollider;
 HookContext GameHook::enemyHP;
 HookContext GameHook::witchTimeMultiplier;
 HookContext GameHook::infMagic;
@@ -83,6 +84,8 @@ void GameHook::UpdateHooks() {
 
 #ifndef SPEEDRUN_BUILD
 	GameHook::ToggleHook(GameHook::getHitbox, GameHook::drawHitboxes_toggle);
+
+	GameHook::ToggleHook(GameHook::getClothCollider, GameHook::drawClothColliders_toggle);
 
 	GameHook::ToggleHook(GameHook::enemyHP, { GameHook::enemyHPNoDamage_toggle, GameHook::enemyHPOneHitKill_toggle });
 
@@ -457,7 +460,6 @@ static __declspec(naked) void FixIntroMoviesTimerDetour(void) {
 }
 
 #ifndef SPEEDRUN_BUILD
-#include <mutex>
 static std::mutex g_EffectIDsMutex;
 std::vector<int> GameHook::seenEffectIDs;
 static void RegisterEffectID(int id) {
@@ -1146,6 +1148,59 @@ static __declspec(naked) void GetHitboxDetour(void) {
 		popfd
 		addss xmm0, [ebx+0x00000100]
 		jmp dword ptr [GameHook::getHitbox.jmp_ret]
+	}
+}
+
+std::vector<clothColliderSnapshot> GameHook::clothColliderDataList;
+std::mutex GameHook::clothColliderMutex;
+static void AddClothColliderDataPtr(void* entity, void* clh) {
+	auto* clothData = static_cast<clothColliderSnapshot*>(clh);
+
+	std::lock_guard<std::mutex> lock(GameHook::clothColliderMutex);
+
+	GameHook::clothColliderDataList.push_back(*clothData);
+	GameHook::clothColliderDataList.back().entity = entity;
+}
+
+static __declspec(naked) void GetClothColliderDetour(void) {
+	_asm {
+		pushfd
+		cmp byte ptr [GameHook::drawClothColliders_toggle], 0
+		je originalcode
+
+		pushad
+		sub esp, 0x80
+		movups [esp+0x00], xmm0
+		movups [esp+0x10], xmm1
+		movups [esp+0x20], xmm2
+		movups [esp+0x30], xmm3
+		movups [esp+0x40], xmm4
+		movups [esp+0x50], xmm5
+		movups [esp+0x60], xmm6
+		movups [esp+0x70], xmm7
+
+		push esi // clh
+		mov edi, [0xEF5A60] // player
+		push edi // entity
+		// eax = part, e.g. 0, 1, 2, 3
+		call AddClothColliderDataPtr
+		add esp, 8
+
+		movups xmm0, [esp+0x00]
+		movups xmm1, [esp+0x10]
+		movups xmm2, [esp+0x20]
+		movups xmm3, [esp+0x30]
+		movups xmm4, [esp+0x40]
+		movups xmm5, [esp+0x50]
+		movups xmm6, [esp+0x60]
+		movups xmm7, [esp+0x70]
+		add esp, 0x80
+		popad
+
+		originalcode:
+		popfd
+		movss [esi+0x0c], xmm0
+		jmp dword ptr [GameHook::getClothCollider.jmp_ret]
 	}
 }
 
@@ -3310,6 +3365,7 @@ void GameHook::SaveDetours(utils::Config& cfg) {
 	cfg.set<bool>("cameraSelect_toggle", cameraSelect_toggle);
 	cfg.set<int>("cameraSelect_newCameraType", cameraSelect_newCameraType);
 	cfg.set<bool>("drawHitboxes_toggle", drawHitboxes_toggle);
+	cfg.set<bool>("drawClothColliders_toggle", drawClothColliders_toggle);
 	cfg.set<bool>("openMenuPause_toggle", openMenuPause_toggle);
 	cfg.set<bool>("enemyHPNoDamage_toggle", enemyHPNoDamage_toggle);
 	cfg.set<bool>("enemyHPOneHitKill_toggle", enemyHPOneHitKill_toggle);
@@ -3434,6 +3490,9 @@ void GameHook::LoadDetours(const utils::Config& cfg) {
 
 	drawHitboxes_toggle = cfg.get<bool>("drawHitboxes_toggle").value_or(false);
 	GameHook::InitHook("getHitbox", 0x41837E, &GetHitboxDetour, 8, GameHook::getHitbox);
+
+	drawClothColliders_toggle = cfg.get<bool>("drawClothColliders_toggle").value_or(false);
+	GameHook::InitHook("getClothCollider", 0x42093B, &GetClothColliderDetour, 5, GameHook::getClothCollider);
 
 	enemyHPNoDamage_toggle = cfg.get<bool>("enemyHPNoDamage_toggle").value_or(false);
 	enemyHPOneHitKill_toggle = cfg.get<bool>("enemyHPOneHitKill_toggle").value_or(false);
