@@ -56,10 +56,10 @@ HookContext GameHook::teleportComboAction;
 HookContext GameHook::fixThirdAccessory;
 HookContext GameHook::thirdAccessoryMenu;
 // HookContext GameHook::animationScrub;
+#endif
 HookContext GameHook::pl0012;
 HookContext GameHook::pl0031;
 HookContext GameHook::pl004c;
-#endif
 
 // instead of the mindbend of figuring this out multiple times, just do it once and call refresh() on all of them every time we toggle via load, hotkey and checkbox
 void GameHook::UpdateHooks() {
@@ -76,6 +76,10 @@ void GameHook::UpdateHooks() {
 	GameHook::ToggleHook(GameHook::fpsSkateSpeed1, GameHook::linkGameToDelta_toggle);
 	GameHook::ToggleHook(GameHook::fpsSkateSpeed2, GameHook::linkGameToDelta_toggle);
 	GameHook::ToggleHook(GameHook::fixIntroMoviesTimer, GameHook::linkGameToDelta_toggle);
+
+	GameHook::ToggleHook(GameHook::pl0012, true);
+	GameHook::ToggleHook(GameHook::pl0031, true);
+	GameHook::ToggleHook(GameHook::pl004c, true);
 
 #ifndef SPEEDRUN_BUILD
 	GameHook::ToggleHook(GameHook::getHitbox, GameHook::drawHitboxes_toggle);
@@ -150,10 +154,6 @@ void GameHook::UpdateHooks() {
 	GameHook::ToggleHook(GameHook::teleportComboAction, GameHook::teleportComboAction_toggle);
 	GameHook::ToggleHook(GameHook::fixThirdAccessory, GameHook::thirdAccessoryMenu_toggle);
 	GameHook::ToggleHook(GameHook::thirdAccessoryMenu, GameHook::thirdAccessoryMenu_toggle);
-
-	GameHook::ToggleHook(GameHook::pl0012, true);
-	GameHook::ToggleHook(GameHook::pl0031, true);
-	GameHook::ToggleHook(GameHook::pl004c, true);
 #endif
 }
 
@@ -2252,6 +2252,9 @@ static __declspec(naked) void FixThirdAccessoryDetour(void) { // player in ebx
 	}
 }
 
+#endif
+
+
 static std::unique_ptr<FunctionHook> pl0012Hook;
 const char* pl0012att = "pl0012.dat\\pl0012.att";
 const char* pl0012flg = "pl0012.dat\\pl0012.flg";
@@ -3299,7 +3302,6 @@ static __declspec(naked) void pl004cDetour(void) {
 	}
 }
 
-#endif
 
 void GameHook::SaveDetours(utils::Config& cfg) {
 #ifndef SPEEDRUN_BUILD
@@ -3388,6 +3390,7 @@ void GameHook::SaveDetours(utils::Config& cfg) {
 void GameHook::LoadDetours(const utils::Config& cfg) {
 #ifdef SPEEDRUN_BUILD
 	uptimeFix_toggle = true; // forced
+	turbo_toggle = true; // forced
 #endif
 #ifndef SPEEDRUN_BUILD
 	uptimeFix_toggle = cfg.get<bool>("uptimeFix_toggle").value_or(false);
@@ -3414,13 +3417,18 @@ void GameHook::LoadDetours(const utils::Config& cfg) {
 	GameHook::InitHook("linkGameToDelta_fixIntroMoviesTimer", 0x5A1DE5, &FixIntroMoviesTimerDetour, 10, GameHook::fixIntroMoviesTimer);
 
 	openMenuPause_toggle = cfg.get<bool>("openMenuPause_toggle").value_or(false);
-	turbo_toggle = cfg.get<bool>("turbo_toggle").value_or(false);
-	turboValue = cfg.get<float>("turboValue").value_or(1.0f);
 	GameHook::InitHook("turbo", 0x513FC7, &TurboHookDetour, 5, GameHook::turbo);
+
+	GameHook::InitHook("pl0012", 0x9F5AF0, &pl0012Detour, 0, GameHook::pl0012);
+	GameHook::InitHook("pl0031", 0x9FC890, &pl0031Detour, 0, GameHook::pl0031);
+	GameHook::InitHook("pl004c", 0xA17420, &pl004cDetour, 0, GameHook::pl004c);
 
 	static std::random_device bayoHookRandomDevice;
 	GameHook::rng.seed(bayoHookRandomDevice() ^ (unsigned)time(NULL));
 #ifndef SPEEDRUN_BUILD
+	turbo_toggle = cfg.get<bool>("turbo_toggle").value_or(false);
+	turboValue = cfg.get<float>("turboValue").value_or(1.0f);
+
 	saveStatesHotkeys_toggle = cfg.get<bool>("saveStatesHotkeys_toggle").value_or(false);
 	//loadReplace_toggle = cfg.get<bool>("loadReplace_toggle").value_or(false);
 
@@ -3554,10 +3562,6 @@ void GameHook::LoadDetours(const utils::Config& cfg) {
 	thirdAccessoryMenu_toggle = cfg.get<bool>("thirdAccessoryMenu_toggle").value_or(false);
 	GameHook::InitHook("fixThirdAccessory", 0x97ED07, &FixThirdAccessoryDetour, 5, GameHook::fixThirdAccessory);
 	GameHook::InitHook("thirdAccessoryMenu", 0xB1E0AC, &ThirdAccessoryMenuDetour, 9, GameHook::thirdAccessoryMenu);
-
-	GameHook::InitHook("pl0012", 0x9F5AF0, &pl0012Detour, 0, GameHook::pl0012);
-	GameHook::InitHook("pl0031", 0x9FC890, &pl0031Detour, 0, GameHook::pl0031);
-	GameHook::InitHook("pl004c", 0xA17420, &pl004cDetour, 0, GameHook::pl004c);
 	InitSwapRules();
 #endif
 	GameHook::UpdateHooks();

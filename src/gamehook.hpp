@@ -159,11 +159,6 @@ public:
 
 	// static HookContext animationScrub; // unused
 
-	// these have no toggle and are always enabled
-	static HookContext pl0012;
-	static HookContext pl0031;
-	static HookContext pl004c;
-
 	//static utility::Hotkey* pad_hk_toggle_menu;
 	static utility::Hotkey* hk_enemy_no_damage;
 	static utility::Hotkey* hk_player_no_damage;
@@ -425,6 +420,11 @@ public:
 	static HookContext fpsSkateSpeed1;
 	static HookContext fpsSkateSpeed2;
 	static HookContext fixIntroMoviesTimer;
+
+	// these have no toggle and are always enabled
+	static HookContext pl0012;
+	static HookContext pl0031;
+	static HookContext pl004c;
 
 	static bool turbo_toggle; // if either of these bools are true, toggle the hook
 	static bool openMenuPause_toggle;
