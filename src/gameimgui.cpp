@@ -156,14 +156,17 @@ void GameHook::Draw3dShapes() {
         for (const clothColliderSnapshot& snapshot : snapshots) {
             Vec3 vec1, vec2;
 
-            if (!GetBonePoint(/*snapshot.entity*/player, snapshot.p1, snapshot.offset1, vec1))
+            if (!GetBonePoint(player, snapshot.p1, snapshot.offset1, vec1))
                 continue;
 
-            if (!GetBonePoint(/*snapshot.entity*/player, snapshot.p2, snapshot.offset2, vec2))
-                continue;
+            Vec3 center = vec1;
 
-            const float weight = std::clamp(snapshot.weight, 0.0f, 1.0f);
-            const Vec3 center = vec1 + (vec2 - vec1) * weight;
+            if (snapshot.p1 != snapshot.p2) {
+                if (!GetBonePoint(player, snapshot.p2, snapshot.offset2, vec2))
+                    continue;
+
+                center = vec1 + (vec2 - vec1) * snapshot.weight;
+            }
 
             WorldVisualizer::DrawWorldSphere(center, snapshot.radius, IM_COL32(255, 255, 0, 255), 16, 0.25f);
         }

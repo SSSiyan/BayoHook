@@ -70,12 +70,14 @@ void GameHook::MemPatch(bool enabled) {
 bool GameHook::infJumps_toggle = false;
 void GameHook::InfJumps(bool enabled) {
 	if (enabled) {
-		GameHook::_nop((char*)(0x9E8906), 6); // jumps
+		GameHook::_patch((char*)(0x9E88A2), (char*)"\xeb\x0f", 2); // jumps
+		// GameHook::_nop((char*)(0x9E8906), 6); // old first jumps
 		GameHook::_nop((char*)(0x9A120F), 6); // bird jumps
 		GameHook::_nop((char*)(0x9E8D8D), 6); // wall jumps
 	}
 	else {
-		GameHook::_patch((char*)(0x9E8906), (char*)"\x01\xAE\x78\x35\x09\x00", 6); // jumps
+		GameHook::_patch((char*)(0x9E88A2), (char*)"\x72\x0f", 2); // jumps
+		// GameHook::_patch((char*)(0x9E8906), (char*)"\x01\xAE\x78\x35\x09\x00", 6); // old first jumps
 		GameHook::_patch((char*)(0x9A120F), (char*)"\xFF\x86\x78\x35\x09\x00", 6); // bird jumps
 		GameHook::_patch((char*)(0x9E8D8D), (char*)"\x89\xBE\x90\x35\x09\x00", 6); // wall jumps
 	}
