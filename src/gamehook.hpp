@@ -12,6 +12,8 @@
 #include "sdk/Bayonetta.hpp"
 #include <random> // for random costume
 #include <mutex>
+#include <XInput.h>
+#pragma comment(lib, "XInput.lib")
 #ifndef IM_PI
 #define IM_PI 3.14159265358979323846f
 #endif
@@ -163,6 +165,33 @@ public:
 	static HookContext thirdAccessoryMenu;
 
 	// static HookContext animationScrub; // unused
+
+	//d-pad weapon swap variables
+	static bool leftPressed;
+	static bool rightPressed;
+	static bool upPressed;
+	static bool downPressed;
+	static int switchLimit;
+
+	static int weaponA1;
+	static int weaponA2;
+	static int weaponB1;
+	static int weaponB2;
+
+	static int previousMoveWrite;
+	static int currentSet;
+
+	static bool isCallerCalled;
+	static bool weaponswap_toggle;
+	static bool moveid_toggle;
+
+	static int pairUp[2];
+	static int pairDown[2];
+	static int pairLeft[2];
+	static int pairRight[2];
+
+	static int currentPair[2];
+
 
 	//static utility::Hotkey* pad_hk_toggle_menu;
 	static utility::Hotkey* hk_enemy_no_damage;
@@ -378,6 +407,11 @@ public:
 	static uintptr_t WeaponA2Address;
 	static uintptr_t WeaponB1Address;
 	static uintptr_t WeaponB2Address;
+	static uintptr_t WeaponActiveSet;
+	static uintptr_t WeaponPickedSet;
+
+	static int testMoveSwap;
+	static int testMoveZero;
 
 	static std::vector<HitboxSnapshot> hitDataList;
 	static std::vector<clothColliderSnapshot> clothColliderDataList;
@@ -499,6 +533,20 @@ public:
 	static float inputItemWidth;
 	static float sameLineWidth;
 	static void BackgroundImGui(void);
+
+	//weaponswap
+	static void switchHandsLeft(int* weapon, XINPUT_STATE state, int cSet);
+	static void switchHandsRight(int* weapon, XINPUT_STATE state, int cSet);
+	static void switchLegsUp(int* weapon, XINPUT_STATE state, int cSet);
+	static void switchLegsDown(int* weapon, XINPUT_STATE state, int cSet);
+
+	static void InitWeaponSwitch();
+
+	static const char* previousWeaponName;
+	static const char* previousWeaponName2;
+
+
+
 
 	// tick
 	static bool showMessages_toggle;

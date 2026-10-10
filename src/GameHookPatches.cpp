@@ -628,6 +628,17 @@ void GameHook::SavePatches(utils::Config& cfg) {
 	cfg.set<bool>("tauntWithTimeBracelet_toggle", tauntWithTimeBracelet_toggle);
 	cfg.set<bool>("forceSummoningClothes_toggle", forceSummoningClothes_toggle);
 	cfg.set<bool>("disableSummoningClothes_toggle", disableSummoningClothes_toggle);
+
+	cfg.set<int>("up1", pairUp[0]);
+	cfg.set<int>("up2", pairUp[1]);
+	cfg.set<int>("down1", pairDown[0]);
+	cfg.set<int>("down2", pairDown[1]);
+	cfg.set<int>("left1", pairLeft[0]);
+	cfg.set<int>("left2", pairLeft[1]);
+	cfg.set<int>("right1", pairRight[0]);
+	cfg.set<int>("right2", pairRight[1]);
+	cfg.set<bool>("weaponswap", weaponswap_toggle);
+
 #endif
 	// both speedrun and non speedrun
 	cfg.set<bool>("disableFpsLimiter_toggle", disableFpsLimiter_toggle);
@@ -725,6 +736,17 @@ void GameHook::LoadPatches(const utils::Config& cfg) {
 	ForceSummoningClothes(forceSummoningClothes_toggle);
 	disableSummoningClothes_toggle = cfg.get<bool>("disableSummoningClothes_toggle").value_or(false);
 	DisableSummoningClothes(disableSummoningClothes_toggle);
+
+	pairUp[0] = cfg.get<int>("up1").value_or(0);
+	pairUp[1] = cfg.get<int>("up2").value_or(0);
+	pairDown[0] = cfg.get<int>("down1").value_or(18);
+	pairDown[1] = cfg.get<int>("down2").value_or(18);
+	pairLeft[0] = cfg.get<int>("left1").value_or(2);
+	pairLeft[1] = cfg.get<int>("left2").value_or(6);
+	pairRight[0] = cfg.get<int>("right1").value_or(3);
+	pairRight[1] = cfg.get<int>("right2").value_or(7);
+	weaponswap_toggle = cfg.get<bool>("weaponswap").value_or(false);
+
 #endif
 #ifdef SPEEDRUN_BUILD
 	disableTutorials_toggle = true;

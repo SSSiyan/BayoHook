@@ -181,6 +181,10 @@ HRESULT __stdcall Base::Hooks::EndScene(LPDIRECT3DDEVICE9 pDevice) {
 
 	if (!Data::InitImGui) return Data::oEndScene(pDevice);
 
+	if (GameHook::weaponswap_toggle) {
+		GameHook::InitWeaponSwitch();
+	}
+
 	ImGui_ImplDX9_NewFrame();
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
