@@ -1517,6 +1517,7 @@ static const std::vector<SpawnEntry> spawnTypes = {
     {{"Dear", 0x20011, 0, 0}, SpawnCategory::EnemyTier1},
     {{"Enchant", 0x20030, 0, 0}, SpawnCategory::EnemyTier1},
     {{"Harmony", 0x20060, 0, 0}, SpawnCategory::EnemyTier1},
+    {{"Brave", 0x20073, 0, 0}, SpawnCategory::EnemyTier1},
 
     {{"Ardor (Sword)", 0x20004, 0, 0}, SpawnCategory::EnemyTier2},
     {{"Ardor (Axe)", 0x20004, 1, 0}, SpawnCategory::EnemyTier2},
@@ -1529,7 +1530,6 @@ static const std::vector<SpawnEntry> spawnTypes = {
     {{"Fairness", 0x20051, 0, 0}, SpawnCategory::EnemyTier2},
     {{"Beloved", 0x20070, 0, 0}, SpawnCategory::EnemyTier2},
     {{"Beloved (Larger)", 0x20071, 0, 0}, SpawnCategory::EnemyTier2},
-    {{"Brave", 0x20073, 0, 0}, SpawnCategory::EnemyTier1},
     {{"Beloved (Silver)", 0x20074, 0, 0}, SpawnCategory::EnemyTier2},
     {{"Joy", 0x20080, 0, 0}, SpawnCategory::EnemyTier2},
     {{"Kinship", 0x200A0, 0, 0}, SpawnCategory::EnemyTier2},

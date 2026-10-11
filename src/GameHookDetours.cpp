@@ -2000,9 +2000,24 @@ struct SpawnResult {
 
 static const std::unordered_map<SpawnCategory, std::vector<SpawnCategory>> spawnCategoryPool = {
 	{SpawnCategory::EnemyTier1, {SpawnCategory::EnemyTier1}},
-	{SpawnCategory::EnemyTier2, {SpawnCategory::EnemyTier2, SpawnCategory::EnemyTier1}},
-	{SpawnCategory::EnemyBoss,  {SpawnCategory::EnemyBoss, SpawnCategory::EnemyTier2}},
+	{SpawnCategory::EnemyTier2, {SpawnCategory::EnemyTier2/*, SpawnCategory::EnemyTier1*/}},
+	{SpawnCategory::EnemyBoss,  {SpawnCategory::EnemyBoss, /*SpawnCategory::EnemyTier2*/}},
 };
+
+// make the pools rather than every time we spawn a dude
+static std::unordered_map<SpawnCategory, std::vector<const SpawnInfo*>> poolCache;
+
+static void BuildSpawnPools() {
+	poolCache.clear();
+	for (const auto& [category, allowedCategories] : spawnCategoryPool) {
+		std::vector<const SpawnInfo*> pool;
+		for (const auto& entry : spawnTypes) {
+			if (std::find(allowedCategories.begin(), allowedCategories.end(), entry.category) != allowedCategories.end())
+				pool.push_back(&entry.info);
+		}
+		poolCache.emplace(category, std::move(pool));
+	}
+}
 
 static SpawnResult GetRandomizedSpawn(int id, int variant, int spawnModifier) {
 	const SpawnCategory* category = nullptr;
@@ -2017,16 +2032,11 @@ static SpawnResult GetRandomizedSpawn(int id, int variant, int spawnModifier) {
 	if (!category)
 		return { id, variant, spawnModifier };
 
-	std::vector<const SpawnInfo*> pool;
-	const auto& allowedCategories = spawnCategoryPool.at(*category);
-	for (const auto& entry : spawnTypes) {
-		if (std::find(allowedCategories.begin(), allowedCategories.end(), entry.category) != allowedCategories.end())
-			pool.push_back(&entry.info);
-	}
-
-	if (pool.empty())
+	auto cached = poolCache.find(*category);
+	if (cached == poolCache.end() || cached->second.empty())
 		return { id, variant, spawnModifier };
 
+	const auto& pool = cached->second;
 	std::uniform_int_distribution<size_t> dist(0, pool.size() - 1);
 	const SpawnInfo* picked = pool[dist(GameHook::rng)];
 	return { picked->id, picked->variant, picked->spawnModifier };
@@ -3622,6 +3632,7 @@ void GameHook::LoadDetours(const utils::Config& cfg) {
 	GameHook::InitHook("fixThirdAccessory", 0x97ED07, &FixThirdAccessoryDetour, 5, GameHook::fixThirdAccessory);
 	GameHook::InitHook("thirdAccessoryMenu", 0xB1E0AC, &ThirdAccessoryMenuDetour, 9, GameHook::thirdAccessoryMenu);
 	InitSwapRules();
+	BuildSpawnPools();
 #endif
 	GameHook::UpdateHooks();
 }
