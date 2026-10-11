@@ -111,6 +111,17 @@ void FreeCamera::Save(utils::Config& cfg)
 		cfg.set<int>(FreeCamera_CfgKeys[i], m_Controls[i]);
 }
 
+SHORT __stdcall CheckKeyState(int key)
+{
+	if (!*(bool*)0x5BB967C) // Hw::OsWindow::m_bFocus
+		return 0;
+
+	if (*(unsigned int*)0x51ADE24 & 0x200) // STA_PAUSE
+		return 0;
+
+	return GetAsyncKeyState(key);
+}
+
 void FreeCamera::Update(void *pCamera)
 {
 	if (!m_bEnabled)
@@ -129,7 +140,7 @@ void FreeCamera::Update(void *pCamera)
 
 	{
 		static bool guard = false;
-		if (GetAsyncKeyState(m_Controls[CTRL_TOGGLE]) & 0x8000)
+		if (CheckKeyState(m_Controls[CTRL_TOGGLE]) & 0x8000)
 		{
 			if (!guard)
 			{
@@ -181,7 +192,7 @@ void FreeCamera::Update(void *pCamera)
 
 	{
 		static bool guard = false;
-		if (SHORT down = GetAsyncKeyState(m_Controls[CTRL_CUTSCENE_PAUSE]) & 0x8000; down && !guard)
+		if (SHORT down = CheckKeyState(m_Controls[CTRL_CUTSCENE_PAUSE]) & 0x8000; down && !guard)
 		{
 			m_bCutscenePaused ^= true;
 			SafeHook::WriteMemory<unsigned char>(0x433D00, m_bCutscenePaused ? 0xC3 : 0x56);
@@ -218,44 +229,44 @@ void FreeCamera::Update(void *pCamera)
 	Vector3 m;
 
 	float speed = m_fSpeed;
-	if (GetAsyncKeyState(m_Controls[CTRL_TURBO_MOVE]) & 0x8000)
+	if (CheckKeyState(m_Controls[CTRL_TURBO_MOVE]) & 0x8000)
 		speed = m_fTurboSpeed;
 
-	if (GetAsyncKeyState(m_Controls[CTRL_FORWARD]) & 0x8000)
+	if (CheckKeyState(m_Controls[CTRL_FORWARD]) & 0x8000)
 	{
 		m.x += cosf(pitch) * sinf(yaw);
 		m.y += sinf(pitch);
 		m.z += cosf(pitch) * cosf(yaw);
 	}
-	else if (GetAsyncKeyState(m_Controls[CTRL_BACKWARD]) & 0x8000)
+	else if (CheckKeyState(m_Controls[CTRL_BACKWARD]) & 0x8000)
 	{
 		m.x -= cosf(pitch) * sinf(yaw);
 		m.y -= sinf(pitch);
 		m.z -= cosf(pitch) * cosf(yaw);
 	}
 
-	if (GetAsyncKeyState(m_Controls[CTRL_LEFT]) & 0x8000)
+	if (CheckKeyState(m_Controls[CTRL_LEFT]) & 0x8000)
 	{
 		m.x -= sinf(yaw - float(M_PI / 2.0));
 		m.z -= cosf(yaw - float(M_PI / 2.0));
 	}
-	else if (GetAsyncKeyState(m_Controls[CTRL_RIGHT]) & 0x8000)
+	else if (CheckKeyState(m_Controls[CTRL_RIGHT]) & 0x8000)
 	{
 		m.x += sinf(yaw - float(M_PI / 2.0));
 		m.z += cosf(yaw - float(M_PI / 2.0));
 	}
 
-	if (GetAsyncKeyState(m_Controls[CTRL_MOVE_UP]) & 0x8000)
+	if (CheckKeyState(m_Controls[CTRL_MOVE_UP]) & 0x8000)
 		m.y += speed;
-	else if (GetAsyncKeyState(m_Controls[CTRL_MOVE_DOWN]) & 0x8000)
+	else if (CheckKeyState(m_Controls[CTRL_MOVE_DOWN]) & 0x8000)
 		m.y -= speed;
 
 	float fovStep = 0.5f * (nowFov / 90.0f);
 	if (fovStep < 0.01f) fovStep = 0.01f;
 
-	if (GetAsyncKeyState(m_Controls[CTRL_FOV_UP]))
+	if (CheckKeyState(m_Controls[CTRL_FOV_UP]))
 		nowFov += fovStep;
-	else if (GetAsyncKeyState(m_Controls[CTRL_FOV_DOWN]))
+	else if (CheckKeyState(m_Controls[CTRL_FOV_DOWN]))
 		nowFov -= fovStep;
 
 	nowTrans += m * speed;
@@ -265,14 +276,14 @@ void FreeCamera::Update(void *pCamera)
 
 	if (!m_bUseMouseForLook)
 	{
-		if (GetAsyncKeyState(m_Controls[CTRL_LOOK_LEFT]) & 0x8000)
+		if (CheckKeyState(m_Controls[CTRL_LOOK_LEFT]) & 0x8000)
 			yaw += m_fLookSpeed * float(nowFov < DEG_TO_RAD(90.f) ? sinf(nowFov) : nowFov / DEG_TO_RAD(90.0f));
-		else if (GetAsyncKeyState(m_Controls[CTRL_LOOK_RIGHT]) & 0x8000)
+		else if (CheckKeyState(m_Controls[CTRL_LOOK_RIGHT]) & 0x8000)
 			yaw -= m_fLookSpeed * float(nowFov < DEG_TO_RAD(90.f) ? sinf(nowFov) : nowFov / DEG_TO_RAD(90.0f));
 
-		if (GetAsyncKeyState(m_Controls[CTRL_LOOK_UP]) & 0x8000)
+		if (CheckKeyState(m_Controls[CTRL_LOOK_UP]) & 0x8000)
 			pitch += m_fLookPitchSpeed * float(nowFov < DEG_TO_RAD(90.f) ? sinf(nowFov) : nowFov / DEG_TO_RAD(90.0f));
-		else if (GetAsyncKeyState(m_Controls[CTRL_LOOK_DOWN]) & 0x8000)
+		else if (CheckKeyState(m_Controls[CTRL_LOOK_DOWN]) & 0x8000)
 			pitch -= m_fLookPitchSpeed * float(nowFov < DEG_TO_RAD(90.f) ? sinf(nowFov) : nowFov / DEG_TO_RAD(90.0f));
 	}
 	else
@@ -306,6 +317,20 @@ void FreeCamera::Update(void *pCamera)
 	*fov = nowFov;
 }
 
+SafeHook::InlineHook FreeCamera_Hook;
+
+void __declspec(naked) FreeCamera_HookedUpdate()
+{
+	_asm
+	{
+		call FreeCamera::get
+		mov ecx, eax
+		push esi
+		call FreeCamera::Update
+		jmp [FreeCamera_Hook.m_trampoline]
+	}
+}
+
 void FreeCamera::Init()
 {
 	// lazy init, only when enabled, to avoid unnecessary hooks and memory writes
@@ -332,11 +357,11 @@ void FreeCamera::Init()
 	}
 	else
 	{
-		static SafeHook::MidAsmHook hook(0xA95E55, [](SafeHook::CTX& ctx)
+		static bool hookInstalled = false;
+		if (!hookInstalled)
 		{
-			void* pCamera = (void*)ctx.esi.i32;
-
-			FreeCamera::get().Update(pCamera);
-		});
+			FreeCamera_Hook.Create((void*)0xA95E55, FreeCamera_HookedUpdate);
+			hookInstalled = true;
+		}
 	}
 }
