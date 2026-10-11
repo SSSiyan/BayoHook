@@ -92,6 +92,24 @@ uintptr_t GameHook::WeaponA2Address = 0x5AA7420;
 uintptr_t GameHook::WeaponB1Address = 0x5AA742C;
 uintptr_t GameHook::WeaponB2Address = 0x5AA7430;
 
+// nose weaponswap shit
+uintptr_t GameHook::WeaponActiveSet = 0x5AA744C;
+uintptr_t GameHook::WeaponPickedSet = 0x5AA7450;
+
+int GameHook::pairUp[2] = { 0, 0 };//scarborough fair x2
+int GameHook::pairDown[2] = { 18, 18 };//rodin x2
+int GameHook::pairLeft[2] = { 2, 6 };//shuraba, durga
+int GameHook::pairRight[2] = { 3, 7 };//kulshedra, kilgore
+
+int GameHook::currentPair[2] = { 0, 0 };
+
+bool GameHook::weaponswap_toggle = false;
+bool GameHook::moveid_toggle = false;
+
+int GameHook::testMoveSwap = -1;
+int GameHook::testMoveZero = -1;
+bool GameHook::isCallerCalled = false;
+
 bool GameHook::spawnEntityFromGui = false;
 bool GameHook::spawnEntityFromHotkey = false;
 EntitySpawn GameHook::guiEntitySpawn;
@@ -247,6 +265,171 @@ void GameHook::WeaponSwapCaller(void) {
 		call weaponSwapCallAddress
 		popfd
 		popad
+	}
+}
+
+//Weaponswitch
+const char* GameHook::previousWeaponName = "Scarborough Fair";
+const char* GameHook::previousWeaponName2 = "Scarborough Fair";
+
+int& weaponA1Value = *(int*)GameHook::WeaponA1Address;
+int& weaponA2Value = *(int*)GameHook::WeaponA2Address;
+int& weaponB1Value = *(int*)GameHook::WeaponB1Address;
+int& weaponB2Value = *(int*)GameHook::WeaponB2Address;
+int& weaponSetActive = *(int*)GameHook::WeaponActiveSet;
+int& weaponSetPicked = *(int*)GameHook::WeaponPickedSet;
+
+int GameHook::weaponA1 = weaponA1Value;
+int GameHook::weaponA2 = weaponA2Value;
+int GameHook::weaponB1 = weaponB1Value;
+int GameHook::weaponB2 = weaponB2Value;
+
+int GameHook::currentSet = -1;
+
+
+bool GameHook::leftPressed = false;
+bool GameHook::rightPressed = false;
+bool GameHook::upPressed = false;
+bool GameHook::downPressed = false;
+
+//int GameHook::messageTimer = 200;
+int GameHook::switchLimit = 0;
+int GameHook::previousMoveWrite = -1;
+
+void GameHook::InitWeaponSwitch() {
+
+	XINPUT_STATE state;
+	ZeroMemory(&state, sizeof(XINPUT_STATE));
+
+	if (GameHook::moveIDSwap_toggle == true) {
+		uintptr_t actorPlayable = *(uintptr_t*)GameHook::playerPointerAddress;
+		float& playerAnimFrame = *(float*)(actorPlayable + 0x3E4);
+		if (playerAnimFrame > 10) {
+			GameHook::moveIDSwap_toggle = false;
+			GameHook::testMoveSwap = -1;
+		}
+	}
+
+	if (GameHook::switchLimit > 0) 
+		GameHook::switchLimit--;
+
+	if (XInputGetState(0, &state) == ERROR_SUCCESS) {
+		if (weaponSetPicked == 0) {
+			GameHook::switchHandsLeft(&GameHook::weaponB1, state, 1);
+			GameHook::switchHandsRight(&GameHook::weaponB1, state, 1);
+			GameHook::switchLegsUp(&GameHook::weaponB2, state, 1);
+			GameHook::switchLegsDown(&GameHook::weaponB2, state, 1);
+		}
+		else if (weaponSetPicked == 1) {
+			GameHook::switchHandsLeft(&GameHook::weaponA1, state, 0);
+			GameHook::switchHandsRight(&GameHook::weaponA1, state, 0);
+			GameHook::switchLegsUp(&GameHook::weaponA2, state, 0);
+			GameHook::switchLegsDown(&GameHook::weaponA2, state, 0);
+		}
+	}
+
+	if (weaponSetPicked == GameHook::currentSet) {
+		uintptr_t actorPlayable = *(uintptr_t*)GameHook::playerPointerAddress;
+		int& playerMoveID = *(int*)(actorPlayable + 0x34C);
+		int& playerMovePart = *(int*)(actorPlayable + 0x350);
+		int& playerMoveSomething = *(int*)(actorPlayable + 0x354);
+		float& playerAnimFrame = *(float*)(actorPlayable + 0x3E4);
+
+		int moveId = playerMoveID;
+		bool ismovezero = playerMoveID == 0;
+		int movePart = playerMovePart;
+		int moveSomething = playerMoveSomething;
+		float animFrame = playerAnimFrame;
+		int tempPicked=-1;
+		if (GameHook::currentSet == 1) {
+			tempPicked = 0;
+			weaponB1Value = GameHook::currentPair[0];
+			weaponB2Value = GameHook::currentPair[1];
+		}
+		else if (GameHook::currentSet == 0) {
+			tempPicked = 1;
+			weaponA1Value = GameHook::currentPair[0];
+			weaponA2Value = GameHook::currentPair[1];
+		}
+
+		if (GameHook::currentSet == weaponSetActive) {
+			if (playerMoveID != 0
+				&& playerMoveID != 1
+				&& playerMoveID != 6) {
+				GameHook::moveIDSwap_toggle = true;
+				GameHook::testMoveZero = 0;
+			}
+			GameHook::WeaponSwapCaller();
+				
+			if (playerMoveID != 0
+				&& playerMoveID != 1
+				&& playerMoveID != 6) {
+				GameHook::testMoveSwap = playerMoveID;
+			}
+			GameHook::currentSet = -1;
+		}
+	}
+}
+
+void GameHook::switchHandsLeft(int* weapon, XINPUT_STATE state, int cSet) {
+	if ((state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_LEFT) == 0) {
+		GameHook::leftPressed = false;
+	}
+
+	if ((state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_LEFT) != 0
+		&& GameHook::leftPressed == false) {
+		GameHook::isCallerCalled = true;
+		GameHook::leftPressed = true;
+		GameHook::currentPair[0] = GameHook::pairLeft[0];
+		GameHook::currentPair[1] = GameHook::pairLeft[1];
+		GameHook::currentSet = cSet;
+	}
+}
+
+void GameHook::switchHandsRight(int* weapon, XINPUT_STATE state, int cSet) {
+	if ((state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_RIGHT) == 0) {
+		GameHook::rightPressed = false;
+	}
+
+	if ((state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_RIGHT) != 0
+		&& GameHook::rightPressed == false) {
+		GameHook::isCallerCalled = true;
+		GameHook::rightPressed = true;
+		GameHook::currentPair[0] = GameHook::pairRight[0];
+		GameHook::currentPair[1] = GameHook::pairRight[1];
+		GameHook::currentSet = cSet;
+	}
+}
+
+void GameHook::switchLegsUp(int* weapon, XINPUT_STATE state, int cSet) {
+	if ((state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_UP) == 0) {
+		GameHook::upPressed = false;
+	}
+
+	if ((state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_UP) != 0
+		&& GameHook::upPressed == false) {
+		GameHook::upPressed = true;
+		GameHook::isCallerCalled = true;
+
+		GameHook::currentPair[0] = GameHook::pairUp[0];
+		GameHook::currentPair[1] = GameHook::pairUp[1];
+		GameHook::currentSet = cSet;
+	}
+
+}
+
+void GameHook::switchLegsDown(int* weapon, XINPUT_STATE state, int cSet) {
+	if ((state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_DOWN) == 0) {
+		GameHook::downPressed = false;
+	}
+
+	if ((state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_DOWN) != 0
+		&& GameHook::downPressed == false) {
+		GameHook::isCallerCalled = true;
+		GameHook::downPressed = true;
+		GameHook::currentPair[0] = GameHook::pairDown[0];
+		GameHook::currentPair[1] = GameHook::pairDown[1];
+		GameHook::currentSet = cSet;
 	}
 }
 

@@ -2156,6 +2156,35 @@ void GameHook::GameImGui(void) {
             ImGui::EndTabItem();
         }
 
+        if (ImGui::BeginTabItem("Weapons")) {
+            ImGui::BeginChild("WeaponsChild");
+            
+            //ImGui::Checkbox("Patch moveID", &GameHook::forbidMovement_toggle);
+
+            ImGui::Checkbox("Use D-pad set switcher", &GameHook::weaponswap_toggle);    
+            help_marker("Set desired pair of weapon to the D-pad direction. If not working, go into weapon menu once.");
+            ImGui::PushItemWidth(inputItemWidth);
+
+            ImGui::Text("UP");
+            ImGui::Combo("WeaponUP1InputInt", &GameHook::pairUp[0], weaponNames, IM_ARRAYSIZE(weaponNames));
+            ImGui::Combo("WeaponUP2InputInt", &GameHook::pairUp[1], weaponNames, IM_ARRAYSIZE(weaponNames));
+
+            ImGui::Text("DOWN");
+            ImGui::Combo("WeaponDOWN1InputInt", &GameHook::pairDown[0], weaponNames, IM_ARRAYSIZE(weaponNames));
+            ImGui::Combo("WeaponDOWN2InputInt", &GameHook::pairDown[1], weaponNames, IM_ARRAYSIZE(weaponNames));
+
+            ImGui::Text("LEFT");
+            ImGui::Combo("WeaponLEFT1InputInt", &GameHook::pairLeft[0], weaponNames, IM_ARRAYSIZE(weaponNames));
+            ImGui::Combo("WeaponLEFT2InputInt", &GameHook::pairLeft[1], weaponNames, IM_ARRAYSIZE(weaponNames));
+
+            ImGui::Text("RIGHT");
+            ImGui::Combo("WeaponRIGHT1InputInt", &GameHook::pairRight[0], weaponNames, IM_ARRAYSIZE(weaponNames));
+            ImGui::Combo("WeaponRIGHT2InputInt", &GameHook::pairRight[1], weaponNames, IM_ARRAYSIZE(weaponNames));
+            ImGui::EndChild();
+            ImGui::EndTabItem();
+            //GameHook::windowHeightHack = 360;
+        }
+
         if (ImGui::BeginTabItem("Stats")) {
             ImGui::BeginChild("StatsChild");
 
