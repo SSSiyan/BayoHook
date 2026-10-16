@@ -3525,6 +3525,8 @@ void GameHook::LoadDetours(const utils::Config& cfg) {
 	infMagic_value = cfg.get<float>("infMagic_value").value_or(1200.0f);
 	GameHook::InitHook("infMagic", 0x8BCE4C, &InfMagicDetour, 8, GameHook::infMagic);
 
+	InitSwapRules();
+	BuildSpawnPools();
 	randomizeSpawns_toggle = cfg.get<bool>("randomizeSpawns_toggle").value_or(false);
 	swapSpawns_toggle = cfg.get<bool>("swapSpawns_toggle").value_or(false);
 	for (int i = 0; i < (int)swapRules.size(); i++) {
@@ -3631,8 +3633,6 @@ void GameHook::LoadDetours(const utils::Config& cfg) {
 	thirdAccessoryMenu_toggle = cfg.get<bool>("thirdAccessoryMenu_toggle").value_or(false);
 	GameHook::InitHook("fixThirdAccessory", 0x97ED07, &FixThirdAccessoryDetour, 5, GameHook::fixThirdAccessory);
 	GameHook::InitHook("thirdAccessoryMenu", 0xB1E0AC, &ThirdAccessoryMenuDetour, 9, GameHook::thirdAccessoryMenu);
-	InitSwapRules();
-	BuildSpawnPools();
 #endif
 	GameHook::UpdateHooks();
 }

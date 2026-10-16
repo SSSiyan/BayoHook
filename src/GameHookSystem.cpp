@@ -56,7 +56,7 @@ utility::Hotkey* GameHook::hk_spawn_beloved;
 utility::Hotkey* GameHook::hk_spawn_golem;
 utility::Hotkey* GameHook::hk_spawn_fortitudo;
 utility::Hotkey* GameHook::hk_spawn_balder;
-utility::Hotkey* GameHook::hk_spawn_jeanne_formal;
+utility::Hotkey* GameHook::hk_spawn_jeanne;
 utility::Hotkey* GameHook::hk_spawn_bayonetta;
 #endif
 
@@ -652,7 +652,7 @@ void GameHook::LoadSystem(const utils::Config& cfg) {
 	hk_spawn_golem = g_hotkeys.emplace_back(utility::create_keyboard_hotkey({ VK_LSHIFT, VK_F8 }, "Spawn Golem", "hk_spawn_golem")).get();
 	hk_spawn_fortitudo = g_hotkeys.emplace_back(utility::create_keyboard_hotkey({ VK_LSHIFT, VK_F9 }, "Spawn Fortitudo", "hk_spawn_fortitudo")).get();
 	hk_spawn_balder = g_hotkeys.emplace_back(utility::create_keyboard_hotkey({ VK_LSHIFT, VK_F10 }, "Spawn Balder", "hk_spawn_balder")).get();
-	hk_spawn_jeanne_formal = g_hotkeys.emplace_back(utility::create_keyboard_hotkey({ VK_LSHIFT, VK_F11 }, "Spawn Jeanne", "hk_spawn_jeanne")).get();
+	hk_spawn_jeanne = g_hotkeys.emplace_back(utility::create_keyboard_hotkey({ VK_LSHIFT, VK_F11 }, "Spawn Jeanne", "hk_spawn_jeanne")).get();
 	hk_spawn_bayonetta = g_hotkeys.emplace_back(utility::create_keyboard_hotkey({ VK_LSHIFT, VK_F12 }, "Spawn Bayonetta", "hk_spawn_bayonetta")).get();
 
 	comboMaker_toggle = cfg.get<bool>("comboMaker_toggle").value_or(false);

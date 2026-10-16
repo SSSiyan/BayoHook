@@ -130,7 +130,7 @@ static void HotkeyStuff() {
 		if (GameHook::hk_spawn_golem->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x20090, 0, 0);
 		if (GameHook::hk_spawn_fortitudo->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x200B0, 0, 0);
 		if (GameHook::hk_spawn_balder->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x20500, 0, 0);
-		if (GameHook::hk_spawn_jeanne_formal->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x21002, 0, 0);
+		if (GameHook::hk_spawn_jeanne->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x21002, 0, 0);
 		if (GameHook::hk_spawn_bayonetta->check(GameHook::g_input))GameHook::EasySpawnEntityFromHotkey(0x21003, 0, 0);
 #endif
 		GameHook::g_input.update();

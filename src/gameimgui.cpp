@@ -1158,7 +1158,7 @@ void GameHook::GameImGui(void) {
     if (ImGui::Button("Save Config")) {
         GameHook::SavePatches(GameHook::cfg);
         GameHook::SaveDetours(GameHook::cfg);
-
+        GameHook::SaveSystem(GameHook::cfg);
         FreeCamera::get().Save(GameHook::cfg);
     }
 

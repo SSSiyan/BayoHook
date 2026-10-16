@@ -227,7 +227,7 @@ public:
 	static utility::Hotkey* hk_spawn_golem;
 	static utility::Hotkey* hk_spawn_fortitudo;
 	static utility::Hotkey* hk_spawn_balder;
-	static utility::Hotkey* hk_spawn_jeanne_formal;
+	static utility::Hotkey* hk_spawn_jeanne;
 	static utility::Hotkey* hk_spawn_bayonetta;
 
 	// patches (non-speedrun)
